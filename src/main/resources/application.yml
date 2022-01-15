@@ -1,1 +1,42 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:h2:file:./db/bokslstock_db
+    username: boksl_user
+    password: boksl_pw
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.H2Dialect
+    open-in-view: false
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: true
+        use_sql_comments: false
+  mvc:
+    static-path-pattern: /static/**
+  h2:
+    console:
+      enabled: true
+      settings:
+        web-allow-others: true
+
+logging.level:
+  org.hibernate.SQL: error
+#  org.hibernate.type: trace
+
+com:
+  setvect:
+    bokslstock:
+      crawl:
+        url:
+          stockList: https://finance.naver.com/sise/sise_market_sum.nhn?sosok={marketSeq}&page={page}
+          companyInfo: https://finance.naver.com/item/main.nhn?code={code}
+          marketPrice: https://api.finance.naver.com/siseJson.naver?symbol={code}&requestType=1&startTime={start}&endTime={end}&timeframe=day
+        userAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36
+
 
