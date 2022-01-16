@@ -37,6 +37,10 @@ com:
           stockList: https://finance.naver.com/sise/sise_market_sum.nhn?sosok={marketSeq}&page={page}
           companyInfo: https://finance.naver.com/item/main.nhn?code={code}
           marketPrice: https://api.finance.naver.com/siseJson.naver?symbol={code}&requestType=1&startTime={start}&endTime={end}&timeframe=day
+        config:
+          connectionTimeoutMs: 1000
+          readTimeoutMs: 1000
         userAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36
+
 
 
