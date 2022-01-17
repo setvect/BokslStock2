@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.entity
+package com.setvect.bokslstock2.common.entity
 
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate

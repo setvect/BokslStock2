@@ -14,22 +14,34 @@ import java.util.*
  * 날짜 범위 검색에 필요한 파라미터 역활을 할 수 있음
  */
 class DateRange {
-    /**
-     * @return 시작날짜를 리턴합니다.
-     */
+    companion object {
+        /**
+         * 기간 제한 없는 날짜 시작일
+         */
+        const val UNLIMITED_DATE_START = "1990-01-01"
+
+        /**
+         * 기간 제한 없는 날짜 종료일
+         */
+        const val UNLIMITED_DATE_END = "2100-12-31"
+
+        /**
+         * @return 1990-01-01 ~ 2100-12-31 날짜 범위 리턴
+         * @see .UNLIMITE_DATE_START
+         * @see .UNLIMITE_DATE_END
+         */
+        val maxRange: DateRange get() = DateRange(UNLIMITED_DATE_START, UNLIMITED_DATE_END)
+    }
+
     /**
      * 시작 날짜
      */
-    var from: LocalDateTime? = null
-        private set
-    /**
-     * @return 종료날짜를 리턴합니다.
-     */
+    private var from: LocalDateTime
+
     /**
      * 종료 날짜
      */
-    var to: LocalDateTime? = null
-        private set
+    private var to: LocalDateTime
 
     /**
      * 오늘 날짜를 기준으로 해서 차이 값을 생성 한다.
@@ -40,10 +52,10 @@ class DateRange {
         // 양수()
         if (diff > 0) {
             from = LocalDateTime.now()
-            to = from!!.plusDays(diff.toLong())
+            to = from.plusDays(diff.toLong())
         } else {
             to = LocalDateTime.now()
-            from = from!!.plusDays(diff.toLong())
+            from = to.minusDays(diff.toLong())
         }
     }
 
@@ -65,21 +77,16 @@ class DateRange {
         cal[Calendar.DATE] = 1
         from = convert(cal.timeInMillis)
     }
+
     /**
-     * 날짜영역 객체 생성. 기본 날짜 포맷 (yyyy-MM-dd)으로 날짜 변환
+     * 날짜영역 객체 생성. 기본 날짜 포맷 (yyyy-MM-dd'T'HH:mm:ss)으로 날짜 변환
      *
      * @param from   시작날짜
      * @param to     종료날짜
      * @param format 날짜 패턴 "yyyy, MM, dd, HH, mm, ss and more"
      */
-    /**
-     * 날짜영역 객체 생성. 기본 날짜 포맷 (yyyy-MM-dd)으로 날짜 변환
-     *
-     * @param from 시작날짜
-     * @param to   종료날짜
-     */
     @JvmOverloads
-    constructor(from: String?, to: String?, format: String? = "yyyy-MM-dd'T'HH:mm:ss") {
+    constructor(from: String, to: String, format: String = "yyyy-MM-dd'T'HH:mm:ss") {
         this.from = getLocalDateTime(from, format)
         this.to = getLocalDateTime(to, format)
     }
@@ -90,7 +97,7 @@ class DateRange {
      * @param from 시작일
      * @param to   종료일
      */
-    constructor(from: LocalDateTime?, to: LocalDateTime?) {
+    constructor(from: LocalDateTime, to: LocalDateTime) {
         this.from = from
         this.to = to
     }
@@ -99,40 +106,40 @@ class DateRange {
      * @return 종료날짜를 "yyyy-MM-dd" 형태로 리턴합니다.
      */
     val toDateFormat: String
-        get() = format(to!!, "yyyy-MM-dd")
+        get() = format(to, "yyyy-MM-dd")
 
     /**
      * @return 시작날짜를 "yyyy-MM-dd" 형태로 리턴합니다.
      */
     val fromDateFormat: String
-        get() = format(from!!, "yyyy-MM-dd")
+        get() = format(from, "yyyy-MM-dd")
 
     /**
      * @return 종료날짜를 "yyyy-MM-dd HH:mm:ss" 형태로 리턴합니다.
      */
     val toDateTimeFormat: String
-        get() = format(to!!, "yyyy-MM-dd HH:mm:ss")
+        get() = format(to, "yyyy-MM-dd HH:mm:ss")
 
     /**
      * @return 시작날짜를 "yyyy-MM-dd HH:mm:ss" 형태로 리턴합니다.
      */
     val fromDateTimeFormat: String
-        get() = format(from!!, "yyyy-MM-dd HH:mm:ss")
+        get() = format(from, "yyyy-MM-dd HH:mm:ss")
 
     /**
      * @param format 날짜 패턴 "yyyy, MM, dd, HH, mm, ss and more"
      * @return 종료날짜를 포맷 형태로 리턴합니다.
      */
-    fun getToDateTimeFormat(format: String?): String {
-        return format(to!!, format)
+    fun getToDateTimeFormat(format: String): String {
+        return format(to, format)
     }
 
     /**
      * @param format 날짜 패턴 "yyyy, MM, dd, HH, mm, ss and more"
      * @return 종료날짜를 포맷 형태로 리턴합니다.
      */
-    fun getFromDateTimeFormat(format: String?): String {
-        return format(from!!, format)
+    fun getFromDateTimeFormat(format: String): String {
+        return format(from, format)
     }
 
     /**
@@ -141,14 +148,12 @@ class DateRange {
      * @param dateTime 검사할 날짜시간
      * @return 두 날짜 사이에 있는지에 있으면 true
      */
-    fun isBetween(dateTime: LocalDateTime?): Boolean {
-        return from!!.isBefore(dateTime) && to!!.isAfter(dateTime) || from!!.isEqual(dateTime) || to!!.isEqual(dateTime)
+    fun isBetween(dateTime: LocalDateTime): Boolean {
+        return from.isBefore(dateTime) && to.isAfter(dateTime) || from.isEqual(dateTime) || to.isEqual(dateTime)
     }
 
     override fun toString(): String {
-        return formatDateTime(from!!) + " ~ " + formatDateTime(
-            to!!
-        )
+        return formatDateTime(from) + " ~ " + formatDateTime(to)
     }
 
     val diffMinute: Long
@@ -162,25 +167,4 @@ class DateRange {
      */
     val diffDays: Long
         get() = ChronoUnit.DAYS.between(from, to)
-
-    companion object {
-        /**
-         * 기간 제한 없는 날짜 시작일
-         */
-        const val UNLIMITE_DATE_START = "1990-01-01"
-
-        /**
-         * 기간 제한 없는 날짜 종료일
-         */
-        const val UNLIMITE_DATE_END = "2100-12-31"
-
-        /**
-         * @return 1990-01-01 ~ 2100-12-31 날짜 범위 리턴
-         * @see .UNLIMITE_DATE_START
-         *
-         * @see .UNLIMITE_DATE_END
-         */
-        val maxRange: DateRange
-            get() = DateRange(UNLIMITE_DATE_START, UNLIMITE_DATE_END)
-    }
 }

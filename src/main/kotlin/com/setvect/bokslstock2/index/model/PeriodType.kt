@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.backtest.model
+package com.setvect.bokslstock2.index.model
 
 enum class PeriodType {
     /**

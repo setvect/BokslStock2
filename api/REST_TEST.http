@@ -1,0 +1,2 @@
+### day, week, month
+GET https://api.finance.naver.com/siseJson.naver?symbol=233740&requestType=1&startTime=2020301&endTime=20220117&timeframe=month

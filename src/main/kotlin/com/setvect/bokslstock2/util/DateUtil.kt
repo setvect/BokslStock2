@@ -19,7 +19,7 @@ object DateUtil {
     const val HHmmss = "HHmmss"
     const val HH_mm_ss = "HH:mm:ss"
     val NUMBER_FORMAT: NumberFormat = DecimalFormat("#.############")
-    fun getLocalDateTime(text: String?, pattern: String?): LocalDateTime {
+    fun getLocalDateTime(text: String, pattern: String): LocalDateTime {
         val formatter = DateTimeFormatter.ofPattern(pattern)
         return LocalDateTime.parse(text, formatter)
     }

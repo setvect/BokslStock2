@@ -1,6 +1,6 @@
-package com.setvect.bokslstock2.backtest.entity
+package com.setvect.bokslstock2.index.entity
 
-import com.setvect.bokslstock2.backtest.model.PeriodType
+import com.setvect.bokslstock2.index.model.PeriodType
 import java.time.LocalDateTime
 import javax.persistence.Column
 import javax.persistence.Entity
@@ -19,8 +19,8 @@ import javax.persistence.Table
  */
 @Entity
 @Table(name = "CB_CANDLE", indexes = [
-    Index(name = "idx_candleentity", columnList = "CANDLE_DATE_TIME"),
-    Index(name = "idx_candleentity_period_type", columnList = "PERIOD_TYPE")
+    Index(name = "IDX_CANDLE_ENTITY", columnList = "CANDLE_DATE_TIME"),
+    Index(name = "IDX_CANDLE_ENTITY_PERIOD_TYPE", columnList = "PERIOD_TYPE")
 ])
 class CandleEntity(
     /**

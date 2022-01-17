@@ -1,18 +1,23 @@
-package com.setvect.bokslstock2.backtest.entity
+package com.setvect.bokslstock2.index.entity
 
-import com.setvect.bokslstock2.entity.BaseTimeEntity
+import com.setvect.bokslstock2.common.entity.BaseTimeEntity
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType.SEQUENCE
 import javax.persistence.Id
 import javax.persistence.Table
+import javax.persistence.UniqueConstraint
 
 /**
  * 주식 종목
  */
 @Entity
-@Table(name = "CA_STOCK")
+@Table(
+    name = "CA_STOCK", uniqueConstraints = [
+        UniqueConstraint(name = "UC_STOCK_ENTITY_CODE", columnNames = ["CODE"])
+    ]
+)
 class StockEntity(
     /**
      * 종목이름
