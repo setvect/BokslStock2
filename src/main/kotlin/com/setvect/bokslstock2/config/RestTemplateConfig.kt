@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.bokslstock2.config
+package com.setvect.bokslstock2.config
 
 import lombok.extern.slf4j.Slf4j
 import org.slf4j.Logger

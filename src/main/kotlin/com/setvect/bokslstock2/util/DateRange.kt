@@ -1,9 +1,9 @@
-package com.setvect.bokslstock2.bokslstock2.util
+package com.setvect.bokslstock2.util
 
-import com.setvect.bokslstock2.bokslstock2.util.DateUtil.convert
-import com.setvect.bokslstock2.bokslstock2.util.DateUtil.format
-import com.setvect.bokslstock2.bokslstock2.util.DateUtil.formatDateTime
-import com.setvect.bokslstock2.bokslstock2.util.DateUtil.getLocalDateTime
+import com.setvect.bokslstock2.util.DateUtil.convert
+import com.setvect.bokslstock2.util.DateUtil.format
+import com.setvect.bokslstock2.util.DateUtil.formatDateTime
+import com.setvect.bokslstock2.util.DateUtil.getLocalDateTime
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit

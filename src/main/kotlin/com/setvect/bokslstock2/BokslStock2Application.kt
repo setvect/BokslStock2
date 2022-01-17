@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.bokslstock2
+package com.setvect.bokslstock2
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan

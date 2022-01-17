@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.bokslstock2
+package com.setvect.bokslstock2
 
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer

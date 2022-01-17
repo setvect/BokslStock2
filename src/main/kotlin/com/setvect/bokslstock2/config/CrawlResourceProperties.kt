@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.bokslstock2.config
+package com.setvect.bokslstock2.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.ConstructorBinding
