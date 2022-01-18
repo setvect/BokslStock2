@@ -28,14 +28,14 @@ class CandleEntity(
      */
     @JoinColumn(name = "STOCK_SEQ")
     @ManyToOne
-    val stockSeq: StockEntity,
+    val stock: StockEntity,
     /**
-     * 종목코드
+     * 거래날짜
      */
     @Column(name = "CANDLE_DATE_TIME", nullable = false)
-    val code: LocalDateTime,
+    val candleDateTime: LocalDateTime,
     /**
-     * 종목코드
+     * 캔들 유형
      */
     @Column(name = "PERIOD_TYPE", length = 20, nullable = false)
     @Enumerated(STRING)
