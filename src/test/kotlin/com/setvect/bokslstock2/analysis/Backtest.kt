@@ -25,7 +25,9 @@ class Backtest {
     @Test
     @Transactional
     fun 이동평균계산() {
-        movingAverageService.getMovingAverage("069500", PeriodType.PERIOD_MONTH, listOf(5, 20, 60, 120))
+        movingAverageService.getMovingAverage("069500", PeriodType.PERIOD_DAY, listOf(5, 20, 60, 120))
+//        movingAverageService.getMovingAverage("069500", PeriodType.PERIOD_WEEK, listOf(5, 20, 60, 120))
+//        movingAverageService.getMovingAverage("069500", PeriodType.PERIOD_MONTH, listOf(5, 20, 60, 120))
     }
 
     @Test

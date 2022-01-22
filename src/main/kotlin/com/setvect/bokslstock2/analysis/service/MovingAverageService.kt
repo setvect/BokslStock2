@@ -2,6 +2,9 @@ package com.setvect.bokslstock2.analysis.service
 
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType
+import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
+import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_MONTH
+import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_WEEK
 import com.setvect.bokslstock2.index.repository.StockRepository
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -26,9 +29,21 @@ class MovingAverageService(
 
         val candleList = stock.candleList
         val candleGroupMap = candleList.groupByTo(TreeMap()) {
-            it.candleDateTime
-                .withDayOfMonth(1)
-                .withHour(0)
+            val localDateTime = when (group) {
+                PERIOD_DAY -> {
+                    it.candleDateTime
+
+                }
+                PERIOD_WEEK -> {
+                    it.candleDateTime
+                        .minusDays(it.candleDateTime.dayOfWeek.value.toLong() - 1)
+                }
+                PERIOD_MONTH -> {
+                    it.candleDateTime
+                        .withDayOfMonth(1)
+                }
+            }
+            localDateTime.withHour(0)
                 .withMinute(0)
                 .withSecond(0)
                 .withNano(0)
@@ -65,7 +80,7 @@ class MovingAverageService(
             val avgInfo =
                 avgCountList.map { avgCount -> "이동평균(${avgCount}): ${it.average[avgCount]}" }.toList()
                     .joinToString(", ")
-            println("${it.candleDateTime} - O: ${it.openPrice}, H: ${it.highPrice}, L: ${it.lowPrice}, C:${it.closePrice}, $avgInfo")
+            println("${it.candleDateTime} - O: ${it.openPrice}, H: ${it.highPrice}, L: ${it.lowPrice}, C:${it.closePrice}, ${it.periodType}, $avgInfo")
         }
         return LinkedHashMap()
     }
