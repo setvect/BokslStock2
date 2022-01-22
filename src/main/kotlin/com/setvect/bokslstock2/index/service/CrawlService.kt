@@ -20,6 +20,7 @@ import org.springframework.web.client.RestTemplate
 import java.time.LocalDateTime
 import java.util.Collections
 import java.util.Optional
+import javax.transaction.Transactional
 import kotlin.streams.toList
 
 
@@ -29,33 +30,55 @@ class CrawlService(
     private val crawlResourceProperties: CrawlResourceProperties,
     private val stockRepository: StockRepository,
     private val candleRepository: CandleRepository,
-    private val crawlRestTemplate: RestTemplate
+    private val crawlRestTemplate: RestTemplate,
 ) {
     companion object {
         private val START_DATE = LocalDateTime.of(1991, 1, 1, 0, 0)
     }
-
     private val log = LoggerFactory.getLogger(javaClass)
 
     /**
-     * 정해진 기간[range]에 시세 정보를 수집하여 저장함
+     * 등록된 모든 종목에 대한 시세 데이터를 삭제하고 다시 수집
      */
-    fun crawlStock(code: String, range: DateRange) {
-        val stockEntityOptional = stockRepository.findByCode(code)
-        checkExistStock(stockEntityOptional)
-        saveCandleEntityList(stockEntityOptional, range)
+    @Transactional
+    fun crawlStock() {
+        val stockEntities = stockRepository.findAll()
+        stockEntities.forEach {
+            val deleteCount = candleRepository.deleteByStock(it)
+            log.info("시세 데이터 삭제: ${it.name}(${it.code}) - ${String.format("%,d", deleteCount)}건")
+            crawlStock(it.code)
+        }
     }
 
     /**
-     *  마지막 수집일 부터 [end]까지 [code]종목을 일봉 수집
+     * 기존 수집된 데이터를 모두 지우고 전체 기간 수집
      */
-    fun crawlStockIncremental(code: String, end: LocalDateTime) {
+    fun crawlStock(code: String) {
+        val stockEntityOptional = stockRepository.findByCode(code)
+        checkExistStock(stockEntityOptional)
+        saveCandleEntityList(stockEntityOptional, DateRange(START_DATE, LocalDateTime.now()))
+    }
+
+
+    /**
+     * 등록된 모든 종목에 대한 증분 시세 수집
+     */
+    fun crawlStockIncremental() {
+        val stockEntities = stockRepository.findAll()
+        stockEntities.forEach {
+            crawlStockIncremental(it.code)
+        }
+    }
+
+    /**
+     *  마지막 수집일 부터 [end]까지 [code]종목을 시세 수집
+     */
+    fun crawlStockIncremental(code: String, end: LocalDateTime = LocalDateTime.now()) {
         val stockEntityOptional = stockRepository.findByCode(code)
         checkExistStock(stockEntityOptional)
 
         val priceList = candleRepository.list(
-            stockEntityOptional.get(),
-            PageRequest.of(0, 1, Sort.by("candleDateTime").descending())
+            stockEntityOptional.get(), PageRequest.of(0, 1, Sort.by("candleDateTime").descending())
         )
         val start: LocalDateTime = if (priceList.isNotEmpty()) {
             // 완전한 시세 정보를 얻기 위해 마지막 시세 정보를 삭제함
@@ -69,8 +92,7 @@ class CrawlService(
 
     private fun saveCandleEntityList(stockEntityOptional: Optional<StockEntity>, range: DateRange) {
         val stockList = crawlResourceProperties.url.marketPrice
-        val url = stockList
-            .replace("{code}", stockEntityOptional.get().code)
+        val url = stockList.replace("{code}", stockEntityOptional.get().code)
             .replace("{start}", range.getFromDateTimeFormat("yyyyMMdd"))
             .replace("{end}", range.getToDateTimeFormat("yyyyMMdd"))
 

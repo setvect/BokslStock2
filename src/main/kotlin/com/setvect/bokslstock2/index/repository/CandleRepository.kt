@@ -4,6 +4,7 @@ import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
@@ -13,4 +14,12 @@ interface CandleRepository : JpaRepository<CandleEntity, Long> {
      */
     @Query("select c from CandleEntity c where c.stock = :stock")
     fun list(@Param("stock") stock: StockEntity, pageable: Pageable): List<CandleEntity>
+
+    /**
+     * 해당 종목의 시세 데이터를 삭제
+     */
+    @Modifying
+    @Query("delete from CandleEntity c where c.stock = :stock")
+    fun deleteByStock(@Param("stock") stock: StockEntity): Int
+
 }

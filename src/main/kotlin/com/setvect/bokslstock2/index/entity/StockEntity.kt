@@ -6,6 +6,8 @@ import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType.SEQUENCE
 import javax.persistence.Id
+import javax.persistence.OneToMany
+import javax.persistence.OrderBy
 import javax.persistence.Table
 import javax.persistence.UniqueConstraint
 
@@ -38,4 +40,11 @@ class StockEntity(
     @GeneratedValue(strategy = SEQUENCE)
     @Column(name = "STOCK_ID", nullable = false)
     var stockSeq: Long? = null
+
+    /**
+     * 시세 정보
+     */
+    @OneToMany(mappedBy = "stock")
+    @OrderBy("candleDateTime asc")
+    val candleList: List<CandleEntity> = ArrayList()
 }

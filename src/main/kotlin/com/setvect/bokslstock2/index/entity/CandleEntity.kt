@@ -18,10 +18,12 @@ import javax.persistence.Table
  * 시세 정보
  */
 @Entity
-@Table(name = "CB_CANDLE", indexes = [
-    Index(name = "IDX_CANDLE_ENTITY", columnList = "CANDLE_DATE_TIME"),
-    Index(name = "IDX_CANDLE_ENTITY_PERIOD_TYPE", columnList = "PERIOD_TYPE")
-])
+@Table(
+    name = "CB_CANDLE", indexes = [
+        Index(name = "IDX_CANDLE_ENTITY", columnList = "CANDLE_DATE_TIME"),
+        Index(name = "IDX_CANDLE_ENTITY_PERIOD_TYPE", columnList = "PERIOD_TYPE")
+    ]
+)
 class CandleEntity(
     /**
      * 주식 종목
