@@ -6,6 +6,7 @@ import com.setvect.bokslstock2.index.repository.StockRepository
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.TreeMap
+import kotlin.math.roundToInt
 
 @Service
 class MovingAverageService(
@@ -56,13 +57,14 @@ class MovingAverageService(
                     .mapToInt(CandleDto::closePrice)
                     .average()
 
-                groupingCandleList[idx].average[avgCount] = average.asDouble.toInt()
+                groupingCandleList[idx].average[avgCount] = average.asDouble.roundToInt()
             }
         }
 
         groupingCandleList.forEach {
             val avgInfo =
-                avgCountList.map { avgCount -> "이동평균(${avgCount}): ${it.average[avgCount]}" }.toList().joinToString(", ")
+                avgCountList.map { avgCount -> "이동평균(${avgCount}): ${it.average[avgCount]}" }.toList()
+                    .joinToString(", ")
             println("${it.candleDateTime} - O: ${it.openPrice}, H: ${it.highPrice}, L: ${it.lowPrice}, C:${it.closePrice}, $avgInfo")
         }
         return LinkedHashMap()
