@@ -58,13 +58,13 @@ class MabsTradeEntity(
      * 단기 이동평균 가격
      */
     @Column(name = "MA_SHORT", nullable = false)
-    val maShort: Double,
+    val maShort: Int,
 
     /**
      * 장기 이동평균 가격
      */
     @Column(name = "MA_LONG", nullable = false)
-    val maLong: Double,
+    val maLong: Int,
 
     /**
      * 매도시 수익률
@@ -80,7 +80,7 @@ class MabsTradeEntity(
      * - 매도일 경우 매도 단가
      */
     @Column(name = "UNIT_PRICE", nullable = false)
-    val unitPrice: Double,
+    val unitPrice: Int,
 
     /**
      * 거래시간

@@ -32,16 +32,16 @@ class MabsConditionEntity(
      */
     @Column(name = "PERIOD_TYPE", length = 20, nullable = false)
     @Enumerated(STRING)
-    private val periodType: PeriodType,
+    val periodType: PeriodType,
 
     /**
-     * 상승 매수률
+     * 상승 매수률(양수)
      */
     @Column(name = "UP_BUY_RATE", nullable = false)
     val upBuyRate: Double,
 
     /**
-     * 하락 매도률
+     * 하락 매도률(양수)
      */
     @Column(name = "DOWN_BUY_RATE", nullable = false)
     val downSellRate: Double,

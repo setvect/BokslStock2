@@ -13,7 +13,7 @@ data class TradeMabsCondition(
     /**
      * 대상 종목코드
      */
-    val stockCode: Set<String>,
+    val stockCode: String,
     /**
      * 최대매매 종목수
      */

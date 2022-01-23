@@ -51,10 +51,10 @@
 | TRADE_TYPE         | 매수/매도          |     | VARCHAR  | 20  | Y        | BUY, SELL         |
 | HIGH_YIELD         | 최고 수익률        |     | NUMBER   |     | Y        |                   |
 | LOW_YIELD          | 최저 수익률        |     | NUMBER   |     | Y        |                   |
-| MA_SHORT           | 단기 이동평균 가격 |     | NUMBER   |     | Y        |                   |
-| MA_LONG            | 장기 이동평균 가격 |     | NUMBER   |     | Y        |                   |
+| MA_SHORT           | 단기 이동평균 가격 |     | INTEGER  |     | Y        |                   |
+| MA_LONG            | 장기 이동평균 가격 |     | INTEGER  |     | Y        |                   |
 | YIELD              | 매도시 수익률      |     | NUMBER   |     | Y        |                   |
-| UNIT_PRICE         | 거래 단가          |     | NUMBER   |     | Y        |                   |
+| UNIT_PRICE         | 거래 단가          |     | INTEGER  |     | Y        |                   |
 | TRADE_DATE         | 거래시간           |     | DATETIME |     | Y        |                   |
 
 - Index

@@ -7,7 +7,7 @@ import kotlin.math.pow
  */
 object ApplicationUtil {
     /**
-     * @param prices 시계열 가격 변화
+     * [prices] 시계열 가격 변화
      * @return 최대 낙폭 계산 - MDD(Max. Draw Down)
      */
     fun getMdd(prices: List<Double>): Double {
@@ -24,7 +24,7 @@ object ApplicationUtil {
     }
 
     /**
-     * @param prices 시계열 가격 변화
+     * [prices] 시계열 가격 변화
      * @return 수익률 1 == 100%
      */
     fun getYield(prices: List<Double>): Double {
@@ -34,21 +34,30 @@ object ApplicationUtil {
     }
 
     /**
-     * @param start   시작값
-     * @param current 현재 값
+     * 수익률 계산
+     * [base] 기준 값, [delta] 변화 값
      * @return 수익률 1 == 100%
      */
-    fun getYield(start: Double, current: Double): Double {
-        return current / start - 1
+    fun getYield(base: Int, delta: Int): Double {
+        return getYield(base.toDouble(), delta.toDouble())
+    }
+
+    /**
+     * 수익률 계산
+     * [base] 기준 값, [delta] 변화 값
+     * @return 수익률 1 == 100%
+     */
+    fun getYield(base: Double, delta: Double): Double {
+        return delta / base - 1
     }
 
     /**
      * 연 복리
      * CAGR = (EV / BV) ^ (1 / dayCount) - 1
      *
-     * @param bv       초기 값, BV (시작 값)
-     * @param ev       종료 값, EV (종료 값)
-     * @param dayCount 일수
+     * [bv]       초기 값, BV (시작 값)
+     * [ev]       종료 값, EV (종료 값)
+     * [dayCount] 일수
      * @return 연복리
      */
     fun getCagr(bv: Double, ev: Double, dayCount: Int): Double {

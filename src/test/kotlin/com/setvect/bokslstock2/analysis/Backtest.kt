@@ -1,14 +1,17 @@
 package com.setvect.bokslstock2.analysis
 
+import com.setvect.bokslstock2.StockCode
+import com.setvect.bokslstock2.analysis.entity.MabsConditionEntity
 import com.setvect.bokslstock2.analysis.service.MabsBacktestService
 import com.setvect.bokslstock2.analysis.service.MovingAverageService
-import com.setvect.bokslstock2.index.model.PeriodType
+import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
 import com.setvect.bokslstock2.index.repository.StockRepository
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.annotation.Rollback
 import org.springframework.test.context.ActiveProfiles
 import javax.transaction.Transactional
 
@@ -30,9 +33,9 @@ class Backtest {
     @Transactional
     fun 이동평균계산() {
         val movingAverage =
-            movingAverageService.getMovingAverage("069500", PeriodType.PERIOD_DAY, listOf(5, 20, 60, 120))
-//        movingAverageService.getMovingAverage("069500", PeriodType.PERIOD_WEEK, listOf(5, 20, 60, 120))
-//        movingAverageService.getMovingAverage("069500", PeriodType.PERIOD_MONTH, listOf(5, 20, 60, 120))
+            movingAverageService.getMovingAverage(StockCode.CODE_069500, PERIOD_DAY, listOf(5, 20, 60, 120))
+//        movingAverageService.getMovingAverage(StockCode.CODE_069500, PeriodType.PERIOD_WEEK, listOf(5, 20, 60, 120))
+//        movingAverageService.getMovingAverage(StockCode.CODE_069500, PeriodType.PERIOD_MONTH, listOf(5, 20, 60, 120))
 
         movingAverage.forEach {
             val avgInfo = it.average.entries
@@ -48,7 +51,7 @@ class Backtest {
     @Test
     @Transactional
     fun 종목과_시세조회() {
-        val stockOp = stockRepository.findByCode("069500")
+        val stockOp = stockRepository.findByCode(StockCode.CODE_069500)
         val stock = stockOp.get()
 
         log.info("${stock.name}(${stock.code}) ${stock.candleList.size}")
@@ -56,5 +59,75 @@ class Backtest {
             log.info("${it.candleDateTime}: close:${String.format("%,d", it.closePrice)}")
         }
         println("끝.")
+    }
+
+    @Test
+    fun 이동평균돌파전략_조건생성() {
+        val stock = stockRepository.findByCode(StockCode.CODE_069500)
+
+        val pairList = listOf(
+            Pair(3, 20),
+            Pair(5, 20),
+            Pair(10, 20),
+            Pair(3, 25),
+            Pair(5, 25),
+            Pair(10, 25),
+            Pair(5, 30),
+            Pair(10, 30),
+            Pair(20, 30),
+            Pair(5, 40),
+            Pair(10, 40),
+            Pair(20, 40),
+            Pair(30, 40),
+            Pair(5, 50),
+            Pair(10, 50),
+            Pair(20, 50),
+            Pair(30, 50),
+            Pair(5, 60),
+            Pair(10, 60),
+            Pair(20, 60),
+            Pair(30, 60),
+            Pair(5, 80),
+            Pair(10, 80),
+            Pair(20, 80),
+            Pair(30, 80),
+            Pair(5, 90),
+            Pair(10, 90),
+            Pair(20, 90),
+            Pair(30, 90),
+            Pair(5, 100),
+            Pair(10, 100),
+            Pair(20, 100),
+            Pair(30, 100),
+            Pair(5, 110),
+            Pair(10, 110),
+            Pair(20, 110),
+            Pair(30, 110),
+            Pair(5, 120),
+            Pair(10, 120),
+            Pair(20, 120),
+            Pair(30, 120),
+        )
+
+        pairList.forEach {
+            val mabsCondition = MabsConditionEntity(
+                stock = stock.get(),
+                periodType = PERIOD_DAY,
+                upBuyRate = 0.01,
+                downSellRate = 0.01,
+                it.first,
+                it.second,
+                ""
+            )
+            backtestService.saveCondition(mabsCondition)
+        }
+
+    }
+
+    @Test
+    @Transactional
+    @Rollback(false)
+    fun 이동평균돌파전략_백테스트() {
+        backtestService.runTestBatch()
     }
 }

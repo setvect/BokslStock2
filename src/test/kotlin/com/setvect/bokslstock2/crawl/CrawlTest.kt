@@ -1,5 +1,6 @@
 package com.setvect.bokslstock2.crawl
 
+import com.setvect.bokslstock2.StockCode
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.index.service.CrawlService
@@ -14,24 +15,6 @@ import org.springframework.test.context.ActiveProfiles
 @SpringBootTest
 @ActiveProfiles("local")
 class CrawlTest {
-    companion object {
-        private val stockCodeList = mapOf(
-            "069500" to "KODEX 200",
-            "122630" to "KODEX 레버리지",
-            "252670" to "KODEX 200선물인버스2X",
-            "229200" to "KODEX 코스닥 150",
-            "233740" to "KODEX 코스닥150 레버리지",
-            "251340" to "KODEX 코스닥150선물인버스",
-            "114800" to "KODEX 인버스",
-            "005930" to "삼성전자",
-            "133690" to "TIGER 미국나스닥100",
-            "102110" to "TIGER 200",
-            "091220" to "TIGER 은행",
-            "161510" to "ARIRANG 고배당주",
-            "192090" to "TIGER 차이나CSI300"
-        )
-    }
-
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
     @Autowired
@@ -42,7 +25,7 @@ class CrawlTest {
 
     @Test
     fun addStock() {
-        stockCodeList.forEach {
+        StockCode.STOCK_CODE_MAP.forEach {
             val stockEntityOptional = stockRepository.findByCode(it.key)
             if (stockEntityOptional.isEmpty) {
                 println("종목 등록: $it")
