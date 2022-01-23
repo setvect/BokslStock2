@@ -1,5 +1,6 @@
 package com.setvect.bokslstock2.analysis
 
+import com.setvect.bokslstock2.analysis.service.MabsBacktestService
 import com.setvect.bokslstock2.analysis.service.MovingAverageService
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.StockRepository
@@ -22,12 +23,26 @@ class Backtest {
     @Autowired
     private lateinit var movingAverageService: MovingAverageService
 
+    @Autowired
+    private lateinit var backtestService: MabsBacktestService
+
     @Test
     @Transactional
     fun 이동평균계산() {
-        movingAverageService.getMovingAverage("069500", PeriodType.PERIOD_DAY, listOf(5, 20, 60, 120))
+        val movingAverage =
+            movingAverageService.getMovingAverage("069500", PeriodType.PERIOD_DAY, listOf(5, 20, 60, 120))
 //        movingAverageService.getMovingAverage("069500", PeriodType.PERIOD_WEEK, listOf(5, 20, 60, 120))
 //        movingAverageService.getMovingAverage("069500", PeriodType.PERIOD_MONTH, listOf(5, 20, 60, 120))
+
+        movingAverage.forEach {
+            val avgInfo = it.average.entries
+                .map { entry -> "이동평균(${entry.key}): ${it.average[entry.key]}" }
+                .toList()
+                .joinToString(", ")
+            println("${it.candleDateTime} - O: ${it.openPrice}, H: ${it.highPrice}, L: ${it.lowPrice}, C:${it.closePrice}, ${it.periodType}, $avgInfo")
+        }
+
+//        movingAverage.backtest()
     }
 
     @Test
