@@ -28,14 +28,21 @@ data class TradeReportItem(
     val gains: Long
 ) {
     /**
-     * @return 투자금 + 투자 수익 - 매매수수료
+     * @return 매매 금액
      */
-    fun getInvestResult(): Long {
-        return qty * mabsTradeEntity.unitPrice + gains - feePrice
+    fun getAmount(): Long {
+        return (qty * mabsTradeEntity.unitPrice).toLong()
     }
 
     /**
-     * @return 현금 + 전체코인 매수금액
+     * @return 투자금 + 투자 수익 - 매매수수료
+     */
+    fun getInvestResult(): Long {
+        return getAmount() + gains - feePrice
+    }
+
+    /**
+     * @return 현금 + 매수금액
      */
     fun getFinalResult(): Long {
         return qty * mabsTradeEntity.unitPrice + cash

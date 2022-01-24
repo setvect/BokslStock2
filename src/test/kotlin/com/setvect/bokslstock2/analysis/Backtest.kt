@@ -140,6 +140,8 @@ class Backtest {
     @Test
     @Transactional
     fun 이동평균돌파전략_리포트생성() {
+//        val conditionEntityOptional = mabsConditionRepository.findById(139181)
+
         val conditionList = mabsConditionRepository.findAll()
         conditionList.forEach {
             backtestService.makeReport(

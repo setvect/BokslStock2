@@ -47,4 +47,9 @@ class StockEntity(
     @OneToMany(mappedBy = "stock")
     @OrderBy("candleDateTime asc")
     val candleList: List<CandleEntity> = ArrayList()
+
+
+    fun getNameCode(): String {
+        return "${name}(${code})"
+    }
 }

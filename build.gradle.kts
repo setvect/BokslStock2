@@ -34,6 +34,8 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("org.apache.httpcomponents:httpclient")
 	implementation("com.google.code.gson:gson")
+	implementation("commons-io:commons-io:2.11.0")
+	implementation("org.apache.commons:commons-lang3")
 
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("com.h2database:h2")
