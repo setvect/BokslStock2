@@ -36,12 +36,12 @@ class DateRange {
     /**
      * 시작 날짜
      */
-    private var from: LocalDateTime
+    val from: LocalDateTime
 
     /**
      * 종료 날짜
      */
-    private var to: LocalDateTime
+    val to: LocalDateTime
 
     /**
      * 오늘 날짜를 기준으로 해서 차이 값을 생성 한다.

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import java.time.LocalDateTime
 
 interface CandleRepository : JpaRepository<CandleEntity, Long> {
     /**
@@ -21,5 +22,17 @@ interface CandleRepository : JpaRepository<CandleEntity, Long> {
     @Modifying
     @Query("delete from CandleEntity c where c.stock = :stock")
     fun deleteByStock(@Param("stock") stock: StockEntity): Int
+
+
+    @Query(
+        "select c from CandleEntity c " +
+                " where c.stock = :stock and c.candleDateTime between :candleDateTimeStart and :candleDateTimeEnd" +
+                " order by c.candleDateTime"
+    )
+    fun findByRange(
+        @Param("stock") stock: StockEntity,
+        @Param("candleDateTimeStart") candleDateTimeStart: LocalDateTime,
+        @Param("candleDateTimeEnd") candleDateTimeEnd: LocalDateTime
+    ): List<CandleEntity>
 
 }

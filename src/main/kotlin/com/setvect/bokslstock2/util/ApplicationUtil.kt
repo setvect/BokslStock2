@@ -6,6 +6,7 @@ import kotlin.math.pow
  * 어플리케이션의 의존적인 유틸성 메소드
  */
 object ApplicationUtil {
+
     /**
      * [prices] 시계열 가격 변화
      * @return 최대 낙폭 계산 - MDD(Max. Draw Down)
@@ -21,6 +22,14 @@ object ApplicationUtil {
             }
         }
         return mdd
+    }
+
+    fun getMddByInt(prices: List<Int>): Double {
+        return getMdd(prices.map { it.toDouble() })
+    }
+
+    fun getMddByLong(prices: List<Long>): Double {
+        return getMdd(prices.map { it.toDouble() })
     }
 
     /**
@@ -39,6 +48,15 @@ object ApplicationUtil {
      * @return 수익률 1 == 100%
      */
     fun getYield(base: Int, delta: Int): Double {
+        return getYield(base.toDouble(), delta.toDouble())
+    }
+
+    /**
+     * 수익률 계산
+     * [base] 기준 값, [delta] 변화 값
+     * @return 수익률 1 == 100%
+     */
+    fun getYield(base: Long, delta: Long): Double {
         return getYield(base.toDouble(), delta.toDouble())
     }
 

@@ -70,6 +70,6 @@ class MabsConditionEntity(
     val mabsConditionSeq = 0
 
     @OneToMany(mappedBy = "mabsConditionEntity")
-    @OrderBy("tradeTimeKst ASC")
-    val mabsTradeEntityList: List<MabsTradeEntity> = ArrayList()
+    @OrderBy("tradeDate ASC")
+    val tradeList: List<MabsTradeEntity> = ArrayList()
 }

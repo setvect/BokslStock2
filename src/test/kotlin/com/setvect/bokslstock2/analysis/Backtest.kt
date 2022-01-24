@@ -2,10 +2,13 @@ package com.setvect.bokslstock2.analysis
 
 import com.setvect.bokslstock2.StockCode
 import com.setvect.bokslstock2.analysis.entity.MabsConditionEntity
+import com.setvect.bokslstock2.analysis.model.AnalysisMabsCondition
+import com.setvect.bokslstock2.analysis.repository.MabsConditionRepository
 import com.setvect.bokslstock2.analysis.service.MabsBacktestService
 import com.setvect.bokslstock2.analysis.service.MovingAverageService
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
 import com.setvect.bokslstock2.index.repository.StockRepository
+import com.setvect.bokslstock2.util.DateRange
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -13,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.annotation.Rollback
 import org.springframework.test.context.ActiveProfiles
+import java.time.LocalDateTime
 import javax.transaction.Transactional
 
 @SpringBootTest
@@ -28,6 +32,9 @@ class Backtest {
 
     @Autowired
     private lateinit var backtestService: MabsBacktestService
+
+    @Autowired
+    private lateinit var mabsConditionRepository: MabsConditionRepository
 
     @Test
     @Transactional
@@ -121,7 +128,6 @@ class Backtest {
             )
             backtestService.saveCondition(mabsCondition)
         }
-
     }
 
     @Test
@@ -129,5 +135,24 @@ class Backtest {
     @Rollback(false)
     fun 이동평균돌파전략_백테스트() {
         backtestService.runTestBatch()
+    }
+
+    @Test
+    @Transactional
+    fun 이동평균돌파전략_리포트생성() {
+        val conditionList = mabsConditionRepository.findAll()
+        conditionList.forEach {
+            backtestService.makeReport(
+                AnalysisMabsCondition(
+                    tradeCondition = it,
+                    range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now()),
+                    investRatio = 0.99,
+                    cash = 10_000_000,
+                    feeBuy = 0.001,
+                    feeSell = 0.001,
+                    comment = ""
+                )
+            )
+        }
     }
 }
