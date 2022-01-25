@@ -21,6 +21,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
+import java.sql.Timestamp
 import java.time.LocalDateTime
 import javax.transaction.Transactional
 import kotlin.streams.toList
@@ -51,9 +52,11 @@ class MabsBacktestService(
     @Transactional
     fun runTestBatch() {
         val conditionList = mabsConditionRepository.findAll()
+        var i = 0
         conditionList.forEach {
             mabsTradeRepository.deleteByCondition(it)
             backtest(it)
+            log.info("${++i}/${conditionList.size}")
         }
     }
 
@@ -160,6 +163,66 @@ class MabsBacktestService(
         val result = analysis(tradeItemHistory, condition)
         printSummary(result)
         makeReportFile(result)
+    }
+
+    /**
+     *  복수개의 조건에 대한 분석 요약 리포트를 만듦
+     */
+    fun makeSummaryReport(conditionList: List<AnalysisMabsCondition>) {
+        val resultList = conditionList.map { condition ->
+            val tradeItemHistory = trade(condition)
+            analysis(tradeItemHistory, condition)
+        }.toList()
+
+        val header = "분석기간,분석 아이디,종목,투자비율,최초 투자금액,매수 수수료,매도 수수료," +
+                "매매주기,단기 이동평균 기간,장기 이동평균 기간,하락매도률,상승매도률," +
+                "조건 설명," +
+                "매수 후 보유 수익,매수 후 보유 MDD," +
+                "실현 수익,실현 MDD,매매 횟수,승률,CAGR"
+        val report = StringBuilder(header.replace(",", "\t") + "\n")
+
+        var i = 0
+        resultList.forEach { result ->
+            val multiCondition = result.analysisMabsCondition
+            val tradeCondition = multiCondition.tradeCondition
+
+            val reportRow = StringBuilder()
+            reportRow.append(String.format("%s\t", multiCondition.range))
+            reportRow.append(String.format("%s\t", tradeCondition.mabsConditionSeq))
+            reportRow.append(String.format("%s\t", tradeCondition.stock.getNameCode()))
+            reportRow.append(String.format("%,.2f%%\t", multiCondition.investRatio * 100))
+            reportRow.append(String.format("%,d\t", multiCondition.cash))
+            reportRow.append(String.format("%,.2f%%\t", multiCondition.feeBuy * 100))
+            reportRow.append(String.format("%,.2f%%\t", multiCondition.feeSell * 100))
+            reportRow.append(String.format("%s\t", tradeCondition.periodType))
+            reportRow.append(String.format("%d\t", tradeCondition.shortPeriod))
+            reportRow.append(String.format("%d\t", tradeCondition.longPeriod))
+            reportRow.append(String.format("%,.2f%%\t", tradeCondition.downSellRate * 100))
+            reportRow.append(String.format("%,.2f%%\t", tradeCondition.upBuyRate * 100))
+            reportRow.append(String.format("%s\t", multiCondition.comment))
+
+            val sumYield: YieldMdd = result.stockHoldYield
+            reportRow.append(String.format("%,.2f%%\t", sumYield.yield * 100))
+            reportRow.append(String.format("%,.2f%%\t", sumYield.mdd * 100))
+
+            val totalYield: TotalYield = result.totalYield
+            reportRow.append(String.format("%,.2f%%\t", totalYield.yield * 100))
+            reportRow.append(String.format("%,.2f%%\t", totalYield.mdd * 100))
+            reportRow.append(String.format("%d\t", totalYield.getTradeCount()))
+            reportRow.append(String.format("%,.2f%%\t", totalYield.getWinRate() * 100))
+            reportRow.append(String.format("%,.2f%%\t", totalYield.getCagr() * 100))
+
+            report.append(reportRow).append("\n")
+
+            log.info("${++i}/${conditionList.size}")
+        }
+
+
+        // 결과 저장
+        val reportFile =
+            File("./backtest-result", "이평선돌파_전략_백테스트_분석결과_" + Timestamp.valueOf(LocalDateTime.now()).time + ".txt")
+        FileUtils.writeStringToFile(reportFile, report.toString(), "euc-kr")
+        println("결과 파일:" + reportFile.name)
     }
 
 
@@ -287,8 +350,8 @@ class MabsBacktestService(
         val candleList = candleRepository.findByRange(stock, range.from, range.to)
         val priceList = candleList.map { it.closePrice }.toList()
         return YieldMdd(
-            ApplicationUtil.getMdd(priceList.map { it.toDouble() }),
-            ApplicationUtil.getYield(priceList.map { it.toDouble() })
+            ApplicationUtil.getYield(priceList.map { it.toDouble() }),
+            ApplicationUtil.getMdd(priceList.map { it.toDouble() })
         )
     }
 

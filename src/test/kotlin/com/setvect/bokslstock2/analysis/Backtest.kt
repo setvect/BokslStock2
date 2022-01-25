@@ -74,8 +74,6 @@ class Backtest {
 
     @Test
     fun 이동평균돌파전략_조건생성() {
-        val stock = stockRepository.findByCode(StockCode.CODE_069500)
-
         val pairList = listOf(
             Pair(3, 20),
             Pair(5, 20),
@@ -120,17 +118,20 @@ class Backtest {
             Pair(30, 120),
         )
 
-        pairList.forEach {
-            val mabsCondition = MabsConditionEntity(
-                stock = stock.get(),
-                periodType = PERIOD_DAY,
-                upBuyRate = 0.01,
-                downSellRate = 0.01,
-                it.first,
-                it.second,
-                ""
-            )
-            backtestService.saveCondition(mabsCondition)
+        val stockList = stockRepository.findAll()
+        stockList.forEach { stock ->
+            pairList.forEach {
+                val mabsCondition = MabsConditionEntity(
+                    stock = stock,
+                    periodType = PERIOD_DAY,
+                    upBuyRate = 0.01,
+                    downSellRate = 0.01,
+                    it.first,
+                    it.second,
+                    ""
+                )
+                backtestService.saveCondition(mabsCondition)
+            }
         }
     }
 
@@ -144,30 +145,12 @@ class Backtest {
     @Test
     @Transactional
     fun 이동평균돌파전략_리포트생성() {
-//        val conditionEntityOptional = mabsConditionRepository.findById(139190)
-//        conditionEntityOptional.ifPresent {
-//            backtestService.makeReport(
-//                AnalysisMabsCondition(
-//                    tradeCondition = it,
-//                    range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now()),
-//                    investRatio = 0.99,
-//                    cash = 10_000_000,
-//                    feeBuy = 0.001,
-//                    feeSell = 0.001,
-//                    comment = ""
-//                )
-//            )
-//        }
-
-
-        val conditionList = mabsConditionRepository.findAll()
-        conditionList.forEach {
-            val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
-            val priceRange = candleRepository.findByCandleDateTimeBetween(it.stock, range.from, range.to)
+        val conditionEntityOptional = mabsConditionRepository.findById(148103)
+        conditionEntityOptional.ifPresent {
             backtestService.makeReport(
                 AnalysisMabsCondition(
                     tradeCondition = it,
-                    range = priceRange,
+                    range = DateRange(LocalDateTime.of(1990, 1, 1, 0, 0), LocalDateTime.now()),
                     investRatio = 0.99,
                     cash = 10_000_000,
                     feeBuy = 0.001,
@@ -176,5 +159,44 @@ class Backtest {
                 )
             )
         }
+
+
+//        val conditionList = mabsConditionRepository.findAll()
+//        conditionList.forEach {
+//            val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
+//            val priceRange = candleRepository.findByCandleDateTimeBetween(it.stock, range.from, range.to)
+//            backtestService.makeReport(
+//                AnalysisMabsCondition(
+//                    tradeCondition = it,
+//                    range = priceRange,
+//                    investRatio = 0.99,
+//                    cash = 10_000_000,
+//                    feeBuy = 0.001,
+//                    feeSell = 0.001,
+//                    comment = ""
+//                )
+//            )
+//        }
+    }
+
+    @Test
+    @Transactional
+    fun 분석요약리포트_리포트생성() {
+        val conditionList = mabsConditionRepository.findAll()
+        val mabsConditionList = conditionList.map {
+            val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
+            val priceRange = candleRepository.findByCandleDateTimeBetween(it.stock, range.from, range.to)
+            AnalysisMabsCondition(
+                tradeCondition = it,
+                range = priceRange,
+                investRatio = 0.99,
+                cash = 10_000_000,
+                feeBuy = 0.001,
+                feeSell = 0.001,
+                comment = ""
+            )
+        }.toList()
+
+        backtestService.makeSummaryReport(mabsConditionList)
     }
 }
