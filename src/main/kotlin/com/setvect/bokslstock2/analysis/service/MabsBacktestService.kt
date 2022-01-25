@@ -186,22 +186,24 @@ class MabsBacktestService(
             if (it.tradeType == BUY) {
                 val buyQty: Int = ((cash * condition.investRatio) / it.unitPrice).toInt()
                 val buyAmount: Int = buyQty * it.unitPrice
-                cash -= buyAmount
+                val feePrice = (condition.feeBuy * buyAmount).toInt()
+                cash -= buyAmount - feePrice
                 val tradeReportItem = TradeReportItem(
                     mabsTradeEntity = it,
                     qty = buyQty,
                     cash = cash,
-                    feePrice = (condition.feeBuy * buyAmount).toInt(),
+                    feePrice = feePrice,
                     gains = 0
                 )
                 tradeItemHistory.add(tradeReportItem)
             } else if (it.tradeType == SELL) {
-                // 투자수익금: (매수수량 * 현재가격) * 수익률 - 수수료
-                val sellPrice = tradeItemHistory.last().qty * it.unitPrice
-                val sellFee: Int = (sellPrice * condition.feeSell).toInt()
-                val gains: Long = (sellPrice * it.yield - sellFee).toLong()
+                // 투자수익금: 매수금액 * 수익률 - 수수료
+                val buyTrade = tradeItemHistory.last()
+                val sellPrice = (buyTrade.getBuyAmount() * (1 + it.yield)).toLong()
+                val sellFee = (sellPrice * condition.feeSell).toInt()
+                val gains = (sellPrice - buyTrade.getBuyAmount())
 
-                cash += sellPrice + gains
+                cash += sellPrice - sellFee
 
                 val tradeReportItem = TradeReportItem(
                     mabsTradeEntity = it, qty = 0, cash = cash, feePrice = sellFee, gains = gains
@@ -240,18 +242,16 @@ class MabsBacktestService(
         tradeItemHistory: ArrayList<TradeReportItem>, condition: AnalysisMabsCondition
     ): TotalYield {
         if (tradeItemHistory.isEmpty()) {
-            // TODO 날짜 차이 계산
             return TotalYield(
                 yield = 0.0, mdd = 0.0, dayCount = condition.range.diffDays.toInt(), gainCount = 0, lossCount = 0
             )
         }
 
-        val lastCash = tradeItemHistory.last().getFinalResult()
-
-        val startCash = tradeItemHistory.first().getFinalResult()
+        val lastCash = tradeItemHistory.last().getEvaluationPrice()
+        val startCash = condition.cash
         val realYield = ApplicationUtil.getYield(startCash, lastCash)
 
-        val finalResultList = tradeItemHistory.stream().map(TradeReportItem::getFinalResult).toList()
+        val finalResultList = tradeItemHistory.stream().map(TradeReportItem::getEvaluationPrice).toList()
         val realMdd = ApplicationUtil.getMddByLong(finalResultList)
         // TODO 날짜 차리 잘 계산
         val totalYield = TotalYield(realYield, realMdd, condition.range.diffDays.toInt())
@@ -275,7 +275,7 @@ class MabsBacktestService(
         tradeItemHistory: ArrayList<TradeReportItem>
     ): WinningRate {
         val sellList = tradeItemHistory.filter { it.mabsTradeEntity.tradeType == SELL }.toList()
-        val totalInvest = tradeItemHistory.sumOf { it.getInvestResult() }
+        val totalInvest = tradeItemHistory.sumOf { it.gains }
         val gainCount = tradeItemHistory.count { it.gains > 0 }
         return WinningRate(gainCount, sellList.size - gainCount, totalInvest)
     }
@@ -318,7 +318,7 @@ class MabsBacktestService(
      */
     private fun makeReportFile(result: AnalysisReportResult) {
         val header =
-            "날짜,종목,매매 구분,단기 이동평균,장기 이동평균,매매 수량,매매 금액,체결 가격,최고수익률,최저수익률,실현 수익률,현금,수수료,투자 수익(수수료포함),투자 결과,현금 매수금액 - 수수료,수익비"
+            "날짜,종목,매매 구분,단기 이동평균,장기 이동평균,매매 수량,매매 금액,체결 가격,최고수익률,최저수익률,실현 수익률,수수료,투자 수익(수수료포함),매매후 보유 현금,평가금,수익비"
         val report = StringBuilder(header.replace(",", "\t")).append("\n")
 
         result.tradeHistory.forEach { row: TradeReportItem ->
@@ -332,17 +332,21 @@ class MabsBacktestService(
             report.append(String.format("%,d\t", mabsTradeEntity.maShort))
             report.append(String.format("%,d\t", mabsTradeEntity.maLong))
             report.append(String.format("%,d\t", row.qty))
-            report.append(String.format("%,d\t", row.getAmount()))
+            report.append(String.format("%,d\t", row.getBuyAmount()))
             report.append(String.format("%,d\t", mabsTradeEntity.unitPrice))
             report.append(String.format("%,.2f%%\t", mabsTradeEntity.highYield * 100))
             report.append(String.format("%,.2f%%\t", mabsTradeEntity.lowYield * 100))
             report.append(String.format("%,.2f%%\t", mabsTradeEntity.yield * 100))
-            report.append(String.format("%,d\t", row.cash))
             report.append(String.format("%,d\t", row.feePrice))
             report.append(String.format("%,d\t", row.gains))
-            report.append(String.format("%,d\t", row.getInvestResult()))
-            report.append(String.format("%,d\t", row.getFinalResult()))
-            report.append(String.format("%,.2f\n", row.getFinalResult() / result.analysisMabsCondition.cash.toDouble()))
+            report.append(String.format("%,d\t", row.cash))
+            report.append(String.format("%,d\t", row.getEvaluationPrice()))
+            report.append(
+                String.format(
+                    "%,.2f\n",
+                    row.getEvaluationPrice() / result.analysisMabsCondition.cash.toDouble()
+                )
+            )
         }
 
         report.append("\n-----------\n")
@@ -363,6 +367,7 @@ class MabsBacktestService(
 
         val condition = result.analysisMabsCondition
         val range: DateRange = condition.range
+        report.append(String.format("분석기간\t %s", range)).append("\n")
         report.append(String.format("분석기간\t %s", range)).append("\n")
         report.append(String.format("투자비율\t %,.2f%%", condition.investRatio * 100)).append("\n")
         report.append(String.format("최초 투자금액\t %,d", condition.cash)).append("\n")

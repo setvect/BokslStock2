@@ -2,6 +2,7 @@ package com.setvect.bokslstock2.index.repository
 
 import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
+import com.setvect.bokslstock2.util.DateRange
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
@@ -26,13 +27,28 @@ interface CandleRepository : JpaRepository<CandleEntity, Long> {
 
     @Query(
         "select c from CandleEntity c " +
-                " where c.stock = :stock and c.candleDateTime between :candleDateTimeStart and :candleDateTimeEnd" +
+                " where c.stock = :stock and c.candleDateTime between :start and :end" +
                 " order by c.candleDateTime"
     )
     fun findByRange(
         @Param("stock") stock: StockEntity,
-        @Param("candleDateTimeStart") candleDateTimeStart: LocalDateTime,
-        @Param("candleDateTimeEnd") candleDateTimeEnd: LocalDateTime
+        @Param("start") start: LocalDateTime,
+        @Param("end") end: LocalDateTime
     ): List<CandleEntity>
 
+
+    /**
+     * [stock] 종목에서 [start] [end] 범위 안에 시세가 포함된 범위를 반환
+     */
+    @Query(
+        "select new com.setvect.bokslstock2.util.DateRange(min(c.candleDateTime), max(c.candleDateTime)) " +
+                " from CandleEntity c " +
+                " where c.candleDateTime between :start and :end" +
+                " and c.stock = :stock "
+    )
+    fun findByCandleDateTimeBetween(
+        @Param("stock") stock: StockEntity,
+        @Param("start") start: LocalDateTime,
+        @Param("end") end: LocalDateTime
+    ): DateRange
 }

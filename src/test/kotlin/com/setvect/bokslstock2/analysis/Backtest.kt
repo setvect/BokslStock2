@@ -7,6 +7,7 @@ import com.setvect.bokslstock2.analysis.repository.MabsConditionRepository
 import com.setvect.bokslstock2.analysis.service.MabsBacktestService
 import com.setvect.bokslstock2.analysis.service.MovingAverageService
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
+import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.util.DateRange
 import org.junit.jupiter.api.Test
@@ -35,6 +36,9 @@ class Backtest {
 
     @Autowired
     private lateinit var mabsConditionRepository: MabsConditionRepository
+
+    @Autowired
+    private lateinit var candleRepository: CandleRepository
 
     @Test
     @Transactional
@@ -140,14 +144,30 @@ class Backtest {
     @Test
     @Transactional
     fun 이동평균돌파전략_리포트생성() {
-//        val conditionEntityOptional = mabsConditionRepository.findById(139181)
+//        val conditionEntityOptional = mabsConditionRepository.findById(139190)
+//        conditionEntityOptional.ifPresent {
+//            backtestService.makeReport(
+//                AnalysisMabsCondition(
+//                    tradeCondition = it,
+//                    range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now()),
+//                    investRatio = 0.99,
+//                    cash = 10_000_000,
+//                    feeBuy = 0.001,
+//                    feeSell = 0.001,
+//                    comment = ""
+//                )
+//            )
+//        }
+
 
         val conditionList = mabsConditionRepository.findAll()
         conditionList.forEach {
+            val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
+            val priceRange = candleRepository.findByCandleDateTimeBetween(it.stock, range.from, range.to)
             backtestService.makeReport(
                 AnalysisMabsCondition(
                     tradeCondition = it,
-                    range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now()),
+                    range = priceRange,
                     investRatio = 0.99,
                     cash = 10_000_000,
                     feeBuy = 0.001,
