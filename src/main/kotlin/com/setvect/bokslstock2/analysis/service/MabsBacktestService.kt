@@ -34,7 +34,7 @@ class MabsBacktestService(
     val mabsConditionRepository: MabsConditionRepository,
     val mabsTradeRepository: MabsTradeRepository,
     val movingAverageService: MovingAverageService,
-    val candleRepository: CandleRepository
+    val candleRepository: CandleRepository,
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -183,6 +183,9 @@ class MabsBacktestService(
 
         var i = 0
         resultList.forEach { result ->
+            // 개별 매매 리포트 만듦
+            makeReportFile(result)
+
             val multiCondition = result.analysisMabsCondition
             val tradeCondition = multiCondition.tradeCondition
 
@@ -216,7 +219,6 @@ class MabsBacktestService(
 
             log.info("${++i}/${conditionList.size}")
         }
-
 
         // 결과 저장
         val reportFile =
@@ -454,7 +456,7 @@ class MabsBacktestService(
             range.toDateFormat,
             tradeCondition.stock.getNameCode()
         )
-        val reportFile = File("./backtest-result", reportFileName)
+        val reportFile = File("./backtest-result/trade-report", reportFileName)
         FileUtils.writeStringToFile(reportFile, report.toString(), "euc-kr")
         println("결과 파일:" + reportFile.name)
     }

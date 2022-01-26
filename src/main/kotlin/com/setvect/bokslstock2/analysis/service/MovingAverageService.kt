@@ -8,6 +8,7 @@ import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_WEEK
 import com.setvect.bokslstock2.index.repository.StockRepository
 import org.springframework.stereotype.Service
 import java.util.TreeMap
+import javax.transaction.Transactional
 import kotlin.math.roundToInt
 
 @Service
@@ -18,6 +19,7 @@ class MovingAverageService(
      * [code] 종목에 대한 [group]단위로 [avgCountList]만큼 이동 평균 계산
      * @return 날짜:해당 날의 이동평균
      */
+    @Transactional
     fun getMovingAverage(
         code: String, group: PeriodType, avgCountList: List<Int>
     ): List<CandleDto> {
