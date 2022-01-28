@@ -58,7 +58,7 @@ class MabsBacktestService(
         conditionList.forEach {
             mabsTradeRepository.deleteByCondition(it)
             backtest(it)
-            log.info("${++i}/${conditionList.size}")
+            log.info("백테스트 진행 ${++i}/${conditionList.size}")
         }
     }
 
@@ -171,9 +171,12 @@ class MabsBacktestService(
      *  복수개의 조건에 대한 분석 요약 리포트를 만듦
      */
     fun makeSummaryReport(conditionList: List<AnalysisMabsCondition>) {
+        var i = 0
         val resultList = conditionList.map { condition ->
             val tradeItemHistory = trade(condition)
-            analysis(tradeItemHistory, condition)
+            val analysis = analysis(tradeItemHistory, condition)
+            log.info("분석 진행 ${++i}/${conditionList.size}")
+            analysis
         }.toList()
 
         val header = "분석기간,분석 아이디,종목,투자비율,최초 투자금액,매수 수수료,매도 수수료," +
@@ -183,7 +186,7 @@ class MabsBacktestService(
                 "실현 수익,실현 MDD,매매 횟수,승률,CAGR"
         val report = StringBuilder(header.replace(",", "\t") + "\n")
 
-        var i = 0
+        i = 0
         resultList.forEach { result ->
             // 개별 매매 리포트 만듦
             makeReportFile(result)
@@ -219,7 +222,7 @@ class MabsBacktestService(
 
             report.append(reportRow).append("\n")
 
-            log.info("${++i}/${conditionList.size}")
+            log.info("리포트생성 진행 ${++i}/${conditionList.size}")
         }
 
         // 결과 저장
