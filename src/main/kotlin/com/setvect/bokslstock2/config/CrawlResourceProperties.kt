@@ -19,6 +19,7 @@ data class CrawlResourceProperties(
         val companyInfo: String,
         val marketPrice: String
     )
+
     data class Config(
         val connectionTimeoutMs: Int,
         val readTimeoutMs: Int

@@ -3,12 +3,12 @@ package com.setvect.bokslstock2.index.repository
 import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.util.DateRange
+import java.time.LocalDateTime
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
-import java.time.LocalDateTime
 
 interface CandleRepository : JpaRepository<CandleEntity, Long> {
     /**

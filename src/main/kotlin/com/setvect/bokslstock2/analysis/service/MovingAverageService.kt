@@ -6,9 +6,9 @@ import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_MONTH
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_WEEK
 import com.setvect.bokslstock2.index.repository.StockRepository
+import java.util.*
 import org.springframework.stereotype.Service
-import java.util.TreeMap
-import javax.transaction.Transactional
+import org.springframework.transaction.annotation.Transactional
 import kotlin.math.roundToInt
 
 @Service

@@ -10,17 +10,16 @@ import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.util.DateRange
 import com.setvect.bokslstock2.util.DateUtil
+import java.time.LocalDateTime
+import java.util.*
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod.GET
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.RestTemplate
-import java.time.LocalDateTime
-import java.util.Collections
-import java.util.Optional
-import javax.transaction.Transactional
 import kotlin.streams.toList
 
 
@@ -35,6 +34,7 @@ class CrawlService(
     companion object {
         private val START_DATE = LocalDateTime.of(1991, 1, 1, 0, 0)
     }
+
     private val log = LoggerFactory.getLogger(javaClass)
 
     /**

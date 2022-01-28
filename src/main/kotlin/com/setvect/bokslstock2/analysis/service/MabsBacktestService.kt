@@ -4,7 +4,9 @@ import com.setvect.bokslstock2.analysis.entity.MabsConditionEntity
 import com.setvect.bokslstock2.analysis.entity.MabsTradeEntity
 import com.setvect.bokslstock2.analysis.model.AnalysisMabsCondition
 import com.setvect.bokslstock2.analysis.model.AnalysisReportResult
-import com.setvect.bokslstock2.analysis.model.AnalysisReportResult.*
+import com.setvect.bokslstock2.analysis.model.AnalysisReportResult.TotalYield
+import com.setvect.bokslstock2.analysis.model.AnalysisReportResult.WinningRate
+import com.setvect.bokslstock2.analysis.model.AnalysisReportResult.YieldMdd
 import com.setvect.bokslstock2.analysis.model.TradeReportItem
 import com.setvect.bokslstock2.analysis.model.TradeType.BUY
 import com.setvect.bokslstock2.analysis.model.TradeType.SELL
@@ -16,14 +18,14 @@ import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import com.setvect.bokslstock2.util.DateUtil
+import java.io.File
+import java.sql.Timestamp
+import java.time.LocalDateTime
 import org.apache.commons.io.FileUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.io.File
-import java.sql.Timestamp
-import java.time.LocalDateTime
-import javax.transaction.Transactional
+import org.springframework.transaction.annotation.Transactional
 import kotlin.streams.toList
 
 /**

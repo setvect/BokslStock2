@@ -58,4 +58,4 @@
 | TRADE_DATE         | 거래시간           |     | DATETIME |     | Y        |                   |
 
 - Index
-  - TRADE_DATE
+    - TRADE_DATE

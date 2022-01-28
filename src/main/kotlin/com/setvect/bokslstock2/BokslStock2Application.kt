@@ -11,5 +11,5 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing
 class BokslStock2Application
 
 fun main(args: Array<String>) {
-	runApplication<BokslStock2Application>(*args)
+    runApplication<BokslStock2Application>(*args)
 }

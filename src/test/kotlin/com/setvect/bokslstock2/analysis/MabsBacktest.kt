@@ -8,9 +8,12 @@ import com.setvect.bokslstock2.analysis.repository.MabsTradeRepository
 import com.setvect.bokslstock2.analysis.service.MabsBacktestService
 import com.setvect.bokslstock2.analysis.service.MovingAverageService
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
+import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_MONTH
+import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_WEEK
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.util.DateRange
+import java.time.LocalDateTime
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -18,9 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.annotation.Rollback
 import org.springframework.test.context.ActiveProfiles
-import java.time.LocalDateTime
+import org.springframework.transaction.annotation.Transactional
 import javax.persistence.EntityManager
-import javax.transaction.Transactional
 
 @SpringBootTest
 @ActiveProfiles("local")
@@ -46,7 +48,7 @@ class MabsBacktest {
     private lateinit var mabsTradeRepository: MabsTradeRepository
 
     @Autowired
-    private  lateinit var entityManager: EntityManager
+    private lateinit var entityManager: EntityManager
 
     @Test
     @Transactional
@@ -55,7 +57,7 @@ class MabsBacktest {
         deleteBacktestData()
 
         // 1. 조건 만들기
-        조건생성_일봉()
+        조건생성_월봉()
 
         // 2. 모든 조건에 대해 백테스트
         backtestService.runTestBatch()
@@ -210,6 +212,104 @@ class MabsBacktest {
                 val mabsCondition = MabsConditionEntity(
                     stock = stock,
                     periodType = PERIOD_DAY,
+                    upBuyRate = 0.01,
+                    downSellRate = 0.01,
+                    it.first,
+                    it.second,
+                    ""
+                )
+                backtestService.saveCondition(mabsCondition)
+            }
+        }
+    }
+
+    private fun 조건생성_주봉() {
+        val pairList = listOf(
+            Pair(1, 5),
+            Pair(2, 5),
+            Pair(3, 5),
+            Pair(1, 8),
+            Pair(2, 8),
+            Pair(3, 8),
+            Pair(1, 10),
+            Pair(2, 10),
+            Pair(3, 10),
+            Pair(5, 10),
+            Pair(2, 20),
+            Pair(3, 20),
+            Pair(4, 20),
+            Pair(5, 20),
+            Pair(3, 25),
+            Pair(5, 25),
+            Pair(7, 25),
+            Pair(10, 25),
+            Pair(12, 25),
+            Pair(3, 30),
+            Pair(5, 30),
+            Pair(7, 30),
+            Pair(10, 30),
+            Pair(13, 30),
+        )
+
+        val stockList = stockRepository.findAll()
+        stockList.forEach { stock ->
+            pairList.forEach {
+                val mabsCondition = MabsConditionEntity(
+                    stock = stock,
+                    periodType = PERIOD_WEEK,
+                    upBuyRate = 0.01,
+                    downSellRate = 0.01,
+                    it.first,
+                    it.second,
+                    ""
+                )
+                backtestService.saveCondition(mabsCondition)
+            }
+        }
+    }
+
+    private fun 조건생성_월봉() {
+        val pairList = listOf(
+            Pair(1, 2),
+            Pair(1, 3),
+            Pair(1, 4),
+            Pair(1, 5),
+            Pair(1, 6),
+            Pair(1, 7),
+            Pair(1, 8),
+            Pair(1, 9),
+            Pair(1, 10),
+            Pair(1, 11),
+            Pair(1, 12),
+
+            Pair(2, 3),
+            Pair(2, 4),
+            Pair(2, 5),
+            Pair(2, 6),
+            Pair(2, 7),
+            Pair(2, 8),
+            Pair(2, 9),
+            Pair(2, 10),
+            Pair(2, 11),
+            Pair(2, 12),
+
+            Pair(3, 4),
+            Pair(3, 5),
+            Pair(3, 6),
+            Pair(3, 7),
+            Pair(3, 8),
+            Pair(3, 9),
+            Pair(3, 10),
+            Pair(3, 11),
+            Pair(3, 12),
+        )
+
+        val stockList = stockRepository.findAll()
+        stockList.forEach { stock ->
+            pairList.forEach {
+                val mabsCondition = MabsConditionEntity(
+                    stock = stock,
+                    periodType = PERIOD_MONTH,
                     upBuyRate = 0.01,
                     downSellRate = 0.01,
                     it.first,
