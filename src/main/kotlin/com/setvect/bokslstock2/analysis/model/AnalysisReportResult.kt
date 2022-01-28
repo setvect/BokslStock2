@@ -44,8 +44,7 @@ data class AnalysisReportResult(
          * 최대 낙폭
          */
         val mdd: Double,
-    ) {
-    }
+    )
 
     data class TotalYield(
         /**

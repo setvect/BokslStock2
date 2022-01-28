@@ -26,6 +26,7 @@ class LapTimeChecker(
      * 체크 카운트
      */
     private var checkCount = 0
+
     /**
      * 현재 진행 시간 대비 전체 카운트를 계산하여 총 예상 시간을 구함
      */
@@ -45,7 +46,7 @@ class LapTimeChecker(
      *
      * [name] 구분 이름
      */
-    constructor(name: String) : this(System.out, name) {}
+    constructor(name: String) : this(System.out, name)
 
     init {
         startTime = System.currentTimeMillis()

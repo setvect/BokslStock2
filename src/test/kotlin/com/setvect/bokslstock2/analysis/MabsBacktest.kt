@@ -339,7 +339,7 @@ class MabsBacktest {
             it.tradeList.size > 1
         }.toList()
 
-        var i = 0;
+        var i = 0
         val mabsConditionList = conditionList.map {
             val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
             val priceRange = candleRepository.findByCandleDateTimeBetween(it.stock, range.from, range.to)
