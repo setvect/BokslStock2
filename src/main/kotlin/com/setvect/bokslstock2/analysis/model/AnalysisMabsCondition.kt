@@ -10,7 +10,7 @@ data class AnalysisMabsCondition(
     /**
      * 분석 조건
      */
-    val tradeCondition: MabsConditionEntity,
+    val tradeConditionList: List<MabsConditionEntity>,
     /**
      * 분석 대상 기간
      */

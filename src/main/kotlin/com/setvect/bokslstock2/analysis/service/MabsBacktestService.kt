@@ -192,7 +192,7 @@ class MabsBacktestService(
             makeReportFile(result)
 
             val multiCondition = result.analysisMabsCondition
-            val tradeCondition = multiCondition.tradeCondition
+            val tradeCondition = multiCondition.tradeConditionList
 
             val reportRow = StringBuilder()
             reportRow.append(String.format("%s\t", multiCondition.range))
@@ -237,22 +237,30 @@ class MabsBacktestService(
      * 매매 백테스트
      */
     private fun trade(condition: AnalysisMabsCondition): ArrayList<TradeReportItem> {
-        val tradeList =
-            condition.tradeCondition.tradeList.filter { condition.range.isBetween(it.tradeDate) }.toMutableList()
-        if (tradeList.isEmpty()) {
+        val rangeInList: List<List<MabsTradeEntity>> =
+            condition.tradeConditionList.map { mainList ->
+                mainList.tradeList.filter { condition.range.isBetween(it.tradeDate) }
+            }
+                .toList()
+
+        val tradeAllList = rangeInList.flatMap { tradeList ->
+            val subList = tradeList.stream()
+                // 첫 거래가 매도이면 삭제
+                .skip(if (tradeList[0].tradeType == SELL) 1 else 0)
+                .toList()
+            if (subList.size > 1) subList else emptyList()
+        }.sortedWith(compareBy { it.tradeDate }).toList()
+
+        if (tradeAllList.isEmpty()) {
             throw RuntimeException("매매 기록이 없습니다.")
         }
-        // 첫 거래가 매도이면 삭제
-        if (tradeList[0].tradeType == SELL) {
-            tradeList.removeAt(0)
-        }
-        if (tradeList.size < 2) {
+        if (tradeAllList.size < 2) {
             throw RuntimeException("매수/매도 기록이 없습니다.")
         }
 
         var cash = condition.cash
         val tradeItemHistory = ArrayList<TradeReportItem>()
-        tradeList.forEach {
+        tradeAllList.forEach {
             if (it.tradeType == BUY) {
                 val buyQty: Int = ((cash * condition.investRatio) / it.unitPrice).toInt()
                 val buyAmount: Int = buyQty * it.unitPrice
@@ -445,21 +453,23 @@ class MabsBacktestService(
         report.append(String.format("매도 수수료\t %,.2f%%", condition.feeSell * 100)).append("\n")
 
 
-        val tradeCondition: MabsConditionEntity = result.analysisMabsCondition.tradeCondition
-        report.append(String.format("조건아이디\t %s", tradeCondition.mabsConditionSeq)).append("\n")
-        report.append(String.format("분석주기\t %s", tradeCondition.periodType)).append("\n")
-        report.append(String.format("대상 코인\t %s", tradeCondition.stock.getNameCode())).append("\n")
-        report.append(String.format("상승 매수률\t %,.2f%%", tradeCondition.upBuyRate * 100)).append("\n")
-        report.append(String.format("하락 매도률\t %,.2f%%", tradeCondition.downSellRate * 100)).append("\n")
-        report.append(String.format("단기 이동평균 기간\t %d", tradeCondition.shortPeriod)).append("\n")
-        report.append(String.format("장기 이동평균 기간\t %d", tradeCondition.longPeriod)).append("\n")
+        val tradeConditionList: List<MabsConditionEntity> = result.analysisMabsCondition.tradeConditionList
+        for (tradeCondition in tradeConditionList) {
+            report.append(String.format("조건아이디\t %s", tradeCondition.mabsConditionSeq)).append("\n")
+            report.append(String.format("분석주기\t %s", tradeCondition.periodType)).append("\n")
+            report.append(String.format("대상 코인\t %s", tradeCondition.stock.getNameCode())).append("\n")
+            report.append(String.format("상승 매수률\t %,.2f%%", tradeCondition.upBuyRate * 100)).append("\n")
+            report.append(String.format("하락 매도률\t %,.2f%%", tradeCondition.downSellRate * 100)).append("\n")
+            report.append(String.format("단기 이동평균 기간\t %d", tradeCondition.shortPeriod)).append("\n")
+            report.append(String.format("장기 이동평균 기간\t %d", tradeCondition.longPeriod)).append("\n")
+        }
 
         val reportFileName = String.format(
             "%s_%s~%s_%s.txt",
-            condition.tradeCondition.mabsConditionSeq,
+            tradeConditionList.joinToString(",") { it.mabsConditionSeq.toString() },
             range.fromDateFormat,
             range.toDateFormat,
-            tradeCondition.stock.getNameCode()
+            tradeConditionList.joinToString(",") { it.stock.code }
         )
         val reportFile = File("./backtest-result/trade-report", reportFileName)
         FileUtils.writeStringToFile(reportFile, report.toString(), "euc-kr")
