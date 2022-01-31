@@ -13,7 +13,6 @@ import com.setvect.bokslstock2.analysis.model.TradeType.SELL
 import com.setvect.bokslstock2.analysis.repository.MabsConditionRepository
 import com.setvect.bokslstock2.analysis.repository.MabsTradeRepository
 import com.setvect.bokslstock2.index.dto.CandleDto
-import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
@@ -21,11 +20,14 @@ import com.setvect.bokslstock2.util.DateUtil
 import java.io.File
 import java.sql.Timestamp
 import java.time.LocalDateTime
+import java.util.*
 import org.apache.commons.io.FileUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.streams.toList
 
 /**
@@ -251,45 +253,71 @@ class MabsBacktestService(
             if (subList.size > 1) subList else emptyList()
         }.sortedWith(compareBy { it.tradeDate }).toList()
 
-        if (tradeAllList.isEmpty()) {
-            throw RuntimeException("매매 기록이 없습니다.")
-        }
         if (tradeAllList.size < 2) {
             throw RuntimeException("매수/매도 기록이 없습니다.")
         }
 
         var cash = condition.cash
         val tradeItemHistory = ArrayList<TradeReportItem>()
-        tradeAllList.forEach {
-            if (it.tradeType == BUY) {
-                val buyQty: Int = ((cash * condition.investRatio) / it.unitPrice).toInt()
-                val buyAmount: Int = buyQty * it.unitPrice
+        val buyStock = HashMap<String, TradeReportItem>()
+        tradeAllList.forEach { tradeItem ->
+            if (tradeItem.tradeType == BUY) {
+                val buyCash = getBuyCash(buyStock.size, cash, condition.tradeConditionList.size, condition.investRatio)
+
+                val buyQty: Int = (buyCash / tradeItem.unitPrice).toInt()
+                val buyAmount: Int = buyQty * tradeItem.unitPrice
                 val feePrice = (condition.feeBuy * buyAmount).toInt()
                 cash -= buyAmount - feePrice
                 val tradeReportItem = TradeReportItem(
-                    mabsTradeEntity = it,
+                    mabsTradeEntity = tradeItem,
                     qty = buyQty,
                     cash = cash,
                     feePrice = feePrice,
                     gains = 0
                 )
                 tradeItemHistory.add(tradeReportItem)
-            } else if (it.tradeType == SELL) {
-                // 투자수익금: 매수금액 * 수익률 - 수수료
-                val buyTrade = tradeItemHistory.last()
-                val sellPrice = (buyTrade.getBuyAmount() * (1 + it.yield)).toLong()
+                buyStock[tradeItem.mabsConditionEntity.stock.code] = tradeReportItem
+            } else if (tradeItem.tradeType == SELL) {
+                // 투자수익금 = 매수금액 * 수익률 - 수수료
+                val buyTrade = buyStock[tradeItem.mabsConditionEntity.stock.code]
+                    ?: throw RuntimeException("${tradeItem.mabsConditionEntity.stock.code} 매수 내역이 없습니다.")
+                buyStock.remove(tradeItem.mabsConditionEntity.stock.code)
+                val sellPrice = (buyTrade.getBuyAmount() * (1 + tradeItem.yield)).toLong()
                 val sellFee = (sellPrice * condition.feeSell).toInt()
                 val gains = (sellPrice - buyTrade.getBuyAmount())
 
+                // 매매후 현금
                 cash += sellPrice - sellFee
 
                 val tradeReportItem = TradeReportItem(
-                    mabsTradeEntity = it, qty = 0, cash = cash, feePrice = sellFee, gains = gains
+                    mabsTradeEntity = tradeItem, qty = 0, cash = cash, feePrice = sellFee, gains = gains
                 )
                 tradeItemHistory.add(tradeReportItem)
             }
         }
         return tradeItemHistory
+    }
+
+    /**
+     * [currentBuyStockCount] 현재 매수중인 종목 수
+     * [cash] 현재 보유 현금
+     * [stockBuyTotalCount] 매매 대상 종목수
+     * [investRatio] 전체 현금 대비 투자 비율. 1: 모든 현금을 투자, 0.5 현금의 50%만 매수에 사용
+     *
+     * @return 매수에 사용될 금액 반환
+     */
+    private fun getBuyCash(
+        currentBuyStockCount: Int,
+        cash: Long,
+        stockBuyTotalCount: Int,
+        investRatio: Double
+    ): Double {
+        // 매수에 사용할 현금
+        // 시작 현금 역산 = 현재현금 * 직전 매수 종목 수 / 매매 종목수 * 사용비율/ (매매종목수 * 1/ 사용비율 - 직적 매수 종목 수) + 현재현금
+        val startCash =
+            cash * currentBuyStockCount / stockBuyTotalCount * investRatio / (currentBuyStockCount * 1 / investRatio - currentBuyStockCount) + cash
+        // 매수에 사용할 현금 = 시작현금 역산 * 사용비율 * (1/매매종목수)
+        return startCash * investRatio / (1 / currentBuyStockCount)
     }
 
     /**
@@ -299,7 +327,8 @@ class MabsBacktestService(
         tradeItemHistory: ArrayList<TradeReportItem>, condition: AnalysisMabsCondition
     ): AnalysisReportResult {
 
-        val buyAndHoldYieldMdd: YieldMdd = calculateHoldYield(condition.tradeCondition.stock, condition.range)
+        val buyAndHoldYieldMdd: YieldMdd =
+            calculateHoldYield(condition.tradeConditionList, condition.range)
 
         val totalYield: TotalYield = calculateTotalYield(tradeItemHistory, condition)
         val winningRate: WinningRate = calculateCoinInvestment(tradeItemHistory)
@@ -359,14 +388,73 @@ class MabsBacktestService(
     }
 
     /**
-     * @return 투자종목 Buy & Hold시 수익 정보
+     * @return 전체 투자 종목에 대한 Buy & Hold시 수익 정보
      */
-    private fun calculateHoldYield(stock: StockEntity, range: DateRange): YieldMdd {
-        val candleList = candleRepository.findByRange(stock, range.from, range.to)
-        val priceList = candleList.map { it.closePrice }.toList()
+    private fun calculateHoldYield(conditionList: List<MabsConditionEntity>, range: DateRange): YieldMdd {
+
+        // <조건아아디, List(캔들)>
+        val mapOfCandleList = conditionList.associate { condition ->
+            condition.mabsConditionSeq to candleRepository.findByRange(condition.stock, range.from, range.to)
+        }
+
+        var currentDate = range.from
+
+        //<조건아이디, 직전 가격>
+        val mapOfBeforePrice =
+            conditionList.associate { it.mabsConditionSeq to mapOfCandleList[it.mabsConditionSeq]?.get(0)?.openPrice }
+                .toMutableMap()
+
+        // <조건아이디, Map<날짜, 상대 수익률>> TODO 안씀
+//        val mapOfDayRelativeRate1: Map<Int, Map<LocalDateTime, Double>> = conditionList.associate { condition ->
+//            val dayOfYield: MutableMap<LocalDateTime, Double> = mutableMapOf()
+//            for (candle: CandleEntity in mapOfCandleList[condition.mabsConditionSeq]!!) {
+//                val beforePrice = mapOfBeforePrice[condition.mabsConditionSeq]
+//                dayOfYield[currentDate] = (candle.closePrice / beforePrice!!.toDouble()) - 1
+//                mapOfBeforePrice[condition.mabsConditionSeq] = candle.closePrice
+//            }
+//            condition.mabsConditionSeq to dayOfYield
+//        }
+
+
+        // <조건아이디, Map<날짜, 종가>>
+        val mapOfCondClosePrice: Map<Int, Map<LocalDateTime, Int>> =
+            conditionList.associate { condition ->
+                condition.mabsConditionSeq to (mapOfCandleList[condition.mabsConditionSeq]
+                    ?.map { it.candleDateTime to it.closePrice })!!.toMap()
+            }
+
+        // <날짜, Map<조건아이디, 상대 수익률>>
+        val mapOfDayRelativeRate = mutableMapOf<LocalDateTime, Map<Int, Double>>()
+        while (currentDate.isBefore(range.to) || currentDate == range.to) {
+            // Map<조건아이디, 상대 수익률>
+            val mapCondRelativeRate: Map<Int, Double> = mapOfCondClosePrice.entries
+                .filter { it.value[currentDate] != null }
+                .associate {
+                    val beforePrice = mapOfBeforePrice[it.key]
+                    val closePrice = it.value[currentDate]!!
+                    val relativeYield = closePrice / beforePrice!!.toDouble() - 1
+                    mapOfBeforePrice[it.key] = closePrice
+                    it.key to relativeYield
+                }
+
+            mapOfDayRelativeRate[currentDate] = mapCondRelativeRate
+            currentDate = currentDate.plusDays(1)
+        }
+
+        // <날짜, 합산수익률>
+        val combinedYield: SortedMap<LocalDateTime, Double> = mapOfDayRelativeRate.entries
+            .associate { dayOfItem -> dayOfItem.key to dayOfItem.value.values.toList().average() }
+            .toSortedMap()
+
+        // 평가금액의 변화를 계산하기 위한 임의의 값
+        val priceList = mutableListOf(1_000_000.0)
+        for (relativeYield in combinedYield.values) {
+            priceList.add(priceList.last() * (relativeYield + 1))
+        }
+
         return YieldMdd(
-            ApplicationUtil.getYield(priceList.map { it.toDouble() }),
-            ApplicationUtil.getMdd(priceList.map { it.toDouble() })
+            ApplicationUtil.getYield(priceList),
+            ApplicationUtil.getMdd(priceList)
         )
     }
 
