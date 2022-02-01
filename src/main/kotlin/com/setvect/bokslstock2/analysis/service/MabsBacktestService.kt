@@ -13,6 +13,7 @@ import com.setvect.bokslstock2.analysis.model.TradeType.SELL
 import com.setvect.bokslstock2.analysis.repository.MabsConditionRepository
 import com.setvect.bokslstock2.analysis.repository.MabsTradeRepository
 import com.setvect.bokslstock2.index.dto.CandleDto
+import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
@@ -211,11 +212,11 @@ class MabsBacktestService(
             reportRow.append(String.format("%,.2f%%\t", tradeCondition.upBuyRate * 100))
             reportRow.append(String.format("%s\t", multiCondition.comment))
 
-            val sumYield: YieldMdd = result.stockHoldYield
+            val sumYield: YieldMdd = result.buyAndHoldYieldTotal
             reportRow.append(String.format("%,.2f%%\t", sumYield.yield * 100))
             reportRow.append(String.format("%,.2f%%\t", sumYield.mdd * 100))
 
-            val totalYield: TotalYield = result.totalYield
+            val totalYield: TotalYield = result.yieldTotal
             reportRow.append(String.format("%,.2f%%\t", totalYield.yield * 100))
             reportRow.append(String.format("%,.2f%%\t", totalYield.mdd * 100))
             reportRow.append(String.format("%d\t", totalYield.getTradeCount()))
@@ -327,17 +328,16 @@ class MabsBacktestService(
         tradeItemHistory: ArrayList<TradeReportItem>, condition: AnalysisMabsCondition
     ): AnalysisReportResult {
 
-        val buyAndHoldYieldMdd: YieldMdd =
-            calculateHoldYield(condition.tradeConditionList, condition.range)
+        val buyAndHoldYieldMdd: YieldMdd = calculateHoldYield(condition.tradeConditionList, condition.range)
 
         val totalYield: TotalYield = calculateTotalYield(tradeItemHistory, condition)
         val winningRate: WinningRate = calculateCoinInvestment(tradeItemHistory)
         return AnalysisReportResult(
             analysisMabsCondition = condition,
             tradeHistory = tradeItemHistory,
-            totalYield = totalYield,
-            coinWinningRate = winningRate,
-            stockHoldYield = buyAndHoldYieldMdd
+            yieldTotal = totalYield,
+            conditionTotalWinningRate = winningRate,
+            buyAndHoldYieldTotal = buyAndHoldYieldMdd
         )
     }
 
@@ -376,12 +376,34 @@ class MabsBacktestService(
 
 
     /**
-     * @return 투자 종목 수익 정보
+     * @return <조건아이디, 투자 종목 수익 정보>
      */
     private fun calculateCoinInvestment(
         tradeItemHistory: ArrayList<TradeReportItem>
-    ): WinningRate {
+    ): Map<Int, WinningRate> {
+
         val sellList = tradeItemHistory.filter { it.mabsTradeEntity.tradeType == SELL }.toList()
+
+//        val groupBy: Map<Int, List<TradeReportItem>> = sellList.groupBy { it.mabsTradeEntity.mabsConditionEntity.mabsConditionSeq }
+
+        val groupBy: Map<Int, List<TradeReportItem>> =
+            sellList.groupBy { it.mabsTradeEntity.mabsConditionEntity.mabsConditionSeq }
+
+        val toMap: Map<Int, WinningRate> = groupBy.entries.map { aa ->
+            aa.key to
+            val b = 2
+            WinningRate(b, 1, 22)
+
+        }.toMap() 어기 작업
+
+        val result: `Map<Int,  WinningRate>` = groupBy.entries.associate { entiry ->
+            entiry.key to {
+                val totalInvest = entiry.value.sumOf { it.gains }
+                val gainCount = entiry.value.count { it.gains > 0 }
+                WinningRate(gainCount, entiry.value.size - gainCount, totalInvest)
+            }
+        }.toMap()
+
         val totalInvest = tradeItemHistory.sumOf { it.gains }
         val gainCount = tradeItemHistory.count { it.gains > 0 }
         return WinningRate(gainCount, sellList.size - gainCount, totalInvest)
@@ -391,30 +413,11 @@ class MabsBacktestService(
      * @return 전체 투자 종목에 대한 Buy & Hold시 수익 정보
      */
     private fun calculateHoldYield(conditionList: List<MabsConditionEntity>, range: DateRange): YieldMdd {
-
         // <조건아아디, List(캔들)>
-        val mapOfCandleList = conditionList.associate { condition ->
-            condition.mabsConditionSeq to candleRepository.findByRange(condition.stock, range.from, range.to)
-        }
+        val mapOfCandleList = getConditionOfCandle(conditionList, range)
 
-        var currentDate = range.from
-
-        //<조건아이디, 직전 가격>
-        val mapOfBeforePrice =
-            conditionList.associate { it.mabsConditionSeq to mapOfCandleList[it.mabsConditionSeq]?.get(0)?.openPrice }
-                .toMutableMap()
-
-        // <조건아이디, Map<날짜, 상대 수익률>> TODO 안씀
-//        val mapOfDayRelativeRate1: Map<Int, Map<LocalDateTime, Double>> = conditionList.associate { condition ->
-//            val dayOfYield: MutableMap<LocalDateTime, Double> = mutableMapOf()
-//            for (candle: CandleEntity in mapOfCandleList[condition.mabsConditionSeq]!!) {
-//                val beforePrice = mapOfBeforePrice[condition.mabsConditionSeq]
-//                dayOfYield[currentDate] = (candle.closePrice / beforePrice!!.toDouble()) - 1
-//                mapOfBeforePrice[condition.mabsConditionSeq] = candle.closePrice
-//            }
-//            condition.mabsConditionSeq to dayOfYield
-//        }
-
+        // <조건아이디, 직전 가격>
+        val mapOfBeforePrice = getConditionOfFirstOpenPrice(conditionList, mapOfCandleList)
 
         // <조건아이디, Map<날짜, 종가>>
         val mapOfCondClosePrice: Map<Int, Map<LocalDateTime, Int>> =
@@ -423,9 +426,10 @@ class MabsBacktestService(
                     ?.map { it.candleDateTime to it.closePrice })!!.toMap()
             }
 
+        var currentDate = range.from
         // <날짜, Map<조건아이디, 상대 수익률>>
         val mapOfDayRelativeRate = mutableMapOf<LocalDateTime, Map<Int, Double>>()
-        while (currentDate.isBefore(range.to) || currentDate == range.to) {
+        while (currentDate.isBefore(range.to) || (currentDate == range.to)) {
             // Map<조건아이디, 상대 수익률>
             val mapCondRelativeRate: Map<Int, Double> = mapOfCondClosePrice.entries
                 .filter { it.value[currentDate] != null }
@@ -459,17 +463,43 @@ class MabsBacktestService(
     }
 
     /**
+     * @return <조건아이디, 최초 가격>
+     */
+    private fun getConditionOfFirstOpenPrice(
+        conditionList: List<MabsConditionEntity>,
+        mapOfCandleList: Map<Int, List<CandleEntity>>
+    ): MutableMap<Int, Int?> {
+        return conditionList.associate {
+            it.mabsConditionSeq to mapOfCandleList[it.mabsConditionSeq]?.get(0)?.openPrice
+        }
+            .toMutableMap()
+    }
+
+    /**
+     *@return <조건아아디, List(캔들)>
+     */
+    private fun getConditionOfCandle(
+        conditionList: List<MabsConditionEntity>,
+        range: DateRange
+    ): Map<Int, List<CandleEntity>> {
+        val mapOfCandleList = conditionList.associate { condition ->
+            condition.mabsConditionSeq to candleRepository.findByRange(condition.stock, range.from, range.to)
+        }
+        return mapOfCandleList
+    }
+
+    /**
      * 분석 요약결과
      */
     private fun printSummary(result: AnalysisReportResult) {
         val report = StringBuilder()
-        val sumYield: YieldMdd = result.stockHoldYield
+        val sumYield: YieldMdd = result.buyAndHoldYieldTotal
         val tradeCondition = result.analysisMabsCondition.tradeCondition
         report.append("매매번호: ${tradeCondition.mabsConditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), 장기-단기: ${tradeCondition.longPeriod}-${tradeCondition.shortPeriod}\n")
         report.append(String.format("동일비중 수익\t %,.2f%%", sumYield.yield * 100)).append("\n")
         report.append(String.format("동일비중 MDD\t %,.2f%%", sumYield.mdd * 100)).append("\n")
 
-        val totalYield: TotalYield = result.totalYield
+        val totalYield: TotalYield = result.yieldTotal
         report.append(String.format("실현 수익\t %,.2f%%", totalYield.yield * 100)).append("\n")
         report.append(String.format("실현 MDD\t %,.2f%%", totalYield.mdd * 100)).append("\n")
         report.append(String.format("매매회수\t %d", totalYield.getTradeCount())).append("\n")
@@ -516,13 +546,13 @@ class MabsBacktestService(
         }
 
         report.append("\n-----------\n")
-        val sumYield: YieldMdd = result.stockHoldYield
+        val sumYield: YieldMdd = result.buyAndHoldYieldTotal
         report.append(String.format("동일비중 수익\t %,.2f%%", sumYield.yield * 100)).append("\n")
         report.append(String.format("동일비중 MDD\t %,.2f%%", sumYield.mdd * 100)).append("\n")
 
         report.append("\n-----------\n")
 
-        val totalYield: TotalYield = result.totalYield
+        val totalYield: TotalYield = result.yieldTotal
         report.append(String.format("실현 수익\t %,.2f%%", totalYield.yield * 100)).append("\n")
         report.append(String.format("실현 MDD\t %,.2f%%", totalYield.mdd * 100)).append("\n")
         report.append(String.format("매매회수\t %d", totalYield.getTradeCount())).append("\n")

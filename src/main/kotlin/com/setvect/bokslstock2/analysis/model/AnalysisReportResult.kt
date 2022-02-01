@@ -18,20 +18,44 @@ data class AnalysisReportResult(
 
     /**
      * 전체 수익 결과
+     * <조건아이디, 수익률>
      */
-    val totalYield: TotalYield,
+    val yieldCondition: Map<Int, TotalYield>,
 
     /**
-     * 종목 승률
+     * 전체 수익 결과
      */
-    val coinWinningRate: WinningRate,
+    val yieldTotal: TotalYield,
+
+    /**
+     * 조건 기준 승률 합
+     * <조건아이디, 승률>
+     */
+    val winningRateCondition: Map<Int, WinningRate>,
+
+    /**
+     * 조건별 종목 Buy&Hold 수익률
+     * <조건아이디, 수익률>
+     */
+    val buyAndHoldYieldCondition: Map<Int, YieldMdd>,
 
     /**
      * 종목 Buy&Hold 수익률
      */
-    val stockHoldYield: YieldMdd,
+    val buyAndHoldYieldTotal: YieldMdd,
 ) {
     /**
+     *@return 전체 매매 내역 승률 합
+     */
+    fun getWinningRateTotal(): WinningRate {
+        return WinningRate(
+            gainCount = winningRateCondition.values.sumOf { it.gainCount },
+            lossCount = winningRateCondition.values.sumOf { it.lossCount },
+            invest = winningRateCondition.values.sumOf { it.invest },
+        )
+    }
+
+    /*
      * 수익률과 MDD
      */
     data class YieldMdd(
