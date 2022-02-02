@@ -25,7 +25,11 @@ data class TradeReportItem(
     /**
      * 투자 수익 금액
      */
-    val gains: Long
+    val gains: Long,
+    /**
+     * 현재시점 주식평가금
+     */
+    val stockEvalPrice: Long
 ) {
     /**
      * @return 매수 금액
@@ -37,8 +41,8 @@ data class TradeReportItem(
     /**
      * @return 평가금
      */
-    fun getEvaluationPrice(): Long {
-        return getBuyAmount() + cash
+    fun getEvalPrice(): Long {
+        return stockEvalPrice + cash
     }
 
 }

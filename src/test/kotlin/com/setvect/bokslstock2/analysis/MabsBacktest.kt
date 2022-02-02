@@ -14,7 +14,6 @@ import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.util.DateRange
 import java.time.LocalDateTime
-import java.util.*
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -53,20 +52,21 @@ class MabsBacktest {
 
     @Test
     @Transactional
+    @Rollback(false)
     fun 한번에_모두_백테스트() {
         // 0. 기존 백테스트 기록 모두 삭제
         deleteBacktestData()
 
         // 1. 조건 만들기
-        조건생성_일봉()
+//        조건생성_일봉()
         조건생성_주봉()
-        조건생성_월봉()
+//        조건생성_월봉()
 
         // 2. 모든 조건에 대해 백테스트
         backtestService.runTestBatch()
 
         // 3. 모든 조건에 대한 리포트 만들기
-        allConditionReportMake()
+//        allConditionReportMake()
     }
 
     @Test
@@ -117,7 +117,9 @@ class MabsBacktest {
     @Test
     @Transactional
     fun 이동평균돌파전략_리포트생성() {
-        val conditionList = mabsConditionRepository.listBySeq(listOf(661674, 662125))
+//        900104,005930,삼성전자
+//        900155,133690,TIGER 미국나스닥100
+        val conditionList = mabsConditionRepository.listBySeq(listOf(900104, 900155))
         if (conditionList.isEmpty()) {
             log.warn("거래 조건이 없습니다.")
             return
@@ -126,7 +128,7 @@ class MabsBacktest {
         backtestService.makeReport(
             AnalysisMabsCondition(
                 tradeConditionList = conditionList,
-                range = DateRange(LocalDateTime.of(1990, 1, 1, 0, 0), LocalDateTime.now()),
+                range = DateRange(LocalDateTime.of(2010, 1, 1, 0, 0), LocalDateTime.now()),
                 investRatio = 0.99,
                 cash = 10_000_000,
                 feeBuy = 0.001,
@@ -136,30 +138,29 @@ class MabsBacktest {
         )
     }
 
+    @Test
+    @Transactional
+    fun 이동평균돌파전략_합계리포트생성() {
+        val range = DateRange(LocalDateTime.of(2010, 1, 1, 0, 0), LocalDateTime.now())
+        val conditionList = mabsConditionRepository.listBySeq(listOf(900104, 900155))
+        val analysisMabsCondition = AnalysisMabsCondition(
+            tradeConditionList = conditionList,
+            range = range,
+            investRatio = 0.99,
+            cash = 10_000_000,
+            feeBuy = 0.001,
+            feeSell = 0.001,
+            comment = ""
+        )
 
-//        val conditionList = mabsConditionRepository.findAll()
-//        conditionList.forEach {
-//            val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
-//            val priceRange = candleRepository.findByCandleDateTimeBetween(it.stock, range.from, range.to)
-//            backtestService.makeReport(
-//                AnalysisMabsCondition(
-//                    tradeCondition = it,
-//                    range = priceRange,
-//                    investRatio = 0.99,
-//                    cash = 10_000_000,
-//                    feeBuy = 0.001,
-//                    feeSell = 0.001,
-//                    comment = ""
-//                )
-//            )
-//        }
+        backtestService.makeSummaryReport(listOf(analysisMabsCondition))
+    }
 
     @Test
     @Transactional
     fun 분석요약리포트_리포트생성() {
         allConditionReportMake()
     }
-
 
     private fun deleteBacktestData() {
         mabsTradeRepository.deleteAll()

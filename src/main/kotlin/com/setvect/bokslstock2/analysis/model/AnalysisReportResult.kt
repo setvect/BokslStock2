@@ -18,12 +18,6 @@ data class AnalysisReportResult(
 
     /**
      * 전체 수익 결과
-     * <조건아이디, 수익률>
-     */
-    val yieldCondition: Map<Int, TotalYield>,
-
-    /**
-     * 전체 수익 결과
      */
     val yieldTotal: TotalYield,
 
@@ -84,54 +78,18 @@ data class AnalysisReportResult(
          * 분석 일자
          */
         val dayCount: Int,
-        /**
-         * 수익 카운트
-         */
-        var gainCount: Int = 0,
-        /**
-         * 이익 카운트
-         */
-        var lossCount: Int = 0,
+
     ) {
-        /**
-         * @return 총 매매 횟수 (매수-매도가 한쌍)
-         */
-        fun getTradeCount(): Int {
-            return gainCount + lossCount
-        }
-
-        /**
-         * @return 총 매매에서 이익을 본 비율
-         */
-        fun getWinRate(): Double {
-            return if (getTradeCount() == 0) 0.0 else gainCount.toDouble() / getTradeCount()
-        }
-
         /**
          * @return 연복리
          */
         fun getCagr(): Double {
             return ApplicationUtil.getCagr(1.0, 1 + `yield`, dayCount)
         }
-
-        /**
-         * 수익 카운트 증가
-         */
-        fun incrementGainCount() {
-            gainCount++
-        }
-
-        /**
-         * 손실 카운트 증가
-         */
-        fun incrementLossCount() {
-            lossCount++
-        }
     }
 
     /**
      * 단위 수익 정보
-     * TODO 필요 없을것 같음. 화인해 보기
      */
     data class WinningRate(
         /**
