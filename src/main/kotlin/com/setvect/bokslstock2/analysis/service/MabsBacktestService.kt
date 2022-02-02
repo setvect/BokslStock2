@@ -183,8 +183,8 @@ class MabsBacktestService(
 
         val header = "분석기간,분석 아이디,종목,투자비율,최초 투자금액,매수 수수료,매도 수수료," +
                 "조건 설명," +
-                "매수 후 보유 수익,매수 후 보유 MDD," +
-                "실현 수익,실현 MDD,매매 횟수,승률,CAGR"
+                "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR," +
+                "실현 수익,실현 MDD,실현 CAGR,매매 횟수,승률,"
         val report = StringBuilder(header.replace(",", "\t") + "\n")
 
         resultList.forEach { result ->
@@ -210,16 +210,17 @@ class MabsBacktestService(
 
             reportRow.append(String.format("%s\t", multiCondition.comment))
 
-            val sumYield: YieldMdd = result.buyAndHoldYieldTotal
+            val sumYield: TotalYield = result.buyAndHoldYieldTotal
             reportRow.append(String.format("%,.2f%%\t", sumYield.yield * 100))
             reportRow.append(String.format("%,.2f%%\t", sumYield.mdd * 100))
+            reportRow.append(String.format("%,.2f%%\t", sumYield.getCagr()  * 100))
 
             val totalYield: TotalYield = result.yieldTotal
             reportRow.append(String.format("%,.2f%%\t", totalYield.yield * 100))
             reportRow.append(String.format("%,.2f%%\t", totalYield.mdd * 100))
+            reportRow.append(String.format("%,.2f%%\t", totalYield.getCagr() * 100))
             reportRow.append(String.format("%d\t", result.getWinningRateTotal().getTradeCount()))
             reportRow.append(String.format("%,.2f%%\t", result.getWinningRateTotal().getWinRate() * 100))
-            reportRow.append(String.format("%,.2f%%\t", totalYield.getCagr() * 100))
 
             report.append(reportRow).append("\n")
 
@@ -241,6 +242,7 @@ class MabsBacktestService(
             reportRow.append(String.format("%s\t", condition.mabsConditionSeq))
             reportRow.append(String.format("%s\t", condition.stock.name))
             reportRow.append(String.format("%s\t", condition.stock.code))
+            reportRow.append(String.format("%s\t", condition.periodType))
             reportRow.append(String.format("%d\t", condition.shortPeriod))
             reportRow.append(String.format("%d\t", condition.longPeriod))
             reportRow.append(String.format("%,.2f%%\t", condition.downSellRate * 100))
@@ -344,9 +346,9 @@ class MabsBacktestService(
         investRatio: Double
     ): Double {
         // 매수에 사용할 현금
-        // 현재현금 * 직전 매수 종목 수 / 매매 종목수 * 사용비율 * 매매종목수  / 사용비율 / (매매 종목 수 / 사용비율 - 직전 매수 종목 수) + 현재현금
+        // 현재현금 * 직전 매수 종목 수 / 매매 대상 종목수 * 사용비율 * 매매 대상 종목수  / 사용비율 / (매매 대상 종목수 / 사용비율 - 직전 매수 종목 수) + 현재현금
         val startCash =
-            cash * currentBuyStockCount / stockBuyTotalCount * investRatio * currentBuyStockCount / investRatio / (stockBuyTotalCount / investRatio - currentBuyStockCount) + cash
+            cash * currentBuyStockCount / stockBuyTotalCount * investRatio * stockBuyTotalCount / investRatio / (stockBuyTotalCount / investRatio - currentBuyStockCount) + cash
         // 매수에 사용할 현금 = 시작현금 역산 * 사용비율 * (1/매매종목수)
         return startCash * investRatio * (1 / stockBuyTotalCount.toDouble())
     }
@@ -358,7 +360,7 @@ class MabsBacktestService(
         tradeItemHistory: ArrayList<TradeReportItem>, condition: AnalysisMabsCondition
     ): AnalysisReportResult {
 
-        val buyAndHoldYieldMdd: YieldMdd = calculateTotalBuyAndHoldYield(condition.tradeConditionList, condition.range)
+        val buyAndHoldYieldMdd: TotalYield = calculateTotalBuyAndHoldYield(condition.tradeConditionList, condition.range)
         val buyAndHoldYieldCondition: Map<Int, YieldMdd> =
             calculateBuyAndHoldYield(condition.tradeConditionList, condition.range)
 
@@ -445,7 +447,7 @@ class MabsBacktestService(
     /**
      * @return 전체 투자 종목에 대한 Buy & Hold시 수익 정보
      */
-    private fun calculateTotalBuyAndHoldYield(conditionList: List<MabsConditionEntity>, range: DateRange): YieldMdd {
+    private fun calculateTotalBuyAndHoldYield(conditionList: List<MabsConditionEntity>, range: DateRange): TotalYield {
         // <조건아아디, List(캔들)>
         val mapOfCandleList = getConditionOfCandle(conditionList, range)
 
@@ -491,9 +493,10 @@ class MabsBacktestService(
             priceList.add(priceList.last() * (relativeYield + 1))
         }
 
-        return YieldMdd(
+        return TotalYield(
             ApplicationUtil.getYield(priceList),
-            ApplicationUtil.getMdd(priceList)
+            ApplicationUtil.getMdd(priceList),
+            range.diffDays.toInt()
         )
     }
 
@@ -533,6 +536,7 @@ class MabsBacktestService(
         report.append("----------- Buy&Hold 결과 -----------\n")
         report.append(String.format("합산 동일비중 수익\t %,.2f%%", result.buyAndHoldYieldTotal.yield * 100)).append("\n")
         report.append(String.format("합산 동일비중 MDD\t %,.2f%%", result.buyAndHoldYieldTotal.mdd * 100)).append("\n")
+        report.append(String.format("합산 동일비중 CAGR\t %,.2f%%", result.buyAndHoldYieldTotal.getCagr() * 100)).append("\n")
 
         for (i in 1..tradeConditionList.size) {
             val tradeCondition = tradeConditionList[i - 1]

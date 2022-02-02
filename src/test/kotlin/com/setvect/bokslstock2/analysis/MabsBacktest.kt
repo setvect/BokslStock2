@@ -14,6 +14,8 @@ import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.util.DateRange
 import java.time.LocalDateTime
+import java.util.stream.Collectors
+import java.util.stream.IntStream
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -58,15 +60,15 @@ class MabsBacktest {
         deleteBacktestData()
 
         // 1. 조건 만들기
-//        조건생성_일봉()
+        조건생성_일봉()
         조건생성_주봉()
-//        조건생성_월봉()
+        조건생성_월봉()
 
         // 2. 모든 조건에 대해 백테스트
         backtestService.runTestBatch()
 
         // 3. 모든 조건에 대한 리포트 만들기
-//        allConditionReportMake()
+        allConditionReportMake()
     }
 
     @Test
@@ -117,25 +119,27 @@ class MabsBacktest {
     @Test
     @Transactional
     fun 이동평균돌파전략_리포트생성() {
-//        900104,005930,삼성전자
-//        900155,133690,TIGER 미국나스닥100
-        val conditionList = mabsConditionRepository.listBySeq(listOf(900104, 900155))
-        if (conditionList.isEmpty()) {
-            log.warn("거래 조건이 없습니다.")
-            return
-        }
+//        val elementList = listOf(951551, 951255) // 평균 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
+//        val elementList = listOf(950589, 950064) // 최고 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
+//        val elementList = listOf(952722, 950164) // 최악 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
+//        val elementList = listOf(949078, 951062) // 코스닥150 레버리지, KODEX 코스닥150선물인버스
+        val elementList = listOf(949078, 949331) // 코스닥150 레버리지, KODEX 레버리지
+        val conditionSetList = getSubSet(elementList)
 
-        backtestService.makeReport(
+        val analysisMabsConditionList = conditionSetList.map {
+            val conditionList = mabsConditionRepository.listBySeq(it)
             AnalysisMabsCondition(
                 tradeConditionList = conditionList,
-                range = DateRange(LocalDateTime.of(2010, 1, 1, 0, 0), LocalDateTime.now()),
-                investRatio = 0.99,
+                range = DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.now()),
+                investRatio = 0.5,
                 cash = 10_000_000,
                 feeBuy = 0.001,
                 feeSell = 0.001,
                 comment = ""
             )
-        )
+        }.toList();
+
+        backtestService.makeSummaryReport(analysisMabsConditionList)
     }
 
     @Test
@@ -362,5 +366,40 @@ class MabsBacktest {
             analysisMabsCondition
         }.toList()
         backtestService.makeSummaryReport(mabsConditionList)
+    }
+
+
+    /**
+     * [elementList] 부분 집합을 만들 원소
+     * @return 공집합 제외한 부분집합
+     */
+    private fun getSubSet(elementList: List<Int>): MutableList<Set<Int>> {
+        val conditionSetList = mutableListOf<Set<Int>>()
+        makeSubSet(elementList, conditionSetList, 0, BooleanArray(elementList.size))
+        return conditionSetList
+    }
+
+    /**
+     * [list] 집합을 만들 원소
+     * [subSet] 부분집합
+     * 부분집합 만듦
+     */
+    private fun makeSubSet(list: List<Int>, subSet: MutableList<Set<Int>>, idx: Int, check: BooleanArray) {
+        if (list.size == idx) {
+            val subSetItem = IntStream.range(0, list.size)
+                .filter { num: Int -> check[num] }
+                .mapToObj { num: Int -> list[num] }
+                .collect(Collectors.toSet())
+
+            // 공집합은 제외
+            if (subSetItem.isNotEmpty()) {
+                subSet.add(subSetItem)
+            }
+            return
+        }
+        check[idx] = true
+        makeSubSet(list, subSet, idx + 1, check)
+        check[idx] = false
+        makeSubSet(list, subSet, idx + 1, check)
     }
 }

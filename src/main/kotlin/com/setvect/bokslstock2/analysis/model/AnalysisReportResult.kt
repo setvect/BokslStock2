@@ -36,7 +36,7 @@ data class AnalysisReportResult(
     /**
      * 종목 Buy&Hold 수익률
      */
-    val buyAndHoldYieldTotal: YieldMdd,
+    val buyAndHoldYieldTotal: TotalYield,
 ) {
     /**
      *@return 전체 매매 내역 승률 합
