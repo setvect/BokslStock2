@@ -87,7 +87,7 @@ class MabsBacktestService(
                 if (buyCheck(beforeYesterdayCandle, condition)) {
                     val shortFormat = String.format("%,d", yesterdayCandle.average[condition.shortPeriod])
                     val longFormat = String.format("%,d", yesterdayCandle.average[condition.longPeriod])
-                    log.info("새롭게 이동평균을 돌파할 때만 매수합니다. ${yesterdayCandle.candleDateTime} - 단기이평: $shortFormat, 장기이평: $longFormat")
+                    log.info("새롭게 이동평균을 돌파할 때만 매수합니다. ${yesterdayCandle.candleDateTimeStart}~${yesterdayCandle.candleDateTimeEnd} - 단기이평: $shortFormat, 장기이평: $longFormat")
                     continue
                 }
                 if (buyCheck(yesterdayCandle, condition)) {
@@ -100,7 +100,7 @@ class MabsBacktestService(
                         maLong = yesterdayCandle.average[condition.longPeriod] ?: 0,
                         yield = 0.0,
                         unitPrice = currentCandle.openPrice,
-                        tradeDate = currentCandle.candleDateTime
+                        tradeDate = currentCandle.candleDateTimeStart
                     )
                     mabsTradeRepository.save(lastBuyInfo)
                     lastStatus = BUY
@@ -120,7 +120,7 @@ class MabsBacktestService(
                         maLong = yesterdayCandle.average[condition.longPeriod] ?: 0,
                         yield = ApplicationUtil.getYield(lastBuyInfo!!.unitPrice, currentCandle.openPrice),
                         unitPrice = currentCandle.openPrice,
-                        tradeDate = currentCandle.candleDateTime
+                        tradeDate = currentCandle.candleDateTimeStart
                     )
                     mabsTradeRepository.save(sellInfo)
                     lastStatus = SELL
@@ -507,7 +507,7 @@ class MabsBacktestService(
         evaluationAmountList: List<EvaluationAmountItem>,
         range: DateRange
     ): TotalYield {
-        val prices = evaluationAmountList.map { it.backtestAmount }.toList()
+        val prices = evaluationAmountList.map { it.buyHoldAmount }.toList()
         return TotalYield(
             ApplicationUtil.getYieldByLong(prices),
             ApplicationUtil.getMddByLong(prices),
@@ -705,7 +705,7 @@ class MabsBacktestService(
         report.append(getConditionSummary(result))
 
         val reportFileSubPrefix = getReportFileSuffix(result.analysisMabsCondition.tradeConditionList, result)
-        val reportFile = File("./backtest-result/trade-report", reportFileSubPrefix)
+        val reportFile = File("./backtest-result/trade-report", "trade_" + reportFileSubPrefix)
         FileUtils.writeStringToFile(reportFile, report.toString(), "euc-kr")
         println("결과 파일:" + reportFile.name)
     }
@@ -731,7 +731,7 @@ class MabsBacktestService(
         report.append(getConditionSummary(result))
 
         val reportFileSubPrefix = getReportFileSuffix(result.analysisMabsCondition.tradeConditionList, result)
-        val reportFile = File("./backtest-result/trade-report-eval", reportFileSubPrefix)
+        val reportFile = File("./backtest-result/trade-report", "trade_eval_" + reportFileSubPrefix)
         FileUtils.writeStringToFile(reportFile, report.toString(), "euc-kr")
         println("결과 파일:" + reportFile.name)
     }

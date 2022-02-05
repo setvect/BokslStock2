@@ -45,7 +45,8 @@ class MovingAverageService(
 
         val groupingCandleList = candleGroupMap.entries.map {
             CandleDto(
-                candleDateTime = it.value.last().candleDateTime,
+                candleDateTimeStart = it.value.first().candleDateTime,
+                candleDateTimeEnd = it.value.last().candleDateTime,
                 lowPrice = it.value.minOf { p -> p.lowPrice },
                 highPrice = it.value.maxOf { p -> p.highPrice },
                 openPrice = it.value.first().openPrice,

@@ -84,7 +84,7 @@ class MabsBacktest {
                 .map { entry -> "이동평균(${entry.key}): ${it.average[entry.key]}" }
                 .toList()
                 .joinToString(", ")
-            println("${it.candleDateTime} - O: ${it.openPrice}, H: ${it.highPrice}, L: ${it.lowPrice}, C:${it.closePrice}, ${it.periodType}, $avgInfo")
+            println("${it.candleDateTimeStart}~${it.candleDateTimeEnd} - O: ${it.openPrice}, H: ${it.highPrice}, L: ${it.lowPrice}, C:${it.closePrice}, ${it.periodType}, $avgInfo")
         }
 
 //        movingAverage.backtest()
@@ -118,7 +118,7 @@ class MabsBacktest {
 
     @Test
     @Transactional
-    fun 이동평균돌파전략_리포트생성() {
+    fun 이동평균돌파전략_여러개_리포트생성() {
 //        val elementList = listOf(951551, 951255) // 평균 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
 //        val elementList = listOf(950589, 950064) // 최고 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
 //        val elementList = listOf(952722, 950164) // 최악 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
@@ -156,9 +156,9 @@ class MabsBacktest {
 
     @Test
     @Transactional
-    fun 이동평균돌파전략_합계리포트생성() {
+    fun 이동평균돌파전략_단건_리포트생성() {
         val range = DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.now())
-        val conditionList = mabsConditionRepository.listBySeq(listOf(950700, 950071))
+        val conditionList = mabsConditionRepository.listBySeq(listOf(949092))
         val analysisMabsCondition = AnalysisMabsCondition(
             tradeConditionList = conditionList,
             range = range,
