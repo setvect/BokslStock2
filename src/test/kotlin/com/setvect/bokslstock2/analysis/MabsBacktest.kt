@@ -5,6 +5,7 @@ import com.setvect.bokslstock2.analysis.entity.MabsConditionEntity
 import com.setvect.bokslstock2.analysis.model.AnalysisMabsCondition
 import com.setvect.bokslstock2.analysis.repository.MabsConditionRepository
 import com.setvect.bokslstock2.analysis.repository.MabsTradeRepository
+import com.setvect.bokslstock2.analysis.service.MabsAnalysisService
 import com.setvect.bokslstock2.analysis.service.MabsBacktestService
 import com.setvect.bokslstock2.analysis.service.MovingAverageService
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
@@ -39,6 +40,9 @@ class MabsBacktest {
 
     @Autowired
     private lateinit var backtestService: MabsBacktestService
+
+    @Autowired
+    private lateinit var analysisService: MabsAnalysisService
 
     @Autowired
     private lateinit var mabsConditionRepository: MabsConditionRepository
@@ -151,7 +155,7 @@ class MabsBacktest {
             }.toList()
         }.toList()
 
-        backtestService.makeSummaryReport(analysisMabsConditionList)
+        analysisService.makeSummaryReport(analysisMabsConditionList)
     }
 
     @Test
@@ -169,7 +173,7 @@ class MabsBacktest {
             comment = ""
         )
 
-        backtestService.makeReport(analysisMabsCondition)
+        analysisService.makeReport(analysisMabsCondition)
     }
 
     @Test
@@ -182,7 +186,6 @@ class MabsBacktest {
         mabsTradeRepository.deleteAll()
         mabsConditionRepository.deleteAll()
     }
-
 
     private fun 조건생성_일봉() {
         val pairList = listOf(
@@ -377,7 +380,7 @@ class MabsBacktest {
             log.info("거래 내역 조회 진행 ${++i}/${conditionList.size}")
             analysisMabsCondition
         }.toList()
-        backtestService.makeSummaryReport(mabsConditionList)
+        analysisService.makeSummaryReport(mabsConditionList)
     }
 
 
