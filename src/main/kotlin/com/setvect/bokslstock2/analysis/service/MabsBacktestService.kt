@@ -411,7 +411,7 @@ class MabsBacktestService(
         // <조건아이디, 주식수>
         val condByStockQty = condition.tradeConditionList.associate { it.mabsConditionSeq to 0 }.toMutableMap()
 
-        return allDateList.map { date ->
+        val result = allDateList.map { date ->
             val buyHoldAmount = buyHoldMap[date] ?: buyHoldLastAmount
             val currentTradeList = tradeByDate[date] ?: emptyList()
             for (trade in currentTradeList) {
@@ -433,7 +433,17 @@ class MabsBacktestService(
             val backtestAmount = backtestLastCash + evalStockAmount
             buyHoldLastAmount = buyHoldAmount
             EvaluationAmountItem(baseDate = date, buyHoldAmount = buyHoldAmount, backtestAmount = backtestAmount)
-        }.toList()
+        }.toMutableList()
+        // 최초 시작은 초기 투자금으로 설정
+        result.add(
+            0,
+            EvaluationAmountItem(
+                baseDate = allDateList.first(),
+                buyHoldAmount = condition.cash,
+                backtestAmount = condition.cash
+            )
+        )
+        return result
 
     }
 
