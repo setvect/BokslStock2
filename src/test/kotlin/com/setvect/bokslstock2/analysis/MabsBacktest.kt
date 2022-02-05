@@ -123,21 +123,33 @@ class MabsBacktest {
 //        val elementList = listOf(950589, 950064) // 최고 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
 //        val elementList = listOf(952722, 950164) // 최악 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
 //        val elementList = listOf(949078, 951062) // 코스닥150 레버리지, KODEX 코스닥150선물인버스
-        val elementList = listOf(949078, 949331) // 코스닥150 레버리지, KODEX 레버리지
+//        val elementList = listOf(949078, 949331) // 코스닥150 레버리지, KODEX 레버리지
+        val elementList = listOf(949079) // 코스닥150 레버리지
         val conditionSetList = getSubSet(elementList)
 
-        val analysisMabsConditionList = conditionSetList.map {
-            val conditionList = mabsConditionRepository.listBySeq(it)
-            AnalysisMabsCondition(
-                tradeConditionList = conditionList,
-                range = DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.now()),
-                investRatio = 0.5,
-                cash = 10_000_000,
-                feeBuy = 0.001,
-                feeSell = 0.001,
-                comment = ""
-            )
-        }.toList();
+        val rangeList = listOf(
+            DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.of(2017, 1, 1, 0, 0)),
+            DateRange(LocalDateTime.of(2017, 1, 1, 0, 0), LocalDateTime.of(2018, 1, 1, 0, 0)),
+            DateRange(LocalDateTime.of(2018, 1, 1, 0, 0), LocalDateTime.of(2019, 1, 1, 0, 0)),
+            DateRange(LocalDateTime.of(2019, 1, 1, 0, 0), LocalDateTime.of(2020, 1, 1, 0, 0)),
+            DateRange(LocalDateTime.of(2020, 1, 1, 0, 0), LocalDateTime.of(2021, 1, 1, 0, 0)),
+            DateRange(LocalDateTime.of(2021, 1, 1, 0, 0), LocalDateTime.now()),
+        )
+
+        val analysisMabsConditionList = conditionSetList.flatMap { conditionSet ->
+            val conditionList = mabsConditionRepository.listBySeq(conditionSet)
+            rangeList.map { range ->
+                AnalysisMabsCondition(
+                    tradeConditionList = conditionList,
+                    range = range,
+                    investRatio = 0.5,
+                    cash = 10_000_000,
+                    feeBuy = 0.001,
+                    feeSell = 0.001,
+                    comment = ""
+                )
+            }.toList()
+        }.toList()
 
         backtestService.makeSummaryReport(analysisMabsConditionList)
     }
@@ -145,8 +157,8 @@ class MabsBacktest {
     @Test
     @Transactional
     fun 이동평균돌파전략_합계리포트생성() {
-        val range = DateRange(LocalDateTime.of(2010, 1, 1, 0, 0), LocalDateTime.now())
-        val conditionList = mabsConditionRepository.listBySeq(listOf(900104, 900155))
+        val range = DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.now())
+        val conditionList = mabsConditionRepository.listBySeq(listOf(950700, 950071))
         val analysisMabsCondition = AnalysisMabsCondition(
             tradeConditionList = conditionList,
             range = range,
@@ -157,7 +169,7 @@ class MabsBacktest {
             comment = ""
         )
 
-        backtestService.makeSummaryReport(listOf(analysisMabsCondition))
+        backtestService.makeReport(analysisMabsCondition)
     }
 
     @Test

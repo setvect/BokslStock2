@@ -36,6 +36,16 @@ object ApplicationUtil {
      * [prices] 시계열 가격 변화
      * @return 수익률 1 == 100%
      */
+    fun getYieldByLong(prices: List<Long>): Double {
+        return if (prices.isEmpty()) {
+            0.0
+        } else getYield(prices[0], prices[prices.size - 1])
+    }
+
+    /**
+     * [prices] 시계열 가격 변화
+     * @return 수익률 1 == 100%
+     */
     fun getYieldByInt(prices: List<Int>): Double {
         return if (prices.isEmpty()) {
             0.0

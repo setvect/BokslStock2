@@ -11,7 +11,7 @@ data class TradeReportItem(
      */
     val mabsTradeEntity: MabsTradeEntity,
     /**
-     * 매매 수량
+     * 매수 수량
      */
     val qty: Int,
     /**
