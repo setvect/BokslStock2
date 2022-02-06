@@ -94,7 +94,14 @@ class MabsAnalysisService(
         }.toList()
 
         val workbook = XSSFWorkbook()
-        val sheetBacktestSummary  = createTotalSummary(workbook, resultList)
+
+        var rowIdx = 1
+        resultList.forEach { result ->
+            makeReportFile(result)
+            log.info("개별분석파일 생성 ${rowIdx++}/$resultList.size}")
+        }
+
+        val sheetBacktestSummary = createTotalSummary(workbook, resultList)
         workbook.setSheetName(workbook.getSheetIndex(sheetBacktestSummary), "1. 평가표")
 
         val sheetCondition = createMultiCondition(workbook, conditionList)
@@ -125,9 +132,16 @@ class MabsAnalysisService(
                 "실현 수익,실현 MDD,실현 CAGR,매매 횟수,승률"
         applyHeader(sheet, header)
         var rowIdx = 1
+
+        val defaultStyle = ExcelStyle.createDate(workbook)
+        val dateStyle = ExcelStyle.createDate(workbook)
+        val commaStyle = ExcelStyle.createComma(workbook)
+        val percentStyle = ExcelStyle.createPercent(workbook)
+        val percentImportantStyle = ExcelStyle.createPercent(workbook)
+        percentImportantStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        percentImportantStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
+
         resultList.forEach { result ->
-            makeReportFile(result)
-            log.info("개별분석파일 생성 ${rowIdx}/$resultList.size}")
 
             val multiCondition = result.analysisMabsCondition
             val tradeConditionList = multiCondition.tradeConditionList
@@ -136,77 +150,71 @@ class MabsAnalysisService(
             var cellIdx = 0
             var createCell = row.createCell(cellIdx++)
             createCell.setCellValue(multiCondition.range.toString())
-            createCell.cellStyle = ExcelStyle.getDate(workbook)
+            createCell.cellStyle = dateStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(tradeConditionList.joinToString("|") { it.mabsConditionSeq.toString() })
-            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+            createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(tradeConditionList.joinToString(",") { it.stock.name })
-            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+            createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(multiCondition.investRatio)
-            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+            createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(multiCondition.cash.toDouble())
-            createCell.cellStyle = ExcelStyle.getComma(workbook)
+            createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(multiCondition.feeBuy)
-            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+            createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(multiCondition.feeSell)
-            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+            createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(multiCondition.comment)
-            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+            createCell.cellStyle = defaultStyle
 
             val sumYield: TotalYield = result.buyAndHoldYieldTotal
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(sumYield.yield)
-            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+            createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(sumYield.mdd)
-            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+            createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(sumYield.getCagr())
-            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+            createCell.cellStyle = percentStyle
 
             val totalYield: TotalYield = result.yieldTotal
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(totalYield.yield)
-            createCell.cellStyle = ExcelStyle.getPercent(workbook)
-            createCell.cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
-            createCell.cellStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
+            createCell.cellStyle = percentImportantStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(totalYield.mdd)
-            createCell.cellStyle = ExcelStyle.getPercent(workbook)
-            createCell.cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
-            createCell.cellStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
+            createCell.cellStyle = percentImportantStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(totalYield.getCagr())
-            createCell.cellStyle = ExcelStyle.getPercent(workbook)
-            createCell.cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
-            createCell.cellStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
+            createCell.cellStyle = percentImportantStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(result.getWinningRateTotal().getTradeCount().toDouble())
-            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+            createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx)
             createCell.setCellValue(result.getWinningRateTotal().getWinRate())
-            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+            createCell.cellStyle = percentStyle
         }
         sheet.createFreezePane(0, 1)
         sheet.defaultColumnWidth = 14
@@ -237,41 +245,44 @@ class MabsAnalysisService(
             .toList()
 
         var rowIdx = 1
+        val defaultStyle = ExcelStyle.createDate(workbook)
+        val percentStyle = ExcelStyle.createPercent(workbook)
+
         for (condition in mabsConditionList) {
             val row = sheet.createRow(rowIdx++)
             var cellIdx = 0
 
             var createCell = row.createCell(cellIdx++)
             createCell.setCellValue(condition.mabsConditionSeq.toString())
-            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+            createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(condition.stock.name)
-            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+            createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(condition.stock.code)
-            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+            createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(condition.periodType.name)
-            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+            createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(condition.shortPeriod.toDouble())
-            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+            createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(condition.longPeriod.toDouble())
-            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+            createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(condition.downSellRate)
-            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+            createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx)
             createCell.setCellValue(condition.upBuyRate)
-            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+            createCell.cellStyle = percentStyle
         }
 
         sheet.createFreezePane(0, 1)
@@ -704,6 +715,11 @@ class MabsAnalysisService(
         applyHeader(sheet, header)
         var rowIdx = 1
 
+        val defaultStyle = ExcelStyle.createDate(workbook)
+        val commaStyle = ExcelStyle.createComma(workbook)
+        val percentStyle = ExcelStyle.createPercent(workbook)
+        val decimalStyle =ExcelStyle.createDecimal(workbook)
+
         result.tradeHistory.forEach { tradeItem: TradeReportItem ->
             val mabsTradeEntity: MabsTradeEntity = tradeItem.mabsTradeEntity
             val mabsConditionEntity: MabsConditionEntity = mabsTradeEntity.mabsConditionEntity
@@ -713,71 +729,71 @@ class MabsAnalysisService(
             var cellIdx = 0
             var createCell = row.createCell(cellIdx++)
             createCell.setCellValue(tradeDate)
-            createCell.cellStyle = ExcelStyle.getDate(workbook)
+            createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(mabsConditionEntity.stock.getNameCode())
-            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+            createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(mabsTradeEntity.tradeType.name)
-            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+            createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(mabsTradeEntity.maShort.toDouble())
-            createCell.cellStyle = ExcelStyle.getComma(workbook)
+            createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(mabsTradeEntity.maLong.toDouble())
-            createCell.cellStyle = ExcelStyle.getComma(workbook)
+            createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(tradeItem.qty.toDouble())
-            createCell.cellStyle = ExcelStyle.getComma(workbook)
+            createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(tradeItem.getBuyAmount().toDouble())
-            createCell.cellStyle = ExcelStyle.getComma(workbook)
+            createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(mabsTradeEntity.unitPrice.toDouble())
-            createCell.cellStyle = ExcelStyle.getComma(workbook)
+            createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(mabsTradeEntity.highYield)
-            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+            createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(mabsTradeEntity.lowYield)
-            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+            createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(mabsTradeEntity.yield)
-            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+            createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(tradeItem.feePrice.toDouble())
-            createCell.cellStyle = ExcelStyle.getComma(workbook)
+            createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(tradeItem.gains.toDouble())
-            createCell.cellStyle = ExcelStyle.getComma(workbook)
+            createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(tradeItem.stockEvalPrice.toDouble())
-            createCell.cellStyle = ExcelStyle.getComma(workbook)
+            createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(tradeItem.cash.toDouble())
-            createCell.cellStyle = ExcelStyle.getComma(workbook)
+            createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(tradeItem.getEvalPrice().toDouble())
-            createCell.cellStyle = ExcelStyle.getComma(workbook)
+            createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx)
             createCell.setCellValue(tradeItem.getEvalPrice() / result.analysisMabsCondition.cash.toDouble())
-            createCell.cellStyle = ExcelStyle.getDecimal(workbook)
+            createCell.cellStyle = decimalStyle
         }
 
         sheet.createFreezePane(0, 1)
@@ -803,20 +819,23 @@ class MabsAnalysisService(
         applyHeader(sheet, header)
         var rowIdx = 1
 
+        val dateStyle = ExcelStyle.createDate(workbook)
+        val commaStyle = ExcelStyle.createComma(workbook)
+
         result.evaluationAmountHistory.forEach { evalItem: EvaluationAmountItem ->
             val row = sheet.createRow(rowIdx++)
             var cellIdx = 0
             var createCell = row.createCell(cellIdx++)
             createCell.setCellValue(evalItem.baseDate)
-            createCell.cellStyle = ExcelStyle.getDate(workbook)
+            createCell.cellStyle = dateStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(evalItem.buyHoldAmount.toDouble())
-            createCell.cellStyle = ExcelStyle.getComma(workbook)
+            createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx)
             createCell.setCellValue(evalItem.backtestAmount.toDouble())
-            createCell.cellStyle = ExcelStyle.getComma(workbook)
+            createCell.cellStyle = commaStyle
         }
         sheet.createFreezePane(0, 1)
         sheet.defaultColumnWidth = 20
@@ -848,7 +867,7 @@ class MabsAnalysisService(
         for (cellIdx in headerTxt.indices) {
             val cell = rowHeader.createCell(cellIdx)
             cell.setCellValue(headerTxt[cellIdx])
-            cell.cellStyle = ExcelStyle.getHeaderRow(sheet.workbook)
+            cell.cellStyle = ExcelStyle.createHeaderRow(sheet.workbook)
         }
     }
 
@@ -864,7 +883,7 @@ class MabsAnalysisService(
                 val colVal = columns[colIdx]
                 val cell = row.createCell(colIdx)
                 cell.setCellValue(colVal)
-                cell.cellStyle = ExcelStyle.getDefault(sheet.workbook)
+                cell.cellStyle = ExcelStyle.createDefault(sheet.workbook)
             }
         }
     }
@@ -923,18 +942,18 @@ class MabsAnalysisService(
      * 엑셀 리포트에 사용될 셀 스타일 모음
      */
     object ExcelStyle {
-        fun getDefault(workbook: XSSFWorkbook): XSSFCellStyle? {
+        fun createDefault(workbook: XSSFWorkbook): XSSFCellStyle? {
             return workbook.createCellStyle()
         }
 
-        fun getDate(workbook: XSSFWorkbook): XSSFCellStyle? {
+        fun createDate(workbook: XSSFWorkbook): XSSFCellStyle? {
             val cellStyle = workbook.createCellStyle()
             val createHelper: CreationHelper = workbook.creationHelper
             cellStyle.dataFormat = createHelper.createDataFormat().getFormat("yyyy/MM/dd hh:mm")
             return cellStyle
         }
 
-        fun getComma(workbook: XSSFWorkbook): XSSFCellStyle? {
+        fun createComma(workbook: XSSFWorkbook): XSSFCellStyle? {
             val cellStyle = workbook.createCellStyle()
             val format: DataFormat = workbook.createDataFormat()
             cellStyle.dataFormat = format.getFormat("###,###")
@@ -944,21 +963,21 @@ class MabsAnalysisService(
         /**
          * 소수점 표시
          */
-        fun getDecimal(workbook: XSSFWorkbook): XSSFCellStyle? {
+        fun createDecimal(workbook: XSSFWorkbook): XSSFCellStyle? {
             val cellStyle = workbook.createCellStyle()
             val format: DataFormat = workbook.createDataFormat()
             cellStyle.dataFormat = format.getFormat("0.00")
             return cellStyle
         }
 
-        fun getPercent(workbook: XSSFWorkbook): XSSFCellStyle {
+        fun createPercent(workbook: XSSFWorkbook): XSSFCellStyle {
             val cellStyle = workbook.createCellStyle()
             val format: DataFormat = workbook.createDataFormat()
             cellStyle.dataFormat = format.getFormat("0.00%")
             return cellStyle
         }
 
-        fun getHeaderRow(workbook: XSSFWorkbook): XSSFCellStyle {
+        fun createHeaderRow(workbook: XSSFWorkbook): XSSFCellStyle {
             val cellStyle = workbook.createCellStyle()
             cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
             cellStyle.fillForegroundColor = IndexedColors.YELLOW.index
