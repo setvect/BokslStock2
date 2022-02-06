@@ -127,6 +127,7 @@ class MabsAnalysisService(
         var rowIdx = 1
         resultList.forEach { result ->
             makeReportFile(result)
+            log.info("개별분석파일 생성 ${rowIdx}/$resultList.size}")
 
             val multiCondition = result.analysisMabsCondition
             val tradeConditionList = multiCondition.tradeConditionList
@@ -893,7 +894,7 @@ class MabsAnalysisService(
             val tradeCondition = tradeConditionList[i - 1]
             report.append(String.format("${i}. 조건아이디\t %s", tradeCondition.mabsConditionSeq)).append("\n")
             report.append(String.format("${i}. 분석주기\t %s", tradeCondition.periodType)).append("\n")
-            report.append(String.format("${i}. 대상 코인\t %s", tradeCondition.stock.getNameCode())).append("\n")
+            report.append(String.format("${i}. 대상 종목\t %s", tradeCondition.stock.getNameCode())).append("\n")
             report.append(String.format("${i}. 상승 매수률\t %,.2f%%", tradeCondition.upBuyRate * 100)).append("\n")
             report.append(String.format("${i}. 하락 매도률\t %,.2f%%", tradeCondition.downSellRate * 100)).append("\n")
             report.append(String.format("${i}. 단기 이동평균 기간\t %d", tradeCondition.shortPeriod)).append("\n")

@@ -3,7 +3,7 @@ package com.setvect.bokslstock2.analysis.model
 import com.setvect.bokslstock2.util.ApplicationUtil
 
 /**
- * 멀티 코인 매매 백테스트 분석 결과
+ * 멀티 종목 매매 백테스트 분석 결과
  */
 data class AnalysisReportResult(
     /**

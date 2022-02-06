@@ -144,10 +144,18 @@ class MabsBacktest {
         val analysisMabsConditionList = conditionSetList.flatMap { conditionSet ->
             val conditionList = mabsConditionRepository.listBySeq(conditionSet)
             rangeList.map { range ->
+                // 시세가 포함된 날짜범위 지정
+                val realRangeList =
+                    conditionList.map { candleRepository.findByCandleDateTimeBetween(it.stock, range.from, range.to) }
+                        .toList()
+                val from = realRangeList.minOf { it.from }
+                val to = realRangeList.maxOf { it.to }
+                val realRange = DateRange(from, to)
+
                 AnalysisMabsCondition(
                     tradeConditionList = conditionList,
-                    range = range,
-                    investRatio = 0.5,
+                    range = realRange,
+                    investRatio = 0.99,
                     cash = 10_000_000,
                     feeBuy = 0.001,
                     feeSell = 0.001,
