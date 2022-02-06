@@ -15,16 +15,27 @@ import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
-import com.setvect.bokslstock2.util.DateUtil
 import java.io.File
+import java.io.FileOutputStream
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import java.util.*
-import org.apache.commons.io.FileUtils
+import org.apache.poi.ss.usermodel.BorderStyle
+import org.apache.poi.ss.usermodel.CreationHelper
+import org.apache.poi.ss.usermodel.DataFormat
+import org.apache.poi.ss.usermodel.FillPatternType
+import org.apache.poi.ss.usermodel.HorizontalAlignment
+import org.apache.poi.ss.usermodel.IndexedColors
+import org.apache.poi.ss.usermodel.VerticalAlignment
+import org.apache.poi.xssf.usermodel.XSSFCellStyle
+import org.apache.poi.xssf.usermodel.XSSFFont
+import org.apache.poi.xssf.usermodel.XSSFSheet
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import kotlin.streams.toList
+
 
 /**
  * 이동평균 돌파 매매 분석
@@ -43,14 +54,37 @@ class MabsAnalysisService(
         val result = analysis(tradeItemHistory, condition)
         val summary = getSummary(result)
         println(summary)
-        makeReport(result)
-        makeReportEvalAmount(result)
+        makeReportFile(result)
+    }
+
+    /**
+     * 분석건에 대한 리포트 파일 만듦
+     * @return 엑셀 파일
+     */
+    private fun makeReportFile(result: AnalysisReportResult): File {
+        val workbook = XSSFWorkbook()
+        var sheet = createTradeReport(result, workbook)
+        workbook.setSheetName(workbook.getSheetIndex(sheet), "1. 매매이력")
+
+        sheet = createReportEvalAmount(result, workbook)
+        workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일짜별 자산변화")
+
+        sheet = createReportSummary(result, workbook)
+        workbook.setSheetName(workbook.getSheetIndex(sheet), "3. 매매 요약결과 및 조건")
+
+        val reportFileSubPrefix = getReportFileSuffix(result)
+        val reportFile = File("./backtest-result/trade-report", "trade_$reportFileSubPrefix")
+        FileOutputStream(reportFile).use { ous ->
+            workbook.write(ous)
+        }
+        println("결과 파일:" + reportFile.name)
+        return reportFile
     }
 
     /**
      *  복수개의 조건에 대한 분석 요약 리포트를 만듦
      */
-    fun makeSummaryReport(conditionList: List<AnalysisMabsCondition>) {
+    fun makeSummaryReport(conditionList: List<AnalysisMabsCondition>): File {
         var i = 0
         val resultList = conditionList.map { condition ->
             val tradeItemHistory = trade(condition)
@@ -59,82 +93,193 @@ class MabsAnalysisService(
             analysis
         }.toList()
 
+        val workbook = XSSFWorkbook()
+        val sheetBacktestSummary  = createTotalSummary(workbook, resultList)
+        workbook.setSheetName(workbook.getSheetIndex(sheetBacktestSummary), "1. 평가표")
+
+        val sheetCondition = createMultiCondition(workbook, conditionList)
+        workbook.setSheetName(workbook.getSheetIndex(sheetCondition), "2. 테스트 조건")
+
+        // 결과 저장
+        val reportFile =
+            File("./backtest-result", "이평선돌파_전략_백테스트_분석결과_" + Timestamp.valueOf(LocalDateTime.now()).time + ".xlsx")
+        FileOutputStream(reportFile).use { ous ->
+            workbook.write(ous)
+        }
+        println("결과 파일:" + reportFile.name)
+        return reportFile
+    }
+
+    /**
+     * @return 여러개 백테스트 결과 요약 시트
+     */
+    private fun createTotalSummary(
+        workbook: XSSFWorkbook,
+        resultList: List<AnalysisReportResult>
+    ): XSSFSheet {
+        val sheet = workbook.createSheet()
+
         val header = "분석기간,분석 아이디,종목,투자비율,최초 투자금액,매수 수수료,매도 수수료," +
                 "조건 설명," +
                 "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR," +
-                "실현 수익,실현 MDD,실현 CAGR,매매 횟수,승률,"
-        val report = StringBuilder(header.replace(",", "\t") + "\n")
-
+                "실현 수익,실현 MDD,실현 CAGR,매매 횟수,승률"
+        applyHeader(sheet, header)
+        var rowIdx = 1
         resultList.forEach { result ->
-            // 개별 매매 리포트 만듦
-            makeReport(result)
+            makeReportFile(result)
 
             val multiCondition = result.analysisMabsCondition
             val tradeConditionList = multiCondition.tradeConditionList
 
-            val reportRow = StringBuilder()
-            reportRow.append(String.format("%s\t", multiCondition.range))
-            reportRow.append(
-                String.format(
-                    "%s\t",
-                    tradeConditionList.joinToString("|") { it.mabsConditionSeq.toString() }
-                )
-            )
-            reportRow.append(String.format("%s\t", tradeConditionList.joinToString(",") { it.stock.name }))
-            reportRow.append(String.format("%,.2f%%\t", multiCondition.investRatio * 100))
-            reportRow.append(String.format("%,d\t", multiCondition.cash))
-            reportRow.append(String.format("%,.2f%%\t", multiCondition.feeBuy * 100))
-            reportRow.append(String.format("%,.2f%%\t", multiCondition.feeSell * 100))
+            val row = sheet.createRow(rowIdx++)
+            var cellIdx = 0
+            var createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(multiCondition.range.toString())
+            createCell.cellStyle = ExcelStyle.getDate(workbook)
 
-            reportRow.append(String.format("%s\t", multiCondition.comment))
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeConditionList.joinToString("|") { it.mabsConditionSeq.toString() })
+            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeConditionList.joinToString(",") { it.stock.name })
+            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(multiCondition.investRatio)
+            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(multiCondition.cash.toDouble())
+            createCell.cellStyle = ExcelStyle.getComma(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(multiCondition.feeBuy)
+            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(multiCondition.feeSell)
+            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(multiCondition.comment)
+            createCell.cellStyle = ExcelStyle.getDefault(workbook)
 
             val sumYield: TotalYield = result.buyAndHoldYieldTotal
-            reportRow.append(String.format("%,.2f%%\t", sumYield.yield * 100))
-            reportRow.append(String.format("%,.2f%%\t", sumYield.mdd * 100))
-            reportRow.append(String.format("%,.2f%%\t", sumYield.getCagr() * 100))
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(sumYield.yield)
+            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(sumYield.mdd)
+            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(sumYield.getCagr())
+            createCell.cellStyle = ExcelStyle.getPercent(workbook)
 
             val totalYield: TotalYield = result.yieldTotal
-            reportRow.append(String.format("%,.2f%%\t", totalYield.yield * 100))
-            reportRow.append(String.format("%,.2f%%\t", totalYield.mdd * 100))
-            reportRow.append(String.format("%,.2f%%\t", totalYield.getCagr() * 100))
-            reportRow.append(String.format("%d\t", result.getWinningRateTotal().getTradeCount()))
-            reportRow.append(String.format("%,.2f%%\t", result.getWinningRateTotal().getWinRate() * 100))
 
-            report.append(reportRow).append("\n")
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(totalYield.yield)
+            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+            createCell.cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            createCell.cellStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
 
-            log.info("리포트생성 진행 ${++i}/${conditionList.size}")
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(totalYield.mdd)
+            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+            createCell.cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            createCell.cellStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(totalYield.getCagr())
+            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+            createCell.cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            createCell.cellStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(result.getWinningRateTotal().getTradeCount().toDouble())
+            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+
+            createCell = row.createCell(cellIdx)
+            createCell.setCellValue(result.getWinningRateTotal().getWinRate())
+            createCell.cellStyle = ExcelStyle.getPercent(workbook)
         }
+        sheet.createFreezePane(0, 1)
+        sheet.defaultColumnWidth = 14
+        sheet.setColumnWidth(0, 12000)
+        sheet.setColumnWidth(1, 5000)
+        sheet.setColumnWidth(2, 5000)
 
-        report.append("\n\n\n========================== 매매 조건 정보 ==========================\n")
+        ExcelStyle.applyAllBorder(sheet)
+        ExcelStyle.applyDefaultFont(sheet)
 
+        return sheet
+    }
+
+    /**
+     * @return 백테스트 조건 정보를 가지고 있는 시트
+     */
+    private fun createMultiCondition(
+        workbook: XSSFWorkbook,
+        conditionList: List<AnalysisMabsCondition>
+    ): XSSFSheet {
+        val sheet = workbook.createSheet()
         val conditionHeader = "분석 아이디,종목이름,종목코드,매매주기,단기 이동평균 기간,장기 이동평균 기간,하락매도률,상승매도률"
-        report.append(conditionHeader.replace(",", "\t") + "\n")
+        applyHeader(sheet, conditionHeader)
 
         val mabsConditionList: List<MabsConditionEntity> = conditionList
             .flatMap { it.tradeConditionList }
             .distinct()
             .toList()
 
+        var rowIdx = 1
         for (condition in mabsConditionList) {
-            val reportRow = StringBuilder()
-            reportRow.append(String.format("%s\t", condition.mabsConditionSeq))
-            reportRow.append(String.format("%s\t", condition.stock.name))
-            reportRow.append(String.format("%s\t", condition.stock.code))
-            reportRow.append(String.format("%s\t", condition.periodType))
-            reportRow.append(String.format("%d\t", condition.shortPeriod))
-            reportRow.append(String.format("%d\t", condition.longPeriod))
-            reportRow.append(String.format("%,.2f%%\t", condition.downSellRate * 100))
-            reportRow.append(String.format("%,.2f%%\t", condition.upBuyRate * 100))
-            report.append(reportRow).append("\n")
+            val row = sheet.createRow(rowIdx++)
+            var cellIdx = 0
+
+            var createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(condition.mabsConditionSeq.toString())
+            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(condition.stock.name)
+            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(condition.stock.code)
+            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(condition.periodType.name)
+            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(condition.shortPeriod.toDouble())
+            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(condition.longPeriod.toDouble())
+            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(condition.downSellRate)
+            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+
+            createCell = row.createCell(cellIdx)
+            createCell.setCellValue(condition.upBuyRate)
+            createCell.cellStyle = ExcelStyle.getPercent(workbook)
         }
 
-        // 결과 저장
-        val reportFile =
-            File("./backtest-result", "이평선돌파_전략_백테스트_분석결과_" + Timestamp.valueOf(LocalDateTime.now()).time + ".txt")
-        FileUtils.writeStringToFile(reportFile, report.toString(), "euc-kr")
-        println("결과 파일:" + reportFile.name)
-    }
+        sheet.createFreezePane(0, 1)
+        sheet.defaultColumnWidth = 15
 
+        ExcelStyle.applyAllBorder(sheet)
+        ExcelStyle.applyDefaultFont(sheet)
+        return sheet
+    }
 
     /**
      * 매매 백테스트
@@ -549,78 +694,180 @@ class MabsAnalysisService(
     }
 
     /**
-     * 매매 결과를 파일로 만듦
+     * 매매 내역을 시트로 만듦
      */
-    private fun makeReport(result: AnalysisReportResult) {
+    private fun createTradeReport(result: AnalysisReportResult, workbook: XSSFWorkbook): XSSFSheet {
+        val sheet = workbook.createSheet()
         val header =
             "날짜,종목,매매 구분,단기 이동평균,장기 이동평균,매수 수량,매매 금액,체결 가격,최고수익률,최저수익률,실현 수익률,수수료,투자 수익(수수료포함),보유 주식 평가금,매매후 보유 현금,평가금(주식+현금),수익비"
-        val report = StringBuilder(header.replace(",", "\t")).append("\n")
+        applyHeader(sheet, header)
+        var rowIdx = 1
 
-        result.tradeHistory.forEach { row: TradeReportItem ->
-            val mabsTradeEntity: MabsTradeEntity = row.mabsTradeEntity
+        result.tradeHistory.forEach { tradeItem: TradeReportItem ->
+            val mabsTradeEntity: MabsTradeEntity = tradeItem.mabsTradeEntity
             val mabsConditionEntity: MabsConditionEntity = mabsTradeEntity.mabsConditionEntity
             val tradeDate: LocalDateTime = mabsTradeEntity.tradeDate
-            val dateStr: String = DateUtil.formatDateTime(tradeDate)
-            report.append(String.format("%s\t", dateStr))
-            report.append(String.format("%s\t", mabsConditionEntity.stock.getNameCode()))
-            report.append(String.format("%s\t", mabsTradeEntity.tradeType))
-            report.append(String.format("%,d\t", mabsTradeEntity.maShort))
-            report.append(String.format("%,d\t", mabsTradeEntity.maLong))
-            report.append(String.format("%,d\t", row.qty))
-            report.append(String.format("%,d\t", row.getBuyAmount()))
-            report.append(String.format("%,d\t", mabsTradeEntity.unitPrice))
-            report.append(String.format("%,.2f%%\t", mabsTradeEntity.highYield * 100))
-            report.append(String.format("%,.2f%%\t", mabsTradeEntity.lowYield * 100))
-            report.append(String.format("%,.2f%%\t", mabsTradeEntity.yield * 100))
-            report.append(String.format("%,d\t", row.feePrice))
-            report.append(String.format("%,d\t", row.gains))
-            report.append(String.format("%,d\t", row.stockEvalPrice))
-            report.append(String.format("%,d\t", row.cash))
-            report.append(String.format("%,d\t", row.getEvalPrice()))
-            report.append(
-                String.format(
-                    "%,.2f\n",
-                    row.getEvalPrice() / result.analysisMabsCondition.cash.toDouble()
-                )
-            )
+
+            val row = sheet.createRow(rowIdx++)
+            var cellIdx = 0
+            var createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeDate)
+            createCell.cellStyle = ExcelStyle.getDate(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(mabsConditionEntity.stock.getNameCode())
+            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(mabsTradeEntity.tradeType.name)
+            createCell.cellStyle = ExcelStyle.getDefault(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(mabsTradeEntity.maShort.toDouble())
+            createCell.cellStyle = ExcelStyle.getComma(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(mabsTradeEntity.maLong.toDouble())
+            createCell.cellStyle = ExcelStyle.getComma(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.qty.toDouble())
+            createCell.cellStyle = ExcelStyle.getComma(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.getBuyAmount().toDouble())
+            createCell.cellStyle = ExcelStyle.getComma(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(mabsTradeEntity.unitPrice.toDouble())
+            createCell.cellStyle = ExcelStyle.getComma(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(mabsTradeEntity.highYield)
+            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(mabsTradeEntity.lowYield)
+            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(mabsTradeEntity.yield)
+            createCell.cellStyle = ExcelStyle.getPercent(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.feePrice.toDouble())
+            createCell.cellStyle = ExcelStyle.getComma(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.gains.toDouble())
+            createCell.cellStyle = ExcelStyle.getComma(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.stockEvalPrice.toDouble())
+            createCell.cellStyle = ExcelStyle.getComma(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.cash.toDouble())
+            createCell.cellStyle = ExcelStyle.getComma(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.getEvalPrice().toDouble())
+            createCell.cellStyle = ExcelStyle.getComma(workbook)
+
+            createCell = row.createCell(cellIdx)
+            createCell.setCellValue(tradeItem.getEvalPrice() / result.analysisMabsCondition.cash.toDouble())
+            createCell.cellStyle = ExcelStyle.getDecimal(workbook)
         }
 
-        report.append("\n\n")
-        report.append(getSummary(result))
-        report.append("\n\n")
-        report.append(getConditionSummary(result))
+        sheet.createFreezePane(0, 1)
+        sheet.defaultColumnWidth = 12
+        sheet.setColumnWidth(0, 4000)
+        sheet.setColumnWidth(1, 4000)
+        sheet.setColumnWidth(12, 4000)
+        sheet.setColumnWidth(13, 4000)
+        sheet.setColumnWidth(14, 4000)
+        sheet.setColumnWidth(15, 4000)
 
-        val reportFileSubPrefix = getReportFileSuffix(result.analysisMabsCondition.tradeConditionList, result)
-        val reportFile = File("./backtest-result/trade-report", "trade_" + reportFileSubPrefix)
-        FileUtils.writeStringToFile(reportFile, report.toString(), "euc-kr")
-        println("결과 파일:" + reportFile.name)
+        ExcelStyle.applyAllBorder(sheet)
+        ExcelStyle.applyDefaultFont(sheet)
+        return sheet
     }
 
     /**
-     * 날짜에 따른 평가금액(Buy&Hold, 벡테스트) 변화 리포트
+     * 날짜에 따른 평가금액(Buy&Hold, 벡테스트) 변화 시트 만듦
      */
-    private fun makeReportEvalAmount(result: AnalysisReportResult) {
-        val header =
-            "날짜,Buy&Hold 평가금,백테스트 평가금"
-        val report = StringBuilder(header.replace(",", "\t")).append("\n")
+    private fun createReportEvalAmount(result: AnalysisReportResult, workbook: XSSFWorkbook): XSSFSheet {
+        val sheet = workbook.createSheet()
+        val header = "날짜,Buy&Hold 평가금,백테스트 평가금"
+        applyHeader(sheet, header)
+        var rowIdx = 1
 
-        result.evaluationAmountHistory.forEach { row: EvaluationAmountItem ->
-            val dateStr: String = DateUtil.formatDateTime(row.baseDate)
-            report.append(String.format("%s\t", dateStr))
-            report.append(String.format("%,d\t", row.buyHoldAmount))
-            report.append(String.format("%,d\n", row.backtestAmount))
+        result.evaluationAmountHistory.forEach { evalItem: EvaluationAmountItem ->
+            val row = sheet.createRow(rowIdx++)
+            var cellIdx = 0
+            var createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(evalItem.baseDate)
+            createCell.cellStyle = ExcelStyle.getDate(workbook)
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(evalItem.buyHoldAmount.toDouble())
+            createCell.cellStyle = ExcelStyle.getComma(workbook)
+
+            createCell = row.createCell(cellIdx)
+            createCell.setCellValue(evalItem.backtestAmount.toDouble())
+            createCell.cellStyle = ExcelStyle.getComma(workbook)
         }
-
-        report.append("\n\n")
-        report.append(getSummary(result))
-        report.append("\n\n")
-        report.append(getConditionSummary(result))
-
-        val reportFileSubPrefix = getReportFileSuffix(result.analysisMabsCondition.tradeConditionList, result)
-        val reportFile = File("./backtest-result/trade-report", "trade_eval_" + reportFileSubPrefix)
-        FileUtils.writeStringToFile(reportFile, report.toString(), "euc-kr")
-        println("결과 파일:" + reportFile.name)
+        sheet.createFreezePane(0, 1)
+        sheet.defaultColumnWidth = 20
+        ExcelStyle.applyAllBorder(sheet)
+        ExcelStyle.applyDefaultFont(sheet)
+        return sheet
     }
+
+    /**
+     * 매매 결과 요약 및 조건 시트 만듦
+     */
+    private fun createReportSummary(result: AnalysisReportResult, workbook: XSSFWorkbook): XSSFSheet {
+        val sheet = workbook.createSheet()
+        val summary = getSummary(result)
+        textToSheet(summary, sheet)
+        val conditionSummary = getConditionSummary(result)
+        textToSheet(conditionSummary, sheet)
+
+        sheet.defaultColumnWidth = 60
+        return sheet
+    }
+
+    private fun applyHeader(
+        sheet: XSSFSheet,
+        header: String,
+    ) {
+        val rowHeader = sheet.createRow(0)
+        val headerTxt = header.split(",")
+        for (cellIdx in headerTxt.indices) {
+            val cell = rowHeader.createCell(cellIdx)
+            cell.setCellValue(headerTxt[cellIdx])
+            cell.cellStyle = ExcelStyle.getHeaderRow(sheet.workbook)
+        }
+    }
+
+    private fun textToSheet(summary: String, sheet: XSSFSheet) {
+        val lines = summary.split("\n")
+        sheet.createRow(sheet.physicalNumberOfRows)
+
+        for (rowIdx in lines.indices) {
+            val row = sheet.createRow(sheet.physicalNumberOfRows)
+            val columns = lines[rowIdx].split("\t")
+
+            for (colIdx in columns.indices) {
+                val colVal = columns[colIdx]
+                val cell = row.createCell(colIdx)
+                cell.setCellValue(colVal)
+                cell.cellStyle = ExcelStyle.getDefault(sheet.workbook)
+            }
+        }
+    }
+
 
     /**
      * 백테스트 조건 요약 정보
@@ -653,22 +900,106 @@ class MabsAnalysisService(
             report.append(String.format("${i}. 장기 이동평균 기간\t %d", tradeCondition.longPeriod)).append("\n")
         }
         return report.toString()
-
     }
 
     /**
      * @return 조건 정보가 담긴 리포트 파일명 subfix
      */
     private fun getReportFileSuffix(
-        tradeConditionList: List<MabsConditionEntity>,
         result: AnalysisReportResult
     ): String {
+        val tradeConditionList = result.analysisMabsCondition.tradeConditionList
         return String.format(
-            "%s_%s~%s_%s.txt",
+            "%s_%s~%s_%s.xlsx",
             tradeConditionList.joinToString(",") { it.mabsConditionSeq.toString() },
             result.analysisMabsCondition.range.fromDateFormat,
             result.analysisMabsCondition.range.toDateFormat,
             tradeConditionList.joinToString(",") { it.stock.code }
         )
+    }
+
+    /**
+     * 엑셀 리포트에 사용될 셀 스타일 모음
+     */
+    object ExcelStyle {
+        fun getDefault(workbook: XSSFWorkbook): XSSFCellStyle? {
+            return workbook.createCellStyle()
+        }
+
+        fun getDate(workbook: XSSFWorkbook): XSSFCellStyle? {
+            val cellStyle = workbook.createCellStyle()
+            val createHelper: CreationHelper = workbook.creationHelper
+            cellStyle.dataFormat = createHelper.createDataFormat().getFormat("yyyy/MM/dd hh:mm")
+            return cellStyle
+        }
+
+        fun getComma(workbook: XSSFWorkbook): XSSFCellStyle? {
+            val cellStyle = workbook.createCellStyle()
+            val format: DataFormat = workbook.createDataFormat()
+            cellStyle.dataFormat = format.getFormat("###,###")
+            return cellStyle
+        }
+
+        /**
+         * 소수점 표시
+         */
+        fun getDecimal(workbook: XSSFWorkbook): XSSFCellStyle? {
+            val cellStyle = workbook.createCellStyle()
+            val format: DataFormat = workbook.createDataFormat()
+            cellStyle.dataFormat = format.getFormat("0.00")
+            return cellStyle
+        }
+
+        fun getPercent(workbook: XSSFWorkbook): XSSFCellStyle {
+            val cellStyle = workbook.createCellStyle()
+            val format: DataFormat = workbook.createDataFormat()
+            cellStyle.dataFormat = format.getFormat("0.00%")
+            return cellStyle
+        }
+
+        fun getHeaderRow(workbook: XSSFWorkbook): XSSFCellStyle {
+            val cellStyle = workbook.createCellStyle()
+            cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            cellStyle.fillForegroundColor = IndexedColors.YELLOW.index
+
+            val font: XSSFFont = workbook.createFont()
+            font.bold = true
+            cellStyle.setFont(font)
+            cellStyle.alignment = HorizontalAlignment.CENTER
+            cellStyle.verticalAlignment = VerticalAlignment.CENTER
+            return cellStyle
+        }
+
+        /**
+         * 모든 셀 border 적용
+         */
+        fun applyAllBorder(sheet: XSSFSheet) {
+            val rowCount = sheet.physicalNumberOfRows
+            for (rowIdx in 0 until rowCount) {
+                val row = sheet.getRow(rowIdx)
+                val cellCount = row.physicalNumberOfCells
+                for (cellIdx in 0 until cellCount) {
+                    val cell = row.getCell(cellIdx)
+                    val cellStyle = cell.cellStyle
+                    cellStyle.borderBottom = BorderStyle.THIN
+                    cellStyle.borderTop = BorderStyle.THIN
+                    cellStyle.borderRight = BorderStyle.THIN
+                    cellStyle.borderLeft = BorderStyle.THIN
+                }
+            }
+        }
+
+        fun applyDefaultFont(sheet: XSSFSheet) {
+            val rowCount = sheet.physicalNumberOfRows
+            for (rowIdx in 0 until rowCount) {
+                val row = sheet.getRow(rowIdx)
+                val cellCount = row.physicalNumberOfCells
+                for (cellIdx in 0 until cellCount) {
+                    val cellStyle = row.getCell(cellIdx).cellStyle
+                    cellStyle.font.fontName = "맑은 고딕"
+                }
+            }
+        }
+
     }
 }

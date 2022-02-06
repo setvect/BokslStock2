@@ -122,22 +122,23 @@ class MabsBacktest {
 
     @Test
     @Transactional
-    fun 이동평균돌파전략_여러개_리포트생성() {
+    fun 이동평균돌파전략_멀티_리포트생성() {
 //        val elementList = listOf(951551, 951255) // 평균 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
-//        val elementList = listOf(950589, 950064) // 최고 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
+        val elementList = listOf(950589, 950064) // 최고 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
 //        val elementList = listOf(952722, 950164) // 최악 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
 //        val elementList = listOf(949078, 951062) // 코스닥150 레버리지, KODEX 코스닥150선물인버스
 //        val elementList = listOf(949078, 949331) // 코스닥150 레버리지, KODEX 레버리지
-        val elementList = listOf(949079) // 코스닥150 레버리지
+//        val elementList = listOf(949079) // 코스닥150 레버리지
         val conditionSetList = getSubSet(elementList)
 
         val rangeList = listOf(
-            DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.of(2017, 1, 1, 0, 0)),
-            DateRange(LocalDateTime.of(2017, 1, 1, 0, 0), LocalDateTime.of(2018, 1, 1, 0, 0)),
-            DateRange(LocalDateTime.of(2018, 1, 1, 0, 0), LocalDateTime.of(2019, 1, 1, 0, 0)),
-            DateRange(LocalDateTime.of(2019, 1, 1, 0, 0), LocalDateTime.of(2020, 1, 1, 0, 0)),
-            DateRange(LocalDateTime.of(2020, 1, 1, 0, 0), LocalDateTime.of(2021, 1, 1, 0, 0)),
-            DateRange(LocalDateTime.of(2021, 1, 1, 0, 0), LocalDateTime.now()),
+//            DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.of(2017, 1, 1, 0, 0)),
+//            DateRange(LocalDateTime.of(2017, 1, 1, 0, 0), LocalDateTime.of(2018, 1, 1, 0, 0)),
+//            DateRange(LocalDateTime.of(2018, 1, 1, 0, 0), LocalDateTime.of(2019, 1, 1, 0, 0)),
+//            DateRange(LocalDateTime.of(2019, 1, 1, 0, 0), LocalDateTime.of(2020, 1, 1, 0, 0)),
+//            DateRange(LocalDateTime.of(2020, 1, 1, 0, 0), LocalDateTime.of(2021, 1, 1, 0, 0)),
+//            DateRange(LocalDateTime.of(2021, 1, 1, 0, 0), LocalDateTime.now()),
+            DateRange(LocalDateTime.of(2010, 1, 1, 0, 0), LocalDateTime.now()),
         )
 
         val analysisMabsConditionList = conditionSetList.flatMap { conditionSet ->
@@ -178,7 +179,7 @@ class MabsBacktest {
 
     @Test
     @Transactional
-    fun 분석요약리포트_리포트생성() {
+    fun 모든매매조건_단건기준_리포트생성() {
         allConditionReportMake()
     }
 
