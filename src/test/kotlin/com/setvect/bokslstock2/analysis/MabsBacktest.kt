@@ -185,6 +185,10 @@ class MabsBacktest {
         analysisService.makeReport(analysisMabsCondition)
     }
 
+    /**
+     * 백테스트 건수에 따라 Heap 사이즈 조절
+     * -Xms2G -Xmx2G
+     */
     @Test
     @Transactional
     fun 모든매매조건_단건기준_리포트생성() {

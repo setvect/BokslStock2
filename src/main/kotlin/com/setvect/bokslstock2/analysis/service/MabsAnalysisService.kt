@@ -62,20 +62,22 @@ class MabsAnalysisService(
      * @return 엑셀 파일
      */
     private fun makeReportFile(result: AnalysisReportResult): File {
-        val workbook = XSSFWorkbook()
-        var sheet = createTradeReport(result, workbook)
-        workbook.setSheetName(workbook.getSheetIndex(sheet), "1. 매매이력")
-
-        sheet = createReportEvalAmount(result, workbook)
-        workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일짜별 자산변화")
-
-        sheet = createReportSummary(result, workbook)
-        workbook.setSheetName(workbook.getSheetIndex(sheet), "3. 매매 요약결과 및 조건")
-
         val reportFileSubPrefix = getReportFileSuffix(result)
         val reportFile = File("./backtest-result/trade-report", "trade_$reportFileSubPrefix")
-        FileOutputStream(reportFile).use { ous ->
-            workbook.write(ous)
+
+        XSSFWorkbook().use { workbook ->
+            var sheet = createTradeReport(result, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "1. 매매이력")
+
+            sheet = createReportEvalAmount(result, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일짜별 자산변화")
+
+            sheet = createReportSummary(result, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "3. 매매 요약결과 및 조건")
+
+            FileOutputStream(reportFile).use { ous ->
+                workbook.write(ous)
+            }
         }
         println("결과 파일:" + reportFile.name)
         return reportFile
@@ -93,25 +95,25 @@ class MabsAnalysisService(
             analysis
         }.toList()
 
-        val workbook = XSSFWorkbook()
 
         var rowIdx = 1
         resultList.forEach { result ->
             makeReportFile(result)
-            log.info("개별분석파일 생성 ${rowIdx++}/$resultList.size}")
+            log.info("개별분석파일 생성 ${rowIdx++}/${resultList.size}")
         }
-
-        val sheetBacktestSummary = createTotalSummary(workbook, resultList)
-        workbook.setSheetName(workbook.getSheetIndex(sheetBacktestSummary), "1. 평가표")
-
-        val sheetCondition = createMultiCondition(workbook, conditionList)
-        workbook.setSheetName(workbook.getSheetIndex(sheetCondition), "2. 테스트 조건")
 
         // 결과 저장
         val reportFile =
             File("./backtest-result", "이평선돌파_전략_백테스트_분석결과_" + Timestamp.valueOf(LocalDateTime.now()).time + ".xlsx")
-        FileOutputStream(reportFile).use { ous ->
-            workbook.write(ous)
+        XSSFWorkbook().use { workbook ->
+            val sheetBacktestSummary = createTotalSummary(workbook, resultList)
+            workbook.setSheetName(workbook.getSheetIndex(sheetBacktestSummary), "1. 평가표")
+
+            val sheetCondition = createMultiCondition(workbook, conditionList)
+            workbook.setSheetName(workbook.getSheetIndex(sheetCondition), "2. 테스트 조건")
+            FileOutputStream(reportFile).use { ous ->
+                workbook.write(ous)
+            }
         }
         println("결과 파일:" + reportFile.name)
         return reportFile
@@ -718,7 +720,7 @@ class MabsAnalysisService(
         val defaultStyle = ExcelStyle.createDate(workbook)
         val commaStyle = ExcelStyle.createComma(workbook)
         val percentStyle = ExcelStyle.createPercent(workbook)
-        val decimalStyle =ExcelStyle.createDecimal(workbook)
+        val decimalStyle = ExcelStyle.createDecimal(workbook)
 
         result.tradeHistory.forEach { tradeItem: TradeReportItem ->
             val mabsTradeEntity: MabsTradeEntity = tradeItem.mabsTradeEntity
