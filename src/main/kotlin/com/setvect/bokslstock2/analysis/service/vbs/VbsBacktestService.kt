@@ -1,12 +1,14 @@
 package com.setvect.bokslstock2.analysis.service.vbs
 
-import com.setvect.bokslstock2.analysis.entity.MabsTradeEntity
 import com.setvect.bokslstock2.analysis.entity.vbs.VbsConditionEntity
+import com.setvect.bokslstock2.analysis.entity.vbs.VbsTradeEntity
+import com.setvect.bokslstock2.analysis.model.TradeType.BUY
 import com.setvect.bokslstock2.analysis.model.TradeType.SELL
 import com.setvect.bokslstock2.analysis.repository.vbs.VbsConditionRepository
 import com.setvect.bokslstock2.analysis.repository.vbs.VbsTradeRepository
 import com.setvect.bokslstock2.analysis.service.MovingAverageService
 import com.setvect.bokslstock2.index.dto.CandleDto
+import com.setvect.bokslstock2.util.ApplicationUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -51,23 +53,50 @@ class VbsBacktestService(
             condition.stock.code, condition.periodType, listOf(condition.maPeriod)
         )
 
-        var lastStatus = SELL
-        var highYield = 0.0
-        var lowYield = 0.0
-        var lastBuyInfo: MabsTradeEntity? = null
+        var lastBuyInfo: VbsTradeEntity? = null
 
         for (idx in 1 until movingAverageCandle.size) {
             val currentCandle = movingAverageCandle[idx]
             // -1 영업일
             val beforeCandle = movingAverageCandle[idx - 1]
-// TODO
-            if (lastStatus == SELL) {
-                val targetPrice = getTargetPrice(beforeCandle, currentCandle, condition)
-                // 매수 판단
-                if (targetPrice <= currentCandle.highPrice) {
+            var sell = false
+            if (lastBuyInfo != null) {
+                // 갭 상승 시 매도 통과 조건이면, 전일 고가 보다 오늘 시초가가 높은 경우 오늘 매도 하지 않음
+                if (condition.gapRisenSkip && beforeCandle.highPrice < currentCandle.openPrice) {
+                    continue
                 }
 
-            } else {
+                // 매도
+                val sellInfo = VbsTradeEntity(
+                    vbsConditionEntity = condition,
+                    tradeType = SELL,
+                    maPrice = currentCandle.average[condition.maPeriod] ?: 0,
+                    yield = ApplicationUtil.getYield(lastBuyInfo.unitPrice, currentCandle.openPrice),
+                    unitPrice = currentCandle.openPrice,
+                    tradeDate = currentCandle.candleDateTimeStart
+                )
+                vbsTradeRepository.save(sellInfo)
+                lastBuyInfo = null
+                sell = true
+            }
+
+            // 하루에 한번만 매매를 한다면, 매도 했으면 그날 매수 안함
+            if (sell && condition.onlyOneDayTrade) {
+                continue
+            }
+
+            val targetPrice = getTargetPrice(beforeCandle, currentCandle, condition)
+            // 매수 판단
+            if (targetPrice <= currentCandle.highPrice) {
+                lastBuyInfo = VbsTradeEntity(
+                    vbsConditionEntity = condition,
+                    tradeType = BUY,
+                    maPrice = currentCandle.average[condition.maPeriod] ?: 0,
+                    yield = 0.0,
+                    unitPrice = targetPrice,
+                    tradeDate = currentCandle.candleDateTimeStart
+                )
+                vbsTradeRepository.save(lastBuyInfo)
             }
         }
     }

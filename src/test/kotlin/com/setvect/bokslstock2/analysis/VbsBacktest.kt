@@ -2,6 +2,7 @@ package com.setvect.bokslstock2.analysis
 
 import com.setvect.bokslstock2.analysis.entity.vbs.VbsConditionEntity
 import com.setvect.bokslstock2.analysis.repository.vbs.VbsConditionRepository
+import com.setvect.bokslstock2.analysis.repository.vbs.VbsTradeRepository
 import com.setvect.bokslstock2.analysis.service.MovingAverageService
 import com.setvect.bokslstock2.analysis.service.vbs.VbsBacktestService
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
@@ -26,6 +27,9 @@ class VbsBacktest {
     private lateinit var stockRepository: StockRepository
 
     @Autowired
+    private lateinit var vbsTradeRepository: VbsTradeRepository
+
+    @Autowired
     private lateinit var vbsAverageService: MovingAverageService
 
     @Autowired
@@ -39,8 +43,10 @@ class VbsBacktest {
     @Rollback(false)
     fun 한번에_모두_백테스트() {
         // 0. 기존 백테스트 기록 모두 삭제
+        deleteBacktestData()
 
         // 1. 조건 만들기
+        조건생성()
 
         // 2. 모든 조건에 대해 백테스트
         vbsBacktestService.runTestBatch()
@@ -53,15 +59,26 @@ class VbsBacktest {
     fun 조건생성() {
         val stock = stockRepository.findByCode("233740").get()
 
-        val condition = VbsConditionEntity(
-            stock = stock,
-            periodType = PERIOD_DAY,
-            kRate = 0.5,
-            maPeriod = 1,
-            unitAskPrice = 5,
-            comment = null
+        val optionList = listOf(
+            Pair(false, false),
+            Pair(false, true),
+            Pair(true, false),
+            Pair(true, true),
         )
-        vbsBacktestService.saveCondition(condition)
+
+        optionList.forEach {
+            val condition = VbsConditionEntity(
+                stock = stock,
+                periodType = PERIOD_DAY,
+                kRate = 0.5,
+                maPeriod = 1,
+                unitAskPrice = 5,
+                gapRisenSkip = it.first,
+                onlyOneDayTrade = it.second,
+                comment = null
+            )
+            vbsBacktestService.saveCondition(condition)
+        }
     }
 
     @Test
@@ -71,5 +88,11 @@ class VbsBacktest {
         val range = DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.now())
         val conditionList = vbsConditionRepository.listBySeq(listOf(1309720))
     }
+
+    private fun deleteBacktestData() {
+        vbsTradeRepository.deleteAll()
+        vbsConditionRepository.deleteAll()
+    }
+
 
 }
