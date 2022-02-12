@@ -40,3 +40,11 @@ TODO
     4. 매도가 발생한 주기는 매수하지 않음, 다음 주기로 넘어갔을 때 매수 활성화
 
 `상승매수률`과 `하락매도률`를 둔 이유는 매수가와 매도가의 차이를 두어 매수가 이러난 직후 매도하지 않게 하기 위함 
+
+### 변동성 돌파 전략 매매 알고리즘
+- 메인 소스:[VbsBacktestService.kt](src/main/kotlin/com/setvect/bokslstock2/analysis/service/vbs/VbsBacktestService.kt)
+- 매수 조건
+  - 목표가 < 오늘 주가
+  - 목표가 산출 방법: 목표가 = 오늘 시가 + (어제 고가 - 어제 저가) * k
+- 매도 조건
+  - 매수 다음날 시가 매도

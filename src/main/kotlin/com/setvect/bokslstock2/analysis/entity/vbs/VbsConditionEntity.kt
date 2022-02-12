@@ -47,10 +47,16 @@ class VbsConditionEntity(
     val maPeriod: Int,
 
     /**
+     * 호가 단위, ETF는 5임
+     */
+    @Column(name = "UNIT_ASK_PRICE", nullable = false)
+    val unitAskPrice: Int,
+
+    /**
      * 조건에 대한 설명. 리포트에서 사용하기 위함
      */
     @Column(name = "COMMENT", length = 100)
-    val comment: String,
+    val comment: String?,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = AUTO)
