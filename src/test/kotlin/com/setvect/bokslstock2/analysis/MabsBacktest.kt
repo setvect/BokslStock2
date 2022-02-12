@@ -2,7 +2,7 @@ package com.setvect.bokslstock2.analysis
 
 import com.setvect.bokslstock2.StockCode
 import com.setvect.bokslstock2.analysis.entity.MabsConditionEntity
-import com.setvect.bokslstock2.analysis.model.AnalysisMabsCondition
+import com.setvect.bokslstock2.analysis.model.MabsAnalysisCondition
 import com.setvect.bokslstock2.analysis.repository.MabsConditionRepository
 import com.setvect.bokslstock2.analysis.repository.MabsTradeRepository
 import com.setvect.bokslstock2.analysis.service.MabsAnalysisService
@@ -141,7 +141,7 @@ class MabsBacktest {
             DateRange(LocalDateTime.of(2010, 1, 1, 0, 0), LocalDateTime.now()),
         )
 
-        val analysisMabsConditionList = conditionSetList.flatMap { conditionSet ->
+        val mabsAnalysisConditionList = conditionSetList.flatMap { conditionSet ->
             val conditionList = mabsConditionRepository.listBySeq(conditionSet)
             rangeList.map { range ->
                 // 시세가 포함된 날짜범위 지정
@@ -152,7 +152,7 @@ class MabsBacktest {
                 val to = realRangeList.maxOf { it.to }
                 val realRange = DateRange(from, to)
 
-                AnalysisMabsCondition(
+                MabsAnalysisCondition(
                     tradeConditionList = conditionList,
                     range = realRange,
                     investRatio = 0.99,
@@ -164,7 +164,7 @@ class MabsBacktest {
             }.toList()
         }.toList()
 
-        analysisService.makeSummaryReport(analysisMabsConditionList)
+        analysisService.makeSummaryReport(mabsAnalysisConditionList)
     }
 
     @Test
@@ -172,7 +172,7 @@ class MabsBacktest {
     fun 이동평균돌파전략_단건_리포트생성() {
         val range = DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.now())
         val conditionList = mabsConditionRepository.listBySeq(listOf(949092))
-        val analysisMabsCondition = AnalysisMabsCondition(
+        val mabsAnalysisCondition = MabsAnalysisCondition(
             tradeConditionList = conditionList,
             range = range,
             investRatio = 0.99,
@@ -182,7 +182,7 @@ class MabsBacktest {
             comment = ""
         )
 
-        analysisService.makeReport(analysisMabsCondition)
+        analysisService.makeReport(mabsAnalysisCondition)
     }
 
     /**
@@ -381,7 +381,7 @@ class MabsBacktest {
             val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
             val priceRange = candleRepository.findByCandleDateTimeBetween(it.stock, range.from, range.to)
 
-            val analysisMabsCondition = AnalysisMabsCondition(
+            val mabsAnalysisCondition = MabsAnalysisCondition(
                 tradeConditionList = listOf(it),
                 range = priceRange,
                 investRatio = 0.99,
@@ -391,7 +391,7 @@ class MabsBacktest {
                 comment = ""
             )
             log.info("거래 내역 조회 진행 ${++i}/${conditionList.size}")
-            analysisMabsCondition
+            mabsAnalysisCondition
         }.toList()
         analysisService.makeSummaryReport(mabsConditionList)
     }

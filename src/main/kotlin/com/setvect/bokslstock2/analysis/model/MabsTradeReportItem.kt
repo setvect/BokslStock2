@@ -5,7 +5,7 @@ import com.setvect.bokslstock2.analysis.entity.MabsTradeEntity
 /**
  * 단위 거래 건별 내역
  */
-data class TradeReportItem(
+data class MabsTradeReportItem(
     /**
      * 거래 내용
      */

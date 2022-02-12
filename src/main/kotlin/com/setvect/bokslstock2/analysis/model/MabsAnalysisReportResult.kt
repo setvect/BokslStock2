@@ -5,16 +5,16 @@ import com.setvect.bokslstock2.util.ApplicationUtil
 /**
  * 멀티 종목 매매 백테스트 분석 결과
  */
-data class AnalysisReportResult(
+data class MabsAnalysisReportResult(
     /**
      * 리포트 조건
      */
-    val analysisMabsCondition: AnalysisMabsCondition,
+    val mabsAnalysisCondition: MabsAnalysisCondition,
 
     /**
      * 매매 이력
      */
-    val tradeHistory: List<TradeReportItem>,
+    val tradeHistory: List<MabsTradeReportItem>,
 
     /**
      * 날짜별 평가금 변화 이력

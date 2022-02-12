@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.analysis.service
+package com.setvect.bokslstock2.analysis.service.vbs
 
 import com.setvect.bokslstock2.analysis.entity.MabsConditionEntity
 import com.setvect.bokslstock2.analysis.entity.MabsTradeEntity
@@ -38,10 +38,10 @@ import kotlin.streams.toList
 
 
 /**
- * 이동평균 돌파 매매 분석
+ * 변동성 돌파 매매 분석
  */
 @Service
-class MabsAnalysisService(
+class VbsAnalysisService(
     val candleRepository: CandleRepository,
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
