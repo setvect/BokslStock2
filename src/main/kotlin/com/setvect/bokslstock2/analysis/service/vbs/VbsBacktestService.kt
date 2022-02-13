@@ -105,14 +105,9 @@ class VbsBacktestService(
      * @return 목표가 계산
      */
     private fun getTargetPrice(beforeCandle: CandleDto, currentCandle: CandleDto, condition: VbsConditionEntity): Int {
-        val maPeriod = beforeCandle.average[condition.maPeriod] ?: return Integer.MAX_VALUE
-
         var volatilityPrice = (beforeCandle.highPrice - beforeCandle.lowPrice) * condition.kRate
         // 호가단위 기준으로 절삭
         volatilityPrice -= (volatilityPrice % condition.unitAskPrice)
         return (currentCandle.openPrice + volatilityPrice).toInt()
-
     }
-
-
 }

@@ -120,8 +120,8 @@ class VbsBacktest {
 //        1313248	Y	N	0.5
 //        1313249	Y	Y	0.5
 
-        val range = DateRange(LocalDateTime.of(2015, 12, 1, 0, 0), LocalDateTime.now())
-        val conditionList = vbsConditionRepository.listBySeq(listOf(1313246))
+        val range = DateRange(LocalDateTime.of(2000, 12, 1, 0, 0), LocalDateTime.now())
+        val conditionList = vbsConditionRepository.listBySeq(listOf(1317674))
         val vbsAnalysisCondition = VbsAnalysisCondition(
             tradeConditionList = conditionList,
             range = range,

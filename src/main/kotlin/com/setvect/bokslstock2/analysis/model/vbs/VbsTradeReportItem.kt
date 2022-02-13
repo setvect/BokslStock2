@@ -35,7 +35,7 @@ data class VbsTradeReportItem(
      * @return 매수 금액
      */
     fun getBuyAmount(): Long {
-        return (qty * vbsTradeEntity.unitPrice).toLong()
+        return qty * vbsTradeEntity.unitPrice.toLong()
     }
 
     /**

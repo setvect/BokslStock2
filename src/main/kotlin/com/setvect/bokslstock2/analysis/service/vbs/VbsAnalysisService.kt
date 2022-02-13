@@ -331,14 +331,15 @@ class VbsAnalysisService(
         val buyStock = HashMap<String, VbsTradeReportItem>()
         tradeAllList.forEach { tradeItem ->
             if (tradeItem.tradeType == BUY) {
+                // 매도 처리
                 val buyCash = getBuyCash(buyStock.size, cash, condition.tradeConditionList.size, condition.investRatio)
 
                 val buyQty: Int = (buyCash / tradeItem.unitPrice).toInt()
-                val buyAmount: Int = buyQty * tradeItem.unitPrice
+                val buyAmount: Long = buyQty * tradeItem.unitPrice.toLong()
                 val feePrice = (condition.feeBuy * buyAmount).toInt()
                 cash -= buyAmount + feePrice
                 val stockEvalPrice = buyStock.entries.map { it.value }
-                    .sumOf { it.vbsTradeEntity.unitPrice.toLong() * it.qty } + buyQty * tradeItem.unitPrice
+                    .sumOf { it.vbsTradeEntity.unitPrice.toLong() * it.qty } + buyQty * tradeItem.unitPrice.toLong()
                 val vbsTradeReportItem = VbsTradeReportItem(
                     vbsTradeEntity = tradeItem,
                     qty = buyQty,
@@ -350,6 +351,7 @@ class VbsAnalysisService(
                 tradeItemHistory.add(vbsTradeReportItem)
                 buyStock[tradeItem.vbsConditionEntity.stock.code] = vbsTradeReportItem
             } else if (tradeItem.tradeType == SELL) {
+                // 매수 처리
                 // 투자수익금 = 매수금액 * 수익률 - 수수료
                 val buyTrade = buyStock[tradeItem.vbsConditionEntity.stock.code]
                     ?: throw RuntimeException("${tradeItem.vbsConditionEntity.stock.code} 매수 내역이 없습니다.")
