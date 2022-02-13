@@ -1,16 +1,16 @@
 package com.setvect.bokslstock2.analysis.service.vbs
 
-import com.setvect.bokslstock2.analysis.entity.MabsConditionEntity
-import com.setvect.bokslstock2.analysis.entity.MabsTradeEntity
-import com.setvect.bokslstock2.analysis.model.MabsAnalysisCondition
-import com.setvect.bokslstock2.analysis.model.MabsAnalysisReportResult
-import com.setvect.bokslstock2.analysis.model.MabsAnalysisReportResult.TotalYield
-import com.setvect.bokslstock2.analysis.model.MabsAnalysisReportResult.WinningRate
-import com.setvect.bokslstock2.analysis.model.MabsAnalysisReportResult.YieldMdd
+import com.setvect.bokslstock2.analysis.entity.vbs.VbsConditionEntity
+import com.setvect.bokslstock2.analysis.entity.vbs.VbsTradeEntity
 import com.setvect.bokslstock2.analysis.model.EvaluationAmountItem
-import com.setvect.bokslstock2.analysis.model.MabsTradeReportItem
 import com.setvect.bokslstock2.analysis.model.TradeType.BUY
 import com.setvect.bokslstock2.analysis.model.TradeType.SELL
+import com.setvect.bokslstock2.analysis.model.vbs.VbsAnalysisCondition
+import com.setvect.bokslstock2.analysis.model.vbs.VbsAnalysisReportResult
+import com.setvect.bokslstock2.analysis.model.vbs.VbsAnalysisReportResult.TotalYield
+import com.setvect.bokslstock2.analysis.model.vbs.VbsAnalysisReportResult.WinningRate
+import com.setvect.bokslstock2.analysis.model.vbs.VbsAnalysisReportResult.YieldMdd
+import com.setvect.bokslstock2.analysis.model.vbs.VbsTradeReportItem
 import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.util.ApplicationUtil
@@ -49,7 +49,7 @@ class VbsAnalysisService(
     /**
      *  분석 리포트
      */
-    fun makeReport(condition: MabsAnalysisCondition) {
+    fun makeReport(condition: VbsAnalysisCondition) {
         val tradeItemHistory = trade(condition)
         val result = analysis(tradeItemHistory, condition)
         val summary = getSummary(result)
@@ -61,9 +61,9 @@ class VbsAnalysisService(
      * 분석건에 대한 리포트 파일 만듦
      * @return 엑셀 파일
      */
-    private fun makeReportFile(result: MabsAnalysisReportResult): File {
+    private fun makeReportFile(result: VbsAnalysisReportResult): File {
         val reportFileSubPrefix = getReportFileSuffix(result)
-        val reportFile = File("./backtest-result/trade-report", "trade_$reportFileSubPrefix")
+        val reportFile = File("./backtest-result/vbs-trade-report", "vbs_trade_$reportFileSubPrefix")
 
         XSSFWorkbook().use { workbook ->
             var sheet = createTradeReport(result, workbook)
@@ -86,7 +86,7 @@ class VbsAnalysisService(
     /**
      *  복수개의 조건에 대한 분석 요약 리포트를 만듦
      */
-    fun makeSummaryReport(conditionList: List<MabsAnalysisCondition>): File {
+    fun makeSummaryReport(conditionList: List<VbsAnalysisCondition>): File {
         var i = 0
         val resultList = conditionList.map { condition ->
             val tradeItemHistory = trade(condition)
@@ -104,7 +104,7 @@ class VbsAnalysisService(
 
         // 결과 저장
         val reportFile =
-            File("./backtest-result", "이평선돌파_전략_백테스트_분석결과_" + Timestamp.valueOf(LocalDateTime.now()).time + ".xlsx")
+            File("./backtest-result", "변동성돌파_전략_백테스트_분석결과_" + Timestamp.valueOf(LocalDateTime.now()).time + ".xlsx")
         XSSFWorkbook().use { workbook ->
             val sheetBacktestSummary = createTotalSummary(workbook, resultList)
             workbook.setSheetName(workbook.getSheetIndex(sheetBacktestSummary), "1. 평가표")
@@ -124,7 +124,7 @@ class VbsAnalysisService(
      */
     private fun createTotalSummary(
         workbook: XSSFWorkbook,
-        resultList: List<MabsAnalysisReportResult>
+        resultList: List<VbsAnalysisReportResult>
     ): XSSFSheet {
         val sheet = workbook.createSheet()
 
@@ -145,7 +145,7 @@ class VbsAnalysisService(
 
         resultList.forEach { result ->
 
-            val multiCondition = result.mabsAnalysisCondition
+            val multiCondition = result.vbsAnalysisCondition
             val tradeConditionList = multiCondition.tradeConditionList
 
             val row = sheet.createRow(rowIdx++)
@@ -155,7 +155,7 @@ class VbsAnalysisService(
             createCell.cellStyle = dateStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeConditionList.joinToString("|") { it.mabsConditionSeq.toString() })
+            createCell.setCellValue(tradeConditionList.joinToString("|") { it.vbsConditionSeq.toString() })
             createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
@@ -235,13 +235,13 @@ class VbsAnalysisService(
      */
     private fun createMultiCondition(
         workbook: XSSFWorkbook,
-        conditionList: List<MabsAnalysisCondition>
+        conditionList: List<VbsAnalysisCondition>
     ): XSSFSheet {
         val sheet = workbook.createSheet()
-        val conditionHeader = "분석 아이디,종목이름,종목코드,매매주기,단기 이동평균 기간,장기 이동평균 기간,하락매도률,상승매도률"
+        val conditionHeader = "분석 아이디,종목이름,종목코드,매매주기,변동성비율,이동평균단위,갭 상승 매도 넘김,하루에 한번 거래,호가단위,조건설명"
         applyHeader(sheet, conditionHeader)
 
-        val mabsConditionList: List<MabsConditionEntity> = conditionList
+        val vbsConditionList: List<VbsConditionEntity> = conditionList
             .flatMap { it.tradeConditionList }
             .distinct()
             .toList()
@@ -249,13 +249,14 @@ class VbsAnalysisService(
         var rowIdx = 1
         val defaultStyle = ExcelStyle.createDate(workbook)
         val percentStyle = ExcelStyle.createPercent(workbook)
+        val decimalStyle = ExcelStyle.createDecimal(workbook)
 
-        for (condition in mabsConditionList) {
+        for (condition in vbsConditionList) {
             val row = sheet.createRow(rowIdx++)
             var cellIdx = 0
 
             var createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(condition.mabsConditionSeq.toString())
+            createCell.setCellValue(condition.vbsConditionSeq.toString())
             createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
@@ -271,19 +272,27 @@ class VbsAnalysisService(
             createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(condition.shortPeriod.toDouble())
+            createCell.setCellValue(condition.kRate)
+            createCell.cellStyle = decimalStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(condition.maPeriod.toDouble())
+            createCell.cellStyle = decimalStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(condition.gapRisenSkip)
             createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(condition.longPeriod.toDouble())
-            createCell.cellStyle = defaultStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(condition.downSellRate)
+            createCell.setCellValue(condition.onlyOneDayTrade)
             createCell.cellStyle = percentStyle
 
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(condition.unitAskPrice.toDouble())
+            createCell.cellStyle = decimalStyle
+
             createCell = row.createCell(cellIdx)
-            createCell.setCellValue(condition.upBuyRate)
+            createCell.setCellValue(condition.comment)
             createCell.cellStyle = percentStyle
         }
 
@@ -298,8 +307,8 @@ class VbsAnalysisService(
     /**
      * 매매 백테스트
      */
-    private fun trade(condition: MabsAnalysisCondition): ArrayList<MabsTradeReportItem> {
-        val rangeInList: List<List<MabsTradeEntity>> =
+    private fun trade(condition: VbsAnalysisCondition): ArrayList<VbsTradeReportItem> {
+        val rangeInList: List<List<VbsTradeEntity>> =
             condition.tradeConditionList.map { mainList ->
                 mainList.tradeList.filter { condition.range.isBetween(it.tradeDate) }
             }
@@ -318,8 +327,8 @@ class VbsAnalysisService(
         }
 
         var cash = condition.cash
-        val tradeItemHistory = ArrayList<MabsTradeReportItem>()
-        val buyStock = HashMap<String, MabsTradeReportItem>()
+        val tradeItemHistory = ArrayList<VbsTradeReportItem>()
+        val buyStock = HashMap<String, VbsTradeReportItem>()
         tradeAllList.forEach { tradeItem ->
             if (tradeItem.tradeType == BUY) {
                 val buyCash = getBuyCash(buyStock.size, cash, condition.tradeConditionList.size, condition.investRatio)
@@ -329,22 +338,22 @@ class VbsAnalysisService(
                 val feePrice = (condition.feeBuy * buyAmount).toInt()
                 cash -= buyAmount + feePrice
                 val stockEvalPrice = buyStock.entries.map { it.value }
-                    .sumOf { it.mabsTradeEntity.unitPrice.toLong() * it.qty } + buyQty * tradeItem.unitPrice
-                val mabsTradeReportItem = MabsTradeReportItem(
-                    mabsTradeEntity = tradeItem,
+                    .sumOf { it.vbsTradeEntity.unitPrice.toLong() * it.qty } + buyQty * tradeItem.unitPrice
+                val vbsTradeReportItem = VbsTradeReportItem(
+                    vbsTradeEntity = tradeItem,
                     qty = buyQty,
                     cash = cash,
                     feePrice = feePrice,
                     gains = 0,
                     stockEvalPrice = stockEvalPrice
                 )
-                tradeItemHistory.add(mabsTradeReportItem)
-                buyStock[tradeItem.mabsConditionEntity.stock.code] = mabsTradeReportItem
+                tradeItemHistory.add(vbsTradeReportItem)
+                buyStock[tradeItem.vbsConditionEntity.stock.code] = vbsTradeReportItem
             } else if (tradeItem.tradeType == SELL) {
                 // 투자수익금 = 매수금액 * 수익률 - 수수료
-                val buyTrade = buyStock[tradeItem.mabsConditionEntity.stock.code]
-                    ?: throw RuntimeException("${tradeItem.mabsConditionEntity.stock.code} 매수 내역이 없습니다.")
-                buyStock.remove(tradeItem.mabsConditionEntity.stock.code)
+                val buyTrade = buyStock[tradeItem.vbsConditionEntity.stock.code]
+                    ?: throw RuntimeException("${tradeItem.vbsConditionEntity.stock.code} 매수 내역이 없습니다.")
+                buyStock.remove(tradeItem.vbsConditionEntity.stock.code)
                 val sellPrice = (buyTrade.getBuyAmount() * (1 + tradeItem.yield)).toLong()
                 val sellFee = (sellPrice * condition.feeSell).toInt()
                 val gains = (sellPrice - buyTrade.getBuyAmount())
@@ -353,16 +362,16 @@ class VbsAnalysisService(
                 cash += sellPrice - sellFee
 
                 val stockEvalPrice =
-                    buyStock.entries.map { it.value }.sumOf { it.mabsTradeEntity.unitPrice.toLong() * it.qty }
-                val mabsTradeReportItem = MabsTradeReportItem(
-                    mabsTradeEntity = tradeItem,
+                    buyStock.entries.map { it.value }.sumOf { it.vbsTradeEntity.unitPrice.toLong() * it.qty }
+                val vbsTradeReportItem = VbsTradeReportItem(
+                    vbsTradeEntity = tradeItem,
                     qty = 0,
                     cash = cash,
                     feePrice = sellFee,
                     gains = gains,
                     stockEvalPrice = stockEvalPrice
                 )
-                tradeItemHistory.add(mabsTradeReportItem)
+                tradeItemHistory.add(vbsTradeReportItem)
             }
         }
         return tradeItemHistory
@@ -394,8 +403,8 @@ class VbsAnalysisService(
      * 매매 결과에 대한 통계적 분석을 함
      */
     private fun analysis(
-        tradeItemHistory: ArrayList<MabsTradeReportItem>, condition: MabsAnalysisCondition
-    ): MabsAnalysisReportResult {
+        tradeItemHistory: ArrayList<VbsTradeReportItem>, condition: VbsAnalysisCondition
+    ): VbsAnalysisReportResult {
         // 날짜별로 Buy&Hold 및 투자전략 평가금액 얻기
         val evaluationAmountHistory = applyEvaluationAmount(tradeItemHistory, condition)
 
@@ -406,8 +415,8 @@ class VbsAnalysisService(
         val yieldTotal: TotalYield = calculateTotalYield(evaluationAmountHistory, condition.range)
         val winningRate: Map<Int, WinningRate> = calculateCoinInvestment(tradeItemHistory)
 
-        return MabsAnalysisReportResult(
-            mabsAnalysisCondition = condition,
+        return VbsAnalysisReportResult(
+            vbsAnalysisCondition = condition,
             tradeHistory = tradeItemHistory,
             evaluationAmountHistory = evaluationAmountHistory,
             yieldTotal = yieldTotal,
@@ -421,8 +430,8 @@ class VbsAnalysisService(
      * @return 날짜별 평가금 계산
      */
     private fun applyEvaluationAmount(
-        tradeItemHistory: ArrayList<MabsTradeReportItem>,
-        condition: MabsAnalysisCondition
+        tradeItemHistory: ArrayList<VbsTradeReportItem>,
+        condition: VbsAnalysisCondition
     ): List<EvaluationAmountItem> {
         val buyHoldMap: SortedMap<LocalDateTime, Long> = getBuyAndHoldEvalAmount(condition)
         // <조건아아디, List(캔들)>
@@ -439,19 +448,19 @@ class VbsAnalysisService(
         var backtestLastCash = condition.cash // 마지막 보유 현금
 
         // <거래날짜, 거래내용>
-        val tradeByDate: Map<LocalDateTime, List<MabsTradeReportItem>> =
-            tradeItemHistory.groupBy { it.mabsTradeEntity.tradeDate }
+        val tradeByDate: Map<LocalDateTime, List<VbsTradeReportItem>> =
+            tradeItemHistory.groupBy { it.vbsTradeEntity.tradeDate }
 
         // 현재 가지고 있는 주식 수
         // <조건아이디, 주식수>
-        val condByStockQty = condition.tradeConditionList.associate { it.mabsConditionSeq to 0 }.toMutableMap()
+        val condByStockQty = condition.tradeConditionList.associate { it.vbsConditionSeq to 0 }.toMutableMap()
 
         val result = allDateList.map { date ->
             val buyHoldAmount = buyHoldMap[date] ?: buyHoldLastAmount
             val currentTradeList = tradeByDate[date] ?: emptyList()
             for (trade in currentTradeList) {
-                val mabsConditionSeq = trade.mabsTradeEntity.mabsConditionEntity.mabsConditionSeq
-                condByStockQty[mabsConditionSeq] = trade.qty
+                val vbsConditionSeq = trade.vbsTradeEntity.vbsConditionEntity.vbsConditionSeq
+                condByStockQty[vbsConditionSeq] = trade.qty
                 backtestLastCash = trade.cash
             }
 
@@ -507,11 +516,11 @@ class VbsAnalysisService(
      * @return <조건아이디, 투자 종목 수익 정보>
      */
     private fun calculateCoinInvestment(
-        tradeItemHistory: ArrayList<MabsTradeReportItem>
+        tradeItemHistory: ArrayList<VbsTradeReportItem>
     ): Map<Int, WinningRate> {
-        val sellList = tradeItemHistory.filter { it.mabsTradeEntity.tradeType == SELL }.toList()
-        val groupBy: Map<Int, List<MabsTradeReportItem>> =
-            sellList.groupBy { it.mabsTradeEntity.mabsConditionEntity.mabsConditionSeq }
+        val sellList = tradeItemHistory.filter { it.vbsTradeEntity.tradeType == SELL }.toList()
+        val groupBy: Map<Int, List<VbsTradeReportItem>> =
+            sellList.groupBy { it.vbsTradeEntity.vbsConditionEntity.vbsConditionSeq }
 
         return groupBy.entries.associate { entity ->
             val totalInvest = entity.value.sumOf { it.gains }
@@ -525,7 +534,7 @@ class VbsAnalysisService(
      * @return <조건아이디, 투자 종목에 대한 Buy & Hold시 수익 정보>
      */
     private fun calculateBuyAndHoldYield(
-        condition: MabsAnalysisCondition,
+        condition: VbsAnalysisCondition,
     ): Map<Int, YieldMdd> {
         val mapOfCandleList = getConditionOfCandle(condition)
 
@@ -564,7 +573,7 @@ class VbsAnalysisService(
      * Buy & Hold 투자금액 대비 날짜별 평가금액
      * @return <날짜, 평가금액>
      */
-    private fun getBuyAndHoldEvalAmount(condition: MabsAnalysisCondition): SortedMap<LocalDateTime, Long> {
+    private fun getBuyAndHoldEvalAmount(condition: VbsAnalysisCondition): SortedMap<LocalDateTime, Long> {
         val combinedYield: SortedMap<LocalDateTime, Double> = calculateBuyAndHoldProfitRatio(condition)
         val initial = TreeMap<LocalDateTime, Long>()
         initial[condition.range.from] = condition.cash
@@ -579,7 +588,7 @@ class VbsAnalysisService(
      * 수익비는 1에서 시작함
      * @return <날짜, 수익비>
      */
-    private fun calculateBuyAndHoldProfitRatio(condition: MabsAnalysisCondition): SortedMap<LocalDateTime, Double> {
+    private fun calculateBuyAndHoldProfitRatio(condition: VbsAnalysisCondition): SortedMap<LocalDateTime, Double> {
         val range = condition.range
 
         val tradeConditionList = condition.tradeConditionList
@@ -623,11 +632,11 @@ class VbsAnalysisService(
      * @return <조건아이디, Map<날짜, 종가>>
      */
     private fun getConditionByClosePriceMap(
-        tradeConditionList: List<MabsConditionEntity>,
+        tradeConditionList: List<VbsConditionEntity>,
         candleListMpa: Map<Int, List<CandleEntity>>
     ): Map<Int, Map<LocalDateTime, Int>> {
         return tradeConditionList.associate { tradeCondition ->
-            tradeCondition.mabsConditionSeq to (candleListMpa[tradeCondition.mabsConditionSeq]
+            tradeCondition.vbsConditionSeq to (candleListMpa[tradeCondition.vbsConditionSeq]
                 ?.map { it.candleDateTime to it.closePrice })!!.toMap()
         }
     }
@@ -636,11 +645,11 @@ class VbsAnalysisService(
      * @return <조건아이디, 최초 가격>
      */
     private fun getConditionOfFirstOpenPrice(
-        conditionList: List<MabsConditionEntity>,
+        conditionList: List<VbsConditionEntity>,
         mapOfCandleList: Map<Int, List<CandleEntity>>
     ): MutableMap<Int, Int?> {
         return conditionList.associate {
-            it.mabsConditionSeq to mapOfCandleList[it.mabsConditionSeq]?.get(0)?.openPrice
+            it.vbsConditionSeq to mapOfCandleList[it.vbsConditionSeq]?.get(0)?.openPrice
         }
             .toMutableMap()
     }
@@ -648,9 +657,9 @@ class VbsAnalysisService(
     /**
      *@return <조건아아디, List(캔들)>
      */
-    private fun getConditionOfCandle(condition: MabsAnalysisCondition): Map<Int, List<CandleEntity>> {
+    private fun getConditionOfCandle(condition: VbsAnalysisCondition): Map<Int, List<CandleEntity>> {
         return condition.tradeConditionList.associate { tradeCondition ->
-            tradeCondition.mabsConditionSeq to candleRepository.findByRange(
+            tradeCondition.vbsConditionSeq to candleRepository.findByRange(
                 tradeCondition.stock,
                 condition.range.from,
                 condition.range.to
@@ -661,9 +670,9 @@ class VbsAnalysisService(
     /**
      * 분석 요약결과
      */
-    private fun getSummary(result: MabsAnalysisReportResult): String {
+    private fun getSummary(result: VbsAnalysisReportResult): String {
         val report = StringBuilder()
-        val tradeConditionList = result.mabsAnalysisCondition.tradeConditionList
+        val tradeConditionList = result.vbsAnalysisCondition.tradeConditionList
 
         report.append("----------- Buy&Hold 결과 -----------\n")
         report.append(String.format("합산 동일비중 수익\t %,.2f%%", result.buyAndHoldYieldTotal.yield * 100)).append("\n")
@@ -672,16 +681,17 @@ class VbsAnalysisService(
 
         for (i in 1..tradeConditionList.size) {
             val tradeCondition = tradeConditionList[i - 1]
-            report.append("${i}. 조건번호: ${tradeCondition.mabsConditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), 단기-장기(${tradeCondition.periodType}): ${tradeCondition.shortPeriod}-${tradeCondition.longPeriod}\n")
-            val sumYield = result.buyAndHoldYieldCondition[tradeCondition.mabsConditionSeq]
+            report.append("${i}. 조건번호: ${tradeCondition.vbsConditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), " +
+                    "매매주기: ${tradeCondition.periodType}, 변동성 비율: ${tradeCondition.kRate}, 이동평균 단위:${tradeCondition.maPeriod}, " +
+                    "갭상승 통과: ${tradeCondition.gapRisenSkip}, 하루에 한번 거래: ${tradeCondition.onlyOneDayTrade}\n")
+            val sumYield = result.buyAndHoldYieldCondition[tradeCondition.vbsConditionSeq]
             if (sumYield == null) {
-                log.warn("조건에 해당하는 결과가 없습니다. mabsConditionSeq: ${tradeCondition.mabsConditionSeq}")
+                log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${tradeCondition.vbsConditionSeq}")
                 break
             }
             report.append(String.format("${i}. 동일비중 수익\t %,.2f%%", sumYield.yield * 100)).append("\n")
             report.append(String.format("${i}. 동일비중 MDD\t %,.2f%%", sumYield.mdd * 100)).append("\n")
         }
-
 
         val totalYield: TotalYield = result.yieldTotal
         report.append("----------- 전략 결과 -----------\n")
@@ -693,11 +703,13 @@ class VbsAnalysisService(
 
         for (i in 1..tradeConditionList.size) {
             val tradeCondition = tradeConditionList[i - 1]
-            report.append("${i}. 조건번호: ${tradeCondition.mabsConditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), 단기-장기(${tradeCondition.periodType}): ${tradeCondition.shortPeriod}-${tradeCondition.longPeriod}\n")
+            report.append("${i}. 조건번호: ${tradeCondition.vbsConditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), " +
+                    "매매주기: ${tradeCondition.periodType}, 변동성 비율: ${tradeCondition.kRate}, 이동평균 단위:${tradeCondition.maPeriod}, " +
+                    "갭상승 통과: ${tradeCondition.gapRisenSkip}, 하루에 한번 거래: ${tradeCondition.onlyOneDayTrade}\n")
 
-            val winningRate = result.winningRateCondition[tradeCondition.mabsConditionSeq]
+            val winningRate = result.winningRateCondition[tradeCondition.vbsConditionSeq]
             if (winningRate == null) {
-                log.warn("조건에 해당하는 결과가 없습니다. mabsConditionSeq: ${tradeCondition.mabsConditionSeq}")
+                log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${tradeCondition.vbsConditionSeq}")
                 break
             }
             report.append(String.format("${i}. 실현 수익\t %,d", winningRate.invest)).append("\n")
@@ -710,10 +722,10 @@ class VbsAnalysisService(
     /**
      * 매매 내역을 시트로 만듦
      */
-    private fun createTradeReport(result: MabsAnalysisReportResult, workbook: XSSFWorkbook): XSSFSheet {
+    private fun createTradeReport(result: VbsAnalysisReportResult, workbook: XSSFWorkbook): XSSFSheet {
         val sheet = workbook.createSheet()
         val header =
-            "날짜,종목,매매 구분,단기 이동평균,장기 이동평균,매수 수량,매매 금액,체결 가격,최고수익률,최저수익률,실현 수익률,수수료,투자 수익(수수료포함),보유 주식 평가금,매매후 보유 현금,평가금(주식+현금),수익비"
+            "날짜,종목,매매 구분,이동평균,매수 수량,매매 금액,체결 가격,실현 수익률,수수료,투자 수익(수수료포함),보유 주식 평가금,매매후 보유 현금,평가금(주식+현금),수익비"
         applyHeader(sheet, header)
         var rowIdx = 1
 
@@ -722,10 +734,10 @@ class VbsAnalysisService(
         val percentStyle = ExcelStyle.createPercent(workbook)
         val decimalStyle = ExcelStyle.createDecimal(workbook)
 
-        result.tradeHistory.forEach { tradeItem: MabsTradeReportItem ->
-            val mabsTradeEntity: MabsTradeEntity = tradeItem.mabsTradeEntity
-            val mabsConditionEntity: MabsConditionEntity = mabsTradeEntity.mabsConditionEntity
-            val tradeDate: LocalDateTime = mabsTradeEntity.tradeDate
+        result.tradeHistory.forEach { tradeItem: VbsTradeReportItem ->
+            val vbsTradeEntity: VbsTradeEntity = tradeItem.vbsTradeEntity
+            val vbsConditionEntity: VbsConditionEntity = vbsTradeEntity.vbsConditionEntity
+            val tradeDate: LocalDateTime = vbsTradeEntity.tradeDate
 
             val row = sheet.createRow(rowIdx++)
             var cellIdx = 0
@@ -734,19 +746,15 @@ class VbsAnalysisService(
             createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(mabsConditionEntity.stock.getNameCode())
+            createCell.setCellValue(vbsConditionEntity.stock.getNameCode())
             createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(mabsTradeEntity.tradeType.name)
+            createCell.setCellValue(vbsTradeEntity.tradeType.name)
             createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(mabsTradeEntity.maShort.toDouble())
-            createCell.cellStyle = commaStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(mabsTradeEntity.maLong.toDouble())
+            createCell.setCellValue(vbsTradeEntity.maPrice.toDouble())
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
@@ -758,19 +766,11 @@ class VbsAnalysisService(
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(mabsTradeEntity.unitPrice.toDouble())
+            createCell.setCellValue(vbsTradeEntity.unitPrice.toDouble())
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(mabsTradeEntity.highYield)
-            createCell.cellStyle = percentStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(mabsTradeEntity.lowYield)
-            createCell.cellStyle = percentStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(mabsTradeEntity.yield)
+            createCell.setCellValue(vbsTradeEntity.yield)
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
@@ -794,7 +794,7 @@ class VbsAnalysisService(
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx)
-            createCell.setCellValue(tradeItem.getEvalPrice() / result.mabsAnalysisCondition.cash.toDouble())
+            createCell.setCellValue(tradeItem.getEvalPrice() / result.vbsAnalysisCondition.cash.toDouble())
             createCell.cellStyle = decimalStyle
         }
 
@@ -815,7 +815,7 @@ class VbsAnalysisService(
     /**
      * 날짜에 따른 평가금액(Buy&Hold, 벡테스트) 변화 시트 만듦
      */
-    private fun createReportEvalAmount(result: MabsAnalysisReportResult, workbook: XSSFWorkbook): XSSFSheet {
+    private fun createReportEvalAmount(result: VbsAnalysisReportResult, workbook: XSSFWorkbook): XSSFSheet {
         val sheet = workbook.createSheet()
         val header = "날짜,Buy&Hold 평가금,백테스트 평가금"
         applyHeader(sheet, header)
@@ -849,7 +849,7 @@ class VbsAnalysisService(
     /**
      * 매매 결과 요약 및 조건 시트 만듦
      */
-    private fun createReportSummary(result: MabsAnalysisReportResult, workbook: XSSFWorkbook): XSSFSheet {
+    private fun createReportSummary(result: VbsAnalysisReportResult, workbook: XSSFWorkbook): XSSFSheet {
         val sheet = workbook.createSheet()
         val summary = getSummary(result)
         textToSheet(summary, sheet)
@@ -895,10 +895,10 @@ class VbsAnalysisService(
      * 백테스트 조건 요약 정보
      */
     private fun getConditionSummary(
-        result: MabsAnalysisReportResult
+        result: VbsAnalysisReportResult
     ): String {
-        val range: DateRange = result.mabsAnalysisCondition.range
-        val condition = result.mabsAnalysisCondition
+        val range: DateRange = result.vbsAnalysisCondition.range
+        val condition = result.vbsAnalysisCondition
 
         val report = StringBuilder()
 
@@ -909,17 +909,19 @@ class VbsAnalysisService(
         report.append(String.format("매수 수수료\t %,.2f%%", condition.feeBuy * 100)).append("\n")
         report.append(String.format("매도 수수료\t %,.2f%%", condition.feeSell * 100)).append("\n")
 
-        val tradeConditionList: List<MabsConditionEntity> = result.mabsAnalysisCondition.tradeConditionList
+        val tradeConditionList: List<VbsConditionEntity> = result.vbsAnalysisCondition.tradeConditionList
 
         for (i in 1..tradeConditionList.size) {
             val tradeCondition = tradeConditionList[i - 1]
-            report.append(String.format("${i}. 조건아이디\t %s", tradeCondition.mabsConditionSeq)).append("\n")
+            report.append(String.format("${i}. 조건아이디\t %s", tradeCondition.vbsConditionSeq)).append("\n")
             report.append(String.format("${i}. 분석주기\t %s", tradeCondition.periodType)).append("\n")
             report.append(String.format("${i}. 대상 종목\t %s", tradeCondition.stock.getNameCode())).append("\n")
-            report.append(String.format("${i}. 상승 매수률\t %,.2f%%", tradeCondition.upBuyRate * 100)).append("\n")
-            report.append(String.format("${i}. 하락 매도률\t %,.2f%%", tradeCondition.downSellRate * 100)).append("\n")
-            report.append(String.format("${i}. 단기 이동평균 기간\t %d", tradeCondition.shortPeriod)).append("\n")
-            report.append(String.format("${i}. 장기 이동평균 기간\t %d", tradeCondition.longPeriod)).append("\n")
+            report.append(String.format("${i}. 변동성 비율\t %,.2f", tradeCondition.kRate)).append("\n")
+            report.append(String.format("${i}. 이동평균 단위\t %d", tradeCondition.maPeriod)).append("\n")
+            report.append(String.format("${i}. 갭 상승 시 매도 넘김\t %s", tradeCondition.gapRisenSkip)).append("\n")
+            report.append(String.format("${i}. 하루에 한번 거래\t %s", tradeCondition.onlyOneDayTrade)).append("\n")
+            report.append(String.format("${i}. 호가단위\t %s", tradeCondition.unitAskPrice)).append("\n")
+            report.append(String.format("${i}. 조건 설명\t %s", tradeCondition.comment)).append("\n")
         }
         return report.toString()
     }
@@ -928,14 +930,14 @@ class VbsAnalysisService(
      * @return 조건 정보가 담긴 리포트 파일명 subfix
      */
     private fun getReportFileSuffix(
-        result: MabsAnalysisReportResult
+        result: VbsAnalysisReportResult
     ): String {
-        val tradeConditionList = result.mabsAnalysisCondition.tradeConditionList
+        val tradeConditionList = result.vbsAnalysisCondition.tradeConditionList
         return String.format(
             "%s_%s~%s_%s.xlsx",
-            tradeConditionList.joinToString(",") { it.mabsConditionSeq.toString() },
-            result.mabsAnalysisCondition.range.fromDateFormat,
-            result.mabsAnalysisCondition.range.toDateFormat,
+            tradeConditionList.joinToString(",") { it.vbsConditionSeq.toString() },
+            result.vbsAnalysisCondition.range.fromDateFormat,
+            result.vbsAnalysisCondition.range.toDateFormat,
             tradeConditionList.joinToString(",") { it.stock.code }
         )
     }

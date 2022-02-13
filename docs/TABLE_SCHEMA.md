@@ -29,18 +29,19 @@
 
 ### 1.2.1. WA_VBS_CONDITION: 변동성돌파 전략 조건
 
-| Column Name        | Attribute Name                    | Key | Type     | Len | Not Null | Description                           |
-| ------------------ | --------------------------------- | --- | -------- | --- | -------- | ------------------------------------- |
-| VBS_CONDITION_SEQ  | 일련번호                          | PK  | INTEGER  |     | Y        |                                       |
-| STOCK_SEQ          | 종목                              | FK  | INTEGER  |     | Y        | CA_STOCK                              |
-| PERIOD_TYPE        | 매매 주기                         |     | VARCHAR  | 20  | Y        | PERIOD_DAY, PERIOD_WEEK, PERIOD_MONTH |
-| K_RATE             | 변동성 비율                       |     | NUMBER   |     | Y        |                                       |
-| MA_PERIOD          | 이동평균 주기                     |     | INTEGER  |     | Y        |                                       |
-| GAP_RISEN_SKIP     | 갭 상승 시 매도 멈춤              |     | VARCHAR  | 1   | Y        | Y, N                                  |
-| ONLY_ONE_DAY_TRADE | 하루에 한번만 매도 또는 매수 여부 |     | VARCHAR  | 1   | Y        | Y, N                                  |
-| COMMENT            | 조건에 대한 설명                  |     | VARCHAR  | 100 | N        |                                       |
-| REG_DATE           | 등록일                            |     | DATETIME |     | Y        |                                       |
-| EDIT_DATE          | 마지막 수정일                     |     | DATETIME |     | Y        |                                       |
+| Column Name        | Attribute Name       | Key | Type     | Len | Not Null | Description                           |
+| ------------------ | -------------------- | --- | -------- | --- | -------- | ------------------------------------- |
+| VBS_CONDITION_SEQ  | 일련번호             | PK  | INTEGER  |     | Y        |                                       |
+| STOCK_SEQ          | 종목                 | FK  | INTEGER  |     | Y        | CA_STOCK                              |
+| PERIOD_TYPE        | 매매 주기            |     | VARCHAR  | 20  | Y        | PERIOD_DAY, PERIOD_WEEK, PERIOD_MONTH |
+| K_RATE             | 변동성 비율          |     | NUMBER   |     | Y        |                                       |
+| MA_PERIOD          | 이동평균 주기        |     | INTEGER  |     | Y        |                                       |
+| UNIT_ASK_PRICE     | 호가단위             |     | INTEGER  |     | Y        |                                       |
+| GAP_RISEN_SKIP     | 갭 상승 시 매도 넘김 |     | VARCHAR  | 1   | Y        | Y, N                                  |
+| ONLY_ONE_DAY_TRADE | 하루에 한번 거래     |     | VARCHAR  | 1   | Y        | Y, N                                  |
+| COMMENT            | 조건에 대한 설명     |     | VARCHAR  | 100 | N        |                                       |
+| REG_DATE           | 등록일               |     | DATETIME |     | Y        |                                       |
+| EDIT_DATE          | 마지막 수정일        |     | DATETIME |     | Y        |                                       |
 
 ### 1.2.1. WB_VBS_TRADE: 변동성돌파 전략 조건
 

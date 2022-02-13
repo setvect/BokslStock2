@@ -108,7 +108,7 @@ class MabsBacktest {
     }
 
     @Test
-    fun 이동평균돌파전략_조건생성() {
+    fun 조건생성() {
         조건생성_일봉()
     }
 
@@ -116,13 +116,13 @@ class MabsBacktest {
     @Test
     @Transactional
     @Rollback(false)
-    fun 이동평균돌파전략_백테스트() {
+    fun 백테스트() {
         backtestService.runTestBatch()
     }
 
     @Test
     @Transactional
-    fun 이동평균돌파전략_멀티_리포트생성() {
+    fun 멀티_리포트생성() {
 //        val elementList = listOf(951551, 951255) // 평균 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
         val elementList = listOf(950589, 950064) // 최고 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
 //        val elementList = listOf(952722, 950164) // 최악 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
@@ -169,7 +169,7 @@ class MabsBacktest {
 
     @Test
     @Transactional
-    fun 이동평균돌파전략_단건_리포트생성() {
+    fun 단건_리포트생성() {
         val range = DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.now())
         val conditionList = mabsConditionRepository.listBySeq(listOf(949092))
         val mabsAnalysisCondition = MabsAnalysisCondition(

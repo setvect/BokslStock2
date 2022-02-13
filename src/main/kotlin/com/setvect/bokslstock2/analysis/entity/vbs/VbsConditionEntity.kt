@@ -13,6 +13,8 @@ import javax.persistence.GenerationType.AUTO
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
+import javax.persistence.OneToMany
+import javax.persistence.OrderBy
 
 /**
  * 변동성돌파 전략 조건
@@ -79,4 +81,8 @@ class VbsConditionEntity(
     @GeneratedValue(strategy = AUTO)
     @Column(name = "VBS_CONDITION_SEQ")
     val vbsConditionSeq = 0
+
+    @OneToMany(mappedBy = "vbsConditionEntity")
+    @OrderBy("tradeDate ASC")
+    val tradeList: List<VbsTradeEntity> = ArrayList()
 }
