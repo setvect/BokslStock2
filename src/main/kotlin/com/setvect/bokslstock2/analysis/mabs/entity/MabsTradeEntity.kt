@@ -1,6 +1,6 @@
-package com.setvect.bokslstock2.analysis.entity.vbs
+package com.setvect.bokslstock2.analysis.mabs.entity
 
-import com.setvect.bokslstock2.analysis.model.TradeType
+import com.setvect.bokslstock2.analysis.common.model.TradeType
 import java.time.LocalDateTime
 import javax.persistence.Column
 import javax.persistence.Entity
@@ -18,22 +18,22 @@ import javax.persistence.Table
 /**
  * 이평선 돌파 백테스트 매매 건별 정보
  */
-@Entity(name = "WB_VBS_TRADE")
+@Entity(name = "XB_MABS_TRADE")
 @Table(
     indexes = [
         Index(
-            name = "XB_VBS_TRADE_TRADE_DATE_INDEX",
+            name = "XB_MABS_TRADE_TRADE_DATE_INDEX",
             columnList = "TRADE_DATE"
         )]
 )
-class VbsTradeEntity(
+class MabsTradeEntity(
 
     /**
      * 매매 조건 일련번호
      */
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "VBS_CONDITION_SEQ")
-    val vbsConditionEntity: VbsConditionEntity,
+    @JoinColumn(name = "MABS_CONDITION_SEQ")
+    val mabsConditionEntity: MabsConditionEntity,
 
     /**
      * 매수/매도
@@ -43,10 +43,28 @@ class VbsTradeEntity(
     val tradeType: TradeType,
 
     /**
-     * 매매 시 이동평균 가격
+     * 최고 수익률
      */
-    @Column(name = "MA_PRICE", nullable = false)
-    val maPrice: Int,
+    @Column(name = "HIGH_YIELD")
+    val highYield: Double,
+
+    /**
+     * 최저 수익률
+     */
+    @Column(name = "LOW_YIELD")
+    val lowYield: Double,
+
+    /**
+     * 단기 이동평균 가격
+     */
+    @Column(name = "MA_SHORT", nullable = false)
+    val maShort: Int,
+
+    /**
+     * 장기 이동평균 가격
+     */
+    @Column(name = "MA_LONG", nullable = false)
+    val maLong: Int,
 
     /**
      * 매도시 수익률

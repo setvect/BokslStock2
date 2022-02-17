@@ -1,16 +1,16 @@
-package com.setvect.bokslstock2.analysis.model
+package com.setvect.bokslstock2.analysis.vbs.model
 
-import com.setvect.bokslstock2.analysis.entity.MabsConditionEntity
+import com.setvect.bokslstock2.analysis.vbs.entity.VbsConditionEntity
 import com.setvect.bokslstock2.util.DateRange
 
 /**
  * 이동평균돌파 백테스트
  */
-data class MabsAnalysisCondition(
+data class VbsAnalysisCondition(
     /**
      * 분석 조건
      */
-    val tradeConditionList: List<MabsConditionEntity>,
+    val tradeConditionList: List<VbsConditionEntity>,
     /**
      * 분석 대상 기간
      */

@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.analysis.model
+package com.setvect.bokslstock2.analysis.common.model
 
 import java.time.LocalDateTime
 

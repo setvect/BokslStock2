@@ -1,22 +1,21 @@
 package com.setvect.bokslstock2.analysis
 
 import com.setvect.bokslstock2.StockCode
-import com.setvect.bokslstock2.analysis.entity.MabsConditionEntity
-import com.setvect.bokslstock2.analysis.model.MabsAnalysisCondition
-import com.setvect.bokslstock2.analysis.repository.MabsConditionRepository
-import com.setvect.bokslstock2.analysis.repository.MabsTradeRepository
-import com.setvect.bokslstock2.analysis.service.MabsAnalysisService
-import com.setvect.bokslstock2.analysis.service.MabsBacktestService
-import com.setvect.bokslstock2.analysis.service.MovingAverageService
+import com.setvect.bokslstock2.analysis.mabs.entity.MabsConditionEntity
+import com.setvect.bokslstock2.analysis.mabs.model.MabsAnalysisCondition
+import com.setvect.bokslstock2.analysis.mabs.repository.MabsConditionRepository
+import com.setvect.bokslstock2.analysis.mabs.repository.MabsTradeRepository
+import com.setvect.bokslstock2.analysis.mabs.service.MabsAnalysisService
+import com.setvect.bokslstock2.analysis.mabs.service.MabsBacktestService
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_MONTH
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_WEEK
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
+import com.setvect.bokslstock2.index.service.MovingAverageService
+import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import java.time.LocalDateTime
-import java.util.stream.Collectors
-import java.util.stream.IntStream
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -129,7 +128,7 @@ class MabsBacktest {
 //        val elementList = listOf(949078, 951062) // 코스닥150 레버리지, KODEX 코스닥150선물인버스
 //        val elementList = listOf(949078, 949331) // 코스닥150 레버리지, KODEX 레버리지
 //        val elementList = listOf(949079) // 코스닥150 레버리지
-        val conditionSetList = getSubSet(elementList)
+        val conditionSetList = ApplicationUtil.getSubSet(elementList)
 
         val rangeList = listOf(
 //            DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.of(2017, 1, 1, 0, 0)),
@@ -397,37 +396,4 @@ class MabsBacktest {
     }
 
 
-    /**
-     * [elementList] 부분 집합을 만들 원소
-     * @return 공집합 제외한 부분집합
-     */
-    private fun getSubSet(elementList: List<Int>): MutableList<Set<Int>> {
-        val conditionSetList = mutableListOf<Set<Int>>()
-        makeSubSet(elementList, conditionSetList, 0, BooleanArray(elementList.size))
-        return conditionSetList
-    }
-
-    /**
-     * [list] 집합을 만들 원소
-     * [subSet] 부분집합
-     * 부분집합 만듦
-     */
-    private fun makeSubSet(list: List<Int>, subSet: MutableList<Set<Int>>, idx: Int, check: BooleanArray) {
-        if (list.size == idx) {
-            val subSetItem = IntStream.range(0, list.size)
-                .filter { num: Int -> check[num] }
-                .mapToObj { num: Int -> list[num] }
-                .collect(Collectors.toSet())
-
-            // 공집합은 제외
-            if (subSetItem.isNotEmpty()) {
-                subSet.add(subSetItem)
-            }
-            return
-        }
-        check[idx] = true
-        makeSubSet(list, subSet, idx + 1, check)
-        check[idx] = false
-        makeSubSet(list, subSet, idx + 1, check)
-    }
 }

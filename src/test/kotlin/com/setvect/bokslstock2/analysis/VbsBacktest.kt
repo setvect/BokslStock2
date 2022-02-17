@@ -1,15 +1,16 @@
 package com.setvect.bokslstock2.analysis
 
-import com.setvect.bokslstock2.analysis.entity.vbs.VbsConditionEntity
-import com.setvect.bokslstock2.analysis.model.vbs.VbsAnalysisCondition
-import com.setvect.bokslstock2.analysis.repository.vbs.VbsConditionRepository
-import com.setvect.bokslstock2.analysis.repository.vbs.VbsTradeRepository
-import com.setvect.bokslstock2.analysis.service.MovingAverageService
-import com.setvect.bokslstock2.analysis.service.vbs.VbsAnalysisService
-import com.setvect.bokslstock2.analysis.service.vbs.VbsBacktestService
+import com.setvect.bokslstock2.analysis.vbs.entity.VbsConditionEntity
+import com.setvect.bokslstock2.analysis.vbs.model.VbsAnalysisCondition
+import com.setvect.bokslstock2.analysis.vbs.repository.VbsConditionRepository
+import com.setvect.bokslstock2.analysis.vbs.repository.VbsTradeRepository
+import com.setvect.bokslstock2.analysis.vbs.service.VbsAnalysisService
+import com.setvect.bokslstock2.analysis.vbs.service.VbsBacktestService
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
+import com.setvect.bokslstock2.index.service.MovingAverageService
+import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import java.time.LocalDateTime
 import org.junit.jupiter.api.Test
@@ -112,14 +113,7 @@ class VbsBacktest {
 
     @Test
     @Transactional
-    // TODO
     fun 단건_리포트생성() {
-//        VBS_CONDITION_SEQ	GAP_RISEN_SKIP	ONLY_ONE_DAY_TRADE	K_RATE
-//        1313246	N	N	0.5
-//        1313247	N	Y	0.5
-//        1313248	Y	N	0.5
-//        1313249	Y	Y	0.5
-
         val range = DateRange(LocalDateTime.of(2000, 12, 1, 0, 0), LocalDateTime.now())
         val conditionList = vbsConditionRepository.listBySeq(listOf(1317674))
         val vbsAnalysisCondition = VbsAnalysisCondition(
@@ -135,6 +129,49 @@ class VbsBacktest {
         analysisService.makeReport(vbsAnalysisCondition)
     }
 
+    @Test
+    @Transactional
+    fun 멀티_리포트생성() {
+        val elementList = listOf(2419416, 2418908)
+        val conditionSetList = ApplicationUtil.getSubSet(elementList)
+
+        val rangeList = listOf(
+            DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.of(2017, 1, 1, 0, 0)),
+            DateRange(LocalDateTime.of(2017, 1, 1, 0, 0), LocalDateTime.of(2018, 1, 1, 0, 0)),
+            DateRange(LocalDateTime.of(2018, 1, 1, 0, 0), LocalDateTime.of(2019, 1, 1, 0, 0)),
+            DateRange(LocalDateTime.of(2019, 1, 1, 0, 0), LocalDateTime.of(2020, 1, 1, 0, 0)),
+            DateRange(LocalDateTime.of(2020, 1, 1, 0, 0), LocalDateTime.of(2021, 1, 1, 0, 0)),
+            DateRange(LocalDateTime.of(2021, 1, 1, 0, 0), LocalDateTime.now()),
+            DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.now()),
+//            DateRange(LocalDateTime.of(2010, 1, 1, 0, 0), LocalDateTime.now()),
+        )
+
+        val mabsAnalysisConditionList = conditionSetList.flatMap { conditionSet ->
+            val conditionList = vbsConditionRepository.listBySeq(conditionSet)
+            rangeList.map { range ->
+                // 시세가 포함된 날짜범위 지정
+                val realRangeList =
+                    conditionList.map { candleRepository.findByCandleDateTimeBetween(it.stock, range.from, range.to) }
+                        .toList()
+                val from = realRangeList.minOf { it.from }
+                val to = realRangeList.maxOf { it.to }
+                val realRange = DateRange(from, to)
+
+                VbsAnalysisCondition(
+                    tradeConditionList = conditionList,
+                    range = realRange,
+                    investRatio = 0.99,
+                    cash = 10_000_000,
+                    feeBuy = 0.0002,
+                    feeSell = 0.0002,
+                    comment = ""
+                )
+            }.toList()
+        }.toList()
+
+        analysisService.makeSummaryReport(mabsAnalysisConditionList)
+    }
+
     private fun allConditionReportMake() {
         val conditionList = vbsConditionRepository.findAll().filter {
             // tradeList 정보를 다시 읽어옴. 해당 구분이 없으면 tradeList size가 0인 상태에서 캐싱된 데이터가 불러와짐
@@ -143,7 +180,9 @@ class VbsBacktest {
         }.toList()
 
         var i = 0
-        val vbsConditionList = conditionList.map {
+        val vbsConditionList = conditionList
+//            .filter { it.stock.code == "091170" }
+            .map {
             val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
             val priceRange = candleRepository.findByCandleDateTimeBetween(it.stock, range.from, range.to)
 

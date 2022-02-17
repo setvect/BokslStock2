@@ -1,5 +1,7 @@
 package com.setvect.bokslstock2.util
 
+import java.util.stream.Collectors
+import java.util.stream.IntStream
 import kotlin.math.pow
 
 /**
@@ -102,4 +104,41 @@ object ApplicationUtil {
         val year = dayCount / 365.0
         return (ev / bv).pow(1 / year) - 1
     }
+
+
+    /**
+     * [elementList] 부분 집합을 만들 원소
+     * @return 공집합 제외한 부분집합
+     */
+    fun getSubSet(elementList: List<Int>): MutableList<Set<Int>> {
+        val conditionSetList = mutableListOf<Set<Int>>()
+        makeSubSet(elementList, conditionSetList, 0, BooleanArray(elementList.size))
+        return conditionSetList
+    }
+
+
+    /**
+     * [list] 집합을 만들 원소
+     * [subSet] 부분집합
+     * 부분집합 만듦
+     */
+    private fun makeSubSet(list: List<Int>, subSet: MutableList<Set<Int>>, idx: Int, check: BooleanArray) {
+        if (list.size == idx) {
+            val subSetItem = IntStream.range(0, list.size)
+                .filter { num: Int -> check[num] }
+                .mapToObj { num: Int -> list[num] }
+                .collect(Collectors.toSet())
+
+            // 공집합은 제외
+            if (subSetItem.isNotEmpty()) {
+                subSet.add(subSetItem)
+            }
+            return
+        }
+        check[idx] = true
+        makeSubSet(list, subSet, idx + 1, check)
+        check[idx] = false
+        makeSubSet(list, subSet, idx + 1, check)
+    }
+
 }

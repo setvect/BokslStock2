@@ -1,12 +1,13 @@
-package com.setvect.bokslstock2.analysis.service
+package com.setvect.bokslstock2.analysis.mabs.service
 
-import com.setvect.bokslstock2.analysis.entity.MabsConditionEntity
-import com.setvect.bokslstock2.analysis.entity.MabsTradeEntity
-import com.setvect.bokslstock2.analysis.model.TradeType.BUY
-import com.setvect.bokslstock2.analysis.model.TradeType.SELL
-import com.setvect.bokslstock2.analysis.repository.MabsConditionRepository
-import com.setvect.bokslstock2.analysis.repository.MabsTradeRepository
+import com.setvect.bokslstock2.analysis.mabs.entity.MabsConditionEntity
+import com.setvect.bokslstock2.analysis.mabs.entity.MabsTradeEntity
+import com.setvect.bokslstock2.analysis.common.model.TradeType.BUY
+import com.setvect.bokslstock2.analysis.common.model.TradeType.SELL
+import com.setvect.bokslstock2.analysis.mabs.repository.MabsConditionRepository
+import com.setvect.bokslstock2.analysis.mabs.repository.MabsTradeRepository
 import com.setvect.bokslstock2.index.dto.CandleDto
+import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

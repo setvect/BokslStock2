@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.analysis.service
+package com.setvect.bokslstock2.index.service
 
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType

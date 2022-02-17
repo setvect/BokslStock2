@@ -1,15 +1,15 @@
-package com.setvect.bokslstock2.analysis.model
+package com.setvect.bokslstock2.analysis.vbs.model
 
-import com.setvect.bokslstock2.analysis.entity.MabsTradeEntity
+import com.setvect.bokslstock2.analysis.vbs.entity.VbsTradeEntity
 
 /**
  * 단위 거래 건별 내역
  */
-data class MabsTradeReportItem(
+data class VbsTradeReportItem(
     /**
      * 거래 내용
      */
-    val mabsTradeEntity: MabsTradeEntity,
+    val vbsTradeEntity: VbsTradeEntity,
     /**
      * 매수 수량
      */
@@ -35,7 +35,7 @@ data class MabsTradeReportItem(
      * @return 매수 금액
      */
     fun getBuyAmount(): Long {
-        return (qty * mabsTradeEntity.unitPrice).toLong()
+        return qty * vbsTradeEntity.unitPrice.toLong()
     }
 
     /**

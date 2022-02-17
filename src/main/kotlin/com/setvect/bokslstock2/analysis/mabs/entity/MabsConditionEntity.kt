@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.analysis.entity
+package com.setvect.bokslstock2.analysis.mabs.entity
 
 import com.setvect.bokslstock2.common.entity.BaseTimeEntity
 import com.setvect.bokslstock2.index.entity.StockEntity

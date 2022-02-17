@@ -1,20 +1,21 @@
-package com.setvect.bokslstock2.analysis.model
+package com.setvect.bokslstock2.analysis.vbs.model
 
+import com.setvect.bokslstock2.analysis.common.model.EvaluationAmountItem
 import com.setvect.bokslstock2.util.ApplicationUtil
 
 /**
  * 멀티 종목 매매 백테스트 분석 결과
  */
-data class MabsAnalysisReportResult(
+data class VbsAnalysisReportResult(
     /**
      * 리포트 조건
      */
-    val mabsAnalysisCondition: MabsAnalysisCondition,
+    val vbsAnalysisCondition: VbsAnalysisCondition,
 
     /**
      * 매매 이력
      */
-    val tradeHistory: List<MabsTradeReportItem>,
+    val tradeHistory: List<VbsTradeReportItem>,
 
     /**
      * 날짜별 평가금 변화 이력
