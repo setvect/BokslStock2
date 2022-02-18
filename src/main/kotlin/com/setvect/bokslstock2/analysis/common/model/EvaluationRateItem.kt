@@ -3,19 +3,19 @@ package com.setvect.bokslstock2.analysis.common.model
 import java.time.LocalDateTime
 
 /**
- * Buy&Hold 및 전략 평가금액
+ * Buy&Hold 및 전략 평가금액 변화 비율
  */
-data class EvaluationAmountItem(
+data class EvaluationRateItem(
     /**
      * 기준 날짜
      */
     val baseDate: LocalDateTime,
     /**
-     * buy&hold 평가금
+     * buy&hold 비율
      */
-    val buyHoldAmount: Long,
+    val buyHoldRate: Double,
     /**
-     * 백테스팅 전략 평가금
+     * 백테스팅 전략 비율
      */
-    val backtestAmount: Long,
+    val backtestRate: Double,
 )

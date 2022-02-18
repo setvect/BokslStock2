@@ -1,5 +1,8 @@
 package com.setvect.bokslstock2.analysis.mabs.service
 
+import com.setvect.bokslstock2.analysis.common.model.EvaluationRateItem
+import com.setvect.bokslstock2.analysis.common.model.TradeType.BUY
+import com.setvect.bokslstock2.analysis.common.model.TradeType.SELL
 import com.setvect.bokslstock2.analysis.mabs.entity.MabsConditionEntity
 import com.setvect.bokslstock2.analysis.mabs.entity.MabsTradeEntity
 import com.setvect.bokslstock2.analysis.mabs.model.MabsAnalysisCondition
@@ -7,10 +10,7 @@ import com.setvect.bokslstock2.analysis.mabs.model.MabsAnalysisReportResult
 import com.setvect.bokslstock2.analysis.mabs.model.MabsAnalysisReportResult.TotalYield
 import com.setvect.bokslstock2.analysis.mabs.model.MabsAnalysisReportResult.WinningRate
 import com.setvect.bokslstock2.analysis.mabs.model.MabsAnalysisReportResult.YieldMdd
-import com.setvect.bokslstock2.analysis.common.model.EvaluationAmountItem
 import com.setvect.bokslstock2.analysis.mabs.model.MabsTradeReportItem
-import com.setvect.bokslstock2.analysis.common.model.TradeType.BUY
-import com.setvect.bokslstock2.analysis.common.model.TradeType.SELL
 import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.util.ApplicationUtil
@@ -423,8 +423,8 @@ class MabsAnalysisService(
     private fun applyEvaluationAmount(
         tradeItemHistory: ArrayList<MabsTradeReportItem>,
         condition: MabsAnalysisCondition
-    ): List<EvaluationAmountItem> {
-        val buyHoldMap: SortedMap<LocalDateTime, Long> = getBuyAndHoldEvalAmount(condition)
+    ): List<EvaluationRateItem> {
+        val buyHoldRateMap: SortedMap<LocalDateTime, Double> = getBuyAndHoldEvalRate(condition)
         // <조건아아디, List(캔들)>
         val candleListMap = getConditionOfCandle(condition)
 
@@ -435,8 +435,7 @@ class MabsAnalysisService(
         val allDateList =
             condClosePriceMap.entries.flatMap { it.value.entries }.map { it.key }.toSortedSet()
 
-        var buyHoldLastAmount = condition.cash
-        var backtestLastCash = condition.cash // 마지막 보유 현금
+        var buyHoldLastAmount = 1.0
 
         // <거래날짜, 거래내용>
         val tradeByDate: Map<LocalDateTime, List<MabsTradeReportItem>> =
@@ -447,12 +446,11 @@ class MabsAnalysisService(
         val condByStockQty = condition.tradeConditionList.associate { it.mabsConditionSeq to 0 }.toMutableMap()
 
         val result = allDateList.map { date ->
-            val buyHoldAmount = buyHoldMap[date] ?: buyHoldLastAmount
+            val buyHoldAmount = buyHoldRateMap[date] ?: buyHoldLastAmount
             val currentTradeList = tradeByDate[date] ?: emptyList()
             for (trade in currentTradeList) {
                 val mabsConditionSeq = trade.mabsTradeEntity.mabsConditionEntity.mabsConditionSeq
                 condByStockQty[mabsConditionSeq] = trade.qty
-                backtestLastCash = trade.cash
             }
 
             // 종가기준으로 보유 주식 평가금액 구하기
@@ -465,17 +463,17 @@ class MabsAnalysisService(
                     }.sum()
 
 
-            val backtestAmount = backtestLastCash + evalStockAmount
+            val backtestAmount =  evalStockAmount / condition.cash.toDouble()
             buyHoldLastAmount = buyHoldAmount
-            EvaluationAmountItem(baseDate = date, buyHoldAmount = buyHoldAmount, backtestAmount = backtestAmount)
+            EvaluationRateItem(baseDate = date, buyHoldRate = buyHoldAmount, backtestRate = backtestAmount)
         }.toMutableList()
-        // 최초 시작은 초기 투자금으로 설정
+        // 최초 시작은 비율은 1.0
         result.add(
             0,
-            EvaluationAmountItem(
+            EvaluationRateItem(
                 baseDate = allDateList.first(),
-                buyHoldAmount = condition.cash,
-                backtestAmount = condition.cash
+                buyHoldRate = 1.0,
+                backtestRate = 1.0
             )
         )
         return result
@@ -486,7 +484,7 @@ class MabsAnalysisService(
      * @return 수익률 정보
      */
     private fun calculateTotalYield(
-        evaluationAmountList: List<EvaluationAmountItem>, range: DateRange
+        evaluationAmountList: List<EvaluationRateItem>, range: DateRange
     ): TotalYield {
         if (evaluationAmountList.isEmpty()) {
             return TotalYield(
@@ -494,12 +492,12 @@ class MabsAnalysisService(
             )
         }
 
-        val lastCash = evaluationAmountList.last().backtestAmount
-        val startCash = evaluationAmountList.first().backtestAmount
+        val lastCash = evaluationAmountList.last().backtestRate
+        val startCash = evaluationAmountList.first().backtestRate
         val realYield = ApplicationUtil.getYield(startCash, lastCash)
 
-        val finalResultList = evaluationAmountList.stream().map(EvaluationAmountItem::backtestAmount).toList()
-        val realMdd = ApplicationUtil.getMddByLong(finalResultList)
+        val finalResultList = evaluationAmountList.stream().map(EvaluationRateItem::backtestRate).toList()
+        val realMdd = ApplicationUtil.getMdd(finalResultList)
         return TotalYield(realYield, realMdd, range.diffDays.toInt())
     }
 
@@ -549,28 +547,28 @@ class MabsAnalysisService(
      * @return 전체 투자 종목에 대한 Buy & Hold시 수익 정보
      */
     private fun calculateTotalBuyAndHoldYield(
-        evaluationAmountList: List<EvaluationAmountItem>,
+        evaluationAmountList: List<EvaluationRateItem>,
         range: DateRange
     ): TotalYield {
-        val prices = evaluationAmountList.map { it.buyHoldAmount }.toList()
+        val prices = evaluationAmountList.map { it.buyHoldRate }.toList()
         return TotalYield(
-            ApplicationUtil.getYieldByLong(prices),
-            ApplicationUtil.getMddByLong(prices),
+            ApplicationUtil.getYield(prices),
+            ApplicationUtil.getMdd(prices),
             range.diffDays.toInt()
         )
     }
 
     /**
-     * Buy & Hold 투자금액 대비 날짜별 평가금액
-     * @return <날짜, 평가금액>
+     * Buy & Hold 투자금액 대비 날짜별 평가율
+     * @return <날짜, 평가율>
      */
-    private fun getBuyAndHoldEvalAmount(condition: MabsAnalysisCondition): SortedMap<LocalDateTime, Long> {
+    private fun getBuyAndHoldEvalRate(condition: MabsAnalysisCondition): SortedMap<LocalDateTime, Double> {
         val combinedYield: SortedMap<LocalDateTime, Double> = calculateBuyAndHoldProfitRatio(condition)
-        val initial = TreeMap<LocalDateTime, Long>()
-        initial[condition.range.from] = condition.cash
-        return combinedYield.entries.fold(initial) { acc: SortedMap<LocalDateTime, Long>, item ->
+        val initial = TreeMap<LocalDateTime, Double>()
+        initial[condition.range.from] = 1.0
+        return combinedYield.entries.fold(initial) { acc: SortedMap<LocalDateTime, Double>, item ->
             // 누적수익 = 직전 누적수익 * (수익률 + 1)
-            acc[item.key] = (acc.entries.last().value * (item.value + 1)).toLong()
+            acc[item.key] = acc.entries.last().value * (item.value + 1)
             acc
         }
     }
@@ -824,7 +822,7 @@ class MabsAnalysisService(
         val dateStyle = ExcelStyle.createDate(workbook)
         val commaStyle = ExcelStyle.createComma(workbook)
 
-        result.evaluationAmountHistory.forEach { evalItem: EvaluationAmountItem ->
+        result.evaluationAmountHistory.forEach { evalItem: EvaluationRateItem ->
             val row = sheet.createRow(rowIdx++)
             var cellIdx = 0
             var createCell = row.createCell(cellIdx++)
@@ -832,11 +830,11 @@ class MabsAnalysisService(
             createCell.cellStyle = dateStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(evalItem.buyHoldAmount.toDouble())
+            createCell.setCellValue(evalItem.buyHoldRate.toDouble())
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx)
-            createCell.setCellValue(evalItem.backtestAmount.toDouble())
+            createCell.setCellValue(evalItem.backtestRate.toDouble())
             createCell.cellStyle = commaStyle
         }
         sheet.createFreezePane(0, 1)

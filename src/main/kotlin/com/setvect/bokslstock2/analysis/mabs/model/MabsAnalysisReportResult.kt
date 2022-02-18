@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2.analysis.mabs.model
 
-import com.setvect.bokslstock2.analysis.common.model.EvaluationAmountItem
+import com.setvect.bokslstock2.analysis.common.model.EvaluationRateItem
 import com.setvect.bokslstock2.util.ApplicationUtil
 
 /**
@@ -20,7 +20,7 @@ data class MabsAnalysisReportResult(
     /**
      * 날짜별 평가금 변화 이력
      */
-    val evaluationAmountHistory: List<EvaluationAmountItem>,
+    val evaluationAmountHistory: List<EvaluationRateItem>,
 
     /**
      * 전체 수익 결과

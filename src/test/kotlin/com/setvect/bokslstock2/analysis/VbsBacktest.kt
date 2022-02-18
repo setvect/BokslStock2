@@ -115,7 +115,7 @@ class VbsBacktest {
     @Transactional
     fun 단건_리포트생성() {
         val range = DateRange(LocalDateTime.of(2000, 12, 1, 0, 0), LocalDateTime.now())
-        val conditionList = vbsConditionRepository.listBySeq(listOf(1317674))
+        val conditionList = vbsConditionRepository.listBySeq(listOf(2418908))
         val vbsAnalysisCondition = VbsAnalysisCondition(
             tradeConditionList = conditionList,
             range = range,
