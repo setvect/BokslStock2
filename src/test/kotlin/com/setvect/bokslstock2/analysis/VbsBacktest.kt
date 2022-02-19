@@ -1,5 +1,6 @@
 package com.setvect.bokslstock2.analysis
 
+import com.setvect.bokslstock2.analysis.common.model.BasicAnalysisCondition
 import com.setvect.bokslstock2.analysis.vbs.entity.VbsConditionEntity
 import com.setvect.bokslstock2.analysis.vbs.model.VbsAnalysisCondition
 import com.setvect.bokslstock2.analysis.vbs.repository.VbsConditionRepository
@@ -9,7 +10,6 @@ import com.setvect.bokslstock2.analysis.vbs.service.VbsBacktestService
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
-import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import java.time.LocalDateTime
@@ -33,9 +33,6 @@ class VbsBacktest {
 
     @Autowired
     private lateinit var vbsTradeRepository: VbsTradeRepository
-
-    @Autowired
-    private lateinit var vbsAverageService: MovingAverageService
 
     @Autowired
     private lateinit var vbsConditionRepository: VbsConditionRepository
@@ -118,12 +115,14 @@ class VbsBacktest {
         val conditionList = vbsConditionRepository.listBySeq(listOf(2418908))
         val vbsAnalysisCondition = VbsAnalysisCondition(
             tradeConditionList = conditionList,
-            range = range,
-            investRatio = 0.99,
-            cash = 10_000_000,
-            feeBuy = 0.0002,
-            feeSell = 0.0002,
-            comment = ""
+            basic = BasicAnalysisCondition(
+                range = range,
+                investRatio = 0.99,
+                cash = 10_000_000,
+                feeBuy = 0.0002,
+                feeSell = 0.0002,
+                comment = ""
+            )
         )
 
         analysisService.makeReport(vbsAnalysisCondition)
@@ -159,12 +158,14 @@ class VbsBacktest {
 
                 VbsAnalysisCondition(
                     tradeConditionList = conditionList,
-                    range = realRange,
-                    investRatio = 0.99,
-                    cash = 10_000_000,
-                    feeBuy = 0.0002,
-                    feeSell = 0.0002,
-                    comment = ""
+                    basic = BasicAnalysisCondition(
+                        range = realRange,
+                        investRatio = 0.99,
+                        cash = 10_000_000,
+                        feeBuy = 0.0002,
+                        feeSell = 0.0002,
+                        comment = ""
+                    )
                 )
             }.toList()
         }.toList()
@@ -183,21 +184,23 @@ class VbsBacktest {
         val vbsConditionList = conditionList
 //            .filter { it.stock.code == "091170" }
             .map {
-            val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
-            val priceRange = candleRepository.findByCandleDateTimeBetween(it.stock, range.from, range.to)
+                val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
+                val priceRange = candleRepository.findByCandleDateTimeBetween(it.stock, range.from, range.to)
 
-            val vbsAnalysisCondition = VbsAnalysisCondition(
-                tradeConditionList = listOf(it),
-                range = priceRange,
-                investRatio = 0.99,
-                cash = 10_000_000,
-                feeBuy = 0.0002,
-                feeSell = 0.0002,
-                comment = ""
-            )
-            log.info("거래 내역 조회 진행 ${++i}/${conditionList.size}")
-            vbsAnalysisCondition
-        }.toList()
+                val vbsAnalysisCondition = VbsAnalysisCondition(
+                    tradeConditionList = listOf(it),
+                    basic = BasicAnalysisCondition(
+                        range = priceRange,
+                        investRatio = 0.99,
+                        cash = 10_000_000,
+                        feeBuy = 0.0002,
+                        feeSell = 0.0002,
+                        comment = ""
+                    )
+                )
+                log.info("거래 내역 조회 진행 ${++i}/${conditionList.size}")
+                vbsAnalysisCondition
+            }.toList()
         analysisService.makeSummaryReport(vbsConditionList)
     }
 
