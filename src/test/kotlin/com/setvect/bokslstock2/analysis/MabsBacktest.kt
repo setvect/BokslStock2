@@ -1,6 +1,7 @@
 package com.setvect.bokslstock2.analysis
 
 import com.setvect.bokslstock2.StockCode
+import com.setvect.bokslstock2.analysis.common.model.BasicAnalysisCondition
 import com.setvect.bokslstock2.analysis.mabs.entity.MabsConditionEntity
 import com.setvect.bokslstock2.analysis.mabs.model.MabsAnalysisCondition
 import com.setvect.bokslstock2.analysis.mabs.repository.MabsConditionRepository
@@ -153,12 +154,14 @@ class MabsBacktest {
 
                 MabsAnalysisCondition(
                     tradeConditionList = conditionList,
-                    range = realRange,
-                    investRatio = 0.99,
-                    cash = 10_000_000,
-                    feeBuy = 0.001,
-                    feeSell = 0.001,
-                    comment = ""
+                    basic = BasicAnalysisCondition(
+                        range = realRange,
+                        investRatio = 0.99,
+                        cash = 10_000_000,
+                        feeBuy = 0.001,
+                        feeSell = 0.001,
+                        comment = ""
+                    )
                 )
             }.toList()
         }.toList()
@@ -173,12 +176,14 @@ class MabsBacktest {
         val conditionList = mabsConditionRepository.listBySeq(listOf(949092))
         val mabsAnalysisCondition = MabsAnalysisCondition(
             tradeConditionList = conditionList,
-            range = range,
-            investRatio = 0.99,
-            cash = 10_000_000,
-            feeBuy = 0.001,
-            feeSell = 0.001,
-            comment = ""
+            basic = BasicAnalysisCondition(
+                range = range,
+                investRatio = 0.99,
+                cash = 10_000_000,
+                feeBuy = 0.001,
+                feeSell = 0.001,
+                comment = ""
+            )
         )
 
         analysisService.makeReport(mabsAnalysisCondition)
@@ -382,12 +387,14 @@ class MabsBacktest {
 
             val mabsAnalysisCondition = MabsAnalysisCondition(
                 tradeConditionList = listOf(it),
-                range = priceRange,
-                investRatio = 0.99,
-                cash = 10_000_000,
-                feeBuy = 0.001,
-                feeSell = 0.001,
-                comment = ""
+                basic = BasicAnalysisCondition(
+                    range = priceRange,
+                    investRatio = 0.99,
+                    cash = 10_000_000,
+                    feeBuy = 0.001,
+                    feeSell = 0.001,
+                    comment = ""
+                )
             )
             log.info("거래 내역 조회 진행 ${++i}/${conditionList.size}")
             mabsAnalysisCondition

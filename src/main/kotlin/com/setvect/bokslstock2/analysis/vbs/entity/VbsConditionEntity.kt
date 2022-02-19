@@ -1,6 +1,7 @@
 package com.setvect.bokslstock2.analysis.vbs.entity
 
 import com.setvect.bokslstock2.common.entity.BaseTimeEntity
+import com.setvect.bokslstock2.common.entity.ConditionEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 import org.hibernate.annotations.Type
@@ -26,7 +27,7 @@ class VbsConditionEntity(
      */
     @JoinColumn(name = "STOCK_SEQ")
     @ManyToOne
-    val stock: StockEntity,
+    override val stock: StockEntity,
 
     /**
      * 매매 주기
@@ -60,7 +61,7 @@ class VbsConditionEntity(
      * true: 매수 상태에서 오늘 시가가 전일 종가보다 높으면 매도하지 않고 다음날로 넘김
      */
     @Column(name = "GAP_RISEN_SKIP", nullable = false)
-    @Type(type="yes_no")
+    @Type(type = "yes_no")
     val gapRisenSkip: Boolean,
 
     /**
@@ -68,7 +69,7 @@ class VbsConditionEntity(
      * true: 오늘 매도 하면 조건이 만족해도 그날 매수 안함
      */
     @Column(name = "ONLY_ONE_DAY_TRADE", nullable = false)
-    @Type(type="yes_no")
+    @Type(type = "yes_no")
     val onlyOneDayTrade: Boolean,
 
     /**
@@ -76,7 +77,7 @@ class VbsConditionEntity(
      */
     @Column(name = "COMMENT", length = 100)
     val comment: String?,
-) : BaseTimeEntity() {
+) : ConditionEntity, BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = AUTO)
     @Column(name = "VBS_CONDITION_SEQ")
@@ -84,5 +85,9 @@ class VbsConditionEntity(
 
     @OneToMany(mappedBy = "vbsConditionEntity")
     @OrderBy("tradeDate ASC")
-    val tradeList: List<VbsTradeEntity> = ArrayList()
+    override val tradeList: List<VbsTradeEntity> = ArrayList()
+
+    override fun getConditionId(): Int {
+        return vbsConditionSeq
+    }
 }
