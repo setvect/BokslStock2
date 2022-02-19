@@ -54,13 +54,13 @@ class VbsConditionEntity(
      * 호가 단위, ETF는 5임
      */
     @Column(name = "UNIT_ASK_PRICE", nullable = false)
-    val unitAskPrice: Int,
+    val unitAskPrice: Double,
 
     /**
      * false: 매수 상태에서 다음날 시가 매도
      * true: 매수 상태에서 오늘 시가가 전일 종가보다 높으면 매도하지 않고 다음날로 넘김
      */
-    @Column(name = "GAP_RISEN_SKIP", nullable = false)
+    @Column(name = "GAP_RISEN_SKIP", nullable = false, length = 1)
     @Type(type = "yes_no")
     val gapRisenSkip: Boolean,
 
@@ -68,7 +68,7 @@ class VbsConditionEntity(
      * false: 매도 일에 매수 조건이 되면 매수
      * true: 오늘 매도 하면 조건이 만족해도 그날 매수 안함
      */
-    @Column(name = "ONLY_ONE_DAY_TRADE", nullable = false)
+    @Column(name = "ONLY_ONE_DAY_TRADE", nullable = false, length = 1)
     @Type(type = "yes_no")
     val onlyOneDayTrade: Boolean,
 
@@ -81,13 +81,13 @@ class VbsConditionEntity(
     @Id
     @GeneratedValue(strategy = AUTO)
     @Column(name = "VBS_CONDITION_SEQ")
-    val vbsConditionSeq = 0
+    val vbsConditionSeq = 0L
 
     @OneToMany(mappedBy = "vbsConditionEntity")
     @OrderBy("tradeDate ASC")
     override val tradeList: List<VbsTradeEntity> = ArrayList()
 
-    override fun getConditionId(): Int {
+    override fun getConditionId(): Long {
         return vbsConditionSeq
     }
 }

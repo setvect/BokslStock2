@@ -111,10 +111,10 @@ class CrawlService(
                 stock = stockEntityOptional.get(),
                 periodType = PERIOD_DAY,
                 candleDateTime = DateUtil.getLocalDateTime(row[0] + "000000", "yyyyMMddHHmmss"),
-                openPrice = Integer.parseInt(row[1]),
-                highPrice = Integer.parseInt(row[2]),
-                lowPrice = Integer.parseInt(row[3]),
-                closePrice = Integer.parseInt(row[4]),
+                openPrice = row[1].toDouble(),
+                highPrice = row[2].toDouble(),
+                lowPrice = row[3].toDouble(),
+                closePrice = row[4].toDouble(),
             )
         }.toList()
 

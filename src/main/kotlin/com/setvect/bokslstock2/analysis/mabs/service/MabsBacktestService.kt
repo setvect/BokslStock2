@@ -79,8 +79,8 @@ class MabsBacktestService(
                         tradeType = BUY,
                         highYield = 0.0,
                         lowYield = 0.0,
-                        maShort = yesterdayCandle.average[condition.shortPeriod] ?: 0,
-                        maLong = yesterdayCandle.average[condition.longPeriod] ?: 0,
+                        maShort = yesterdayCandle.average[condition.shortPeriod] ?: 0.0,
+                        maLong = yesterdayCandle.average[condition.longPeriod] ?: 0.0,
                         yield = 0.0,
                         unitPrice = currentCandle.openPrice,
                         tradeDate = currentCandle.candleDateTimeStart
@@ -99,8 +99,8 @@ class MabsBacktestService(
                         tradeType = SELL,
                         highYield = highYield,
                         lowYield = lowYield,
-                        maShort = yesterdayCandle.average[condition.shortPeriod] ?: 0,
-                        maLong = yesterdayCandle.average[condition.longPeriod] ?: 0,
+                        maShort = yesterdayCandle.average[condition.shortPeriod] ?: 0.0,
+                        maLong = yesterdayCandle.average[condition.longPeriod] ?: 0.0,
                         yield = ApplicationUtil.getYield(lastBuyInfo!!.unitPrice, currentCandle.openPrice),
                         unitPrice = currentCandle.openPrice,
                         tradeDate = currentCandle.candleDateTimeStart

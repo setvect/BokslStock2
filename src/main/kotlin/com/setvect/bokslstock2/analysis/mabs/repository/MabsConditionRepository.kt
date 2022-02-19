@@ -5,9 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
-interface MabsConditionRepository : JpaRepository<MabsConditionEntity, Int>{
+interface MabsConditionRepository : JpaRepository<MabsConditionEntity, Long>{
 
     @Query("select x from XA_MABS_CONDITION x where x.mabsConditionSeq in :mabsConditionSeqs")
-    fun listBySeq(@Param("mabsConditionSeqs") mabsConditionSeqs: Collection<Int>): List<MabsConditionEntity>
+    fun listBySeq(@Param("mabsConditionSeqs") mabsConditionSeqs: Collection<Long>): List<MabsConditionEntity>
 
 }

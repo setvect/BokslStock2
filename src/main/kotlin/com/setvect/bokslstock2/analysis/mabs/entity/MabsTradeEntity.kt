@@ -60,13 +60,13 @@ class MabsTradeEntity(
      * 단기 이동평균 가격
      */
     @Column(name = "MA_SHORT", nullable = false)
-    val maShort: Int,
+    val maShort: Double,
 
     /**
      * 장기 이동평균 가격
      */
     @Column(name = "MA_LONG", nullable = false)
-    val maLong: Int,
+    val maLong: Double,
 
     /**
      * 매도시 수익률
@@ -82,7 +82,7 @@ class MabsTradeEntity(
      * - 매도일 경우 매도 단가
      */
     @Column(name = "UNIT_PRICE", nullable = false)
-    override val unitPrice: Int,
+    override val unitPrice: Double,
 
     /**
      * 거래시간
@@ -93,9 +93,9 @@ class MabsTradeEntity(
     @Id
     @GeneratedValue(strategy = AUTO)
     @Column(name = "TRADE_SEQ")
-    val tradeSeq = 0
+    val tradeSeq = 0L
 
-    override fun tradeId(): Int {
+    override fun tradeId(): Long {
         return tradeSeq
     }
 

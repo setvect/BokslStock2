@@ -9,7 +9,6 @@ import com.setvect.bokslstock2.index.repository.StockRepository
 import java.util.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import kotlin.math.roundToInt
 
 @Service
 class MovingAverageService(
@@ -57,10 +56,12 @@ class MovingAverageService(
 
         avgCountList.forEach { avgCount ->
             for (idx in avgCount - 1 until groupingCandleList.size) {
-                val average = groupingCandleList.stream().skip((idx - avgCount + 1).toLong()).limit(avgCount.toLong())
-                    .mapToInt(CandleDto::closePrice).average()
+                val average = groupingCandleList.stream()
+                    .skip((idx - avgCount + 1).toLong())
+                    .limit(avgCount.toLong())
+                    .mapToDouble(CandleDto::closePrice).average()
 
-                groupingCandleList[idx].average[avgCount] = average.asDouble.roundToInt()
+                groupingCandleList[idx].average[avgCount] = average.asDouble
             }
         }
 

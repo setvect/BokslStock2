@@ -68,13 +68,13 @@ class MabsConditionEntity(
     @Id
     @GeneratedValue(strategy = AUTO)
     @Column(name = "MABS_CONDITION_SEQ")
-    val mabsConditionSeq = 0
+    val mabsConditionSeq = 0L
 
     @OneToMany(mappedBy = "mabsConditionEntity")
     @OrderBy("tradeDate ASC")
     override val tradeList: List<MabsTradeEntity> = ArrayList()
 
-    override fun getConditionId(): Int {
+    override fun getConditionId(): Long {
         return mabsConditionSeq
     }
 }

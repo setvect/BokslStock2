@@ -124,7 +124,7 @@ class MabsBacktest {
     @Transactional
     fun 멀티_리포트생성() {
 //        val elementList = listOf(951551, 951255) // 평균 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
-        val elementList = listOf(950589, 950064) // 최고 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
+        val elementList = listOf(950589L, 950064L) // 최고 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
 //        val elementList = listOf(952722, 950164) // 최악 수익률 - TIGER 차이나CSI300, TIGER 미국나스닥100
 //        val elementList = listOf(949078, 951062) // 코스닥150 레버리지, KODEX 코스닥150선물인버스
 //        val elementList = listOf(949078, 949331) // 코스닥150 레버리지, KODEX 레버리지

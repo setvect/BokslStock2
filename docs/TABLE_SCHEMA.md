@@ -6,7 +6,7 @@
 
 | Column Name | Attribute Name | Key | Type     | Len | Not Null | Description         |
 | ----------- | -------------- | --- | -------- | --- | -------- | ------------------- |
-| STOCK_SEQ   | 일련번호       | PK  | INTEGER  |     | Y        |                     |
+| STOCK_SEQ   | 일련번호       | PK  | BIGINT   |     | Y        |                     |
 | NAME        | 종목명         |     | VARCHAR  | 100 | Y        |                     |
 | CODE        | 종목코드       |     | VARCHAR  | 20  | Y        | 005930, 233740, ... |
 | REG_DATE    | 등록일         |     | DATETIME |     | Y        |                     |
@@ -16,14 +16,14 @@
 
 | Column Name      | Attribute Name | Key | Type     | Len | Not Null | Description                                             |
 | ---------------- | -------------- | --- | -------- | --- | -------- | ------------------------------------------------------- |
-| CANDLE_SEQ       | 일련번호       | PK  | INTEGER  |     | Y        |                                                         |
-| STOCK_SEQ        | 종목           | FK  | INTEGER  |     | Y        |                                                         |
+| CANDLE_SEQ       | 일련번호       | PK  | BIGINT   |     | Y        |                                                         |
+| STOCK_SEQ        | 종목           | FK  | BIGINT   |     | Y        |                                                         |
 | CANDLE_DATE_TIME | 시세 기준 날짜 | IDX | DATETIME |     | Y        |                                                         |
 | PERIOD_TYPE      | 기준 기간      | IDX | VARCHAR  | 20  | Y        | PERIOD_DAY: 일봉, PERIOD_WEEK: 주봉, PERIOD_MONTH: 월봉 |
-| OPEN_PRICE       | 시가           |     | INTEGER  |     | Y        |                                                         |
-| HIGH_PRICE       | 고가           |     | INTEGER  |     | Y        |                                                         |
-| LOW_PRICE        | 저가           |     | INTEGER  |     | Y        |                                                         |
-| CLOSE_PRICE      | 종가           |     | INTEGER  |     | Y        |                                                         |
+| OPEN_PRICE       | 시가           |     | DOUBLE   |     | Y        |                                                         |
+| HIGH_PRICE       | 고가           |     | DOUBLE   |     | Y        |                                                         |
+| LOW_PRICE        | 저가           |     | DOUBLE   |     | Y        |                                                         |
+| CLOSE_PRICE      | 종가           |     | DOUBLE   |     | Y        |                                                         |
 
 ## 1.2. 백테스트
 
@@ -31,12 +31,12 @@
 
 | Column Name        | Attribute Name       | Key | Type     | Len | Not Null | Description                           |
 | ------------------ | -------------------- | --- | -------- | --- | -------- | ------------------------------------- |
-| VBS_CONDITION_SEQ  | 일련번호             | PK  | INTEGER  |     | Y        |                                       |
-| STOCK_SEQ          | 종목                 | FK  | INTEGER  |     | Y        | CA_STOCK                              |
+| VBS_CONDITION_SEQ  | 일련번호             | PK  | BIGINT   |     | Y        |                                       |
+| STOCK_SEQ          | 종목                 | FK  | BIGINT   |     | Y        | CA_STOCK                              |
 | PERIOD_TYPE        | 매매 주기            |     | VARCHAR  | 20  | Y        | PERIOD_DAY, PERIOD_WEEK, PERIOD_MONTH |
-| K_RATE             | 변동성 비율          |     | NUMBER   |     | Y        |                                       |
+| K_RATE             | 변동성 비율          |     | DOUBLE   |     | Y        |                                       |
 | MA_PERIOD          | 이동평균 주기        |     | INTEGER  |     | Y        |                                       |
-| UNIT_ASK_PRICE     | 호가단위             |     | INTEGER  |     | Y        |                                       |
+| UNIT_ASK_PRICE     | 호가단위             |     | DOUBLE   |     | Y        |                                       |
 | GAP_RISEN_SKIP     | 갭 상승 시 매도 넘김 |     | VARCHAR  | 1   | Y        | Y, N                                  |
 | ONLY_ONE_DAY_TRADE | 하루에 한번 거래     |     | VARCHAR  | 1   | Y        | Y, N                                  |
 | COMMENT            | 조건에 대한 설명     |     | VARCHAR  | 100 | N        |                                       |
@@ -47,12 +47,12 @@
 
 | Column Name       | Attribute Name        | Key | Type     | Len | Not Null | Description      |
 | ----------------- | --------------------- | --- | -------- | --- | -------- | ---------------- |
-| TRADE_SEQ         | 일련번호              | PK  | INTEGER  |     | Y        |                  |
-| VBS_CONDITION_SEQ | 매매 조건 일련번호    | FK  | INTEGER  |     | Y        | WA_VBS_CONDITION |
+| TRADE_SEQ         | 일련번호              | PK  | BIGINT   |     | Y        |                  |
+| VBS_CONDITION_SEQ | 매매 조건 일련번호    | FK  | BIGINT   |     | Y        | WA_VBS_CONDITION |
 | TRADE_TYPE        | 매수/매도             |     | VARCHAR  | 20  | Y        | BUY, SELL        |
-| MA_PRICE          | 매매 시 이동평균 가격 |     | INTEGER  |     | Y        |                  |
-| YIELD             | 매도시 수익률         |     | NUMBER   |     | Y        |                  |
-| UNIT_PRICE        | 거래 단가             |     | INTEGER  |     | Y        |                  |
+| MA_PRICE          | 매매 시 이동평균 가격 |     | DOUBLE   |     | Y        |                  |
+| YIELD             | 매도시 수익률         |     | DOUBLE   |     | Y        |                  |
+| UNIT_PRICE        | 거래 단가             |     | DOUBLE   |     | Y        |                  |
 | TRADE_DATE        | 거래시간              |     | DATETIME |     | Y        |                  |
 
 - Index
@@ -62,11 +62,11 @@
 
 | Column Name        | Attribute Name     | Key | Type     | Len | Not Null | Description                           |
 | ------------------ | ------------------ | --- | -------- | --- | -------- | ------------------------------------- |
-| MABS_CONDITION_SEQ | 일련번호           | PK  | INTEGER  |     | Y        |                                       |
-| STOCK_SEQ          | 종목               | FK  | INTEGER  |     | Y        | CA_STOCK                              |
+| MABS_CONDITION_SEQ | 일련번호           | PK  | BIGINT   |     | Y        |                                       |
+| STOCK_SEQ          | 종목               | FK  | BIGINT   |     | Y        | CA_STOCK                              |
 | PERIOD_TYPE        | 매매 주기          |     | VARCHAR  | 20  | Y        | PERIOD_DAY, PERIOD_WEEK, PERIOD_MONTH |
-| UP_BUY_RATE        | 상승 매수률        |     | NUMBER   |     | Y        |                                       |
-| DOWN_BUY_RATE      | 하락 매도률        |     | NUMBER   |     | Y        |                                       |
+| UP_BUY_RATE        | 상승 매수률        |     | DOUBLE   |     | Y        |                                       |
+| DOWN_BUY_RATE      | 하락 매도률        |     | DOUBLE   |     | Y        |                                       |
 | SHORT_PERIOD       | 단기 이동평균 기간 |     | INTEGER  |     | Y        |                                       |
 | LONG_PERIOD        | 장기 이동평균 기간 |     | INTEGER  |     | Y        |                                       |
 | COMMENT            | 조건에 대한 설명   |     | VARCHAR  | 100 | N        |                                       |
@@ -77,15 +77,15 @@
 
 | Column Name        | Attribute Name     | Key | Type     | Len | Not Null | Description       |
 | ------------------ | ------------------ | --- | -------- | --- | -------- | ----------------- |
-| TRADE_SEQ          | 일련번호           | PK  | INTEGER  |     | Y        |                   |
-| MABS_CONDITION_SEQ | 매매 조건 일련번호 | FK  | INTEGER  |     | Y        | XA_MABS_CONDITION |
+| TRADE_SEQ          | 일련번호           | PK  | BIGINT   |     | Y        |                   |
+| MABS_CONDITION_SEQ | 매매 조건 일련번호 | FK  | BIGINT   |     | Y        | XA_MABS_CONDITION |
 | TRADE_TYPE         | 매수/매도          |     | VARCHAR  | 20  | Y        | BUY, SELL         |
-| HIGH_YIELD         | 최고 수익률        |     | NUMBER   |     | Y        |                   |
-| LOW_YIELD          | 최저 수익률        |     | NUMBER   |     | Y        |                   |
-| MA_SHORT           | 단기 이동평균 가격 |     | INTEGER  |     | Y        |                   |
-| MA_LONG            | 장기 이동평균 가격 |     | INTEGER  |     | Y        |                   |
-| YIELD              | 매도시 수익률      |     | NUMBER   |     | Y        |                   |
-| UNIT_PRICE         | 거래 단가          |     | INTEGER  |     | Y        |                   |
+| HIGH_YIELD         | 최고 수익률        |     | DOUBLE   |     | Y        |                   |
+| LOW_YIELD          | 최저 수익률        |     | DOUBLE   |     | Y        |                   |
+| MA_SHORT           | 단기 이동평균 가격 |     | DOUBLE   |     | Y        |                   |
+| MA_LONG            | 장기 이동평균 가격 |     | DOUBLE   |     | Y        |                   |
+| YIELD              | 매도시 수익률      |     | DOUBLE   |     | Y        |                   |
+| UNIT_PRICE         | 거래 단가          |     | DOUBLE   |     | Y        |                   |
 | TRADE_DATE         | 거래시간           |     | DATETIME |     | Y        |                   |
 
 - Index

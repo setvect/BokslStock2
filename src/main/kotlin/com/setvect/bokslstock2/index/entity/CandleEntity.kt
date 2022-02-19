@@ -46,22 +46,22 @@ class CandleEntity(
      * 시가
      */
     @Column(name = "OPEN_PRICE", nullable = false)
-    val openPrice: Int,
+    val openPrice: Double,
     /**
      * 고가
      */
     @Column(name = "HIGH_PRICE", nullable = false)
-    val highPrice: Int,
+    val highPrice: Double,
     /**
      * 저가
      */
     @Column(name = "LOW_PRICE", nullable = false)
-    val lowPrice: Int,
+    val lowPrice: Double,
     /**
      * 종가
      */
     @Column(name = "CLOSE_PRICE", nullable = false)
-    val closePrice: Int,
+    val closePrice: Double,
 
     ) {
 

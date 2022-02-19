@@ -320,7 +320,7 @@ class VbsAnalysisService(
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(condition.unitAskPrice.toDouble())
+            createCell.setCellValue(condition.unitAskPrice)
             createCell.cellStyle = decimalStyle
 
             createCell = row.createCell(cellIdx)
@@ -430,7 +430,7 @@ class VbsAnalysisService(
             createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(vbsTradeEntity.maPrice.toDouble())
+            createCell.setCellValue(vbsTradeEntity.maPrice)
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
@@ -442,7 +442,7 @@ class VbsAnalysisService(
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(vbsTradeEntity.unitPrice.toDouble())
+            createCell.setCellValue(vbsTradeEntity.unitPrice)
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)

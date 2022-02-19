@@ -11,13 +11,13 @@ data class CandleDto(
     val candleDateTimeStart: LocalDateTime,
     val candleDateTimeEnd: LocalDateTime,
     val periodType: PeriodType,
-    val openPrice: Int,
-    val highPrice: Int,
-    val lowPrice: Int,
-    val closePrice: Int
+    val openPrice: Double,
+    val highPrice: Double,
+    val lowPrice: Double,
+    val closePrice: Double
 ) {
     /**
      * Key: 이동평균 단위, Value: 가격
      */
-    var average = HashMap<Int, Int>()
+    var average = HashMap<Int, Double>()
 }

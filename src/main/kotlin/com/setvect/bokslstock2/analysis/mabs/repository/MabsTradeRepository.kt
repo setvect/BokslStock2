@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
-interface MabsTradeRepository : JpaRepository<MabsTradeEntity, Int> {
+interface MabsTradeRepository : JpaRepository<MabsTradeEntity, Long> {
 
     @Modifying
     @Query("delete from XB_MABS_TRADE x where x.mabsConditionEntity = :mabsConditionEntity")

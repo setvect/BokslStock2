@@ -390,11 +390,11 @@ class MabsAnalysisService(
             createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(mabsTradeEntity.maShort.toDouble())
+            createCell.setCellValue(mabsTradeEntity.maShort)
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(mabsTradeEntity.maLong.toDouble())
+            createCell.setCellValue(mabsTradeEntity.maLong)
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
@@ -406,7 +406,7 @@ class MabsAnalysisService(
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(mabsTradeEntity.unitPrice.toDouble())
+            createCell.setCellValue(mabsTradeEntity.unitPrice)
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)

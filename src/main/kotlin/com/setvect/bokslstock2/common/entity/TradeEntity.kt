@@ -9,7 +9,7 @@ interface TradeEntity {
     /**
      * @return 조건 아이디
      */
-    fun tradeId(): Int
+    fun tradeId(): Long
 
     /**
      * @return 매수/매도
@@ -28,7 +28,7 @@ interface TradeEntity {
      * - 매수일 경우 매수 단가
      * - 매도일 경우 매도 단가
      */
-    val unitPrice: Int
+    val unitPrice: Double
 
     /**
      * 거래시간

@@ -110,8 +110,8 @@ object ApplicationUtil {
      * [elementList] 부분 집합을 만들 원소
      * @return 공집합 제외한 부분집합
      */
-    fun getSubSet(elementList: List<Int>): MutableList<Set<Int>> {
-        val conditionSetList = mutableListOf<Set<Int>>()
+    fun getSubSet(elementList: List<Long>): MutableList<Set<Long>> {
+        val conditionSetList = mutableListOf<Set<Long>>()
         makeSubSet(elementList, conditionSetList, 0, BooleanArray(elementList.size))
         return conditionSetList
     }
@@ -122,7 +122,7 @@ object ApplicationUtil {
      * [subSet] 부분집합
      * 부분집합 만듦
      */
-    private fun makeSubSet(list: List<Int>, subSet: MutableList<Set<Int>>, idx: Int, check: BooleanArray) {
+    private fun makeSubSet(list: List<Long>, subSet: MutableList<Set<Long>>, idx: Int, check: BooleanArray) {
         if (list.size == idx) {
             val subSetItem = IntStream.range(0, list.size)
                 .filter { num: Int -> check[num] }

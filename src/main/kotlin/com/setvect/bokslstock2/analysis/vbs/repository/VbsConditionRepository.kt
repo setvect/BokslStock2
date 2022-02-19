@@ -5,9 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
-interface VbsConditionRepository : JpaRepository<VbsConditionEntity, Int>{
+interface VbsConditionRepository : JpaRepository<VbsConditionEntity, Long>{
 
     @Query("select x from WA_VBS_CONDITION x where x.vbsConditionSeq in :vbsConditionSeqs")
-    fun listBySeq(@Param("vbsConditionSeqs") vbsConditionSeqs: Collection<Int>): List<VbsConditionEntity>
+    fun listBySeq(@Param("vbsConditionSeqs") vbsConditionSeqs: Collection<Long>): List<VbsConditionEntity>
 
 }

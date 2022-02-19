@@ -36,12 +36,12 @@ class TradeService<C : AnalysisCondition, E : TradeEntity, I : TradeReportItem, 
 
         val buyAndHoldYieldMdd: CommonAnalysisReportResult.TotalYield =
             ReportMakerHelperService.calculateTotalBuyAndHoldYield(evaluationAmountHistory, condition.basic.range)
-        val buyAndHoldYieldCondition: Map<Int, CommonAnalysisReportResult.YieldMdd> =
+        val buyAndHoldYieldCondition: Map<Long, CommonAnalysisReportResult.YieldMdd> =
             reportMakerHelperService.calculateBuyAndHoldYield(condition)
 
         val yieldTotal: CommonAnalysisReportResult.TotalYield =
             ReportMakerHelperService.calculateTotalYield(evaluationAmountHistory, condition.basic.range)
-        val winningRate: Map<Int, CommonAnalysisReportResult.WinningRate> =
+        val winningRate: Map<Long, CommonAnalysisReportResult.WinningRate> =
             ReportMakerHelperService.calculateCoinInvestment(tradeItemHistory)
 
 

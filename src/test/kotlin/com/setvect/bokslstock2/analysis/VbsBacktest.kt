@@ -97,7 +97,7 @@ class VbsBacktest {
                         periodType = PERIOD_DAY,
                         kRate = kRate,
                         maPeriod = 1,
-                        unitAskPrice = 5,
+                        unitAskPrice = 5.0,
                         gapRisenSkip = it.first,
                         onlyOneDayTrade = it.second,
                         comment = null
@@ -112,7 +112,7 @@ class VbsBacktest {
     @Transactional
     fun 단건_리포트생성() {
         val range = DateRange(LocalDateTime.of(2000, 12, 1, 0, 0), LocalDateTime.now())
-        val conditionList = vbsConditionRepository.listBySeq(listOf(2418908))
+        val conditionList = vbsConditionRepository.listBySeq(listOf(2418908L))
         val vbsAnalysisCondition = VbsAnalysisCondition(
             tradeConditionList = conditionList,
             basic = BasicAnalysisCondition(
@@ -131,7 +131,7 @@ class VbsBacktest {
     @Test
     @Transactional
     fun 멀티_리포트생성() {
-        val elementList = listOf(2419416, 2418908)
+        val elementList = listOf(2419416L, 2418908L)
         val conditionSetList = ApplicationUtil.getSubSet(elementList)
 
         val rangeList = listOf(

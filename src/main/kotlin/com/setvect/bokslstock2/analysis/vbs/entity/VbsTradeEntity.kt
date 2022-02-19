@@ -29,7 +29,6 @@ import javax.persistence.Table
         )]
 )
 class VbsTradeEntity(
-
     /**
      * 매매 조건 일련번호
      */
@@ -48,7 +47,7 @@ class VbsTradeEntity(
      * 매매 시 이동평균 가격
      */
     @Column(name = "MA_PRICE", nullable = false)
-    val maPrice: Int,
+    val maPrice: Double,
 
     /**
      * 매도시 수익률
@@ -64,7 +63,7 @@ class VbsTradeEntity(
      * - 매도일 경우 매도 단가
      */
     @Column(name = "UNIT_PRICE", nullable = false)
-    override val unitPrice: Int,
+    override val unitPrice: Double,
 
     /**
      * 거래시간
@@ -75,9 +74,9 @@ class VbsTradeEntity(
     @Id
     @GeneratedValue(strategy = AUTO)
     @Column(name = "TRADE_SEQ")
-    val tradeSeq = 0
+    val tradeSeq = 0L
 
-    override fun tradeId(): Int {
+    override fun tradeId(): Long {
         return tradeSeq
     }
 

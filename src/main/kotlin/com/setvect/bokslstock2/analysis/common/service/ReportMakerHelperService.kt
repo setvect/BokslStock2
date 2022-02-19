@@ -39,7 +39,7 @@ class ReportMakerHelperService(
      */
     fun calculateBuyAndHoldYield(
         condition: AnalysisCondition,
-    ): Map<Int, CommonAnalysisReportResult.YieldMdd> {
+    ): Map<Long, CommonAnalysisReportResult.YieldMdd> {
         val mapOfCandleList = getConditionOfCandle(condition)
 
         // <조건아이디, 직전 가격>
@@ -52,8 +52,8 @@ class ReportMakerHelperService(
             priceHistory.add(0, mapOfBeforePrice[entry.key])
 
             entry.key to CommonAnalysisReportResult.YieldMdd(
-                ApplicationUtil.getYieldByInt(priceHistory),
-                ApplicationUtil.getMddByInt(priceHistory)
+                ApplicationUtil.getYield(priceHistory),
+                ApplicationUtil.getMdd(priceHistory)
             )
         }
     }
@@ -61,7 +61,7 @@ class ReportMakerHelperService(
     /**
      *@return <조건아아디, List(캔들)>
      */
-    fun getConditionOfCandle(condition: AnalysisCondition): Map<Int, List<CandleEntity>> {
+    fun getConditionOfCandle(condition: AnalysisCondition): Map<Long, List<CandleEntity>> {
         return condition.conditionList.associate { tradeCondition ->
             tradeCondition.getConditionId() to candleRepository.findByRange(
                 tradeCondition.stock,
@@ -98,17 +98,17 @@ class ReportMakerHelperService(
         val mapOfCandleList = getConditionOfCandle(condition)
 
         // <조건아이디, Map<날짜, 종가>>
-        val mapOfCondClosePrice: Map<Int, Map<LocalDateTime, Int>> =
+        val mapOfCondClosePrice: Map<Long, Map<LocalDateTime, Double>> =
             getConditionByClosePriceMap(tradeConditionList, mapOfCandleList)
 
         // <조건아이디, 직전 가격>
         val mapOfBeforePrice = getConditionOfFirstOpenPrice(tradeConditionList, mapOfCandleList)
         var currentDate = range.from
         // <날짜, Map<조건아이디, 상대 수익률>>
-        val mapOfDayRelativeRate = mutableMapOf<LocalDateTime, Map<Int, Double>>()
+        val mapOfDayRelativeRate = mutableMapOf<LocalDateTime, Map<Long, Double>>()
         while (currentDate.isBefore(range.to) || (currentDate == range.to)) {
             // Map<조건아이디, 상대 수익률>
-            val mapCondRelativeRate: Map<Int, Double> = mapOfCondClosePrice.entries
+            val mapCondRelativeRate: Map<Long, Double> = mapOfCondClosePrice.entries
                 .filter { it.value[currentDate] != null }
                 .associate {
                     val beforePrice = mapOfBeforePrice[it.key]
@@ -143,7 +143,7 @@ class ReportMakerHelperService(
         val candleListMap = getConditionOfCandle(condition)
 
         // <조건아이디, Map<날짜, 종가>>
-        val condClosePriceMap: Map<Int, Map<LocalDateTime, Int>> =
+        val condClosePriceMap: Map<Long, Map<LocalDateTime, Double>> =
             getConditionByClosePriceMap(condition.conditionList, candleListMap)
 
         val allDateList =
@@ -174,10 +174,10 @@ class ReportMakerHelperService(
             // 종가기준으로 보유 주식 평가금액 구하기
             val evalStockAmount =
                 condByStockQty.entries.stream().filter { it.value > 0 }
-                    .mapToLong {
+                    .mapToDouble {
                         val closePrice = condClosePriceMap[it.key]!![date]
                             ?: throw RuntimeException("${date}에 대한 조건아이디(${it.key})의 종가 정보가 없습니다.")
-                        closePrice * it.value.toLong()
+                        closePrice * it.value
                     }.sum()
 
 
@@ -330,8 +330,8 @@ class ReportMakerHelperService(
          */
         fun getConditionOfFirstOpenPrice(
             conditionList: List<ConditionEntity>,
-            mapOfCandleList: Map<Int, List<CandleEntity>>
-        ): MutableMap<Int, Int?> {
+            mapOfCandleList: Map<Long, List<CandleEntity>>
+        ): MutableMap<Long, Double?> {
             return conditionList.associate {
                 it.getConditionId() to mapOfCandleList[it.getConditionId()]?.get(0)?.openPrice
             }
@@ -344,10 +344,10 @@ class ReportMakerHelperService(
          */
         fun getConditionByClosePriceMap(
             tradeConditionList: List<ConditionEntity>,
-            candleListMpa: Map<Int, List<CandleEntity>>
-        ): Map<Int, Map<LocalDateTime, Int>> {
+            candleListMap: Map<Long, List<CandleEntity>>
+        ): Map<Long, Map<LocalDateTime, Double>> {
             return tradeConditionList.associate { tradeCondition ->
-                tradeCondition.getConditionId() to (candleListMpa[tradeCondition.getConditionId()]
+                tradeCondition.getConditionId() to (candleListMap[tradeCondition.getConditionId()]
                     ?.map { it.candleDateTime to it.closePrice })!!.toMap()
             }
         }
@@ -357,9 +357,9 @@ class ReportMakerHelperService(
          */
         fun calculateCoinInvestment(
             tradeItemHistory: List<TradeReportItem>
-        ): Map<Int, CommonAnalysisReportResult.WinningRate> {
+        ): Map<Long, CommonAnalysisReportResult.WinningRate> {
             val sellList = tradeItemHistory.filter { it.tradeEntity.tradeType == TradeType.SELL }.toList()
-            val groupBy: Map<Int, List<TradeReportItem>> =
+            val groupBy: Map<Long, List<TradeReportItem>> =
                 sellList.groupBy { it.tradeEntity.getConditionEntity().getConditionId() }
 
             return groupBy.entries.associate { entity ->

@@ -6,7 +6,7 @@ interface ConditionEntity {
     /**
      * @return 조건 아이디
      */
-    fun getConditionId(): Int
+    fun getConditionId(): Long
 
     /**
      * @return 종목

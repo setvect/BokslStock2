@@ -20,13 +20,13 @@ data class CommonAnalysisReportResult(
      * 조건 기준 승률 합
      * <조건아이디, 승률>
      */
-    val winningRateCondition: Map<Int, WinningRate>,
+    val winningRateCondition: Map<Long, WinningRate>,
 
     /**
      * 조건별 종목 Buy&Hold 수익률
      * <조건아이디, 수익률>
      */
-    val buyAndHoldYieldCondition: Map<Int, YieldMdd>,
+    val buyAndHoldYieldCondition: Map<Long, YieldMdd>,
 
     /**
      * 종목 Buy&Hold 수익률
