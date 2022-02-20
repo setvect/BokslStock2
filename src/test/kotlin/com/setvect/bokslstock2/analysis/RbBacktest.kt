@@ -1,6 +1,8 @@
 package com.setvect.bokslstock2.analysis
 
+import com.setvect.bokslstock2.analysis.common.model.BasicAnalysisCondition
 import com.setvect.bokslstock2.analysis.rb.entity.RbConditionEntity
+import com.setvect.bokslstock2.analysis.rb.model.RbAnalysisCondition
 import com.setvect.bokslstock2.analysis.rb.repository.RbConditionRepository
 import com.setvect.bokslstock2.analysis.rb.repository.RbTradeRepository
 import com.setvect.bokslstock2.analysis.rb.setvice.RbAnalysisService
@@ -8,6 +10,8 @@ import com.setvect.bokslstock2.analysis.rb.setvice.RbBacktestService
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_MONTH
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
+import com.setvect.bokslstock2.util.DateRange
+import java.time.LocalDateTime
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -50,7 +54,7 @@ class RbBacktest {
     @Test
     @Transactional
     @Rollback(false)
-    fun 모든매매조건_단건기준_리포트생성() {
+    fun 한번에_모두_백테스트() {
         // 0. 기존 백테스트 기록 모두 삭제
         deleteBacktestData()
 
@@ -59,6 +63,18 @@ class RbBacktest {
 
         // 2. 모든 조건에 대해 백테스트
         rbBacktestService.runTestBatch()
+
+        // 3. 모든 조건에 대한 리포트 만들기
+        allConditionReportMake()
+    }
+
+    /**
+     * 백테스트 건수에 따라 Heap 사이즈 조절
+     */
+    @Test
+    @Transactional
+    fun 모든매매조건_단건기준_리포트생성() {
+        allConditionReportMake()
     }
 
     @Test
@@ -76,6 +92,36 @@ class RbBacktest {
     }
 
 
+    private fun allConditionReportMake() {
+        val conditionList = rbConditionRepository.findAll().filter {
+            // tradeList 정보를 다시 읽어옴. 해당 구분이 없으면 tradeList size가 0인 상태에서 캐싱된 데이터가 불러와짐
+            entityManager.refresh(it)
+            it.tradeList.size > 1
+        }.toList()
+
+        var i = 0
+        val vbsConditionList = conditionList
+//            .filter { it.stock.code == "091170" }
+            .map {
+                val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
+                val priceRange = candleRepository.findByCandleDateTimeBetween(listOf(it.stock), range.from, range.to)
+
+                val vbsAnalysisCondition = RbAnalysisCondition(
+                    tradeConditionList = listOf(it),
+                    basic = BasicAnalysisCondition(
+                        range = priceRange,
+                        investRatio = 0.5,
+                        cash = 10_000_000.0,
+                        feeBuy = 0.0002,
+                        feeSell = 0.0002,
+                        comment = ""
+                    )
+                )
+                log.info("거래 내역 조회 진행 ${++i}/${conditionList.size}")
+                vbsAnalysisCondition
+            }.toList()
+        analysisService.makeSummaryReport(vbsConditionList)
+    }
 
     private fun deleteBacktestData() {
         rbTradeRepository.deleteAll()
