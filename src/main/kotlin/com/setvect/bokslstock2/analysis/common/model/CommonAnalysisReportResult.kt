@@ -100,7 +100,7 @@ data class CommonAnalysisReportResult(
         /**
          * 수익 합계
          */
-        val invest: Long,
+        val invest: Double,
 
         ) {
         /**

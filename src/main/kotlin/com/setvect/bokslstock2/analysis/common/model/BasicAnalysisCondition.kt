@@ -17,7 +17,7 @@ data class BasicAnalysisCondition(
     /**
      * 최초 투자금액
      */
-    val cash: Long,
+    val cash: Double,
     /**
      * 매수 수수료
      */

@@ -24,7 +24,7 @@ data class MabsTradeReportItem(
     /**
      * @return 매수 금액
      */
-    override fun getBuyAmount(): Long {
-        return (common.qty * mabsTradeEntity.unitPrice).toLong()
+    override fun getBuyAmount(): Double {
+        return common.qty * mabsTradeEntity.unitPrice
     }
 }

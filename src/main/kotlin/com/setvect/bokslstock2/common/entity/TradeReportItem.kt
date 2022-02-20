@@ -19,5 +19,5 @@ interface TradeReportItem {
     /**
      * @return 매수 금액
      */
-    fun getBuyAmount(): Long
+    fun getBuyAmount(): Double
 }

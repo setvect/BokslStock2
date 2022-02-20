@@ -93,15 +93,15 @@ class TradeService<C : AnalysisCondition, E : TradeEntity, I : TradeReportItem, 
 
                 val buyQty: Int = (buyCash / tradeItem.unitPrice).toInt()
                 val buyAmount: Long = buyQty * tradeItem.unitPrice.toLong()
-                val feePrice = (condition.basic.feeBuy * buyAmount).toInt()
+                val feePrice = condition.basic.feeBuy * buyAmount
                 cash -= buyAmount + feePrice
                 val stockEvalPrice = buyStock.entries.map { it.value }
-                    .sumOf { it.tradeEntity.unitPrice.toLong() * it.common.qty } + buyQty * tradeItem.unitPrice.toLong()
+                    .sumOf { it.tradeEntity.unitPrice * it.common.qty } + buyQty * tradeItem.unitPrice
                 val common = CommonTradeReportItem(
                     qty = buyQty,
                     cash = cash,
                     feePrice = feePrice,
-                    gains = 0,
+                    gains = 0.0,
                     stockEvalPrice = stockEvalPrice
                 )
 
@@ -114,15 +114,15 @@ class TradeService<C : AnalysisCondition, E : TradeEntity, I : TradeReportItem, 
                 val buyTrade = buyStock[tradeItem.getConditionEntity().stock.code]
                     ?: throw RuntimeException("${tradeItem.getConditionEntity().stock.code} 매수 내역이 없습니다.")
                 buyStock.remove(tradeItem.getConditionEntity().stock.code)
-                val sellPrice = (buyTrade.getBuyAmount() * (1 + tradeItem.yield)).toLong()
-                val sellFee = (sellPrice * condition.basic.feeSell).toInt()
-                val gains = (sellPrice - buyTrade.getBuyAmount())
+                val sellPrice = buyTrade.getBuyAmount() * (1 + tradeItem.yield)
+                val sellFee = sellPrice * condition.basic.feeSell
+                val gains = sellPrice - buyTrade.getBuyAmount()
 
                 // 매매후 현금
                 cash += sellPrice - sellFee
 
                 val stockEvalPrice =
-                    buyStock.entries.map { it.value }.sumOf { it.tradeEntity.unitPrice.toLong() * it.common.qty }
+                    buyStock.entries.map { it.value }.sumOf { it.tradeEntity.unitPrice * it.common.qty }
 
                 val common = CommonTradeReportItem(
                     qty = 0,

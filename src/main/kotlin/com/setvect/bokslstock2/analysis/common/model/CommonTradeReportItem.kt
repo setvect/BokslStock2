@@ -11,24 +11,24 @@ data class CommonTradeReportItem(
     /**
      * 해당 거래 후 현금
      */
-    val cash: Long,
+    val cash: Double,
     /**
      * 매매 수수료
      */
-    val feePrice: Int,
+    val feePrice: Double,
     /**
      * 투자 수익 금액
      */
-    val gains: Long,
+    val gains: Double,
     /**
      * 현재시점 주식평가금
      */
-    val stockEvalPrice: Long
+    val stockEvalPrice: Double
 ) {
     /**
      * @return 평가금
      */
-    fun getEvalPrice(): Long {
+    fun getEvalPrice(): Double {
         return stockEvalPrice + cash
     }
 }

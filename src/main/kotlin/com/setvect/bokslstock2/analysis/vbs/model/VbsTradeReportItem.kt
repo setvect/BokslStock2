@@ -25,7 +25,7 @@ data class VbsTradeReportItem(
     /**
      * @return 매수 금액
      */
-    override fun getBuyAmount(): Long {
-        return common.qty * vbsTradeEntity.unitPrice.toLong()
+    override fun getBuyAmount(): Double {
+        return common.qty * vbsTradeEntity.unitPrice
     }
 }

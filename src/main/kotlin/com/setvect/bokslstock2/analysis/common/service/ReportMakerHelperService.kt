@@ -181,7 +181,7 @@ class ReportMakerHelperService(
                     }.sum()
 
 
-            val backtestRate = (backtestLastCash + evalStockAmount) / condition.basic.cash.toDouble()
+            val backtestRate = (backtestLastCash + evalStockAmount) / condition.basic.cash
             buyHoldLastAmount = buyHoldRate
             EvaluationRateItem(baseDate = date, buyHoldRate = buyHoldRate, backtestRate = backtestRate)
         }.toMutableList()
@@ -281,7 +281,7 @@ class ReportMakerHelperService(
          */
         fun getBuyCash(
             currentBuyStockCount: Int,
-            cash: Long,
+            cash: Double,
             stockBuyTotalCount: Int,
             investRatio: Double
         ): Double {

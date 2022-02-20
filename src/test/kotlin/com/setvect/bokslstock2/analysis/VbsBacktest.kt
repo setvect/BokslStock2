@@ -118,7 +118,7 @@ class VbsBacktest {
             basic = BasicAnalysisCondition(
                 range = range,
                 investRatio = 0.99,
-                cash = 10_000_000,
+                cash = 10_000_000.0,
                 feeBuy = 0.0002,
                 feeSell = 0.0002,
                 comment = ""
@@ -161,7 +161,7 @@ class VbsBacktest {
                     basic = BasicAnalysisCondition(
                         range = realRange,
                         investRatio = 0.99,
-                        cash = 10_000_000,
+                        cash = 10_000_000.0,
                         feeBuy = 0.0002,
                         feeSell = 0.0002,
                         comment = ""
@@ -192,7 +192,7 @@ class VbsBacktest {
                     basic = BasicAnalysisCondition(
                         range = priceRange,
                         investRatio = 0.99,
-                        cash = 10_000_000,
+                        cash = 10_000_000.0,
                         feeBuy = 0.0002,
                         feeSell = 0.0002,
                         comment = ""

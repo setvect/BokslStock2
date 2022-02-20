@@ -176,7 +176,7 @@ class VbsAnalysisService(
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(multiCondition.basic.cash.toDouble())
+            createCell.setCellValue(multiCondition.basic.cash)
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
@@ -388,7 +388,7 @@ class VbsAnalysisService(
                 log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${tradeCondition.vbsConditionSeq}")
                 break
             }
-            report.append(String.format("${i}. 실현 수익\t %,d", winningRate.invest)).append("\n")
+            report.append(String.format("${i}. 실현 수익\t %,f", winningRate.invest)).append("\n")
             report.append(String.format("${i}. 매매회수\t %d", winningRate.getTradeCount())).append("\n")
             report.append(String.format("${i}. 승률\t %,.2f%%", winningRate.getWinRate() * 100)).append("\n")
         }
@@ -438,7 +438,7 @@ class VbsAnalysisService(
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.getBuyAmount().toDouble())
+            createCell.setCellValue(tradeItem.getBuyAmount())
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
@@ -450,27 +450,27 @@ class VbsAnalysisService(
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.common.feePrice.toDouble())
+            createCell.setCellValue(tradeItem.common.feePrice)
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.common.gains.toDouble())
+            createCell.setCellValue(tradeItem.common.gains)
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.common.stockEvalPrice.toDouble())
+            createCell.setCellValue(tradeItem.common.stockEvalPrice)
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.common.cash.toDouble())
+            createCell.setCellValue(tradeItem.common.cash)
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.common.getEvalPrice().toDouble())
+            createCell.setCellValue(tradeItem.common.getEvalPrice())
             createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx)
-            createCell.setCellValue(tradeItem.common.getEvalPrice() / result.vbsAnalysisCondition.basic.cash.toDouble())
+            createCell.setCellValue(tradeItem.common.getEvalPrice() / result.vbsAnalysisCondition.basic.cash)
             createCell.cellStyle = decimalStyle
         }
 
@@ -516,7 +516,7 @@ class VbsAnalysisService(
         report.append("----------- 백테스트 조건 -----------\n")
         report.append(String.format("분석기간\t %s", range)).append("\n")
         report.append(String.format("투자비율\t %,.2f%%", condition.basic.investRatio * 100)).append("\n")
-        report.append(String.format("최초 투자금액\t %,d", condition.basic.cash)).append("\n")
+        report.append(String.format("최초 투자금액\t %,f", condition.basic.cash)).append("\n")
         report.append(String.format("매수 수수료\t %,.2f%%", condition.basic.feeBuy * 100)).append("\n")
         report.append(String.format("매도 수수료\t %,.2f%%", condition.basic.feeSell * 100)).append("\n")
 
