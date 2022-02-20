@@ -48,7 +48,6 @@ class VbsBacktestService(
     }
 
     private fun backtest(condition: VbsConditionEntity) {
-        condition.stock.candleList
         val movingAverageCandle = movingAverageService.getMovingAverage(
             condition.stock.code, condition.periodType, listOf(condition.maPeriod)
         )

@@ -48,7 +48,6 @@ class MabsBacktestService(
     }
 
     private fun backtest(condition: MabsConditionEntity) {
-        condition.stock.candleList
         val movingAverageCandle = movingAverageService.getMovingAverage(
             condition.stock.code, condition.periodType, listOf(condition.shortPeriod, condition.longPeriod)
         )
