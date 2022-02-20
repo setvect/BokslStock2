@@ -146,7 +146,13 @@ class MabsBacktest {
             rangeList.map { range ->
                 // 시세가 포함된 날짜범위 지정
                 val realRangeList =
-                    conditionList.map { candleRepository.findByCandleDateTimeBetween(it.stock, range.from, range.to) }
+                    conditionList.map {
+                        candleRepository.findByCandleDateTimeBetween(
+                            listOf(it.stock),
+                            range.from,
+                            range.to
+                        )
+                    }
                         .toList()
                 val from = realRangeList.minOf { it.from }
                 val to = realRangeList.maxOf { it.to }
@@ -249,7 +255,7 @@ class MabsBacktest {
             Pair(30, 120),
         )
 
-        val rateList = listOf<Double>(0.01, 0.005, 0.001)
+        val rateList = listOf(0.01, 0.005, 0.001)
         val stockList = stockRepository.findAll()
         stockList.forEach { stock ->
             pairList.forEach { periodPair ->
@@ -297,7 +303,7 @@ class MabsBacktest {
             Pair(13, 30),
         )
 
-        val rateList = listOf<Double>(0.01, 0.005, 0.001)
+        val rateList = listOf(0.01, 0.005, 0.001)
         val stockList = stockRepository.findAll()
         stockList.forEach { stock ->
             pairList.forEach { periodPair ->
@@ -353,7 +359,7 @@ class MabsBacktest {
             Pair(3, 12),
         )
 
-        val rateList = listOf<Double>(0.01, 0.005, 0.001)
+        val rateList = listOf(0.01, 0.005, 0.001)
         val stockList = stockRepository.findAll()
         stockList.forEach { stock ->
             pairList.forEach { periodPair ->
@@ -383,7 +389,7 @@ class MabsBacktest {
         var i = 0
         val mabsConditionList = conditionList.map {
             val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
-            val priceRange = candleRepository.findByCandleDateTimeBetween(it.stock, range.from, range.to)
+            val priceRange = candleRepository.findByCandleDateTimeBetween(listOf(it.stock), range.from, range.to)
 
             val mabsAnalysisCondition = MabsAnalysisCondition(
                 tradeConditionList = listOf(it),

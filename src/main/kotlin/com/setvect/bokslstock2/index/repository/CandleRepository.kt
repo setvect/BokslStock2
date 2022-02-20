@@ -38,16 +38,16 @@ interface CandleRepository : JpaRepository<CandleEntity, Long> {
 
 
     /**
-     * [stock] 종목에서 [start] [end] 범위 안에 시세가 포함된 범위를 반환
+     * [stockList] 종목에서 [start] [end] 범위 안에 시세가 포함된 범위를 반환
      */
     @Query(
         "select new com.setvect.bokslstock2.util.DateRange(min(c.candleDateTime), max(c.candleDateTime)) " +
                 " from CandleEntity c " +
                 " where c.candleDateTime between :start and :end" +
-                " and c.stock = :stock "
+                " and c.stock in (:stockList) "
     )
     fun findByCandleDateTimeBetween(
-        @Param("stock") stock: StockEntity,
+        @Param("stockList") stockList: List<StockEntity>,
         @Param("start") start: LocalDateTime,
         @Param("end") end: LocalDateTime
     ): DateRange

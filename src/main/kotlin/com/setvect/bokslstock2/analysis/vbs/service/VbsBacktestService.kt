@@ -107,7 +107,6 @@ class VbsBacktestService(
     private fun getTargetPrice(beforeCandle: CandleDto, currentCandle: CandleDto, condition: VbsConditionEntity): Double {
         var volatilityPrice = (beforeCandle.highPrice - beforeCandle.lowPrice) * condition.kRate
         // 호가단위 기준으로 절삭
-        // TODO 브레이크포인트 걸어서 확인 필요
         volatilityPrice -= (volatilityPrice % condition.unitAskPrice)
         return currentCandle.openPrice + volatilityPrice
     }

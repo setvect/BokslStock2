@@ -112,11 +112,15 @@ class VbsBacktest {
     @Transactional
     fun 단건_리포트생성() {
         val range = DateRange(LocalDateTime.of(2000, 12, 1, 0, 0), LocalDateTime.now())
-        val conditionList = vbsConditionRepository.listBySeq(listOf(2418908L))
+        val conditionList = vbsConditionRepository.listBySeq(listOf(3615774L))
+
+        val stocks = conditionList.map { it.stock }.distinct().toList()
+        val realRange = candleRepository.findByCandleDateTimeBetween(stocks, range.from, range.to)
+
         val vbsAnalysisCondition = VbsAnalysisCondition(
             tradeConditionList = conditionList,
             basic = BasicAnalysisCondition(
-                range = range,
+                range = realRange,
                 investRatio = 0.99,
                 cash = 10_000_000.0,
                 feeBuy = 0.0002,
@@ -150,7 +154,13 @@ class VbsBacktest {
             rangeList.map { range ->
                 // 시세가 포함된 날짜범위 지정
                 val realRangeList =
-                    conditionList.map { candleRepository.findByCandleDateTimeBetween(it.stock, range.from, range.to) }
+                    conditionList.map {
+                        candleRepository.findByCandleDateTimeBetween(
+                            listOf(it.stock),
+                            range.from,
+                            range.to
+                        )
+                    }
                         .toList()
                 val from = realRangeList.minOf { it.from }
                 val to = realRangeList.maxOf { it.to }
@@ -185,7 +195,7 @@ class VbsBacktest {
 //            .filter { it.stock.code == "091170" }
             .map {
                 val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
-                val priceRange = candleRepository.findByCandleDateTimeBetween(it.stock, range.from, range.to)
+                val priceRange = candleRepository.findByCandleDateTimeBetween(listOf(it.stock), range.from, range.to)
 
                 val vbsAnalysisCondition = VbsAnalysisCondition(
                     tradeConditionList = listOf(it),
