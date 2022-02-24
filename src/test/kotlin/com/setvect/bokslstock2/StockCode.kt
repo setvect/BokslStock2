@@ -11,7 +11,6 @@ object StockCode {
     const val CODE_005930 = "005930"
     const val CODE_133690 = "133690"
     const val CODE_102110 = "102110"
-    const val CODE_091220 = "091220"
     const val CODE_161510 = "161510"
     const val CODE_192090 = "192090"
     const val CODE_091170 = "091170"
@@ -27,9 +26,14 @@ object StockCode {
         CODE_005930 to "삼성전자",
         CODE_133690 to "TIGER 미국나스닥100",
         CODE_102110 to "TIGER 200",
-        CODE_091220 to "TIGER 은행",
         CODE_161510 to "ARIRANG 고배당주",
         CODE_192090 to "TIGER 차이나CSI300",
         CODE_091170 to "KODEX 은행"
+    )
+
+    // 해외 주식
+    const val OS_CODE_TQQQ = "TQQQ"
+    val OVERSEAS_STOCK_CODE_MAP = mapOf(
+        OS_CODE_TQQQ to "TQQQ",
     )
 }
