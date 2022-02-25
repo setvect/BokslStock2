@@ -92,7 +92,7 @@ class TradeService<C : AnalysisCondition, E : TradeEntity, I : TradeReportItem, 
                     )
 
                 val buyQty: Int = (buyCash / tradeItem.unitPrice).toInt()
-                val buyAmount: Long = buyQty * tradeItem.unitPrice.toLong()
+                val buyAmount = buyQty * tradeItem.unitPrice
                 val feePrice = condition.basic.feeBuy * buyAmount
                 cash -= buyAmount + feePrice
                 val stockEvalPrice = buyStock.entries.map { it.value }
