@@ -85,7 +85,7 @@ class VbsConditionEntity(
 
     @OneToMany(mappedBy = "vbsConditionEntity")
     @OrderBy("tradeDate ASC")
-    override val tradeList: List<VbsTradeEntity> = ArrayList()
+    override var tradeList: List<VbsTradeEntity> = ArrayList()
 
     override fun getConditionId(): Long {
         return vbsConditionSeq

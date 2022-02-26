@@ -13,4 +13,6 @@ interface VbsTradeRepository : JpaRepository<VbsTradeEntity, Long> {
     @Query("delete from WB_VBS_TRADE x where x.vbsConditionEntity = :vbsConditionEntity")
     fun deleteByCondition(@Param("vbsConditionEntity") vbsConditionEntity: VbsConditionEntity): Int
 
+    @Query("select w from WB_VBS_TRADE w where w.vbsConditionEntity = :vbsConditionEntity")
+    fun findByCondition(@Param("vbsConditionEntity") vbsConditionEntity: VbsConditionEntity): List<VbsTradeEntity>
 }

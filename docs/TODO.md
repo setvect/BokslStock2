@@ -1,6 +1,8 @@
+
 # 복슬스톡 TODO
 
 ## 진행예정
+- NEW-20220226: Draw Down Chart 자료 만들기
 - REF-20220220: WB_VBS_TRADE, XB_MABS_TRADE 테이블 TRADE_SEQ prefix 넣기  
 - NEW-20220212: 매수조건 추가: 전일 이동평균이 오늘 시가보다 높았을 때 매수  
 - NEW-20220212: 패키지 경로를 모듈 단위로 변경 

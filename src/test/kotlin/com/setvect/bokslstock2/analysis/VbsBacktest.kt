@@ -120,7 +120,7 @@ class VbsBacktest {
     @Transactional
     fun 단건_리포트생성() {
         val range = DateRange(LocalDateTime.of(2000, 12, 1, 0, 0), LocalDateTime.now())
-        val conditionList = vbsConditionRepository.listBySeq(listOf(4986369L))
+        val conditionList = vbsConditionRepository.listBySeq(listOf(4986346L))
 
         val stocks = conditionList.map { it.stock }.distinct().toList()
         val realRange = candleRepository.findByCandleDateTimeBetween(stocks, range.from, range.to)
@@ -191,13 +191,60 @@ class VbsBacktest {
         analysisService.makeSummaryReport(mabsAnalysisConditionList)
     }
 
+    /**
+     * DB에 기록 남기지 않고 백테스팅하고 리포트 만듦
+     */
+    @Test
+    @Transactional
+    fun 일회성_백테스팅_리포트_만듦() {
+        // 1. 백테스트 조건
+        val code = stockRepository.findByCode("233740")
+        val condition = VbsConditionEntity(
+            stock = code.get(),
+            periodType = PERIOD_DAY,
+            kRate = 0.5,
+            maPeriod = 0,
+            unitAskPrice = 0.01,
+            gapRisenSkip = false,
+            onlyOneDayTrade = false,
+            comment = null
+        )
+        vbsBacktestService.saveCondition(condition)
+        log.info("${condition.vbsConditionSeq} aaaaaaaaaaaaa")
+
+        // 2. 백테스트
+        vbsBacktestService.backtest(condition)
+
+        val tradeList = vbsTradeRepository.findByCondition(condition)
+        condition.tradeList = tradeList
+
+        // 3. 거래 조건
+        val realRange = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
+        val vbsAnalysisCondition = VbsAnalysisCondition(
+            tradeConditionList = listOf(condition),
+            basic = BasicAnalysisCondition(
+                range = realRange,
+                investRatio = 0.99,
+                cash = 10_000_000.0,
+                feeBuy = 0.0002,
+                feeSell = 0.0002,
+                comment = ""
+            )
+        )
+        val mabsAnalysisConditionList = listOf(vbsAnalysisCondition)
+        
+        // 4. 리포트 만듦
+        analysisService.makeSummaryReport(mabsAnalysisConditionList)
+
+        log.info("끝.")
+    }
+
     private fun allConditionReportMake() {
         val conditionList = vbsConditionRepository.findAll().filter {
             // tradeList 정보를 다시 읽어옴. 해당 구분이 없으면 tradeList size가 0인 상태에서 캐싱된 데이터가 불러와짐
             entityManager.refresh(it)
             it.tradeList.size > 1
         }.toList()
-
         var i = 0
         val vbsConditionList = conditionList
             .filter { it.stock.code == "TQQQ" }

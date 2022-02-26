@@ -443,7 +443,11 @@ class VbsAnalysisService(
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(vbsTradeEntity.unitPrice)
-            createCell.cellStyle = commaStyle
+            if (vbsTradeEntity.unitPrice > 100) {
+                createCell.cellStyle = commaStyle
+            } else {
+                createCell.cellStyle = decimalStyle
+            }
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(vbsTradeEntity.yield)
