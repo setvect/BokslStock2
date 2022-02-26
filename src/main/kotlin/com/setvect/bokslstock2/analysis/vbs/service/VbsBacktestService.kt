@@ -1,9 +1,9 @@
 package com.setvect.bokslstock2.analysis.vbs.service
 
-import com.setvect.bokslstock2.analysis.vbs.entity.VbsConditionEntity
-import com.setvect.bokslstock2.analysis.vbs.entity.VbsTradeEntity
 import com.setvect.bokslstock2.analysis.common.model.TradeType.BUY
 import com.setvect.bokslstock2.analysis.common.model.TradeType.SELL
+import com.setvect.bokslstock2.analysis.vbs.entity.VbsConditionEntity
+import com.setvect.bokslstock2.analysis.vbs.entity.VbsTradeEntity
 import com.setvect.bokslstock2.analysis.vbs.repository.VbsConditionRepository
 import com.setvect.bokslstock2.analysis.vbs.repository.VbsTradeRepository
 import com.setvect.bokslstock2.index.dto.CandleDto
@@ -40,11 +40,13 @@ class VbsBacktestService(
     fun runTestBatch() {
         val conditionList = vbsConditionRepository.findAll()
         var i = 0
-        conditionList.forEach {
-            vbsTradeRepository.deleteByCondition(it)
-            backtest(it)
-            log.info("백테스트 진행 ${++i}/${conditionList.size}")
-        }
+        conditionList
+            .filter { it.stock.code == "TQQQ" }
+            .forEach {
+                vbsTradeRepository.deleteByCondition(it)
+                backtest(it)
+                log.info("백테스트 진행 ${++i}/${conditionList.size}")
+            }
     }
 
     private fun backtest(condition: VbsConditionEntity) {
@@ -103,7 +105,11 @@ class VbsBacktestService(
     /**
      * @return 목표가 계산
      */
-    private fun getTargetPrice(beforeCandle: CandleDto, currentCandle: CandleDto, condition: VbsConditionEntity): Double {
+    private fun getTargetPrice(
+        beforeCandle: CandleDto,
+        currentCandle: CandleDto,
+        condition: VbsConditionEntity
+    ): Double {
         var volatilityPrice = (beforeCandle.highPrice - beforeCandle.lowPrice) * condition.kRate
         // 호가단위 기준으로 절삭
         volatilityPrice -= (volatilityPrice % condition.unitAskPrice)

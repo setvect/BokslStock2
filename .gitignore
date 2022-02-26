@@ -41,3 +41,4 @@ temp/
 /logs/
 /.jpb/
 /backtest-result/
+/data_source/

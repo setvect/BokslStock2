@@ -61,6 +61,10 @@ class MovingAverageService(
                     .limit(avgCount.toLong())
                     .mapToDouble(CandleDto::closePrice).average()
 
+                if(average.isEmpty){
+                    continue
+                }
+
                 groupingCandleList[idx].average[avgCount] = average.asDouble
             }
         }

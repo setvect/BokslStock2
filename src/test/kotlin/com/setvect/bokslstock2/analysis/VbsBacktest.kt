@@ -77,8 +77,16 @@ class VbsBacktest {
     }
 
     @Test
+    @Transactional
+    @Rollback(false)
+    fun 백테스트() {
+        vbsBacktestService.runTestBatch()
+    }
+
+    @Test
     fun 조건생성() {
-        val stockList = stockRepository.findAll()
+//        val stockList = stockRepository.findAll()
+        val stockList = listOf(stockRepository.findByCode("TQQQ").get())
 
         val optionList = listOf(
             Pair(false, false),
@@ -96,8 +104,8 @@ class VbsBacktest {
                         stock = stock,
                         periodType = PERIOD_DAY,
                         kRate = kRate,
-                        maPeriod = 1,
-                        unitAskPrice = 5.0,
+                        maPeriod = 0,
+                        unitAskPrice = 0.01,
                         gapRisenSkip = it.first,
                         onlyOneDayTrade = it.second,
                         comment = null
@@ -112,7 +120,7 @@ class VbsBacktest {
     @Transactional
     fun 단건_리포트생성() {
         val range = DateRange(LocalDateTime.of(2000, 12, 1, 0, 0), LocalDateTime.now())
-        val conditionList = vbsConditionRepository.listBySeq(listOf(3615774L))
+        val conditionList = vbsConditionRepository.listBySeq(listOf(4986369L))
 
         val stocks = conditionList.map { it.stock }.distinct().toList()
         val realRange = candleRepository.findByCandleDateTimeBetween(stocks, range.from, range.to)
@@ -192,7 +200,7 @@ class VbsBacktest {
 
         var i = 0
         val vbsConditionList = conditionList
-//            .filter { it.stock.code == "091170" }
+            .filter { it.stock.code == "TQQQ" }
             .map {
                 val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
                 val priceRange = candleRepository.findByCandleDateTimeBetween(listOf(it.stock), range.from, range.to)
