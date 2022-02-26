@@ -197,10 +197,34 @@ class VbsBacktest {
     @Test
     @Transactional
     fun 일회성_백테스팅_리포트_만듦() {
-        // 1. 백테스트 조건
-        val code = stockRepository.findByCode("233740")
+        // 거래 조건
+        val realRange = DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.now())
+        val vbsAnalysisCondition = VbsAnalysisCondition(
+            tradeConditionList = listOf(
+                makeCondition("233740"),
+//                makeCondition("091170")
+            ),
+            basic = BasicAnalysisCondition(
+                range = realRange,
+                investRatio = 0.99,
+                cash = 10_000_000.0,
+                feeBuy = 0.0002,
+                feeSell = 0.002,
+                comment = ""
+            )
+        )
+        val mabsAnalysisConditionList = listOf(vbsAnalysisCondition)
+
+        // 리포트 만듦
+        analysisService.makeSummaryReport(mabsAnalysisConditionList)
+
+        log.info("끝.")
+    }
+
+    private fun makeCondition(codeNam: String): VbsConditionEntity {
+        val stock = stockRepository.findByCode(codeNam).get()
         val condition = VbsConditionEntity(
-            stock = code.get(),
+            stock = stock,
             periodType = PERIOD_DAY,
             kRate = 0.5,
             maPeriod = 0,
@@ -210,33 +234,12 @@ class VbsBacktest {
             comment = null
         )
         vbsBacktestService.saveCondition(condition)
-        log.info("${condition.vbsConditionSeq} aaaaaaaaaaaaa")
-
-        // 2. 백테스트
         vbsBacktestService.backtest(condition)
 
         val tradeList = vbsTradeRepository.findByCondition(condition)
         condition.tradeList = tradeList
 
-        // 3. 거래 조건
-        val realRange = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
-        val vbsAnalysisCondition = VbsAnalysisCondition(
-            tradeConditionList = listOf(condition),
-            basic = BasicAnalysisCondition(
-                range = realRange,
-                investRatio = 0.99,
-                cash = 10_000_000.0,
-                feeBuy = 0.0002,
-                feeSell = 0.0002,
-                comment = ""
-            )
-        )
-        val mabsAnalysisConditionList = listOf(vbsAnalysisCondition)
-        
-        // 4. 리포트 만듦
-        analysisService.makeSummaryReport(mabsAnalysisConditionList)
-
-        log.info("끝.")
+        return condition
     }
 
     private fun allConditionReportMake() {

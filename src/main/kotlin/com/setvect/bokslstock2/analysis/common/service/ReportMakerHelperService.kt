@@ -206,17 +206,24 @@ class ReportMakerHelperService(
             workbook: XSSFWorkbook
         ): XSSFSheet {
             val sheet = workbook.createSheet()
-            val header = "날짜,Buy&Hold 평가금,백테스트 평가금"
+            val header = "날짜,Buy&Hold 평가금,백테스트 평가금,Buy&Hold Maxdrawdown,백테스트 Maxdrawdown"
             applyHeader(sheet, header)
             var rowIdx = 1
 
             val dateStyle = ExcelStyle.createDate(workbook)
             val commaStyle = ExcelStyle.createDecimal(workbook)
+            val percentStyle = ExcelStyle.createPercent(workbook)
+
+            var buyAndHoldMax = 0.0
+            var backtestMax = 0.0
 
             evaluationAmountHistory.forEach { evalItem: EvaluationRateItem ->
                 val row = sheet.createRow(rowIdx++)
                 var cellIdx = 0
                 var createCell = row.createCell(cellIdx++)
+                buyAndHoldMax = buyAndHoldMax.coerceAtLeast(evalItem.buyHoldRate)
+                backtestMax = backtestMax.coerceAtLeast(evalItem.backtestRate)
+
                 createCell.setCellValue(evalItem.baseDate)
                 createCell.cellStyle = dateStyle
 
@@ -224,9 +231,17 @@ class ReportMakerHelperService(
                 createCell.setCellValue(evalItem.buyHoldRate)
                 createCell.cellStyle = commaStyle
 
-                createCell = row.createCell(cellIdx)
+                createCell = row.createCell(cellIdx++)
                 createCell.setCellValue(evalItem.backtestRate)
                 createCell.cellStyle = commaStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue((evalItem.buyHoldRate - buyAndHoldMax) / buyAndHoldMax)
+                createCell.cellStyle = percentStyle
+
+                createCell = row.createCell(cellIdx)
+                createCell.setCellValue((evalItem.backtestRate - backtestMax) / backtestMax)
+                createCell.cellStyle = percentStyle
             }
             sheet.createFreezePane(0, 1)
             sheet.defaultColumnWidth = 20
