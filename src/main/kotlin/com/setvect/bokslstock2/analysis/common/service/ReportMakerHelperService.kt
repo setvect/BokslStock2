@@ -152,7 +152,8 @@ class ReportMakerHelperService(
                 .flatMap { it.value.entries }
                 .map { it.key }.toSortedSet()
 
-        var buyHoldLastAmount = 1.0
+        var buyHoldLastRate = 1.0
+        var backtestLastRate = 1.0
         var backtestLastCash = condition.basic.cash // 마지막 보유 현금
 
         // <거래날짜, 거래내용>
@@ -164,7 +165,7 @@ class ReportMakerHelperService(
         val condByStockQty = condition.conditionList.associate { it.getConditionId() to 0 }.toMutableMap()
 
         val result = allDateList.map { date ->
-            val buyHoldRate = buyHoldRateMap[date] ?: buyHoldLastAmount
+            val buyHoldRate = buyHoldRateMap[date] ?: buyHoldLastRate
             val currentTradeList = tradeByDate[date] ?: emptyList()
             for (trade in currentTradeList) {
                 val vbsConditionSeq = trade.tradeEntity.getConditionEntity().getConditionId()
@@ -183,8 +184,18 @@ class ReportMakerHelperService(
 
 
             val backtestRate = (backtestLastCash + evalStockAmount) / condition.basic.cash
-            buyHoldLastAmount = buyHoldRate
-            EvaluationRateItem(baseDate = date, buyHoldRate = buyHoldRate, backtestRate = backtestRate)
+            val buyHoldYield = ApplicationUtil.getYield(buyHoldLastRate, buyHoldRate)
+            val backtestYield = ApplicationUtil.getYield(backtestLastRate, backtestRate)
+
+            buyHoldLastRate = buyHoldRate
+            backtestLastRate= backtestRate
+            EvaluationRateItem(
+                baseDate = date,
+                buyHoldRate = buyHoldRate,
+                backtestRate = backtestRate,
+                buyHoldYield = buyHoldYield,
+                backtestYield = backtestYield
+            )
         }.toMutableList()
         // 최초 시작은 비율은 1.0
         result.add(
@@ -192,7 +203,9 @@ class ReportMakerHelperService(
             EvaluationRateItem(
                 baseDate = allDateList.first(),
                 buyHoldRate = 1.0,
-                backtestRate = 1.0
+                backtestRate = 1.0,
+                buyHoldYield = 0.0,
+                backtestYield = 0.0
             )
         )
         return result
@@ -222,7 +235,7 @@ class ReportMakerHelperService(
             workbook: XSSFWorkbook
         ): XSSFSheet {
             val sheet = workbook.createSheet()
-            val header = "날짜,Buy&Hold 평가금,백테스트 평가금,Buy&Hold Maxdrawdown,백테스트 Maxdrawdown"
+            val header = "날짜,Buy&Hold 평가금,백테스트 평가금,Buy&Hold 일일 수익률,백테스트 일일 수익률,Buy&Hold Maxdrawdown,백테스트 Maxdrawdown"
             applyHeader(sheet, header)
             var rowIdx = 1
 
@@ -243,6 +256,7 @@ class ReportMakerHelperService(
                 createCell.setCellValue(evalItem.baseDate)
                 createCell.cellStyle = dateStyle
 
+                // 변화량
                 createCell = row.createCell(cellIdx++)
                 createCell.setCellValue(evalItem.buyHoldRate)
                 createCell.cellStyle = commaStyle
@@ -251,6 +265,16 @@ class ReportMakerHelperService(
                 createCell.setCellValue(evalItem.backtestRate)
                 createCell.cellStyle = commaStyle
 
+                // 일일 수익률
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(evalItem.buyHoldYield)
+                createCell.cellStyle = percentStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(evalItem.backtestYield)
+                createCell.cellStyle = percentStyle
+
+                // Maxdrawdown
                 createCell = row.createCell(cellIdx++)
                 createCell.setCellValue((evalItem.buyHoldRate - buyAndHoldMax) / buyAndHoldMax)
                 createCell.cellStyle = percentStyle
@@ -501,7 +525,7 @@ class ReportMakerHelperService(
         fun createPercent(workbook: XSSFWorkbook): XSSFCellStyle {
             val cellStyle = workbook.createCellStyle()
             val format: DataFormat = workbook.createDataFormat()
-            cellStyle.dataFormat = format.getFormat("###,###.00%")
+            cellStyle.dataFormat = format.getFormat("###,##0.00%")
             return cellStyle
         }
 

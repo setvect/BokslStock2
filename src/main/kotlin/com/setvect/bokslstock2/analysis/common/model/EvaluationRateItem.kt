@@ -18,4 +18,12 @@ data class EvaluationRateItem(
      * 백테스팅 전략 비율
      */
     val backtestRate: Double,
+    /**
+     * buy&hold 전일대비 수익률
+     */
+    val buyHoldYield: Double,
+    /**
+     * 백테스팅 전략 전일대비 수익률
+     */
+    val backtestYield: Double,
 )
