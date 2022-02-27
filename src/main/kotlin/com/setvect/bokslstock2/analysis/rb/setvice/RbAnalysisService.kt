@@ -447,6 +447,8 @@ class RbAnalysisService(
     private fun createReportSummary(result: RbAnalysisReportResult, workbook: XSSFWorkbook): XSSFSheet {
         val sheet = workbook.createSheet()
         val summary = getSummary(result)
+        log.debug(summary)
+
         ReportMakerHelperService.textToSheet(summary, sheet)
         val conditionSummary = getConditionSummary(result)
         ReportMakerHelperService.textToSheet(conditionSummary, sheet)

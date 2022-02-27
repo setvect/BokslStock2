@@ -13,4 +13,7 @@ interface RbTradeRepository : JpaRepository<RbTradeEntity, Long> {
     @Query("delete from VB_RB_TRADE x where x.rbConditionEntity = :rbConditionEntity")
     fun deleteByCondition(@Param("rbConditionEntity") rbConditionEntity: RbConditionEntity): Int
 
+    @Query("select w from VB_RB_TRADE  w where w.rbConditionEntity = :rbConditionEntity")
+    fun findByCondition(@Param("rbConditionEntity") condition: RbConditionEntity): List<RbTradeEntity>
+
 }

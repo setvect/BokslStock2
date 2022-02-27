@@ -48,7 +48,7 @@ class RbConditionEntity(
 
     @OneToMany(mappedBy = "rbConditionEntity")
     @OrderBy("tradeDate ASC")
-    override val tradeList: List<RbTradeEntity> = ArrayList()
+    override var tradeList: List<RbTradeEntity> = ArrayList()
 
     override fun getConditionId(): Long {
         return rbConditionSeq

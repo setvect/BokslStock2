@@ -7,6 +7,7 @@ import com.setvect.bokslstock2.analysis.rb.repository.RbConditionRepository
 import com.setvect.bokslstock2.analysis.rb.repository.RbTradeRepository
 import com.setvect.bokslstock2.analysis.rb.setvice.RbAnalysisService
 import com.setvect.bokslstock2.analysis.rb.setvice.RbBacktestService
+import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_MONTH
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
@@ -91,6 +92,53 @@ class RbBacktest {
         }
     }
 
+    /**
+     * DB에 기록 남기지 않고 백테스팅하고 리포트 만듦
+     */
+    @Test
+    @Transactional
+    fun 일회성_백테스팅_리포트_만듦() {
+        // 거래 조건
+        val realRange = DateRange(LocalDateTime.of(2010, 1, 1, 0, 0), LocalDateTime.now())
+        val rbAnalysisCondition = RbAnalysisCondition(
+            tradeConditionList = listOf(
+//                makeCondition("122630"), // KODEX 레버리지
+//                makeCondition("233740"), // KODEX 코스닥150 레버리지
+//                makeCondition("091170"), // KODEX 은행
+                makeCondition("TQQQ") // KODEX 은행
+            ),
+            basic = BasicAnalysisCondition(
+                range = realRange,
+                investRatio = 0.50,
+                cash = 10_000_000.0,
+                feeBuy = 0.0002,
+                feeSell = 0.0002,
+                comment = ""
+            )
+        )
+        val rbAnalysisConditionList = listOf(rbAnalysisCondition)
+
+        // 리포트 만듦
+        analysisService.makeSummaryReport(rbAnalysisConditionList)
+
+        log.info("끝.")
+    }
+
+    private fun makeCondition(codeNam: String): RbConditionEntity {
+        val stock = stockRepository.findByCode(codeNam).get()
+        val condition = RbConditionEntity(
+            stock = stock,
+            periodType = PeriodType.PERIOD_MONTH,
+            comment = null
+        )
+        rbBacktestService.saveCondition(condition)
+        rbBacktestService.backtest(condition)
+
+        val tradeList = rbTradeRepository.findByCondition(condition)
+        condition.tradeList = tradeList
+
+        return condition
+    }
 
     private fun allConditionReportMake() {
         val conditionList = rbConditionRepository.findAll().filter {

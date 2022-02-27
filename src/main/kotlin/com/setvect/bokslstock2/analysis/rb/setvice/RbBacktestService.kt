@@ -46,7 +46,8 @@ class RbBacktestService(
         }
     }
 
-    private fun backtest(condition: RbConditionEntity) {
+    @Transactional
+    fun backtest(condition: RbConditionEntity) {
         val movingAverageCandle = movingAverageService.getMovingAverage(
             condition.stock.code, condition.periodType, listOf()
         )
