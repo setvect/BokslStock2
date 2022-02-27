@@ -41,7 +41,6 @@ class MabsBacktestService(
         val conditionList = mabsConditionRepository.findAll()
         var i = 0
         conditionList
-            .filter { it.stock.code == "TQQQ" }
             .forEach {
             mabsTradeRepository.deleteByCondition(it)
             backtest(it)

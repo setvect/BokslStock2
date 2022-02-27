@@ -203,7 +203,7 @@ class VbsBacktest {
             tradeConditionList = listOf(
 //                makeCondition("122630"), // KODEX 레버리지
                 makeCondition("233740"), // KODEX 코스닥150 레버리지
-                makeCondition("091170") // KODEX 은행
+//                makeCondition("091170") // KODEX 은행
             ),
             basic = BasicAnalysisCondition(
                 range = realRange,
@@ -251,7 +251,6 @@ class VbsBacktest {
         }.toList()
         var i = 0
         val vbsConditionList = conditionList
-            .filter { it.stock.code == "TQQQ" }
             .map {
                 val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
                 val priceRange = candleRepository.findByCandleDateTimeBetween(listOf(it.stock), range.from, range.to)

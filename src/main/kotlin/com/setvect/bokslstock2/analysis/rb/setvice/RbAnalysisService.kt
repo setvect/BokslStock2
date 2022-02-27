@@ -80,8 +80,11 @@ class RbAnalysisService(
             sheet = ReportMakerHelperService.createReportEvalAmount(result.common.evaluationAmountHistory, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일짜별 자산비율 변화")
 
-            sheet = ReportMakerHelperService.createReportMonthlyReturn(result.common.monthlyYield, workbook)
+            sheet = ReportMakerHelperService.createReportRangeReturn(result.common.getMonthlyYield(), workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "3. 월별 수익률")
+
+            sheet = ReportMakerHelperService.createReportRangeReturn(result.common.getYearlyYield(), workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "4. 년별 수익률")
 
             sheet = createReportSummary(result, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "4. 매매 요약결과 및 조건")
@@ -142,8 +145,8 @@ class RbAnalysisService(
         val header = "분석기간,분석 아이디,종목,투자비율,최초 투자금액,매수 수수료,매도 수수료," +
                 "매매주기," +
                 "조건 설명," +
-                "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR," +
-                "실현 수익,실현 MDD,실현 CAGR,매매 횟수,승률"
+                "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,샤프지수," +
+                "실현 수익,실현 MDD,실현 CAGR,샤프지수,매매 횟수,승률"
         ReportMakerHelperService.applyHeader(sheet, header)
         var rowIdx = 1
 
@@ -151,6 +154,7 @@ class RbAnalysisService(
         val dateStyle = ReportMakerHelperService.ExcelStyle.createDate(workbook)
         val commaStyle = ReportMakerHelperService.ExcelStyle.createComma(workbook)
         val percentStyle = ReportMakerHelperService.ExcelStyle.createPercent(workbook)
+        val decimalStyle = ReportMakerHelperService.ExcelStyle.createDecimal(workbook)
         val percentImportantStyle = ReportMakerHelperService.ExcelStyle.createPercent(workbook)
         percentImportantStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
         percentImportantStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
@@ -198,7 +202,7 @@ class RbAnalysisService(
             createCell.setCellValue(multiCondition.basic.comment)
             createCell.cellStyle = defaultStyle
 
-            val sumYield: TotalYield = result.common.buyAndHoldYieldTotal
+            val sumYield: TotalYield = result.common.buyHoldYieldTotal
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(sumYield.yield)
             createCell.cellStyle = percentStyle
@@ -210,6 +214,10 @@ class RbAnalysisService(
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(sumYield.getCagr())
             createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(result.common.getBuyHoldSharpeRatio())
+            createCell.cellStyle = decimalStyle
 
             val totalYield: TotalYield = result.common.yieldTotal
 
@@ -224,6 +232,10 @@ class RbAnalysisService(
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(totalYield.getCagr())
             createCell.cellStyle = percentImportantStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(result.common.getBacktestSharpeRatio())
+            createCell.cellStyle = decimalStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(result.common.getWinningRateTotal().getTradeCount().toDouble())
@@ -306,11 +318,12 @@ class RbAnalysisService(
         val tradeConditionList = result.rbAnalysisCondition.tradeConditionList
 
         report.append("----------- Buy&Hold 결과 -----------\n")
-        report.append(String.format("합산 동일비중 수익\t %,.2f%%", result.common.buyAndHoldYieldTotal.yield * 100))
+        report.append(String.format("합산 동일비중 수익\t %,.2f%%", result.common.buyHoldYieldTotal.yield * 100))
             .append("\n")
-        report.append(String.format("합산 동일비중 MDD\t %,.2f%%", result.common.buyAndHoldYieldTotal.mdd * 100)).append("\n")
-        report.append(String.format("합산 동일비중 CAGR\t %,.2f%%", result.common.buyAndHoldYieldTotal.getCagr() * 100))
+        report.append(String.format("합산 동일비중 MDD\t %,.2f%%", result.common.buyHoldYieldTotal.mdd * 100)).append("\n")
+        report.append(String.format("합산 동일비중 CAGR\t %,.2f%%", result.common.buyHoldYieldTotal.getCagr() * 100))
             .append("\n")
+        report.append(String.format("샤프지수\t %,.2f", result.common.getBuyHoldSharpeRatio())).append("\n")
 
         for (i in 1..tradeConditionList.size) {
             val tradeCondition = tradeConditionList[i - 1]
@@ -318,7 +331,7 @@ class RbAnalysisService(
                 "${i}. 조건번호: ${tradeCondition.rbConditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), " +
                         "매매주기: ${tradeCondition.periodType}\n"
             )
-            val sumYield = result.common.buyAndHoldYieldCondition[tradeCondition.rbConditionSeq]
+            val sumYield = result.common.buyHoldYieldCondition[tradeCondition.rbConditionSeq]
             if (sumYield == null) {
                 log.warn("조건에 해당하는 결과가 없습니다. rbConditionSeq: ${tradeCondition.rbConditionSeq}")
                 break
@@ -335,6 +348,7 @@ class RbAnalysisService(
         report.append(String.format("합산 승률\t %,.2f%%", result.common.getWinningRateTotal().getWinRate() * 100))
             .append("\n")
         report.append(String.format("합산 CAGR\t %,.2f%%", totalYield.getCagr() * 100)).append("\n")
+        report.append(String.format("샤프지수\t %,.2f", result.common.getBacktestSharpeRatio())).append("\n")
 
         for (i in 1..tradeConditionList.size) {
             val tradeCondition = tradeConditionList[i - 1]

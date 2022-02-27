@@ -41,7 +41,6 @@ class VbsBacktestService(
         val conditionList = vbsConditionRepository.findAll()
         var i = 0
         conditionList
-            .filter { it.stock.code == "TQQQ" }
             .forEach {
                 vbsTradeRepository.deleteByCondition(it)
                 backtest(it)

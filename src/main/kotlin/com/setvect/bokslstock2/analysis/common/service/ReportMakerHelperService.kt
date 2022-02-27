@@ -211,20 +211,6 @@ class ReportMakerHelperService(
         return result
     }
 
-    /**
-     * @return 월별 buy&hold 수익률, 전략 수익률 정보
-     */
-    fun applyMonthlyYield(evaluationAmountHistory: List<EvaluationRateItem>): List<YieldRateItem> {
-        val monthEval = evaluationAmountHistory.groupBy { it.baseDate.withDayOfMonth(1) }
-        return monthEval.entries.stream().map {
-            YieldRateItem(
-                baseDate = it.key,
-                buyHoldYield = ApplicationUtil.getYield(it.value.first().buyHoldRate, it.value.last().buyHoldRate),
-                backtestYield = ApplicationUtil.getYield(it.value.first().backtestRate, it.value.last().backtestRate),
-            )
-        }
-            .toList()
-    }
 
     companion object {
         /**
@@ -291,10 +277,10 @@ class ReportMakerHelperService(
         }
 
         /**
-         * 월별 수익률
+         * 기간별(년,월) 수익률
          */
-        fun createReportMonthlyReturn(
-            monthlyYieldHistory: List<YieldRateItem>,
+        fun createReportRangeReturn(
+            yieldHistory: List<YieldRateItem>,
             workbook: XSSFWorkbook
         ): XSSFSheet {
             val sheet = workbook.createSheet()
@@ -305,7 +291,7 @@ class ReportMakerHelperService(
             val dateStyle = ExcelStyle.createYearMonth(workbook)
             val percentStyle = ExcelStyle.createPercent(workbook)
 
-            monthlyYieldHistory.forEach { monthYield ->
+            yieldHistory.forEach { monthYield ->
                 val row = sheet.createRow(rowIdx++)
                 var cellIdx = 0
                 var createCell = row.createCell(cellIdx++)
@@ -487,25 +473,25 @@ class ReportMakerHelperService(
      * 엑셀 리포트에 사용될 셀 스타일 모음
      */
     object ExcelStyle {
-        fun createDefault(workbook: XSSFWorkbook): XSSFCellStyle? {
+        fun createDefault(workbook: XSSFWorkbook): XSSFCellStyle {
             return workbook.createCellStyle()
         }
 
-        fun createDate(workbook: XSSFWorkbook): XSSFCellStyle? {
+        fun createDate(workbook: XSSFWorkbook): XSSFCellStyle {
             val cellStyle = workbook.createCellStyle()
             val createHelper: CreationHelper = workbook.creationHelper
             cellStyle.dataFormat = createHelper.createDataFormat().getFormat("yyyy/MM/dd")
             return cellStyle
         }
 
-        fun createYearMonth(workbook: XSSFWorkbook): XSSFCellStyle? {
+        fun createYearMonth(workbook: XSSFWorkbook): XSSFCellStyle {
             val cellStyle = workbook.createCellStyle()
             val createHelper: CreationHelper = workbook.creationHelper
             cellStyle.dataFormat = createHelper.createDataFormat().getFormat("yyyy/MM")
             return cellStyle
         }
 
-        fun createComma(workbook: XSSFWorkbook): XSSFCellStyle? {
+        fun createComma(workbook: XSSFWorkbook): XSSFCellStyle {
             val cellStyle = workbook.createCellStyle()
             val format: DataFormat = workbook.createDataFormat()
             cellStyle.dataFormat = format.getFormat("###,###")
@@ -515,7 +501,7 @@ class ReportMakerHelperService(
         /**
          * 소수점 표시
          */
-        fun createDecimal(workbook: XSSFWorkbook): XSSFCellStyle? {
+        fun createDecimal(workbook: XSSFWorkbook): XSSFCellStyle {
             val cellStyle = workbook.createCellStyle()
             val format: DataFormat = workbook.createDataFormat()
             cellStyle.dataFormat = format.getFormat("0.00")
