@@ -136,7 +136,9 @@ class MabsAnalysisService(
     ): XSSFSheet {
         val sheet = workbook.createSheet()
 
-        val header = "분석기간,분석 아이디,종목,투자비율,최초 투자금액,매수 수수료,매도 수수료," +
+        val header = "분석기간,분석 아이디," +
+                "종목,종목코드,매매주기,단기 이동평균 기간,장기 이동평균 기간," +
+                "투자비율,최초 투자금액,하락 매도률,상승 매도률,매수 수수료,매도 수수료," +
                 "조건 설명," +
                 "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR," +
                 "실현 수익,실현 MDD,실현 CAGR,매매 횟수,승률"
@@ -171,12 +173,36 @@ class MabsAnalysisService(
             createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeConditionList.joinToString(",") { it.stock.code })
+            createCell.cellStyle = defaultStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeConditionList.joinToString(",") { it.periodType.name })
+            createCell.cellStyle = defaultStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeConditionList.joinToString(",") { it.shortPeriod.toString() })
+            createCell.cellStyle = defaultStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeConditionList.joinToString(",") { it.longPeriod.toString() })
+            createCell.cellStyle = defaultStyle
+
+            createCell = row.createCell(cellIdx++)
             createCell.setCellValue(multiCondition.basic.investRatio)
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(multiCondition.basic.cash)
             createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeConditionList.joinToString(",") { it.downSellRate.toString() })
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeConditionList.joinToString(",") { it.upBuyRate.toString() })
+            createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(multiCondition.basic.feeBuy)
@@ -257,6 +283,7 @@ class MabsAnalysisService(
         var rowIdx = 1
         val defaultStyle = ReportMakerHelperService.ExcelStyle.createDate(workbook)
         val percentStyle = ReportMakerHelperService.ExcelStyle.createPercent(workbook)
+        val commaStyle = ReportMakerHelperService.ExcelStyle.createComma(workbook)
 
         for (condition in mabsConditionList) {
             val row = sheet.createRow(rowIdx++)
@@ -280,11 +307,11 @@ class MabsAnalysisService(
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(condition.shortPeriod.toDouble())
-            createCell.cellStyle = defaultStyle
+            createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(condition.longPeriod.toDouble())
-            createCell.cellStyle = defaultStyle
+            createCell.cellStyle = commaStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(condition.downSellRate)
