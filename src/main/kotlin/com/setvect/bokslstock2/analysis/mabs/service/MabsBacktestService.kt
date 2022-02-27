@@ -40,14 +40,17 @@ class MabsBacktestService(
     fun runTestBatch() {
         val conditionList = mabsConditionRepository.findAll()
         var i = 0
-        conditionList.forEach {
+        conditionList
+            .filter { it.stock.code == "TQQQ" }
+            .forEach {
             mabsTradeRepository.deleteByCondition(it)
             backtest(it)
             log.info("백테스트 진행 ${++i}/${conditionList.size}")
         }
     }
 
-    private fun backtest(condition: MabsConditionEntity) {
+    @Transactional
+    fun backtest(condition: MabsConditionEntity) {
         val movingAverageCandle = movingAverageService.getMovingAverage(
             condition.stock.code, condition.periodType, listOf(condition.shortPeriod, condition.longPeriod)
         )

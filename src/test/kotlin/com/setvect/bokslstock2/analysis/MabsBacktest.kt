@@ -39,7 +39,7 @@ class MabsBacktest {
     private lateinit var movingAverageService: MovingAverageService
 
     @Autowired
-    private lateinit var backtestService: MabsBacktestService
+    private lateinit var mabsBacktestService: MabsBacktestService
 
     @Autowired
     private lateinit var analysisService: MabsAnalysisService
@@ -61,7 +61,7 @@ class MabsBacktest {
     @Rollback(false)
     fun 한번에_모두_백테스트() {
         // 0. 기존 백테스트 기록 모두 삭제
-        deleteBacktestData()
+//        deleteBacktestData()
 
         // 1. 조건 만들기
         조건생성_일봉()
@@ -69,7 +69,7 @@ class MabsBacktest {
         조건생성_월봉()
 
         // 2. 모든 조건에 대해 백테스트
-        backtestService.runTestBatch()
+        mabsBacktestService.runTestBatch()
 
         // 3. 모든 조건에 대한 리포트 만들기
         allConditionReportMake()
@@ -117,7 +117,7 @@ class MabsBacktest {
     @Transactional
     @Rollback(false)
     fun 백테스트() {
-        backtestService.runTestBatch()
+        mabsBacktestService.runTestBatch()
     }
 
     @Test
@@ -205,6 +205,59 @@ class MabsBacktest {
         allConditionReportMake()
     }
 
+    /**
+     * DB에 기록 남기지 않고 백테스팅하고 리포트 만듦
+     */
+    @Test
+    @Transactional
+    fun 일회성_백테스팅_리포트_만듦() {
+        // 거래 조건
+        val realRange = DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.now())
+        val mabsAnalysisCondition = MabsAnalysisCondition(
+            tradeConditionList = listOf(
+//                makeCondition("122630"), // KODEX 레버리지
+//                makeCondition("233740"), // KODEX 코스닥150 레버리지
+                makeCondition("TQQQ"),
+//                makeCondition("091170") // KODEX 은행
+            ),
+            basic = BasicAnalysisCondition(
+                range = realRange,
+                investRatio = 0.99,
+                cash = 10_000_000.0,
+                feeBuy = 0.0002,
+                feeSell = 0.0002,
+                comment = ""
+            )
+        )
+        val mabsAnalysisConditionList = listOf(mabsAnalysisCondition)
+
+        // 리포트 만듦
+        analysisService.makeSummaryReport(mabsAnalysisConditionList)
+
+        log.info("끝.")
+    }
+
+
+    private fun makeCondition(codeNam: String): MabsConditionEntity {
+        val stock = stockRepository.findByCode(codeNam).get()
+        val condition = MabsConditionEntity(
+            stock = stock,
+            periodType = PERIOD_WEEK,
+            upBuyRate = 0.01,
+            downSellRate = 0.01,
+            shortPeriod = 2,
+            longPeriod = 5,
+            comment = ""
+        )
+        mabsBacktestService.saveCondition(condition)
+        mabsBacktestService.backtest(condition)
+
+        val tradeList = mabsTradeRepository.findByCondition(condition)
+        condition.tradeList = tradeList
+
+        return condition
+    }
+
     private fun deleteBacktestData() {
         mabsTradeRepository.deleteAll()
         mabsConditionRepository.deleteAll()
@@ -257,7 +310,9 @@ class MabsBacktest {
 
         val rateList = listOf(0.01, 0.005, 0.001)
         val stockList = stockRepository.findAll()
-        stockList.forEach { stock ->
+        stockList
+            .filter { it.code == "TQQQ" }
+            .forEach { stock ->
             pairList.forEach { periodPair ->
                 rateList.forEach { rate ->
                     val mabsCondition = MabsConditionEntity(
@@ -269,7 +324,7 @@ class MabsBacktest {
                         periodPair.second,
                         ""
                     )
-                    backtestService.saveCondition(mabsCondition)
+                    mabsBacktestService.saveCondition(mabsCondition)
                 }
             }
         }
@@ -305,7 +360,9 @@ class MabsBacktest {
 
         val rateList = listOf(0.01, 0.005, 0.001)
         val stockList = stockRepository.findAll()
-        stockList.forEach { stock ->
+        stockList
+            .filter { it.code == "TQQQ" }
+            .forEach { stock ->
             pairList.forEach { periodPair ->
                 rateList.forEach { rate ->
                     val mabsCondition = MabsConditionEntity(
@@ -317,7 +374,7 @@ class MabsBacktest {
                         periodPair.second,
                         ""
                     )
-                    backtestService.saveCondition(mabsCondition)
+                    mabsBacktestService.saveCondition(mabsCondition)
                 }
             }
         }
@@ -361,7 +418,9 @@ class MabsBacktest {
 
         val rateList = listOf(0.01, 0.005, 0.001)
         val stockList = stockRepository.findAll()
-        stockList.forEach { stock ->
+        stockList
+            .filter { it.code == "TQQQ" }
+            .forEach { stock ->
             pairList.forEach { periodPair ->
                 rateList.forEach { rate ->
                     val mabsCondition = MabsConditionEntity(
@@ -373,14 +432,16 @@ class MabsBacktest {
                         periodPair.second,
                         ""
                     )
-                    backtestService.saveCondition(mabsCondition)
+                    mabsBacktestService.saveCondition(mabsCondition)
                 }
             }
         }
     }
 
     private fun allConditionReportMake() {
-        val conditionList = mabsConditionRepository.findAll().filter {
+        val conditionList = mabsConditionRepository.findAll()
+            .filter { it.stock.code == "TQQQ" }
+            .filter {
             // tradeList 정보를 다시 읽어옴. 해당 구분이 없으면 tradeList size가 0인 상태에서 캐싱된 데이터가 불러와짐
             entityManager.refresh(it)
             it.tradeList.size > 1

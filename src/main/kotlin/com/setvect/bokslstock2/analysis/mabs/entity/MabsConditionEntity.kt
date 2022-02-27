@@ -72,7 +72,7 @@ class MabsConditionEntity(
 
     @OneToMany(mappedBy = "mabsConditionEntity")
     @OrderBy("tradeDate ASC")
-    override val tradeList: List<MabsTradeEntity> = ArrayList()
+    override var tradeList: List<MabsTradeEntity> = ArrayList()
 
     override fun getConditionId(): Long {
         return mabsConditionSeq
