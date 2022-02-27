@@ -99,17 +99,17 @@ class RbBacktest {
     @Transactional
     fun 일회성_백테스팅_리포트_만듦() {
         // 거래 조건
-        val realRange = DateRange(LocalDateTime.of(2010, 1, 1, 0, 0), LocalDateTime.now())
+        val realRange = DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.now())
         val rbAnalysisCondition = RbAnalysisCondition(
             tradeConditionList = listOf(
 //                makeCondition("122630"), // KODEX 레버리지
-//                makeCondition("233740"), // KODEX 코스닥150 레버리지
+                makeCondition("233740"), // KODEX 코스닥150 레버리지
 //                makeCondition("091170"), // KODEX 은행
-                makeCondition("TQQQ") // KODEX 은행
+//                makeCondition("TQQQ") // TQQQ
             ),
             basic = BasicAnalysisCondition(
                 range = realRange,
-                investRatio = 0.50,
+                investRatio = 0.20,
                 cash = 10_000_000.0,
                 feeBuy = 0.0002,
                 feeSell = 0.0002,
@@ -128,7 +128,7 @@ class RbBacktest {
         val stock = stockRepository.findByCode(codeNam).get()
         val condition = RbConditionEntity(
             stock = stock,
-            periodType = PeriodType.PERIOD_MONTH,
+            periodType = PERIOD_MONTH,
             comment = null
         )
         rbBacktestService.saveCondition(condition)

@@ -10,7 +10,10 @@ data class CommonAnalysisReportResult(
      * 날짜별 평가금 변화 이력
      */
     val evaluationAmountHistory: List<EvaluationRateItem>,
-
+    /**
+     * 월별 수익률
+     */
+    val monthlyYield: List<YieldRateItem>,
     /**
      * 전체 수익 결과
      */

@@ -3,6 +3,7 @@ package com.setvect.bokslstock2.analysis.common.service
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
 import com.setvect.bokslstock2.analysis.common.model.EvaluationRateItem
 import com.setvect.bokslstock2.analysis.common.model.TradeType
+import com.setvect.bokslstock2.analysis.common.model.YieldRateItem
 import com.setvect.bokslstock2.common.entity.AnalysisCondition
 import com.setvect.bokslstock2.common.entity.AnalysisReportResult
 import com.setvect.bokslstock2.common.entity.ConditionEntity
@@ -197,6 +198,21 @@ class ReportMakerHelperService(
         return result
     }
 
+    /**
+     * @return 월별 buy&hold 수익률, 전략 수익률 정보
+     */
+    fun applyMonthlyYield(evaluationAmountHistory: List<EvaluationRateItem>): List<YieldRateItem> {
+        val monthEval = evaluationAmountHistory.groupBy { it.baseDate.withDayOfMonth(1) }
+        return monthEval.entries.stream().map {
+            YieldRateItem(
+                baseDate = it.key,
+                buyHoldYield = ApplicationUtil.getYield(it.value.first().buyHoldRate, it.value.last().buyHoldRate),
+                backtestYield = ApplicationUtil.getYield(it.value.first().backtestRate, it.value.last().backtestRate),
+            )
+        }
+            .toList()
+    }
+
     companion object {
         /**
          * 날짜에 따른 평가금액(Buy&Hold, 벡테스트) 변화 시트 만듦
@@ -249,6 +265,44 @@ class ReportMakerHelperService(
             ExcelStyle.applyDefaultFont(sheet)
             return sheet
         }
+
+        /**
+         * 월별 수익률
+         */
+        fun createReportMonthlyReturn(
+            monthlyYieldHistory: List<YieldRateItem>,
+            workbook: XSSFWorkbook
+        ): XSSFSheet {
+            val sheet = workbook.createSheet()
+            val header = "날짜,Buy&Hold 수익률,백테스트 수익률"
+            applyHeader(sheet, header)
+            var rowIdx = 1
+
+            val dateStyle = ExcelStyle.createYearMonth(workbook)
+            val percentStyle = ExcelStyle.createPercent(workbook)
+
+            monthlyYieldHistory.forEach { monthYield ->
+                val row = sheet.createRow(rowIdx++)
+                var cellIdx = 0
+                var createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(monthYield.baseDate)
+                createCell.cellStyle = dateStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(monthYield.buyHoldYield)
+                createCell.cellStyle = percentStyle
+
+                createCell = row.createCell(cellIdx)
+                createCell.setCellValue(monthYield.backtestYield)
+                createCell.cellStyle = percentStyle
+            }
+            sheet.createFreezePane(0, 1)
+            sheet.defaultColumnWidth = 20
+            ExcelStyle.applyAllBorder(sheet)
+            ExcelStyle.applyDefaultFont(sheet)
+            return sheet
+        }
+
 
         /**
          * @return 전체 투자 종목에 대한 Buy & Hold시 수익 정보
@@ -416,7 +470,14 @@ class ReportMakerHelperService(
         fun createDate(workbook: XSSFWorkbook): XSSFCellStyle? {
             val cellStyle = workbook.createCellStyle()
             val createHelper: CreationHelper = workbook.creationHelper
-            cellStyle.dataFormat = createHelper.createDataFormat().getFormat("yyyy/MM/dd hh:mm")
+            cellStyle.dataFormat = createHelper.createDataFormat().getFormat("yyyy/MM/dd")
+            return cellStyle
+        }
+
+        fun createYearMonth(workbook: XSSFWorkbook): XSSFCellStyle? {
+            val cellStyle = workbook.createCellStyle()
+            val createHelper: CreationHelper = workbook.creationHelper
+            cellStyle.dataFormat = createHelper.createDataFormat().getFormat("yyyy/MM")
             return cellStyle
         }
 

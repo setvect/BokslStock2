@@ -80,8 +80,11 @@ class MabsAnalysisService(
             sheet = ReportMakerHelperService.createReportEvalAmount(result.common.evaluationAmountHistory, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일짜별 자산변화")
 
+            sheet = ReportMakerHelperService.createReportMonthlyReturn(result.common.monthlyYield, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "3. 월별 수익률")
+
             sheet = createReportSummary(result, workbook)
-            workbook.setSheetName(workbook.getSheetIndex(sheet), "3. 매매 요약결과 및 조건")
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "4. 매매 요약결과 및 조건")
 
             FileOutputStream(reportFile).use { ous ->
                 workbook.write(ous)

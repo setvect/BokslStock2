@@ -33,6 +33,7 @@ class TradeService<C : AnalysisCondition, E : TradeEntity, I : TradeReportItem, 
     ): R {
         // 날짜별로 Buy&Hold 및 투자전략 평가금액 얻기
         val evaluationAmountHistory = reportMakerHelperService.applyEvaluationAmount(tradeItemHistory, condition)
+        val monthlyYield = reportMakerHelperService.applyMonthlyYield(evaluationAmountHistory)
 
         val buyAndHoldYieldMdd: CommonAnalysisReportResult.TotalYield =
             ReportMakerHelperService.calculateTotalBuyAndHoldYield(evaluationAmountHistory, condition.basic.range)
@@ -47,6 +48,7 @@ class TradeService<C : AnalysisCondition, E : TradeEntity, I : TradeReportItem, 
 
         val common = CommonAnalysisReportResult(
             evaluationAmountHistory = evaluationAmountHistory,
+            monthlyYield = monthlyYield,
             yieldTotal = yieldTotal,
             winningRateCondition = winningRate,
             buyAndHoldYieldCondition = buyAndHoldYieldCondition,
