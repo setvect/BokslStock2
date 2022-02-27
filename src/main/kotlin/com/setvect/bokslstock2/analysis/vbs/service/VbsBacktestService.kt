@@ -87,12 +87,16 @@ class VbsBacktestService(
             }
 
             val targetPrice = getTargetPrice(beforeCandle, currentCandle, condition)
+            val maPrice = currentCandle.average[condition.maPeriod] ?: 0.0
+
             // 매수 판단
-            if (targetPrice <= currentCandle.highPrice) {
+            val isTarget = targetPrice <= currentCandle.highPrice
+            val isMa = maPrice <= targetPrice || maPrice == 0.0
+            if (isTarget && isMa) {
                 lastBuyInfo = VbsTradeEntity(
                     vbsConditionEntity = condition,
                     tradeType = BUY,
-                    maPrice = currentCandle.average[condition.maPeriod] ?: 0.0,
+                    maPrice = maPrice,
                     yield = 0.0,
                     unitPrice = targetPrice,
                     tradeDate = currentCandle.candleDateTimeStart

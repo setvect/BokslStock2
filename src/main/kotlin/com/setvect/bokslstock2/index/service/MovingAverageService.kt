@@ -54,14 +54,18 @@ class MovingAverageService(
             )
         }
 
+        // 이동평균에는 현재 기간을 포함하지 않음
         avgCountList.forEach { avgCount ->
             for (idx in avgCount - 1 until groupingCandleList.size) {
+                if (idx - avgCount < 0) {
+                    continue
+                }
                 val average = groupingCandleList.stream()
-                    .skip((idx - avgCount + 1).toLong())
+                    .skip((idx - avgCount).toLong())
                     .limit(avgCount.toLong())
                     .mapToDouble(CandleDto::closePrice).average()
 
-                if(average.isEmpty){
+                if (average.isEmpty) {
                     continue
                 }
 

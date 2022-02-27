@@ -517,7 +517,7 @@ class VbsAnalysisService(
         val sheet = workbook.createSheet()
         val summary = getSummary(result)
         ReportMakerHelperService.textToSheet(summary, sheet)
-        log.debug(summary)
+        log.info(summary)
 
         val conditionSummary = getConditionSummary(result)
         ReportMakerHelperService.textToSheet(conditionSummary, sheet)

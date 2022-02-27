@@ -13,7 +13,6 @@ import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_MONTH
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_WEEK
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
-import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import java.time.LocalDateTime
@@ -34,9 +33,6 @@ class MabsBacktest {
 
     @Autowired
     private lateinit var stockRepository: StockRepository
-
-    @Autowired
-    private lateinit var movingAverageService: MovingAverageService
 
     @Autowired
     private lateinit var mabsBacktestService: MabsBacktestService
@@ -73,25 +69,6 @@ class MabsBacktest {
 
         // 3. 모든 조건에 대한 리포트 만들기
         allConditionReportMake()
-    }
-
-    @Test
-    @Transactional
-    fun 이동평균계산() {
-        val movingAverage =
-            movingAverageService.getMovingAverage(StockCode.CODE_069500, PERIOD_DAY, listOf(5, 20, 60, 120))
-//        movingAverageService.getMovingAverage(StockCode.CODE_069500, PeriodType.PERIOD_WEEK, listOf(5, 20, 60, 120))
-//        movingAverageService.getMovingAverage(StockCode.CODE_069500, PeriodType.PERIOD_MONTH, listOf(5, 20, 60, 120))
-
-        movingAverage.forEach {
-            val avgInfo = it.average.entries
-                .map { entry -> "이동평균(${entry.key}): ${it.average[entry.key]}" }
-                .toList()
-                .joinToString(", ")
-            println("${it.candleDateTimeStart}~${it.candleDateTimeEnd} - O: ${it.openPrice}, H: ${it.highPrice}, L: ${it.lowPrice}, C:${it.closePrice}, ${it.periodType}, $avgInfo")
-        }
-
-//        movingAverage.backtest()
     }
 
     @Test
@@ -212,7 +189,7 @@ class MabsBacktest {
     @Transactional
     fun 일회성_백테스팅_리포트_만듦() {
         // 거래 조건
-        val realRange = DateRange(LocalDateTime.of(2010, 1, 1, 0, 0), LocalDateTime.now())
+        val realRange = DateRange(LocalDateTime.of(2021, 1, 1, 0, 0), LocalDateTime.now())
         val mabsAnalysisCondition = MabsAnalysisCondition(
             tradeConditionList = listOf(
 //                makeCondition("122630"), // KODEX 레버리지
