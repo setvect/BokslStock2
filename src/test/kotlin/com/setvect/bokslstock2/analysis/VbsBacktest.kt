@@ -87,7 +87,7 @@ class VbsBacktest {
     @Test
     fun 조건생성() {
 //        val stockList = stockRepository.findAll()
-        val stockList = listOf(stockRepository.findByCode("TQQQ").get())
+        val stockList = stockRepository.findAll()
 
         val optionList = listOf(
             Pair(false, false),

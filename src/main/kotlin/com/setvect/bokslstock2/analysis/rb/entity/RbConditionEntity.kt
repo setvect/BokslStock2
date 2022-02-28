@@ -43,14 +43,14 @@ class RbConditionEntity(
 ) : ConditionEntity, BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = AUTO)
-    @Column(name = "RB_CONDITION_SEQ")
-    val rbConditionSeq = 0L
+    @Column(name = "CONDITION_SEQ")
+    val conditionSeq = 0L
 
     @OneToMany(mappedBy = "rbConditionEntity")
     @OrderBy("tradeDate ASC")
     override var tradeList: List<RbTradeEntity> = ArrayList()
 
     override fun getConditionId(): Long {
-        return rbConditionSeq
+        return conditionSeq
     }
 }

@@ -7,7 +7,7 @@ import org.springframework.data.repository.query.Param
 
 interface VbsConditionRepository : JpaRepository<VbsConditionEntity, Long>{
 
-    @Query("select x from GA_VBS_CONDITION x where x.vbsConditionSeq in :vbsConditionSeqs")
+    @Query("select x from GA_VBS_CONDITION x where x.conditionSeq in :vbsConditionSeqs")
     fun listBySeq(@Param("vbsConditionSeqs") vbsConditionSeqs: Collection<Long>): List<VbsConditionEntity>
 
 }

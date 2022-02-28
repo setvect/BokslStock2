@@ -80,14 +80,14 @@ class VbsConditionEntity(
 ) : ConditionEntity, BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = AUTO)
-    @Column(name = "VBS_CONDITION_SEQ")
-    val vbsConditionSeq = 0L
+    @Column(name = "CONDITION_SEQ")
+    val conditionSeq = 0L
 
     @OneToMany(mappedBy = "vbsConditionEntity")
     @OrderBy("tradeDate ASC")
     override var tradeList: List<VbsTradeEntity> = ArrayList()
 
     override fun getConditionId(): Long {
-        return vbsConditionSeq
+        return conditionSeq
     }
 }

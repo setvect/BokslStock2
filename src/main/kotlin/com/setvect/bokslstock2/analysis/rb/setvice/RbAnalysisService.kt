@@ -171,7 +171,7 @@ class RbAnalysisService(
             createCell.cellStyle = dateStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeConditionList.joinToString("|") { it.rbConditionSeq.toString() })
+            createCell.setCellValue(tradeConditionList.joinToString("|") { it.conditionSeq.toString() })
             createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
@@ -282,7 +282,7 @@ class RbAnalysisService(
             var cellIdx = 0
 
             var createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(condition.rbConditionSeq.toString())
+            createCell.setCellValue(condition.conditionSeq.toString())
             createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
@@ -328,12 +328,12 @@ class RbAnalysisService(
         for (i in 1..tradeConditionList.size) {
             val tradeCondition = tradeConditionList[i - 1]
             report.append(
-                "${i}. 조건번호: ${tradeCondition.rbConditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), " +
+                "${i}. 조건번호: ${tradeCondition.conditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), " +
                         "매매주기: ${tradeCondition.periodType}\n"
             )
-            val sumYield = result.common.buyHoldYieldCondition[tradeCondition.rbConditionSeq]
+            val sumYield = result.common.buyHoldYieldCondition[tradeCondition.conditionSeq]
             if (sumYield == null) {
-                log.warn("조건에 해당하는 결과가 없습니다. rbConditionSeq: ${tradeCondition.rbConditionSeq}")
+                log.warn("조건에 해당하는 결과가 없습니다. rbConditionSeq: ${tradeCondition.conditionSeq}")
                 break
             }
             report.append(String.format("${i}. 동일비중 수익\t %,.2f%%", sumYield.yield * 100)).append("\n")
@@ -353,13 +353,13 @@ class RbAnalysisService(
         for (i in 1..tradeConditionList.size) {
             val tradeCondition = tradeConditionList[i - 1]
             report.append(
-                "${i}. 조건번호: ${tradeCondition.rbConditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), " +
+                "${i}. 조건번호: ${tradeCondition.conditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), " +
                         "매매주기: ${tradeCondition.periodType}\n"
             )
 
-            val winningRate = result.common.winningRateCondition[tradeCondition.rbConditionSeq]
+            val winningRate = result.common.winningRateCondition[tradeCondition.conditionSeq]
             if (winningRate == null) {
-                log.warn("조건에 해당하는 결과가 없습니다. rbConditionSeq: ${tradeCondition.rbConditionSeq}")
+                log.warn("조건에 해당하는 결과가 없습니다. rbConditionSeq: ${tradeCondition.conditionSeq}")
                 break
             }
             report.append(String.format("${i}. 실현 수익\t %,f", winningRate.invest)).append("\n")
@@ -496,7 +496,7 @@ class RbAnalysisService(
 
         for (i in 1..tradeConditionList.size) {
             val tradeCondition = tradeConditionList[i - 1]
-            report.append(String.format("${i}. 조건아이디\t %s", tradeCondition.rbConditionSeq)).append("\n")
+            report.append(String.format("${i}. 조건아이디\t %s", tradeCondition.conditionSeq)).append("\n")
             report.append(String.format("${i}. 분석주기\t %s", tradeCondition.periodType)).append("\n")
             report.append(String.format("${i}. 대상 종목\t %s", tradeCondition.stock.getNameCode())).append("\n")
             report.append(String.format("${i}. 조건 설명\t %s", tradeCondition.comment)).append("\n")

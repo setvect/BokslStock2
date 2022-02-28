@@ -33,7 +33,7 @@ class RbTradeEntity(
      * 매매 조건 일련번호
      */
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "Rb_CONDITION_SEQ")
+    @JoinColumn(name = "CONDITION_SEQ")
     val rbConditionEntity: RbConditionEntity,
 
     /**

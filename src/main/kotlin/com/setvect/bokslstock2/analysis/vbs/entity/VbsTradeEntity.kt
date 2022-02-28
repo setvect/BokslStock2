@@ -33,7 +33,7 @@ class VbsTradeEntity(
      * 매매 조건 일련번호
      */
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "VBS_CONDITION_SEQ")
+    @JoinColumn(name = "CONDITION_SEQ")
     val vbsConditionEntity: VbsConditionEntity,
 
     /**

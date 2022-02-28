@@ -172,7 +172,7 @@ class MabsAnalysisService(
             createCell.cellStyle = dateStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeConditionList.joinToString("|") { it.mabsConditionSeq.toString() })
+            createCell.setCellValue(tradeConditionList.joinToString("|") { it.conditionSeq.toString() })
             createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
@@ -305,7 +305,7 @@ class MabsAnalysisService(
             var cellIdx = 0
 
             var createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(condition.mabsConditionSeq.toString())
+            createCell.setCellValue(condition.conditionSeq.toString())
             createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
@@ -362,10 +362,10 @@ class MabsAnalysisService(
 
         for (i in 1..tradeConditionList.size) {
             val tradeCondition = tradeConditionList[i - 1]
-            report.append("${i}. 조건번호: ${tradeCondition.mabsConditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), 단기-장기(${tradeCondition.periodType}): ${tradeCondition.shortPeriod}-${tradeCondition.longPeriod}\n")
-            val sumYield = result.common.buyHoldYieldCondition[tradeCondition.mabsConditionSeq]
+            report.append("${i}. 조건번호: ${tradeCondition.conditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), 단기-장기(${tradeCondition.periodType}): ${tradeCondition.shortPeriod}-${tradeCondition.longPeriod}\n")
+            val sumYield = result.common.buyHoldYieldCondition[tradeCondition.conditionSeq]
             if (sumYield == null) {
-                log.warn("조건에 해당하는 결과가 없습니다. mabsConditionSeq: ${tradeCondition.mabsConditionSeq}")
+                log.warn("조건에 해당하는 결과가 없습니다. mabsConditionSeq: ${tradeCondition.conditionSeq}")
                 break
             }
             report.append(String.format("${i}. 동일비중 수익\t %,.2f%%", sumYield.yield * 100)).append("\n")
@@ -385,11 +385,11 @@ class MabsAnalysisService(
 
         for (i in 1..tradeConditionList.size) {
             val tradeCondition = tradeConditionList[i - 1]
-            report.append("${i}. 조건번호: ${tradeCondition.mabsConditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), 단기-장기(${tradeCondition.periodType}): ${tradeCondition.shortPeriod}-${tradeCondition.longPeriod}\n")
+            report.append("${i}. 조건번호: ${tradeCondition.conditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), 단기-장기(${tradeCondition.periodType}): ${tradeCondition.shortPeriod}-${tradeCondition.longPeriod}\n")
 
-            val winningRate = result.common.winningRateCondition[tradeCondition.mabsConditionSeq]
+            val winningRate = result.common.winningRateCondition[tradeCondition.conditionSeq]
             if (winningRate == null) {
-                log.warn("조건에 해당하는 결과가 없습니다. mabsConditionSeq: ${tradeCondition.mabsConditionSeq}")
+                log.warn("조건에 해당하는 결과가 없습니다. mabsConditionSeq: ${tradeCondition.conditionSeq}")
                 break
             }
             report.append(String.format("${i}. 실현 수익\t %,f", winningRate.invest)).append("\n")
@@ -510,7 +510,7 @@ class MabsAnalysisService(
     private fun createReportSummary(result: MabsAnalysisReportResult, workbook: XSSFWorkbook): XSSFSheet {
         val sheet = workbook.createSheet()
         val summary = getSummary(result)
-        log.info(summary)
+        log.debug(summary)
         ReportMakerHelperService.textToSheet(summary, sheet)
         val conditionSummary = getConditionSummary(result)
         ReportMakerHelperService.textToSheet(conditionSummary, sheet)
@@ -542,7 +542,7 @@ class MabsAnalysisService(
 
         for (i in 1..tradeConditionList.size) {
             val tradeCondition = tradeConditionList[i - 1]
-            report.append(String.format("${i}. 조건아이디\t %s", tradeCondition.mabsConditionSeq)).append("\n")
+            report.append(String.format("${i}. 조건아이디\t %s", tradeCondition.conditionSeq)).append("\n")
             report.append(String.format("${i}. 분석주기\t %s", tradeCondition.periodType)).append("\n")
             report.append(String.format("${i}. 대상 종목\t %s", tradeCondition.stock.getNameCode())).append("\n")
             report.append(String.format("${i}. 상승 매수률\t %,.2f%%", tradeCondition.upBuyRate * 100)).append("\n")
