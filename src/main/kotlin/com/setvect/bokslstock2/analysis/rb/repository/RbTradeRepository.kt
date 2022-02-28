@@ -10,10 +10,10 @@ import org.springframework.data.repository.query.Param
 interface RbTradeRepository : JpaRepository<RbTradeEntity, Long> {
 
     @Modifying
-    @Query("delete from VB_RB_TRADE x where x.rbConditionEntity = :rbConditionEntity")
+    @Query("delete from FB_RB_TRADE x where x.rbConditionEntity = :rbConditionEntity")
     fun deleteByCondition(@Param("rbConditionEntity") rbConditionEntity: RbConditionEntity): Int
 
-    @Query("select w from VB_RB_TRADE  w where w.rbConditionEntity = :rbConditionEntity")
+    @Query("select w from FB_RB_TRADE  w where w.rbConditionEntity = :rbConditionEntity")
     fun findByCondition(@Param("rbConditionEntity") condition: RbConditionEntity): List<RbTradeEntity>
 
 }

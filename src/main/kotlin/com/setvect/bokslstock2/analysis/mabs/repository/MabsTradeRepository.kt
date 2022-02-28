@@ -10,11 +10,11 @@ import org.springframework.data.repository.query.Param
 interface MabsTradeRepository : JpaRepository<MabsTradeEntity, Long> {
 
     @Modifying
-    @Query("delete from XB_MABS_TRADE x where x.mabsConditionEntity = :mabsConditionEntity")
+    @Query("delete from HB_MABS_TRADE x where x.mabsConditionEntity = :mabsConditionEntity")
     fun deleteByCondition(@Param("mabsConditionEntity") mabsConditionEntity: MabsConditionEntity): Int
 
 
-    @Query("select w from XB_MABS_TRADE w where w.mabsConditionEntity = :mabsConditionEntity")
+    @Query("select w from HB_MABS_TRADE w where w.mabsConditionEntity = :mabsConditionEntity")
     fun findByCondition(@Param("mabsConditionEntity") mabsConditionEntity: MabsConditionEntity): List<MabsTradeEntity>
 
 }

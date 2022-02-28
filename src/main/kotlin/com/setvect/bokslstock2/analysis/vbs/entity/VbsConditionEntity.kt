@@ -20,7 +20,7 @@ import javax.persistence.OrderBy
 /**
  * 변동성돌파 전략 조건
  */
-@Entity(name = "WA_VBS_CONDITION")
+@Entity(name = "GA_VBS_CONDITION")
 class VbsConditionEntity(
     /**
      * 주식 종목

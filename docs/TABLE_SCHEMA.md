@@ -27,7 +27,7 @@
 
 ## 1.2. 백테스트
 
-### 1.2.3. VA_RB_CONDITION: 리벨러싱 전략 조건
+### 1.2.3. FA_RB_CONDITION: 리벨러싱 전략 조건
 
 | Column Name      | Attribute Name   | Key | Type     | Len | Not Null | Description                           |
 | ---------------- | ---------------- | --- | -------- | --- | -------- | ------------------------------------- |
@@ -38,12 +38,12 @@
 | REG_DATE         | 등록일           |     | DATETIME |     | Y        |                                       |
 | EDIT_DATE        | 마지막 수정일    |     | DATETIME |     | Y        |                                       |
 
-### 1.2.4. VB_RB_TRADE: 리벨러싱 전략 조건
+### 1.2.4. FB_RB_TRADE: 리벨러싱 전략 조건
 
 | Column Name      | Attribute Name     | Key | Type     | Len | Not Null | Description     |
 | ---------------- | ------------------ | --- | -------- | --- | -------- | --------------- |
 | RB_TRADE_SEQ     | 일련번호           | PK  | BIGINT   |     | Y        |                 |
-| RB_CONDITION_SEQ | 매매 조건 일련번호 | FK  | BIGINT   |     | Y        | VA_RB_CONDITION |
+| RB_CONDITION_SEQ | 매매 조건 일련번호 | FK  | BIGINT   |     | Y        | FA_RB_CONDITION |
 | TRADE_TYPE       | 매수/매도          |     | VARCHAR  | 20  | Y        | BUY, SELL       |
 | YIELD            | 매도시 수익률      |     | DOUBLE   |     | Y        |                 |
 | UNIT_PRICE       | 거래 단가          |     | DOUBLE   |     | Y        |                 |
@@ -51,7 +51,7 @@
 
 - Index
     - TRADE_DATE
-### 1.2.3. WA_VBS_CONDITION: 변동성돌파 전략 조건
+### 1.2.3. GA_VBS_CONDITION: 변동성돌파 전략 조건
 
 | Column Name        | Attribute Name       | Key | Type     | Len | Not Null | Description                           |
 | ------------------ | -------------------- | --- | -------- | --- | -------- | ------------------------------------- |
@@ -67,12 +67,12 @@
 | REG_DATE           | 등록일               |     | DATETIME |     | Y        |                                       |
 | EDIT_DATE          | 마지막 수정일        |     | DATETIME |     | Y        |                                       |
 
-### 1.2.4. WB_VBS_TRADE: 변동성돌파 전략 조건
+### 1.2.4. GB_VBS_TRADE: 변동성돌파 전략 조건
 
 | Column Name       | Attribute Name        | Key | Type     | Len | Not Null | Description      |
 | ----------------- | --------------------- | --- | -------- | --- | -------- | ---------------- |
 | TRADE_SEQ         | 일련번호              | PK  | BIGINT   |     | Y        |                  |
-| VBS_CONDITION_SEQ | 매매 조건 일련번호    | FK  | BIGINT   |     | Y        | WA_VBS_CONDITION |
+| VBS_CONDITION_SEQ | 매매 조건 일련번호    | FK  | BIGINT   |     | Y        | GA_VBS_CONDITION |
 | TRADE_TYPE        | 매수/매도             |     | VARCHAR  | 20  | Y        | BUY, SELL        |
 | MA_PRICE          | 매매 시 이동평균 가격 |     | DOUBLE   |     | Y        |                  |
 | YIELD             | 매도시 수익률         |     | DOUBLE   |     | Y        |                  |
@@ -82,7 +82,7 @@
 - Index
     - TRADE_DATE
 
-### 1.2.5. XA_MABS_CONDITION: 이평선 돌파 백테스트 조건
+### 1.2.5. HA_MABS_CONDITION: 이평선 돌파 백테스트 조건
 
 | Column Name        | Attribute Name     | Key | Type     | Len | Not Null | Description                           |
 | ------------------ | ------------------ | --- | -------- | --- | -------- | ------------------------------------- |
@@ -97,12 +97,12 @@
 | REG_DATE           | 등록일             |     | DATETIME |     | Y        |                                       |
 | EDIT_DATE          | 마지막 수정일      |     | DATETIME |     | Y        |                                       |
 
-### 1.2.6. XB_MABS_TRADE: 이평선 돌파 백테스트 매매 건별 정보
+### 1.2.6. HB_MABS_TRADE: 이평선 돌파 백테스트 매매 건별 정보
 
 | Column Name        | Attribute Name     | Key | Type     | Len | Not Null | Description       |
 | ------------------ | ------------------ | --- | -------- | --- | -------- | ----------------- |
 | TRADE_SEQ          | 일련번호           | PK  | BIGINT   |     | Y        |                   |
-| MABS_CONDITION_SEQ | 매매 조건 일련번호 | FK  | BIGINT   |     | Y        | XA_MABS_CONDITION |
+| MABS_CONDITION_SEQ | 매매 조건 일련번호 | FK  | BIGINT   |     | Y        | HA_MABS_CONDITION |
 | TRADE_TYPE         | 매수/매도          |     | VARCHAR  | 20  | Y        | BUY, SELL         |
 | HIGH_YIELD         | 최고 수익률        |     | DOUBLE   |     | Y        |                   |
 | LOW_YIELD          | 최저 수익률        |     | DOUBLE   |     | Y        |                   |

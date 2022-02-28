@@ -7,7 +7,7 @@ import org.springframework.data.repository.query.Param
 
 interface RbConditionRepository : JpaRepository<RbConditionEntity, Long>{
 
-    @Query("select x from VA_RB_CONDITION x where x.rbConditionSeq in :rbConditionSeqs")
+    @Query("select x from FA_RB_CONDITION x where x.rbConditionSeq in :rbConditionSeqs")
     fun listBySeq(@Param("rbConditionSeqs") rbConditionSeqs: Collection<Long>): List<RbConditionEntity>
 
 }

@@ -19,7 +19,7 @@ import javax.persistence.OrderBy
 /**
  * 이평선 돌파 백테스트 조건
  */
-@Entity(name = "XA_MABS_CONDITION")
+@Entity(name = "HA_MABS_CONDITION")
 class MabsConditionEntity(
     /**
      * 주식 종목

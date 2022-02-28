@@ -7,7 +7,7 @@ import org.springframework.data.repository.query.Param
 
 interface MabsConditionRepository : JpaRepository<MabsConditionEntity, Long>{
 
-    @Query("select x from XA_MABS_CONDITION x where x.mabsConditionSeq in :mabsConditionSeqs")
+    @Query("select x from HA_MABS_CONDITION x where x.mabsConditionSeq in :mabsConditionSeqs")
     fun listBySeq(@Param("mabsConditionSeqs") mabsConditionSeqs: Collection<Long>): List<MabsConditionEntity>
 
 }

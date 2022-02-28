@@ -20,11 +20,11 @@ import javax.persistence.Table
 /**
  * 리벨러싱 백테스트 매매 건별 정보
  */
-@Entity(name = "VB_RB_TRADE")
+@Entity(name = "FB_RB_TRADE")
 @Table(
     indexes = [
         Index(
-            name = "VB_RB_TRADE_TRADE_DATE_INDEX",
+            name = "FB_RB_TRADE_TRADE_DATE_INDEX",
             columnList = "TRADE_DATE"
         )]
 )

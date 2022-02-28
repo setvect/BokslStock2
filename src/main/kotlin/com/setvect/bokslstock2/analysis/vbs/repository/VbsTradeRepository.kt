@@ -10,9 +10,9 @@ import org.springframework.data.repository.query.Param
 interface VbsTradeRepository : JpaRepository<VbsTradeEntity, Long> {
 
     @Modifying
-    @Query("delete from WB_VBS_TRADE x where x.vbsConditionEntity = :vbsConditionEntity")
+    @Query("delete from GB_VBS_TRADE x where x.vbsConditionEntity = :vbsConditionEntity")
     fun deleteByCondition(@Param("vbsConditionEntity") vbsConditionEntity: VbsConditionEntity): Int
 
-    @Query("select w from WB_VBS_TRADE w where w.vbsConditionEntity = :vbsConditionEntity")
+    @Query("select w from GB_VBS_TRADE w where w.vbsConditionEntity = :vbsConditionEntity")
     fun findByCondition(@Param("vbsConditionEntity") vbsConditionEntity: VbsConditionEntity): List<VbsTradeEntity>
 }

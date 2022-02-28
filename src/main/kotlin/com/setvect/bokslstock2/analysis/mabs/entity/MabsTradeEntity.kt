@@ -20,11 +20,11 @@ import javax.persistence.Table
 /**
  * 이평선 돌파 백테스트 매매 건별 정보
  */
-@Entity(name = "XB_MABS_TRADE")
+@Entity(name = "HB_MABS_TRADE")
 @Table(
     indexes = [
         Index(
-            name = "XB_MABS_TRADE_TRADE_DATE_INDEX",
+            name = "HB_MABS_TRADE_TRADE_DATE_INDEX",
             columnList = "TRADE_DATE"
         )]
 )

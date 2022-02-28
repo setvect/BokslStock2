@@ -20,7 +20,7 @@ import javax.persistence.Table
 /**
  * 이평선 돌파 백테스트 매매 건별 정보
  */
-@Entity(name = "WB_VBS_TRADE")
+@Entity(name = "GB_VBS_TRADE")
 @Table(
     indexes = [
         Index(

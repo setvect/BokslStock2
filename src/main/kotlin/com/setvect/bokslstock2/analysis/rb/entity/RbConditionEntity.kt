@@ -19,7 +19,7 @@ import javax.persistence.OrderBy
 /**
  * 리벨런싱 전략 조건
  */
-@Entity(name = "VA_RB_CONDITION")
+@Entity(name = "FA_RB_CONDITION")
 class RbConditionEntity(
     /**
      * 주식 종목
