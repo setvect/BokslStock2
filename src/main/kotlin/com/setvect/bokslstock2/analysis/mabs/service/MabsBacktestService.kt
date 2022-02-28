@@ -1,9 +1,9 @@
 package com.setvect.bokslstock2.analysis.mabs.service
 
-import com.setvect.bokslstock2.analysis.mabs.entity.MabsConditionEntity
-import com.setvect.bokslstock2.analysis.mabs.entity.MabsTradeEntity
 import com.setvect.bokslstock2.analysis.common.model.TradeType.BUY
 import com.setvect.bokslstock2.analysis.common.model.TradeType.SELL
+import com.setvect.bokslstock2.analysis.mabs.entity.MabsConditionEntity
+import com.setvect.bokslstock2.analysis.mabs.entity.MabsTradeEntity
 import com.setvect.bokslstock2.analysis.mabs.repository.MabsConditionRepository
 import com.setvect.bokslstock2.analysis.mabs.repository.MabsTradeRepository
 import com.setvect.bokslstock2.index.dto.CandleDto
@@ -42,10 +42,10 @@ class MabsBacktestService(
         var i = 0
         conditionList
             .forEach {
-            mabsTradeRepository.deleteByCondition(it)
-            backtest(it)
-            log.info("백테스트 진행 ${++i}/${conditionList.size}")
-        }
+                mabsTradeRepository.deleteByCondition(it)
+                backtest(it)
+                log.info("백테스트 진행 ${++i}/${conditionList.size}")
+            }
     }
 
     @Transactional
@@ -63,25 +63,23 @@ class MabsBacktestService(
             val currentCandle = movingAverageCandle[idx]
             // -1 영업일
             val yesterdayCandle = movingAverageCandle[idx - 1]
-            // -2 영업일
-            val beforeYesterdayCandle = movingAverageCandle[idx - 2]
 
             if (lastStatus == SELL) {
                 // 매수 판단
-                if (buyCheck(beforeYesterdayCandle, condition)) {
-                    val shortFormat = String.format("%,d", yesterdayCandle.average[condition.shortPeriod])
-                    val longFormat = String.format("%,d", yesterdayCandle.average[condition.longPeriod])
-                    log.info("새롭게 이동평균을 돌파할 때만 매수합니다. ${yesterdayCandle.candleDateTimeStart}~${yesterdayCandle.candleDateTimeEnd} - 단기이평: $shortFormat, 장기이평: $longFormat")
+                if (buyCheck(yesterdayCandle, condition)) {
+                    val shortFormat = String.format("%,d", currentCandle.average[condition.shortPeriod])
+                    val longFormat = String.format("%,d", currentCandle.average[condition.longPeriod])
+                    log.info("새롭게 이동평균을 돌파할 때만 매수합니다. ${currentCandle.candleDateTimeStart}~${currentCandle.candleDateTimeEnd} - 단기이평: $shortFormat, 장기이평: $longFormat")
                     continue
                 }
-                if (buyCheck(yesterdayCandle, condition)) {
+                if (buyCheck(currentCandle, condition)) {
                     lastBuyInfo = MabsTradeEntity(
                         mabsConditionEntity = condition,
                         tradeType = BUY,
                         highYield = 0.0,
                         lowYield = 0.0,
-                        maShort = yesterdayCandle.average[condition.shortPeriod] ?: 0.0,
-                        maLong = yesterdayCandle.average[condition.longPeriod] ?: 0.0,
+                        maShort = currentCandle.average[condition.shortPeriod] ?: 0.0,
+                        maLong = currentCandle.average[condition.longPeriod] ?: 0.0,
                         yield = 0.0,
                         unitPrice = currentCandle.openPrice,
                         tradeDate = currentCandle.candleDateTimeStart
@@ -94,14 +92,14 @@ class MabsBacktestService(
                     lowYield = 0.0.coerceAtMost(currentCloseYield)
                 }
             } else {
-                if (sellCheck(yesterdayCandle, condition)) {
+                if (sellCheck(currentCandle, condition)) {
                     val sellInfo = MabsTradeEntity(
                         mabsConditionEntity = condition,
                         tradeType = SELL,
                         highYield = highYield,
                         lowYield = lowYield,
-                        maShort = yesterdayCandle.average[condition.shortPeriod] ?: 0.0,
-                        maLong = yesterdayCandle.average[condition.longPeriod] ?: 0.0,
+                        maShort = currentCandle.average[condition.shortPeriod] ?: 0.0,
+                        maLong = currentCandle.average[condition.longPeriod] ?: 0.0,
                         yield = ApplicationUtil.getYield(lastBuyInfo!!.unitPrice, currentCandle.openPrice),
                         unitPrice = currentCandle.openPrice,
                         tradeDate = currentCandle.candleDateTimeStart

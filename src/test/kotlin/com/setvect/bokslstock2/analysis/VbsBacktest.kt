@@ -203,8 +203,8 @@ class VbsBacktest {
         val vbsAnalysisCondition = VbsAnalysisCondition(
             tradeConditionList = listOf(
 //                makeCondition("122630"), // KODEX 레버리지
-                makeCondition(StockCode.CODE_233740), // KODEX 코스닥150 레버리지
-                makeCondition(StockCode.CODE_091170), // KODEX 은행
+                makeCondition(StockCode.CODE_KODEX_KOSDAQ_2X_233740), // KODEX 코스닥150 레버리지
+                makeCondition(StockCode.CODE_KODEX_BANK_091170), // KODEX 은행
 //                makeCondition(StockCode.OS_CODE_TQQQ), // KODEX 은행
             ),
             basic = BasicAnalysisCondition(

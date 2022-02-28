@@ -19,7 +19,7 @@ class MovingAverageTest {
     @Transactional
     fun 이동평균계산() {
         val movingAverage =
-            movingAverageService.getMovingAverage(StockCode.CODE_233740, PERIOD_WEEK, listOf(1))
+            movingAverageService.getMovingAverage(StockCode.CODE_KODEX_KOSDAQ_2X_233740, PERIOD_WEEK, listOf(1))
 
         movingAverage.forEach {
             val avgInfo = it.average.entries

@@ -510,7 +510,7 @@ class MabsAnalysisService(
     private fun createReportSummary(result: MabsAnalysisReportResult, workbook: XSSFWorkbook): XSSFSheet {
         val sheet = workbook.createSheet()
         val summary = getSummary(result)
-        log.debug(summary)
+        log.info(summary)
         ReportMakerHelperService.textToSheet(summary, sheet)
         val conditionSummary = getConditionSummary(result)
         ReportMakerHelperService.textToSheet(conditionSummary, sheet)
