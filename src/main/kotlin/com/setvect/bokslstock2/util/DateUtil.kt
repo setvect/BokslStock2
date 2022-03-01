@@ -56,13 +56,11 @@ object DateUtil {
      * @param localDateTime 날짜시간
      * @return yyyy-MM-dd 형태로 반환
      */
-    @JvmOverloads
     fun format(localDateTime: LocalDateTime, pattern: String? = yyyy_MM_dd): String {
         val formatter = DateTimeFormatter.ofPattern(pattern)
         return localDateTime.format(formatter)
     }
 
-    @JvmStatic
     fun formatDateTime(localDateTime: LocalDateTime): String {
         return format(localDateTime, yyyy_MM_dd_HH_mm_ss)
     }
@@ -72,8 +70,25 @@ object DateUtil {
         return localTime.format(formatter)
     }
 
-    @JvmStatic
     fun convert(timeInMillis: Long): LocalDateTime {
         return LocalDateTime.ofInstant(Instant.ofEpochMilli(timeInMillis), TimeZone.getDefault().toZoneId())
     }
+
+    /**
+     * 어떻게 설명해야될지 모르겠다. ㅡㅡ;
+     * 분기나 반기로 시작하는 날짜를 맞추기 위함
+     * 예시)
+     * - [date] = 2021-02-10, [deviceMonth] = 3 => 2021-01-10
+     * - [date] = 2021-11-21, [deviceMonth] = 3 => 2021-10-21
+     * - [date] = 2021-08-15, [deviceMonth] = 6 => 2021-07-15
+     *
+     * @return 입력 기간을 [deviceMonth]로 나눠 제일 작은 날짜로 반환
+     */
+    fun fitMonth(date: LocalDateTime, deviceMonth: Int): LocalDateTime {
+        if (deviceMonth < 1 || deviceMonth > 12) {
+            throw RuntimeException("입력값은 1~12 사이 입니다.")
+        }
+        return date.withMonth((date.monthValue - 1) / deviceMonth * deviceMonth + 1)
+    }
+
 }

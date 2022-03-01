@@ -57,7 +57,7 @@ class MabsBacktest {
     @Rollback(false)
     fun 한번에_모두_백테스트() {
         // 0. 기존 백테스트 기록 모두 삭제
-//        deleteBacktestData()
+        deleteBacktestData()
 
         // 1. 조건 만들기
         조건생성_일봉()

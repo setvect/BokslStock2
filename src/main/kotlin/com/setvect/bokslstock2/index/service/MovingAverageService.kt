@@ -3,9 +3,13 @@ package com.setvect.bokslstock2.index.service
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
+import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_HALF
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_MONTH
+import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_QUARTER
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_WEEK
+import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_YEAR
 import com.setvect.bokslstock2.index.repository.StockRepository
+import com.setvect.bokslstock2.util.DateUtil
 import java.util.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -35,8 +39,8 @@ class MovingAverageService(
                 PERIOD_WEEK -> {
                     it.candleDateTime.minusDays(it.candleDateTime.dayOfWeek.value.toLong() - 1)
                 }
-                PERIOD_MONTH -> {
-                    it.candleDateTime.withDayOfMonth(1)
+                PERIOD_MONTH, PERIOD_QUARTER, PERIOD_HALF, PERIOD_YEAR -> {
+                    DateUtil.fitMonth(it.candleDateTime.withDayOfMonth(1), group.getDeviceMonth())
                 }
             }
             groupDateTime.withHour(0).withMinute(0).withSecond(0).withNano(0)
@@ -75,4 +79,5 @@ class MovingAverageService(
 
         return groupingCandleList
     }
+
 }
