@@ -34,7 +34,7 @@ data class DmAnalysisCondition(
      * 기간 가중치. 가중치의 합이 100이 되야됨
      * <월, 가중치>
      */
-    val timeWeight: Map<Int, Int>
+    val timeWeight: Map<Int, Double>
 ) {
 
 }
