@@ -1,8 +1,19 @@
 package com.setvect.bokslstock2.analysis.dm.serivce
 
+import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
+import com.setvect.bokslstock2.analysis.common.model.CommonTradeReportItem
 import com.setvect.bokslstock2.analysis.common.model.TradeType
+import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
+import com.setvect.bokslstock2.analysis.common.service.TradeService
 import com.setvect.bokslstock2.analysis.dm.model.DmAnalysisCondition
+import com.setvect.bokslstock2.analysis.dm.model.DmAnalysisReportResult
+import com.setvect.bokslstock2.analysis.dm.model.DmBacktestCondition
+import com.setvect.bokslstock2.analysis.dm.model.DmConditionEntity
 import com.setvect.bokslstock2.analysis.dm.model.DmTrade
+import com.setvect.bokslstock2.analysis.dm.model.DmTradeReportItem
+import com.setvect.bokslstock2.common.entity.ConditionEntity
+import com.setvect.bokslstock2.common.entity.TradeEntity
+import com.setvect.bokslstock2.common.entity.TradeReportItem
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.repository.StockRepository
@@ -21,11 +32,32 @@ import org.springframework.stereotype.Service
 @Service
 class DmAnalysisService(
     private val stockRepository: StockRepository,
-    private val movingAverageService: MovingAverageService
+    private val movingAverageService: MovingAverageService,
+    reportMakerHelperService: ReportMakerHelperService,
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
+    val tradeService = TradeService(
+        reportMakerHelperService,
+        object :
+            TradeService.MakerTreadReportItem<DmTrade, DmTradeReportItem> {
+            override fun make(tradeEntity: DmTrade, common: CommonTradeReportItem): DmTradeReportItem {
+                return DmTradeReportItem(tradeEntity, common)
+            }
+        },
+        object :
+            TradeService.MakerAnalysisReportResult<DmAnalysisCondition, DmTradeReportItem, DmAnalysisReportResult> {
+            override fun make(
+                analysisCondition: DmAnalysisCondition,
+                tradeEntity: List<DmTradeReportItem>,
+                common: CommonAnalysisReportResult
+            ): DmAnalysisReportResult {
+                return DmAnalysisReportResult(analysisCondition, tradeEntity, common)
+            }
+        }
+    )
 
-    fun runTest(condition: DmAnalysisCondition) {
+
+    fun runTest(condition: DmBacktestCondition) {
         checkVaidate(condition)
         val tradeList = processDualMomentum(condition)
         var sumYield = 1.0
@@ -34,9 +66,26 @@ class DmAnalysisService(
             sumYield *= (it.yield + 1)
         }
         log.info("수익률: ${String.format("%.2f%%", (sumYield - 1) * 100)}")
+
+        val dmConditionEntity = DmConditionEntity(
+            // TODO 수정해야됨.
+            stock = tradeList[0].stock,
+            tradeList = tradeList
+        )
+
+        val analysisCondition = DmAnalysisCondition(
+            tradeConditionList = listOf(dmConditionEntity),
+            basic = condition.basic
+        )
+        val trades = tradeService.trade(analysisCondition)
+        println(trades.size)
+
+        val result = tradeService.analysis(trades, analysisCondition)
+        val report = getSummary(result)
+        println(report)
     }
 
-    private fun processDualMomentum(condition: DmAnalysisCondition): MutableList<DmTrade> {
+    private fun processDualMomentum(condition: DmBacktestCondition): List<DmTrade> {
         val stockCodes = getTradeStockCode(condition)
 
         // <종목코드, 종목정보>
@@ -51,7 +100,7 @@ class DmAnalysisService(
         var beforeBuyTrade: DmTrade? = null
 
         val tradeList = mutableListOf<DmTrade>()
-
+        var tradeSeq = 0L
         while (current.isBefore(condition.basic.range.to)) {
             val stockByRate = calculateRate(stockPriceIndex, current, condition, codeByStock)
 
@@ -64,28 +113,15 @@ class DmAnalysisService(
 
                 if (existBeforeBuy && changeBuyStock) {
                     val stockPrice = stockPriceIndex[beforeBuyTrade!!.stock.code]!![current]!!
-                    val sellTrade = DmTrade(
-                        stock = beforeBuyTrade.stock,
-                        tradeType = TradeType.SELL,
-                        yield = ApplicationUtil.getYield(beforeBuyTrade.unitPrice, stockPrice.openPrice),
-                        unitPrice = stockPrice.openPrice,
-                        tradeDate = current
-                    )
+                    val sellTrade = makeSellTrade(stockPrice, current, ++tradeSeq, beforeBuyTrade)
                     tradeList.add(sellTrade)
-                    log.info("매도: ${sellTrade.tradeDate}, ${sellTrade.stock.name}(${sellTrade.stock.code}), 수익: ${sellTrade.yield}")
                     beforeBuyTrade = null
                 }
                 if (existHoldCode && (beforeBuyTrade == null || beforeBuyTrade.stock.code != condition.holdCode)) {
                     val stockPrice = stockPriceIndex[condition.holdCode]!![current]!!
-                    val buyTrade = DmTrade(
-                        stock = codeByStock[condition.holdCode]!!,
-                        tradeType = TradeType.BUY,
-                        yield = 0.0,
-                        unitPrice = stockPrice.openPrice,
-                        tradeDate = current
-                    )
+                    val stock = codeByStock[condition.holdCode]!!
+                    val buyTrade = makeBuyTrade(stockPrice, current, ++tradeSeq, stock)
                     tradeList.add(buyTrade)
-                    log.info("매수: ${buyTrade.tradeDate}, ${buyTrade.stock.name}(${buyTrade.stock.code})")
                     beforeBuyTrade = buyTrade
                 } else if (existHoldCode) {
                     log.info("매수 유지: $current, ${getStockName(codeByStock, condition.holdCode!!)}(${condition.holdCode})")
@@ -97,29 +133,14 @@ class DmAnalysisService(
 
                 if (existBeforeBuy && changeBuyStock) {
                     val stockPrice = stockPriceIndex[beforeBuyTrade!!.stock.code]!![current]!!
-                    val sellTrade = DmTrade(
-                        stock = beforeBuyTrade.stock,
-                        tradeType = TradeType.SELL,
-                        yield = ApplicationUtil.getYield(beforeBuyTrade.unitPrice, stockPrice.openPrice),
-                        unitPrice = stockPrice.openPrice,
-                        tradeDate = current
-                    )
+                    val sellTrade = makeSellTrade(stockPrice, current, ++tradeSeq, beforeBuyTrade)
                     tradeList.add(sellTrade)
-                    log.info(
-                        "매도: ${sellTrade.tradeDate}, ${sellTrade.stock.name}(${beforeBuyTrade.stock.code}), 매도수익: ${sellTrade.yield}"
-                    )
                 }
                 if (!existBeforeBuy || changeBuyStock) {
                     val stockPrice = stockPriceIndex[stockCode]!![current]!!
-                    val buyTrade = DmTrade(
-                        stock = codeByStock[stockCode]!!,
-                        tradeType = TradeType.BUY,
-                        yield = 0.0,
-                        unitPrice = stockPrice.openPrice,
-                        tradeDate = current
-                    )
+                    val stock = codeByStock[stockCode]!!
+                    val buyTrade = makeBuyTrade(stockPrice, current, ++tradeSeq, stock)
                     tradeList.add(buyTrade)
-                    log.info("매수: ${buyTrade.tradeDate}, ${buyTrade.stock.name}(${buyTrade.stock.code})")
                     beforeBuyTrade = buyTrade
                 } else {
                     log.info("매수 유지: $current, ${beforeBuyTrade!!.stock.name}(${beforeBuyTrade.stock.code})")
@@ -135,7 +156,79 @@ class DmAnalysisService(
 //            }
             current = current.plusMonths(condition.periodType.getDeviceMonth().toLong())
         }
+
+        tradeList.map { trade ->
+            object : TradeReportItem {
+                override val tradeEntity: TradeEntity
+                    get() = trade
+                override val common: CommonTradeReportItem
+                    get() = TODO("Not yet implemented")
+
+                override fun getBuyAmount(): Double {
+                    return 100.0
+                }
+            }
+        }
+
+
         return tradeList
+    }
+
+    private fun makeBuyTrade(
+        stockPrice: CandleDto,
+        current: LocalDateTime,
+        tradeSeq: Long,
+        stock: StockEntity
+    ): DmTrade {
+        val buyTrade = DmTrade(
+            stock = stock,
+            tradeType = TradeType.BUY,
+            yield = 0.0,
+            unitPrice = stockPrice.openPrice,
+            tradeDate = current,
+            tradeId = tradeSeq,
+            condition = object : ConditionEntity {
+                override fun getConditionId(): Long {
+                    return 0
+                }
+
+                override val stock: StockEntity
+                    get() = stock
+                override val tradeList: List<TradeEntity>
+                    get() = emptyList()
+            }
+        )
+        log.info("매수: ${buyTrade.tradeDate}, ${buyTrade.stock.name}(${buyTrade.stock.code})")
+        return buyTrade
+    }
+
+
+    private fun makeSellTrade(
+        stockPrice: CandleDto,
+        current: LocalDateTime,
+        tradeSeq: Long,
+        beforeBuyTrade: DmTrade
+    ): DmTrade {
+        val sellTrade = DmTrade(
+            stock = beforeBuyTrade.stock,
+            tradeType = TradeType.SELL,
+            yield = ApplicationUtil.getYield(beforeBuyTrade.unitPrice, stockPrice.openPrice),
+            unitPrice = stockPrice.openPrice,
+            tradeDate = current,
+            tradeId = tradeSeq,
+            condition = object : ConditionEntity {
+                override fun getConditionId(): Long {
+                    return 0
+                }
+
+                override val stock: StockEntity
+                    get() = beforeBuyTrade.stock
+                override val tradeList: List<TradeEntity>
+                    get() = emptyList()
+            }
+        )
+        log.info("매도: ${sellTrade.tradeDate}, ${sellTrade.stock.name}(${sellTrade.stock.code}), 수익: ${sellTrade.yield}")
+        return sellTrade
     }
 
     /**
@@ -146,7 +239,7 @@ class DmAnalysisService(
     private fun calculateRate(
         stockPriceIndex: Map<String, Map<LocalDateTime, CandleDto>>,
         current: LocalDateTime,
-        condition: DmAnalysisCondition,
+        condition: DmBacktestCondition,
         codeByStock: Map<String, StockEntity>
     ): List<Pair<String, Double>> {
         val stockByRate = stockPriceIndex.entries.map { stockEntry ->
@@ -191,7 +284,7 @@ class DmAnalysisService(
      */
     private fun getStockPriceIndex(
         stockCodes: MutableList<String>,
-        dmCondition: DmAnalysisCondition
+        dmCondition: DmBacktestCondition
     ): Map<String, Map<LocalDateTime, CandleDto>> {
         val stockPriceIndex = stockCodes.associateWith { code ->
             movingAverageService.getMovingAverage(
@@ -204,7 +297,7 @@ class DmAnalysisService(
         return stockPriceIndex
     }
 
-    private fun getTradeStockCode(dmCondition: DmAnalysisCondition): MutableList<String> {
+    private fun getTradeStockCode(dmCondition: DmBacktestCondition): MutableList<String> {
         val stockCodes = dmCondition.stockCodes.toMutableList()
         if (dmCondition.holdCode != null) {
             stockCodes.add(dmCondition.holdCode)
@@ -212,10 +305,73 @@ class DmAnalysisService(
         return stockCodes
     }
 
-    private fun checkVaidate(dmCondition: DmAnalysisCondition) {
+    private fun checkVaidate(dmCondition: DmBacktestCondition) {
         val sumWeight = dmCondition.timeWeight.entries.sumOf { it.value }
         if (sumWeight != 1.0) {
             throw RuntimeException("가중치의 합계가 100이여 합니다. 현재 가중치 합계: $sumWeight")
         }
     }
+
+
+    /**
+     * 분석 요약결과
+     */
+    private fun getSummary(result: DmAnalysisReportResult): String {
+        val report = StringBuilder()
+        val tradeConditionList = result.dmAnalysisCondition.tradeConditionList
+
+        report.append("----------- Buy&Hold 결과 -----------\n")
+        report.append(String.format("합산 동일비중 수익\t %,.2f%%", result.common.buyHoldYieldTotal.yield * 100))
+            .append("\n")
+        report.append(String.format("합산 동일비중 MDD\t %,.2f%%", result.common.buyHoldYieldTotal.mdd * 100)).append("\n")
+        report.append(String.format("합산 동일비중 CAGR\t %,.2f%%", result.common.buyHoldYieldTotal.getCagr() * 100))
+            .append("\n")
+        report.append(String.format("샤프지수\t %,.2f", result.common.getBuyHoldSharpeRatio())).append("\n")
+
+//        for (i in 1..tradeConditionList.size) {
+//            val tradeCondition = tradeConditionList[i - 1]
+//            report.append(
+//                "${i}. 조건번호: ${tradeCondition.conditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), " +
+//                        "매매주기: ${tradeCondition.periodType}, 변동성 비율: ${tradeCondition.kRate}, 이동평균 단위:${tradeCondition.maPeriod}, " +
+//                        "갭상승 통과: ${tradeCondition.gapRisenSkip}, 하루에 한번 거래: ${tradeCondition.onlyOneDayTrade}\n"
+//            )
+//            val sumYield = result.common.buyHoldYieldCondition[tradeCondition.conditionSeq]
+//            if (sumYield == null) {
+//                log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${tradeCondition.conditionSeq}")
+//                break
+//            }
+//            report.append(String.format("${i}. 동일비중 수익\t %,.2f%%", sumYield.yield * 100)).append("\n")
+//            report.append(String.format("${i}. 동일비중 MDD\t %,.2f%%", sumYield.mdd * 100)).append("\n")
+//        }
+
+        val totalYield: CommonAnalysisReportResult.TotalYield = result.common.yieldTotal
+        report.append("----------- 전략 결과 -----------\n")
+        report.append(String.format("합산 실현 수익\t %,.2f%%", totalYield.yield * 100)).append("\n")
+        report.append(String.format("합산 실현 MDD\t %,.2f%%", totalYield.mdd * 100)).append("\n")
+        report.append(String.format("합산 매매회수\t %d", result.common.getWinningRateTotal().getTradeCount())).append("\n")
+        report.append(String.format("합산 승률\t %,.2f%%", result.common.getWinningRateTotal().getWinRate() * 100))
+            .append("\n")
+        report.append(String.format("합산 CAGR\t %,.2f%%", totalYield.getCagr() * 100)).append("\n")
+        report.append(String.format("샤프지수\t %,.2f", result.common.getBacktestSharpeRatio())).append("\n")
+
+        for (i in 1..tradeConditionList.size) {
+            val tradeCondition = tradeConditionList[i - 1]
+//            report.append(
+//                "${i}. 조건번호: ${tradeCondition.conditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), " +
+//                        "매매주기: ${tradeCondition.periodType}, 변동성 비율: ${tradeCondition.kRate}, 이동평균 단위:${tradeCondition.maPeriod}, " +
+//                        "갭상승 통과: ${tradeCondition.gapRisenSkip}, 하루에 한번 거래: ${tradeCondition.onlyOneDayTrade}\n"
+//            )
+//
+//            val winningRate = result.common.winningRateCondition[tradeCondition.conditionSeq]
+//            if (winningRate == null) {
+//                log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${tradeCondition.conditionSeq}")
+//                break
+//            }
+//            report.append(String.format("${i}. 실현 수익\t %,f", winningRate.invest)).append("\n")
+//            report.append(String.format("${i}. 매매회수\t %d", winningRate.getTradeCount())).append("\n")
+//            report.append(String.format("${i}. 승률\t %,.2f%%", winningRate.getWinRate() * 100)).append("\n")
+        }
+        return report.toString()
+    }
+
 }

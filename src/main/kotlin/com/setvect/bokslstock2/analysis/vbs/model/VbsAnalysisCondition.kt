@@ -6,7 +6,7 @@ import com.setvect.bokslstock2.common.entity.AnalysisCondition
 import com.setvect.bokslstock2.common.entity.ConditionEntity
 
 /**
- * 이동평균돌파 백테스트
+ * 변동성돌파 백테스트
  */
 data class VbsAnalysisCondition(
     /**

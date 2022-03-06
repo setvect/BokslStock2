@@ -1,6 +1,8 @@
 package com.setvect.bokslstock2.analysis.dm.model
 
 import com.setvect.bokslstock2.analysis.common.model.TradeType
+import com.setvect.bokslstock2.common.entity.ConditionEntity
+import com.setvect.bokslstock2.common.entity.TradeEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
 import java.time.LocalDateTime
 
@@ -8,6 +10,13 @@ import java.time.LocalDateTime
  * 듀얼모멘텀 매매 내역
  */
 data class DmTrade(
+    val condition: ConditionEntity,
+
+    /**
+     * 아이디
+     */
+    val tradeId: Long,
+
     /**
      * 매매 기본 조건
      */
@@ -16,25 +25,32 @@ data class DmTrade(
     /**
      * 매수/매도
      */
-    val tradeType: TradeType,
+    override val tradeType: TradeType,
 
     /**
      * 매도시 수익률
      * 소수로 표현, 1->100%, -0.02 -> -2%
      * 매수는 0으로 표현
      */
-    val yield: Double,
+    override val yield: Double,
 
     /**
      * 거래 단가
      * - 매수일 경우 매수 단가
      * - 매도일 경우 매도 단가
      */
-    val unitPrice: Double,
+    override val unitPrice: Double,
 
     /**
      * 거래시간
      */
-    val tradeDate: LocalDateTime,
-    ) {
+    override val tradeDate: LocalDateTime,
+) : TradeEntity {
+    override fun getConditionEntity(): ConditionEntity {
+        return condition
+    }
+
+    override fun tradeId(): Long {
+        return tradeId
+    }
 }

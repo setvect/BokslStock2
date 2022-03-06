@@ -2,7 +2,7 @@ package com.setvect.bokslstock2.analysis
 
 import com.setvect.bokslstock2.StockCode
 import com.setvect.bokslstock2.analysis.common.model.BasicAnalysisCondition
-import com.setvect.bokslstock2.analysis.dm.model.DmAnalysisCondition
+import com.setvect.bokslstock2.analysis.dm.model.DmBacktestCondition
 import com.setvect.bokslstock2.analysis.dm.serivce.DmAnalysisService
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.util.DateRange
@@ -35,7 +35,7 @@ class DmBacktest {
             comment = ""
         )
 
-        val condition = DmAnalysisCondition(
+        val condition = DmBacktestCondition(
             basic = basic,
             stockCodes = listOf(StockCode.CODE_KODEX_200_069500),
             holdCode = StockCode.CODE_KODEX_SHORT_BONDS_153130,
