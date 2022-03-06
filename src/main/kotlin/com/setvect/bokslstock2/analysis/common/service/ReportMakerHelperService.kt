@@ -508,6 +508,13 @@ class ReportMakerHelperService(
             return cellStyle
         }
 
+        fun createCommaDecimal(workbook: XSSFWorkbook): XSSFCellStyle {
+            val cellStyle = workbook.createCellStyle()
+            val format: DataFormat = workbook.createDataFormat()
+            cellStyle.dataFormat = format.getFormat("###,###.00")
+            return cellStyle
+        }
+
         fun createPercent(workbook: XSSFWorkbook): XSSFCellStyle {
             val cellStyle = workbook.createCellStyle()
             val format: DataFormat = workbook.createDataFormat()
