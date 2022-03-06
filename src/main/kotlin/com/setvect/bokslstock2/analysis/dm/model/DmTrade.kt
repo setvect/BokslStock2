@@ -1,6 +1,7 @@
 package com.setvect.bokslstock2.analysis.dm.model
 
 import com.setvect.bokslstock2.analysis.common.model.TradeType
+import com.setvect.bokslstock2.index.entity.StockEntity
 import java.time.LocalDateTime
 
 /**
@@ -10,7 +11,7 @@ data class DmTrade(
     /**
      * 매매 기본 조건
      */
-    val stockCode: String,
+    val stock: StockEntity,
 
     /**
      * 매수/매도

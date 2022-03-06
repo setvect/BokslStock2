@@ -29,8 +29,8 @@ class DmAnalysisService(
         checkVaidate(condition)
         val tradeList = processDualMomentum(condition)
         var sumYield = 1.0
-        tradeList.filter { it.tradeType == TradeType.SELL }.forEach {
-            log.info("매매기록: $it")
+        tradeList.forEach {
+            log.info("${it.tradeType}\t${it.tradeDate}\t${it.stock.name}(${it.stock.code})\t${it.yield}")
             sumYield *= (it.yield + 1)
         }
         log.info("수익률: ${String.format("%.2f%%", (sumYield - 1) * 100)}")
@@ -56,77 +56,83 @@ class DmAnalysisService(
             val stockByRate = calculateRate(stockPriceIndex, current, condition, codeByStock)
 
             val existBeforeBuy = beforeBuyTrade != null
-            val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stockCode != condition.holdCode
 
             // 듀얼 모멘텀 매수 대상 종목이 없으면
             if (stockByRate.isEmpty()) {
+                val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stock.code != condition.holdCode
                 val existHoldCode = condition.holdCode != null
+
                 if (existBeforeBuy && changeBuyStock) {
-                    val stockPrice = stockPriceIndex[beforeBuyTrade!!.stockCode]!![current]!!
+                    val stockPrice = stockPriceIndex[beforeBuyTrade!!.stock.code]!![current]!!
                     val sellTrade = DmTrade(
-                        stockCode = beforeBuyTrade.stockCode,
+                        stock = beforeBuyTrade.stock,
                         tradeType = TradeType.SELL,
                         yield = ApplicationUtil.getYield(beforeBuyTrade.unitPrice, stockPrice.openPrice),
                         unitPrice = stockPrice.openPrice,
                         tradeDate = current
                     )
                     tradeList.add(sellTrade)
-                    log.info("매도: ${getStockName(codeByStock, beforeBuyTrade.stockCode)}(${beforeBuyTrade.stockCode})")
+                    log.info("매도: ${sellTrade.tradeDate}, ${sellTrade.stock.name}(${sellTrade.stock.code}), 수익: ${sellTrade.yield}")
                     beforeBuyTrade = null
                 }
-                if (existHoldCode && changeBuyStock) {
+                if (existHoldCode && (beforeBuyTrade == null || beforeBuyTrade.stock.code != condition.holdCode)) {
                     val stockPrice = stockPriceIndex[condition.holdCode]!![current]!!
                     val buyTrade = DmTrade(
-                        stockCode = condition.holdCode!!,
+                        stock = codeByStock[condition.holdCode]!!,
                         tradeType = TradeType.BUY,
                         yield = 0.0,
                         unitPrice = stockPrice.openPrice,
                         tradeDate = current
                     )
                     tradeList.add(buyTrade)
-                    log.info("매수: ${getStockName(codeByStock, condition.holdCode)}(${condition.holdCode})")
+                    log.info("매수: ${buyTrade.tradeDate}, ${buyTrade.stock.name}(${buyTrade.stock.code})")
                     beforeBuyTrade = buyTrade
                 } else if (existHoldCode) {
-                    log.info("매수 유지: ${getStockName(codeByStock, condition.holdCode!!)}(${condition.holdCode})")
+                    log.info("매수 유지: $current, ${getStockName(codeByStock, condition.holdCode!!)}(${condition.holdCode})")
                 }
             } else {
                 val buyStockRate = stockByRate[0]
                 val stockCode = buyStockRate.first
-                val stockPrice = stockPriceIndex[stockCode]!![current]!!
+                val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stock.code != stockCode
+
                 if (existBeforeBuy && changeBuyStock) {
+                    val stockPrice = stockPriceIndex[beforeBuyTrade!!.stock.code]!![current]!!
                     val sellTrade = DmTrade(
-                        stockCode = beforeBuyTrade!!.stockCode,
+                        stock = beforeBuyTrade.stock,
                         tradeType = TradeType.SELL,
                         yield = ApplicationUtil.getYield(beforeBuyTrade.unitPrice, stockPrice.openPrice),
                         unitPrice = stockPrice.openPrice,
                         tradeDate = current
                     )
                     tradeList.add(sellTrade)
-                    log.info("매도: ${getStockName(codeByStock, beforeBuyTrade.stockCode)}(${beforeBuyTrade.stockCode})")
+                    log.info(
+                        "매도: ${sellTrade.tradeDate}, ${sellTrade.stock.name}(${beforeBuyTrade.stock.code}), 매도수익: ${sellTrade.yield}"
+                    )
                 }
                 if (!existBeforeBuy || changeBuyStock) {
+                    val stockPrice = stockPriceIndex[stockCode]!![current]!!
                     val buyTrade = DmTrade(
-                        stockCode = stockCode,
+                        stock = codeByStock[stockCode]!!,
                         tradeType = TradeType.BUY,
                         yield = 0.0,
                         unitPrice = stockPrice.openPrice,
                         tradeDate = current
                     )
                     tradeList.add(buyTrade)
-                    log.info("매수: ${getStockName(codeByStock, stockCode)}(${stockCode})")
+                    log.info("매수: ${buyTrade.tradeDate}, ${buyTrade.stock.name}(${buyTrade.stock.code})")
                     beforeBuyTrade = buyTrade
                 } else {
-                    log.info("매수 유지: ${getStockName(codeByStock, beforeBuyTrade!!.stockCode)}(${beforeBuyTrade.stockCode})")
+                    log.info("매수 유지: $current, ${beforeBuyTrade!!.stock.name}(${beforeBuyTrade.stock.code})")
                 }
             }
 
-            stockByRate.forEach {
-                log.info("$current - ${getStockName(codeByStock, it.first)}(${it.first}) : ${it.second}")
-            }
+//            stockByRate.forEach {
+//                log.info("$current - ${getStockName(codeByStock, it.first)}(${it.first}) : ${it.second}")
+//            }
 
-            if (stockByRate.isEmpty()) {
-                log.info("$current - empty")
-            }
+//            if (stockByRate.isEmpty()) {
+//                log.info("$current - empty")
+//            }
             current = current.plusMonths(condition.periodType.getDeviceMonth().toLong())
         }
         return tradeList
@@ -149,28 +155,26 @@ class DmAnalysisService(
             val currentCandle = stockEntry.value[current]
                 ?: throw RuntimeException("${stockEntry.key}에 대한 $current 시세가 없습니다.")
 
-            log.info(
-                "\t${current}: ${stock.name}(${stock.code}): ${currentCandle.candleDateTimeStart}~${currentCandle.candleDateTimeEnd} - " +
-                        "O: ${currentCandle.openPrice}, H: ${currentCandle.highPrice}, L: ${currentCandle.lowPrice}, C:${currentCandle.closePrice}, ${currentCandle.periodType}"
-            )
+//            log.info(
+//                "\t${current}: ${stock.name}(${stock.code}): ${currentCandle.candleDateTimeStart}~${currentCandle.candleDateTimeEnd} - " +
+//                        "O: ${currentCandle.openPrice}, H: ${currentCandle.highPrice}, L: ${currentCandle.lowPrice}, C:${currentCandle.closePrice}, ${currentCandle.periodType}"
+//            )
 
             val average = condition.timeWeight.entries.sumOf { timeWeight ->
                 val delta = timeWeight.key
                 val weight = timeWeight.value
                 val deltaCandle = stockEntry.value[current.minusMonths(delta.toLong())]!!
-                log.info("\t\t[${delta}] ${stock.code} - ${deltaCandle.candleDateTimeStart} - C: ${deltaCandle.closePrice}")
-
-
-                log.info(
-                    "\t\t$delta -   ${stock.name}(${stock.code}): ${deltaCandle.candleDateTimeStart}~${deltaCandle.candleDateTimeEnd} - " +
-                            "O: ${deltaCandle.openPrice}, H: ${deltaCandle.highPrice}, L: ${deltaCandle.lowPrice}, C:${deltaCandle.closePrice}, ${deltaCandle.periodType}"
-                )
+//                log.info("\t\t[${delta}] ${stock.code} - ${deltaCandle.candleDateTimeStart} - C: ${deltaCandle.closePrice}")
+//                log.info(
+//                    "\t\t$delta -   ${stock.name}(${stock.code}): ${deltaCandle.candleDateTimeStart}~${deltaCandle.candleDateTimeEnd} - " +
+//                            "O: ${deltaCandle.openPrice}, H: ${deltaCandle.highPrice}, L: ${deltaCandle.lowPrice}, C:${deltaCandle.closePrice}, ${deltaCandle.periodType}"
+//                )
 
                 deltaCandle.closePrice * weight
             }
 
             val rate = currentCandle.openPrice / average
-            //                log.info("\t${average}: \t${rate}")
+//            log.info("\t${average}: \t${rate}")
             stockEntry.key to rate
         }
             .filter { it.second >= 1 && it.first != condition.holdCode }
