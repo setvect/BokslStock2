@@ -37,7 +37,7 @@ class DmBacktest {
 
         val condition = DmAnalysisCondition(
             basic = basic,
-            stockCodes = listOf(StockCode.CODE_KODEX_KOSDAQ_229200, StockCode.CODE_KODEX_BANK_091170),
+            stockCodes = listOf(StockCode.CODE_KODEX_KOSDAQ_2X_233740),
             holdCode = null,
             periodType = PeriodType.PERIOD_MONTH,
             timeWeight = hashMapOf(
