@@ -19,9 +19,14 @@ import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
+import com.setvect.bokslstock2.util.DateRange
 import com.setvect.bokslstock2.util.DateUtil
+import java.io.File
+import java.io.FileOutputStream
 import java.time.LocalDateTime
 import java.util.*
+import org.apache.poi.xssf.usermodel.XSSFSheet
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -81,8 +86,7 @@ class DmAnalysisService(
         println(trades.size)
 
         val result = tradeService.analysis(trades, analysisCondition)
-        val report = getSummary(result)
-        println(report)
+        makeReportFile(result)
     }
 
     private fun processDualMomentum(condition: DmBacktestCondition): List<DmTrade> {
@@ -361,6 +365,175 @@ class DmAnalysisService(
 //            report.append(String.format("${i}. 실현 수익\t %,f", winningRate.invest)).append("\n")
 //            report.append(String.format("${i}. 매매회수\t %d", winningRate.getTradeCount())).append("\n")
 //            report.append(String.format("${i}. 승률\t %,.2f%%", winningRate.getWinRate() * 100)).append("\n")
+        }
+        return report.toString()
+    }
+    /**
+     * 분석건에 대한 리포트 파일 만듦
+     * @return 엑셀 파일
+     */
+    private fun makeReportFile(result: DmAnalysisReportResult): File {
+        val reportFileSubPrefix = ReportMakerHelperService.getReportFileSuffix(result)
+        val reportFile = File("./backtest-result/dm-trade-report", "dm_trade_$reportFileSubPrefix")
+
+        XSSFWorkbook().use { workbook ->
+            var sheet = createTradeReport(result, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "1. 매매이력")
+
+            sheet = ReportMakerHelperService.createReportEvalAmount(result.common.evaluationAmountHistory, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일짜별 자산비율 변화")
+
+            sheet = ReportMakerHelperService.createReportRangeReturn(result.common.getMonthlyYield(), workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "3. 월별 수익률")
+
+            sheet = ReportMakerHelperService.createReportRangeReturn(result.common.getYearlyYield(), workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "4. 년별 수익률")
+
+            sheet = createReportSummary(result, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "5. 매매 요약결과 및 조건")
+
+            FileOutputStream(reportFile).use { ous ->
+                workbook.write(ous)
+            }
+        }
+        println("결과 파일:" + reportFile.name)
+        return reportFile
+    }
+
+    /**
+     * 매매 내역을 시트로 만듦
+     */
+    private fun createTradeReport(result: DmAnalysisReportResult, workbook: XSSFWorkbook): XSSFSheet {
+        val sheet = workbook.createSheet()
+        val header =
+            "날짜,종목,매매 구분,매수 수량,매매 금액,체결 가격,실현 수익률,수수료,투자 수익(수수료포함),보유 주식 평가금,매매후 보유 현금,평가금(주식+현금),수익비"
+        ReportMakerHelperService.applyHeader(sheet, header)
+        var rowIdx = 1
+
+        val defaultStyle = ReportMakerHelperService.ExcelStyle.createDate(workbook)
+        val commaStyle = ReportMakerHelperService.ExcelStyle.createComma(workbook)
+        val percentStyle = ReportMakerHelperService.ExcelStyle.createPercent(workbook)
+        val decimalStyle = ReportMakerHelperService.ExcelStyle.createDecimal(workbook)
+
+        result.tradeHistory.forEach { tradeItem: DmTradeReportItem ->
+            val dmTrade = tradeItem.dmTrade
+            val dmConditionEntity = dmTrade.getConditionEntity()
+            val tradeDate: LocalDateTime = dmTrade.tradeDate
+
+            val row = sheet.createRow(rowIdx++)
+            var cellIdx = 0
+            var createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeDate)
+            createCell.cellStyle = defaultStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(dmConditionEntity.stock.getNameCode())
+            createCell.cellStyle = defaultStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(dmTrade.tradeType.name)
+            createCell.cellStyle = defaultStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.common.qty.toDouble())
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.getBuyAmount())
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(dmTrade.unitPrice)
+            if (dmTrade.unitPrice > 100) {
+                createCell.cellStyle = commaStyle
+            } else {
+                createCell.cellStyle = decimalStyle
+            }
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(dmTrade.yield)
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.common.feePrice)
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.common.gains)
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.common.stockEvalPrice)
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.common.cash)
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.common.getEvalPrice())
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx)
+            createCell.setCellValue(tradeItem.common.getEvalPrice() / result.dmAnalysisCondition.basic.cash)
+            createCell.cellStyle = decimalStyle
+        }
+
+        sheet.createFreezePane(0, 1)
+        sheet.defaultColumnWidth = 12
+        sheet.setColumnWidth(0, 4000)
+        sheet.setColumnWidth(1, 4000)
+        sheet.setColumnWidth(12, 4000)
+        sheet.setColumnWidth(13, 4000)
+        sheet.setColumnWidth(14, 4000)
+        sheet.setColumnWidth(15, 4000)
+
+        ReportMakerHelperService.ExcelStyle.applyAllBorder(sheet)
+        ReportMakerHelperService.ExcelStyle.applyDefaultFont(sheet)
+        return sheet
+    }
+
+
+    /**
+     * 매매 결과 요약 및 조건 시트 만듦
+     */
+    private fun createReportSummary(result: DmAnalysisReportResult, workbook: XSSFWorkbook): XSSFSheet {
+        val sheet = workbook.createSheet()
+        val summary = getSummary(result)
+        ReportMakerHelperService.textToSheet(summary, sheet)
+        log.debug(summary)
+
+        val conditionSummary = getConditionSummary(result)
+        ReportMakerHelperService.textToSheet(conditionSummary, sheet)
+        sheet.defaultColumnWidth = 60
+        return sheet
+    }
+
+
+    /**
+     * 백테스트 조건 요약 정보
+     */
+    private fun getConditionSummary(
+        result: DmAnalysisReportResult
+    ): String {
+        val range: DateRange = result.dmAnalysisCondition.basic.range
+        val condition = result.dmAnalysisCondition
+
+        val report = StringBuilder()
+
+        report.append("----------- 백테스트 조건 -----------\n")
+        report.append(String.format("분석기간\t %s", range)).append("\n")
+        report.append(String.format("투자비율\t %,.2f%%", condition.basic.investRatio * 100)).append("\n")
+        report.append(String.format("최초 투자금액\t %,f", condition.basic.cash)).append("\n")
+        report.append(String.format("매수 수수료\t %,.2f%%", condition.basic.feeBuy * 100)).append("\n")
+        report.append(String.format("매도 수수료\t %,.2f%%", condition.basic.feeSell * 100)).append("\n")
+
+        val tradeConditionList = result.dmAnalysisCondition.tradeConditionList
+
+        for (i in 1..tradeConditionList.size) {
+            val tradeCondition = tradeConditionList[i - 1]
+            report.append(String.format("${i}. 조건아이디\t %s", tradeCondition.getConditionId())).append("\n")
+            report.append(String.format("${i}. 대상 종목\t %s", tradeCondition.stock.getNameCode())).append("\n")
         }
         return report.toString()
     }
