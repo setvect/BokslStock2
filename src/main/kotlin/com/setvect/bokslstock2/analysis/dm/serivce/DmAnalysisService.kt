@@ -58,7 +58,7 @@ class DmAnalysisService(
 
 
     fun runTest(condition: DmBacktestCondition) {
-        checkVaidate(condition)
+        checkValidate(condition)
         val tradeList = processDualMomentum(condition)
         var sumYield = 1.0
         tradeList.forEach {
@@ -86,8 +86,7 @@ class DmAnalysisService(
     }
 
     private fun processDualMomentum(condition: DmBacktestCondition): List<DmTrade> {
-        val stockCodes = getTradeStockCode(condition)
-
+        val stockCodes = condition.listStock()
         // <종목코드, 종목정보>
         val codeByStock = stockCodes.associateWith { stockRepository.findByCode(it).get() }
 
@@ -283,7 +282,7 @@ class DmAnalysisService(
      * @return <종목코드, <날짜, 캔들>>
      */
     private fun getStockPriceIndex(
-        stockCodes: MutableList<String>,
+        stockCodes: List<String>,
         dmCondition: DmBacktestCondition
     ): Map<String, Map<LocalDateTime, CandleDto>> {
         val stockPriceIndex = stockCodes.associateWith { code ->
@@ -297,15 +296,7 @@ class DmAnalysisService(
         return stockPriceIndex
     }
 
-    private fun getTradeStockCode(dmCondition: DmBacktestCondition): MutableList<String> {
-        val stockCodes = dmCondition.stockCodes.toMutableList()
-        if (dmCondition.holdCode != null) {
-            stockCodes.add(dmCondition.holdCode)
-        }
-        return stockCodes
-    }
-
-    private fun checkVaidate(dmCondition: DmBacktestCondition) {
+    private fun checkValidate(dmCondition: DmBacktestCondition) {
         val sumWeight = dmCondition.timeWeight.entries.sumOf { it.value }
         if (sumWeight != 1.0) {
             throw RuntimeException("가중치의 합계가 100이여 합니다. 현재 가중치 합계: $sumWeight")
