@@ -38,14 +38,18 @@ class CsvStoreService(
             val candleList = StreamSupport
                 .stream(records.spliterator(), false)
                 .map {
+                    var time = it.get("time") ?: ""
+                    if (time.length == 3) {
+                        time = "0$time"
+                    }
                     CandleEntity(
                         stock = stock,
-                        candleDateTime = DateUtil.getLocalDate(it.get("Date")).atTime(0, 0),
-                        periodType = PeriodType.PERIOD_DAY,
-                        openPrice = it.get("Open").toDouble(),
-                        highPrice = it.get("High").toDouble(),
-                        lowPrice = it.get("Low").toDouble(),
-                        closePrice = it.get("Close").toDouble()
+                        candleDateTime = DateUtil.getLocalDateTime(it.get("date") + time, "yyyyMMddHHmm"),
+                        periodType = PeriodType.PERIOD_5_MINUTES,
+                        openPrice = it.get("open").toDouble(),
+                        highPrice = it.get("high").toDouble(),
+                        lowPrice = it.get("low").toDouble(),
+                        closePrice = it.get("close").toDouble()
                     )
                 }
                 .collect(Collectors.toList())

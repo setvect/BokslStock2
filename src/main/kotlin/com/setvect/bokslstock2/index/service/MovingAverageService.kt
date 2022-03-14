@@ -2,6 +2,7 @@ package com.setvect.bokslstock2.index.service
 
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType
+import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_5_MINUTES
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_HALF
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_MONTH
@@ -33,8 +34,12 @@ class MovingAverageService(
         val candleGroupMap = candleList.groupByTo(TreeMap()) {
             // 날짜 기준으로 시세 그룹핑
             val groupDateTime = when (group) {
-                PERIOD_DAY -> {
+                PERIOD_5_MINUTES -> {
                     it.candleDateTime
+                }
+                PERIOD_DAY -> {
+                    // TODO 하루 단위로 그룹핑
+                    it.candleDateTime.withHour(0).withMinute(0).withSecond(0)
                 }
                 PERIOD_WEEK -> {
                     it.candleDateTime.minusDays(it.candleDateTime.dayOfWeek.value.toLong() - 1)

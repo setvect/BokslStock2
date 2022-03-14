@@ -70,7 +70,7 @@ class CrawlTest {
     // ---------
     @Test
     fun storeCsv() {
-        val csvStock = File("./data_source/spy_us_d.csv")
-        csvStoreService.store(StockCode.OS_CODE_SPY, csvStock)
+        val csvStock = File("./data_source/A233740.csv")
+        csvStoreService.store(StockCode.CODE_KODEX_KOSDAQ_2X_233740, csvStock)
     }
 }

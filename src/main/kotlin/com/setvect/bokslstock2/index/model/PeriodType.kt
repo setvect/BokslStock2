@@ -2,6 +2,11 @@ package com.setvect.bokslstock2.index.model
 
 enum class PeriodType {
     /**
+     * 5분봉
+     */
+    PERIOD_5_MINUTES,
+
+    /**
      * 일봉
      */
     PERIOD_DAY,
