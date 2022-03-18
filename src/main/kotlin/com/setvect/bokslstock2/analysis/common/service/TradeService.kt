@@ -82,7 +82,7 @@ class TradeService<C : AnalysisCondition, E : TradeEntity, I : TradeReportItem, 
         val buyStock = HashMap<String, I>()
         tradeAllList.forEach { tradeItem ->
             if (tradeItem.tradeType == TradeType.BUY) {
-                // 매도 처리
+                // 매수 처리
                 val buyCash =
                     ReportMakerHelperService.getBuyCash(
                         buyStock.size,
@@ -109,7 +109,7 @@ class TradeService<C : AnalysisCondition, E : TradeEntity, I : TradeReportItem, 
                 tradeItemHistory.add(tradeReportItem)
                 buyStock[tradeItem.getConditionEntity().stock.code] = tradeReportItem
             } else if (tradeItem.tradeType == TradeType.SELL) {
-                // 매수 처리
+                // 매도 처리
                 // 투자수익금 = 매수금액 * 수익률 - 수수료
                 val buyTrade = buyStock[tradeItem.getConditionEntity().stock.code]
                     ?: throw RuntimeException("${tradeItem.getConditionEntity().stock.code} 매수 내역이 없습니다.")

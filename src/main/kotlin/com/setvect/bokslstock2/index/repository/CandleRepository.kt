@@ -36,6 +36,16 @@ interface CandleRepository : JpaRepository<CandleEntity, Long> {
         @Param("end") end: LocalDateTime
     ): List<CandleEntity>
 
+    @Query(
+        "select c from CandleEntity c " +
+                "where c.stock = :stock and c.candleDateTime > :candleDateTime " +
+                "order by c.candleDateTime"
+    )
+    fun findByGreaterThen(
+        @Param("stock") stock: StockEntity,
+        @Param("candleDateTime") candleDateTime: LocalDateTime,
+        pageable: Pageable
+    ): List<CandleEntity>
 
     /**
      * [stockList] 종목에서 [start] [end] 범위 안에 시세가 포함된 범위를 반환
@@ -51,4 +61,6 @@ interface CandleRepository : JpaRepository<CandleEntity, Long> {
         @Param("start") start: LocalDateTime,
         @Param("end") end: LocalDateTime
     ): DateRange
+
+
 }

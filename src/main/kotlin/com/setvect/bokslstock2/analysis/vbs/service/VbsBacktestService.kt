@@ -7,10 +7,12 @@ import com.setvect.bokslstock2.analysis.vbs.entity.VbsTradeEntity
 import com.setvect.bokslstock2.analysis.vbs.repository.VbsConditionRepository
 import com.setvect.bokslstock2.analysis.vbs.repository.VbsTradeRepository
 import com.setvect.bokslstock2.index.dto.CandleDto
+import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -22,6 +24,7 @@ class VbsBacktestService(
     val vbsConditionRepository: VbsConditionRepository,
     val vbsTradeRepository: VbsTradeRepository,
     val movingAverageService: MovingAverageService,
+    val candleRepository: CandleRepository,
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -67,13 +70,23 @@ class VbsBacktestService(
                     continue
                 }
 
+                val afterTime = currentCandle.candleDateTimeStart.withMinute(5)
+                // TODO DB 튜닝
+                val afterCandleList =
+                    candleRepository.findByGreaterThen(condition.stock, afterTime, Pageable.ofSize(1))
+
+                if (afterCandleList.isEmpty()) {
+                    throw RuntimeException("${condition.stock.name}종목 $afterTime 이후 없습니다.")
+                }
+                val nine5minuteCandle = afterCandleList[0]
+
                 // 매도
                 val sellInfo = VbsTradeEntity(
                     vbsConditionEntity = condition,
                     tradeType = SELL,
                     maPrice = currentCandle.average[condition.maPeriod] ?: 0.0,
-                    yield = ApplicationUtil.getYield(lastBuyInfo.unitPrice, currentCandle.openPrice),
-                    unitPrice = currentCandle.openPrice,
+                    yield = ApplicationUtil.getYield(lastBuyInfo.unitPrice, nine5minuteCandle.openPrice),
+                    unitPrice = nine5minuteCandle.openPrice,
                     tradeDate = currentCandle.candleDateTimeStart
                 )
                 vbsTradeRepository.save(sellInfo)
