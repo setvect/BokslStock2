@@ -200,23 +200,47 @@ class VbsBacktest {
     fun 일회성_백테스팅_리포트_만듦() {
         // 거래 조건
         val range = DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.now())
-        val vbsAnalysisCondition = VbsAnalysisCondition(
-            tradeConditionList = listOf(
-//                makeCondition("122630"), // KODEX 레버리지
-                makeCondition(StockCode.CODE_KODEX_KOSDAQ_2X_233740), // KODEX 코스닥150 레버리지
-                makeCondition(StockCode.CODE_KODEX_BANK_091170), // KODEX 은행
-//                makeCondition(StockCode.OS_CODE_TQQQ), // KODEX 은행
+        val mabsAnalysisConditionList = listOf(
+            VbsAnalysisCondition(
+                tradeConditionList = listOf(
+                    makeCondition(StockCode.CODE_KODEX_KOSDAQ_2X_233740), // KODEX 코스닥150 레버리지
+                ),
+                basic = BasicAnalysisCondition(
+                    range = range,
+                    investRatio = 0.99,
+                    cash = 10_000_000.0,
+                    feeBuy = 0.0002,
+                    feeSell = 0.0002,
+                    comment = ""
+                )
             ),
-            basic = BasicAnalysisCondition(
-                range = range,
-                investRatio = 0.99,
-                cash = 10_000_000.0,
-                feeBuy = 0.0002,
-                feeSell = 0.0002,
-                comment = ""
+            VbsAnalysisCondition(
+                tradeConditionList = listOf(
+                    makeCondition(StockCode.CODE_KODEX_KOSDAQ_2X_233740), // KODEX 코스닥150 레버리지
+                ),
+                basic = BasicAnalysisCondition(
+                    range = range,
+                    investRatio = 0.7,
+                    cash = 10_000_000.0,
+                    feeBuy = 0.0002,
+                    feeSell = 0.0002,
+                    comment = ""
+                )
+            ),
+            VbsAnalysisCondition(
+                tradeConditionList = listOf(
+                    makeCondition(StockCode.CODE_KODEX_KOSDAQ_2X_233740), // KODEX 코스닥150 레버리지
+                ),
+                basic = BasicAnalysisCondition(
+                    range = range,
+                    investRatio = 0.5,
+                    cash = 10_000_000.0,
+                    feeBuy = 0.0002,
+                    feeSell = 0.0002,
+                    comment = ""
+                )
             )
         )
-        val mabsAnalysisConditionList = listOf(vbsAnalysisCondition)
 
         // 리포트 만듦
         analysisService.makeSummaryReport(mabsAnalysisConditionList)
