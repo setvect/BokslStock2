@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2.analysis.dm.model
 
-import com.setvect.bokslstock2.analysis.common.model.BasicAnalysisCondition
+import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 
@@ -11,7 +11,7 @@ data class DmBacktestCondition(
     /**
      * 매매 기본 조건
      */
-    val basic: BasicAnalysisCondition,
+    val basic: TradeCondition,
 
     /**
      * 듀얼 모멘텀 대상 종목 코드

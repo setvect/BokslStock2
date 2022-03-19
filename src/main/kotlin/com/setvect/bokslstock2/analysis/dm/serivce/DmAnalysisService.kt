@@ -13,7 +13,6 @@ import com.setvect.bokslstock2.analysis.dm.model.DmTrade
 import com.setvect.bokslstock2.analysis.dm.model.DmTradeReportItem
 import com.setvect.bokslstock2.common.entity.ConditionEntity
 import com.setvect.bokslstock2.common.entity.TradeEntity
-import com.setvect.bokslstock2.common.entity.TradeReportItem
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.repository.StockRepository
@@ -160,18 +159,18 @@ class DmAnalysisService(
             current = current.plusMonths(condition.periodType.getDeviceMonth().toLong())
         }
 
-        tradeList.map { trade ->
-            object : TradeReportItem {
-                override val tradeEntity: TradeEntity
-                    get() = trade
-                override val common: CommonTradeReportItem
-                    get() = TODO("Not yet implemented")
-
-                override fun getBuyAmount(): Double {
-                    return 100.0
-                }
-            }
-        }
+//        tradeList.map { trade ->
+//            object : TradeReportItem {
+//                override val tradeEntity: TradeEntity
+//                    get() = trade
+//                override val common: CommonTradeReportItem
+//                    get() = TODO("Not yet implemented")
+//
+//                override fun getBuyAmount(): Double {
+//                    return 100.0
+//                }
+//            }
+//        }
 
 
         return tradeList

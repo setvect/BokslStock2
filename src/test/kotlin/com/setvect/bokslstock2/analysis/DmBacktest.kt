@@ -1,7 +1,7 @@
 package com.setvect.bokslstock2.analysis
 
 import com.setvect.bokslstock2.StockCode
-import com.setvect.bokslstock2.analysis.common.model.BasicAnalysisCondition
+import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.dm.model.DmBacktestCondition
 import com.setvect.bokslstock2.analysis.dm.serivce.DmAnalysisService
 import com.setvect.bokslstock2.index.model.PeriodType
@@ -26,7 +26,7 @@ class DmBacktest {
     fun 일회성_백테스팅_리포트_만듦() {
         val realRange = DateRange(LocalDateTime.of(2016, 6, 1, 0, 0), LocalDateTime.now())
 
-        val basic = BasicAnalysisCondition(
+        val basic = TradeCondition(
             range = realRange,
             investRatio = 0.99,
             cash = 10_000_000.0,
@@ -47,6 +47,7 @@ class DmBacktest {
             )
         )
         dmAnalysisService.runTest(condition)
+        log.info("끝.")
     }
 
 

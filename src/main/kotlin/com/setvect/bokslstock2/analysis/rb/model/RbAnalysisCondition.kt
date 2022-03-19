@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2.analysis.rb.model
 
-import com.setvect.bokslstock2.analysis.common.model.BasicAnalysisCondition
+import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.rb.entity.RbConditionEntity
 import com.setvect.bokslstock2.common.entity.AnalysisCondition
 import com.setvect.bokslstock2.common.entity.ConditionEntity
@@ -17,7 +17,7 @@ data class RbAnalysisCondition(
     /**
      * 매매 기본 조건
      */
-    override val basic: BasicAnalysisCondition,
+    override val basic: TradeCondition,
 ): AnalysisCondition {
     override val conditionList: List<ConditionEntity>
         get() = tradeConditionList

@@ -1,13 +1,12 @@
 package com.setvect.bokslstock2.analysis
 
-import com.setvect.bokslstock2.analysis.common.model.BasicAnalysisCondition
+import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.rb.entity.RbConditionEntity
 import com.setvect.bokslstock2.analysis.rb.model.RbAnalysisCondition
 import com.setvect.bokslstock2.analysis.rb.repository.RbConditionRepository
 import com.setvect.bokslstock2.analysis.rb.repository.RbTradeRepository
 import com.setvect.bokslstock2.analysis.rb.setvice.RbAnalysisService
 import com.setvect.bokslstock2.analysis.rb.setvice.RbBacktestService
-import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_MONTH
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
@@ -107,7 +106,7 @@ class RbBacktest {
 //                makeCondition("091170"), // KODEX 은행
 //                makeCondition("TQQQ") // TQQQ
             ),
-            basic = BasicAnalysisCondition(
+            basic = TradeCondition(
                 range = realRange,
                 investRatio = 0.20,
                 cash = 10_000_000.0,
@@ -156,7 +155,7 @@ class RbBacktest {
 
                 val vbsAnalysisCondition = RbAnalysisCondition(
                     tradeConditionList = listOf(it),
-                    basic = BasicAnalysisCondition(
+                    basic = TradeCondition(
                         range = priceRange,
                         investRatio = 0.5,
                         cash = 10_000_000.0,
