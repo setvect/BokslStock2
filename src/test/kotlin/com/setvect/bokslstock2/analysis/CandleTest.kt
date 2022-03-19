@@ -17,7 +17,7 @@ class CandleTest {
     @Test
     @Transactional
     fun 분봉값_비교_5_10() {
-        val stock = stockRepository.findByCode(StockCode.CODE_KODEX_BANK_091170).get()
+        val stock = stockRepository.findByCode(StockCode.CODE_KODEX_2X_122630).get()
         val filterCandle = stock.candleList
             .filter { it.candleDateTime.hour == 9 && (it.candleDateTime.minute == 5 || it.candleDateTime.minute == 10) }
             .toList()

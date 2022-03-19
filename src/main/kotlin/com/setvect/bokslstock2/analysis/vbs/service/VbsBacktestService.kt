@@ -87,7 +87,7 @@ class VbsBacktestService(
                     maPrice = currentCandle.average[condition.maPeriod] ?: 0.0,
                     yield = ApplicationUtil.getYield(lastBuyInfo.unitPrice, nine5minuteCandle.openPrice),
                     unitPrice = nine5minuteCandle.openPrice,
-                    tradeDate = currentCandle.candleDateTimeStart
+                    tradeDate = currentCandle.candleDateTimeStart.withHour(0).withMinute(0)
                 )
                 vbsTradeRepository.save(sellInfo)
                 lastBuyInfo = null

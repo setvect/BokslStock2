@@ -199,7 +199,7 @@ class VbsBacktest {
     @Transactional
     fun 일회성_백테스팅_리포트_만듦() {
         // 거래 조건
-        val range = DateRange(LocalDateTime.of(2017, 3, 15, 0, 0), LocalDateTime.now())
+        val range = DateRange(LocalDateTime.of(2017, 2, 14, 0, 0), LocalDateTime.now())
         val mabsAnalysisConditionList = listOf(
             VbsAnalysisCondition(
                 tradeConditionList = listOf(
@@ -214,19 +214,19 @@ class VbsBacktest {
                     comment = ""
                 )
             ),
-            VbsAnalysisCondition(
-                tradeConditionList = listOf(
-                    makeCondition(StockCode.CODE_KODEX_BANK_091170), // KODEX 은행
-                ),
-                basic = BasicAnalysisCondition(
-                    range = range,
-                    investRatio = 0.99,
-                    cash = 10_000_000.0,
-                    feeBuy = 0.0002,
-                    feeSell = 0.0002,
-                    comment = ""
-                )
-            )
+//            VbsAnalysisCondition(
+//                tradeConditionList = listOf(
+//                    makeCondition(StockCode.CODE_KODEX_2X_122630), // KODEX 은행
+//                ),
+//                basic = BasicAnalysisCondition(
+//                    range = range,
+//                    investRatio = 0.99,
+//                    cash = 10_000_000.0,
+//                    feeBuy = 0.0002,
+//                    feeSell = 0.0002,
+//                    comment = ""
+//                )
+//            )
         )
 
         // 리포트 만듦

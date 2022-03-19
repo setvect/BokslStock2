@@ -38,7 +38,6 @@ class MovingAverageService(
                     it.candleDateTime
                 }
                 PERIOD_DAY -> {
-                    // TODO 하루 단위로 그룹핑
                     it.candleDateTime.withHour(0).withMinute(0).withSecond(0)
                 }
                 PERIOD_WEEK -> {

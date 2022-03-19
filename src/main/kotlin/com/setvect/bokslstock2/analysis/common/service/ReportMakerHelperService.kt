@@ -9,9 +9,11 @@ import com.setvect.bokslstock2.common.entity.AnalysisReportResult
 import com.setvect.bokslstock2.common.entity.ConditionEntity
 import com.setvect.bokslstock2.common.entity.TradeReportItem
 import com.setvect.bokslstock2.index.entity.CandleEntity
-import com.setvect.bokslstock2.index.repository.CandleRepository
+import com.setvect.bokslstock2.index.model.PeriodType
+import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
+import com.setvect.bokslstock2.util.DateUtil
 import java.time.LocalDateTime
 import java.util.*
 import org.apache.poi.ss.usermodel.BorderStyle
@@ -33,7 +35,7 @@ import kotlin.streams.toList
  */
 @Service
 class ReportMakerHelperService(
-    val candleRepository: CandleRepository,
+    val movingAverageService: MovingAverageService
 ) {
     /**
      * @return <조건아이디, 투자 종목에 대한 Buy & Hold시 수익 정보>
@@ -64,11 +66,23 @@ class ReportMakerHelperService(
      */
     fun getConditionOfCandle(condition: AnalysisCondition): Map<Long, List<CandleEntity>> {
         return condition.conditionList.associate { tradeCondition ->
-            tradeCondition.getConditionId() to candleRepository.findByRange(
-                tradeCondition.stock,
-                condition.basic.range.from,
-                condition.basic.range.to
-            )
+            val dayList = movingAverageService.getMovingAverage(tradeCondition.stock.code, PeriodType.PERIOD_DAY, listOf())
+            val candleList = dayList
+                .filter { DateUtil.isBetween(it.candleDateTimeStart, condition.basic.range.from, condition.basic.range.to) }
+                .map {
+                    CandleEntity(
+                        stock = tradeCondition.stock,
+                        candleDateTime = it.candleDateTimeStart.withHour(0).withMinute(0),
+                        periodType = it.periodType,
+                        openPrice = it.openPrice,
+                        highPrice = it.highPrice,
+                        lowPrice = it.lowPrice,
+                        closePrice = it.closePrice
+                    )
+                }
+                .toList()
+
+            tradeCondition.getConditionId() to candleList
         }
     }
 
@@ -188,7 +202,7 @@ class ReportMakerHelperService(
             val backtestYield = ApplicationUtil.getYield(backtestLastRate, backtestRate)
 
             buyHoldLastRate = buyHoldRate
-            backtestLastRate= backtestRate
+            backtestLastRate = backtestRate
             EvaluationRateItem(
                 baseDate = date,
                 buyHoldRate = buyHoldRate,

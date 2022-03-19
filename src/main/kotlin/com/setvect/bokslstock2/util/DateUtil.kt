@@ -28,26 +28,26 @@ object DateUtil {
      * @param dateStr yyyy-MM-dd 형태
      * @return LocalDAte
      */
-    fun getLocalDate(dateStr: String?): LocalDate {
+    fun getLocalDate(dateStr: String): LocalDate {
         return getLocalDate(dateStr, yyyy_MM_dd)
     }
 
-    fun getLocalDate(dateStr: String?, pattern: String?): LocalDate {
+    fun getLocalDate(dateStr: String, pattern: String): LocalDate {
         val formatter = DateTimeFormatter.ofPattern(pattern)
         return LocalDate.parse(dateStr, formatter)
     }
 
-    fun getLocalDateTime(dateStr: String?): LocalDateTime {
+    fun getLocalDateTime(dateStr: String): LocalDateTime {
         val formatter = DateTimeFormatter.ofPattern(yyyy_MM_ddTHH_mm_ss)
         return LocalDateTime.parse(dateStr, formatter)
     }
 
-    fun getLocalTime(timeStr: String?): LocalTime {
+    fun getLocalTime(timeStr: String): LocalTime {
         val formatter = DateTimeFormatter.ofPattern(HH_mm_ss)
         return LocalTime.parse(timeStr, formatter)
     }
 
-    fun getLocalTime(timeStr: String?, pattern: String?): LocalTime {
+    fun getLocalTime(timeStr: String, pattern: String): LocalTime {
         val formatter = DateTimeFormatter.ofPattern(pattern)
         return LocalTime.parse(timeStr, formatter)
     }
@@ -56,7 +56,7 @@ object DateUtil {
      * @param localDateTime 날짜시간
      * @return yyyy-MM-dd 형태로 반환
      */
-    fun format(localDateTime: LocalDateTime, pattern: String? = yyyy_MM_dd): String {
+    fun format(localDateTime: LocalDateTime, pattern: String = yyyy_MM_dd): String {
         val formatter = DateTimeFormatter.ofPattern(pattern)
         return localDateTime.format(formatter)
     }
@@ -65,7 +65,7 @@ object DateUtil {
         return format(localDateTime, yyyy_MM_dd_HH_mm_ss)
     }
 
-    fun format(localTime: LocalTime, pattern: String?): String {
+    fun format(localTime: LocalTime, pattern: String): String {
         val formatter = DateTimeFormatter.ofPattern(pattern)
         return localTime.format(formatter)
     }
@@ -89,6 +89,15 @@ object DateUtil {
             throw RuntimeException("입력값은 1~12 사이 입니다.")
         }
         return date.withMonth((date.monthValue - 1) / deviceMonth * deviceMonth + 1)
+    }
+
+    /**
+     * @return [base]값이 [from]과 [to] 사이에 있으면 true
+     */
+    fun isBetween(base: LocalDateTime, from: LocalDateTime, to: LocalDateTime): Boolean {
+        val a = from.isBefore(base) || base == from
+        val b = to.isAfter(base) || base == to
+        return a && b
     }
 
 }
