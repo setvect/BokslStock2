@@ -1,13 +1,10 @@
 package com.setvect.bokslstock2.analysis.dm.model
 
-import com.setvect.bokslstock2.common.entity.ConditionEntity
+import com.setvect.bokslstock2.analysis.common.model.Trade
 import com.setvect.bokslstock2.index.entity.StockEntity
 
+@Deprecated("안씀")
 class DmConditionEntity(
-    override val stock: StockEntity,
-    override val tradeList: List<DmTrade>
-) : ConditionEntity {
-    override fun getConditionId(): Long {
-        return 0
-    }
-}
+    val stock: StockEntity,
+    val tradeList: List<Trade>
+)

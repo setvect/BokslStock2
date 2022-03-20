@@ -12,6 +12,7 @@ import kotlin.streams.toList
 /**
  * 백테스팅 결과를 이용해 매매 분석
  */
+@Deprecated("의존성이 너무 높음", ReplaceWith("BacktestTradeService"))
 class TradeService<C : AnalysisCondition, E : TradeEntity, I : TradeReportItem, R : AnalysisReportResult>(
     private val reportMakerHelperService: ReportMakerHelperService,
     private val makerTrade: MakerTreadReportItem<E, I>,

@@ -3,6 +3,7 @@ package com.setvect.bokslstock2.common.entity
 import com.setvect.bokslstock2.analysis.common.model.TradeType
 import java.time.LocalDateTime
 
+@Deprecated("의존성 제거")
 interface TradeEntity {
     fun getConditionEntity(): ConditionEntity
 
