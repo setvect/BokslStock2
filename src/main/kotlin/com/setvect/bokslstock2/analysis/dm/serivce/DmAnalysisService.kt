@@ -1,10 +1,9 @@
 package com.setvect.bokslstock2.analysis.dm.serivce
 
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
-import com.setvect.bokslstock2.analysis.common.model.Trade
+import com.setvect.bokslstock2.analysis.common.model.PreTrade
 import com.setvect.bokslstock2.analysis.common.model.TradeType
 import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
-import com.setvect.bokslstock2.analysis.dm.model.DmAnalysisCondition
 import com.setvect.bokslstock2.analysis.dm.model.DmAnalysisReportResult
 import com.setvect.bokslstock2.analysis.dm.model.DmBacktestCondition
 import com.setvect.bokslstock2.analysis.dm.model.Stock
@@ -34,26 +33,22 @@ class DmAnalysisService(
 
     fun runTest(condition: DmBacktestCondition) {
         checkValidate(condition)
-        val tradeList = processDualMomentum(condition)
+        val preTrades = processDualMomentum(condition)
         var sumYield = 1.0
-        tradeList.forEach {
+        preTrades.forEach {
             log.info("${it.tradeType}\t${it.tradeDate}\t${it.stock.name}(${it.stock.code})\t${it.yield}")
             sumYield *= (it.yield + 1)
         }
         log.info("수익률: ${String.format("%.2f%%", (sumYield - 1) * 100)}")
 
-        val analysisCondition = DmAnalysisCondition(
-            tradeConditionList = listOf(),
-            basic = condition.basic
-        )
-//        val trades = tradeService.trade(analysisCondition)
-//        println(trades.size)
+        val trades = tradeService.trade(condition.tradeCondition, preTrades)
+        println(trades.size)
 //
 //        val result = tradeService.analysis(trades, analysisCondition)
 //        makeReportFile(result)
     }
 
-    private fun processDualMomentum(condition: DmBacktestCondition): List<Trade> {
+    private fun processDualMomentum(condition: DmBacktestCondition): List<PreTrade> {
         val stockCodes = condition.listStock()
         // <종목코드, 종목정보>
         val codeByStock = stockCodes.associateWith { stockRepository.findByCode(it).get() }
@@ -62,13 +57,12 @@ class DmAnalysisService(
         val stockPriceIndex = getStockPriceIndex(stockCodes, condition)
 
         var current =
-            DateUtil.fitMonth(condition.basic.range.from.withDayOfMonth(1), condition.periodType.getDeviceMonth())
+            DateUtil.fitMonth(condition.tradeCondition.range.from.withDayOfMonth(1), condition.periodType.getDeviceMonth())
 
-        var beforeBuyTrade: Trade? = null
+        var beforeBuyTrade: PreTrade? = null
 
-        val tradeList = mutableListOf<Trade>()
-        var tradeSeq = 0L
-        while (current.isBefore(condition.basic.range.to)) {
+        val tradeList = mutableListOf<PreTrade>()
+        while (current.isBefore(condition.tradeCondition.range.to)) {
             val stockByRate = calculateRate(stockPriceIndex, current, condition, codeByStock)
 
             val existBeforeBuy = beforeBuyTrade != null
@@ -80,14 +74,14 @@ class DmAnalysisService(
 
                 if (existBeforeBuy && changeBuyStock) {
                     val stockPrice = stockPriceIndex[beforeBuyTrade!!.stock.code]!![current]!!
-                    val sellTrade = makeSellTrade(stockPrice, current, ++tradeSeq, beforeBuyTrade)
+                    val sellTrade = makeSellTrade(stockPrice, current, beforeBuyTrade)
                     tradeList.add(sellTrade)
                     beforeBuyTrade = null
                 }
                 if (existHoldCode && (beforeBuyTrade == null || beforeBuyTrade.stock.code != condition.holdCode)) {
                     val stockPrice = stockPriceIndex[condition.holdCode]!![current]!!
                     val stock = codeByStock[condition.holdCode]!!
-                    val buyTrade = makeBuyTrade(stockPrice, current, ++tradeSeq, stock)
+                    val buyTrade = makeBuyTrade(stockPrice, current, stock)
                     tradeList.add(buyTrade)
                     beforeBuyTrade = buyTrade
                 } else if (existHoldCode) {
@@ -100,13 +94,13 @@ class DmAnalysisService(
 
                 if (existBeforeBuy && changeBuyStock) {
                     val stockPrice = stockPriceIndex[beforeBuyTrade!!.stock.code]!![current]!!
-                    val sellTrade = makeSellTrade(stockPrice, current, ++tradeSeq, beforeBuyTrade)
+                    val sellTrade = makeSellTrade(stockPrice, current, beforeBuyTrade)
                     tradeList.add(sellTrade)
                 }
                 if (!existBeforeBuy || changeBuyStock) {
                     val stockPrice = stockPriceIndex[stockCode]!![current]!!
                     val stock = codeByStock[stockCode]!!
-                    val buyTrade = makeBuyTrade(stockPrice, current, ++tradeSeq, stock)
+                    val buyTrade = makeBuyTrade(stockPrice, current, stock)
                     tradeList.add(buyTrade)
                     beforeBuyTrade = buyTrade
                 } else {
@@ -131,16 +125,14 @@ class DmAnalysisService(
     private fun makeBuyTrade(
         stockPrice: CandleDto,
         current: LocalDateTime,
-        seq: Long,
         stock: StockEntity
-    ): Trade {
-        val buyTrade = Trade(
+    ): PreTrade {
+        val buyTrade = PreTrade(
             stock = Stock.of(stock),
             tradeType = TradeType.BUY,
             yield = 0.0,
             unitPrice = stockPrice.openPrice,
             tradeDate = current,
-            seqNo = seq,
         )
         log.info("매수: ${buyTrade.tradeDate}, ${buyTrade.stock.name}(${buyTrade.stock.code})")
         return buyTrade
@@ -150,16 +142,14 @@ class DmAnalysisService(
     private fun makeSellTrade(
         stockPrice: CandleDto,
         current: LocalDateTime,
-        seq: Long,
-        beforeBuyTrade: Trade
-    ): Trade {
-        val sellTrade = Trade(
+        beforeBuyTrade: PreTrade
+    ): PreTrade {
+        val sellTrade = PreTrade(
             stock = beforeBuyTrade.stock,
             tradeType = TradeType.SELL,
             yield = ApplicationUtil.getYield(beforeBuyTrade.unitPrice, stockPrice.openPrice),
             unitPrice = stockPrice.openPrice,
             tradeDate = current,
-            seqNo = seq,
         )
         log.info("매도: ${sellTrade.tradeDate}, ${sellTrade.stock.name}(${sellTrade.stock.code}), 수익: ${sellTrade.yield}")
         return sellTrade

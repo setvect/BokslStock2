@@ -36,7 +36,7 @@ class DmBacktest {
         )
 
         val condition = DmBacktestCondition(
-            basic = basic,
+            tradeCondition = basic,
             stockCodes = listOf(StockCode.CODE_KODEX_200_069500),
             holdCode = StockCode.CODE_KODEX_SHORT_BONDS_153130,
             periodType = PeriodType.PERIOD_MONTH,

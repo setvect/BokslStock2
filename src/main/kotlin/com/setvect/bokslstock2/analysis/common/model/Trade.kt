@@ -1,40 +1,42 @@
 package com.setvect.bokslstock2.analysis.common.model
 
-import com.setvect.bokslstock2.analysis.dm.model.Stock
-import java.time.LocalDateTime
-
 /**
- * 매매 내역
+ * 단위 거래 건별 내역
  */
 data class Trade(
+    val preTrade: PreTrade,
     /**
-     * 일련번호
+     * 매수 수량
      */
-    val seqNo: Long,
+    val qty: Int,
+    /**
+     * 해당 거래 후 현금
+     */
+    val cash: Double,
+    /**
+     * 매매 수수료
+     */
+    val feePrice: Double,
+    /**
+     * 투자 수익 금액
+     */
+    val gains: Double,
+    /**
+     * 현재시점 주식평가금
+     */
+    val stockEvalPrice: Double
+) {
+    /**
+     * @return 평가금
+     */
+    fun getEvalPrice(): Double {
+        return stockEvalPrice + cash
+    }
 
     /**
-     * 매매 종목
+     * @return 매수 금액
      */
-    val stock: Stock,
-
-    val tradeType: TradeType,
-
-    /**
-     * 매도시 수익률
-     * 소수로 표현, 1->100%, -0.02 -> -2%
-     * 매수는 0으로 표현
-     */
-    val yield: Double,
-
-    /**
-     * 거래 단가
-     * - 매수일 경우 매수 단가
-     * - 매도일 경우 매도 단가
-     */
-    val unitPrice: Double,
-
-    /**
-     * 거래시간
-     */
-    val tradeDate: LocalDateTime,
-)
+    fun getBuyAmount(): Double {
+        return qty * preTrade.unitPrice
+    }
+}

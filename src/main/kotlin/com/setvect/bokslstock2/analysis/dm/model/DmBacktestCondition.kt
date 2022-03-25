@@ -11,7 +11,7 @@ data class DmBacktestCondition(
     /**
      * 매매 기본 조건
      */
-    val basic: TradeCondition,
+    val tradeCondition: TradeCondition,
 
     /**
      * 듀얼 모멘텀 대상 종목 코드

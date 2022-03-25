@@ -1,14 +1,14 @@
 package com.setvect.bokslstock2.analysis.dm.model
 
 import com.setvect.bokslstock2.analysis.common.model.CommonTradeReportItem
-import com.setvect.bokslstock2.analysis.common.model.Trade
+import com.setvect.bokslstock2.analysis.common.model.PreTrade
 
 @Deprecated("안씀")
 data class DmTradeReportItem(
     /**
      * 거래 내용
      */
-    val dmTrade: Trade,
+    val dmTrade: PreTrade,
 
     /**
      * 공통 거래 내역

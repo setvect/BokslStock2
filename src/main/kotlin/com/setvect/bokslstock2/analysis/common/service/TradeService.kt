@@ -83,7 +83,7 @@ class TradeService<C : AnalysisCondition, E : TradeEntity, I : TradeReportItem, 
         val buyStock = HashMap<String, I>()
         tradeAllList.forEach { tradeItem ->
             if (tradeItem.tradeType == TradeType.BUY) {
-                // 매도 처리
+                // 매수 처리
                 val buyCash =
                     ReportMakerHelperService.getBuyCash(
                         buyStock.size,
