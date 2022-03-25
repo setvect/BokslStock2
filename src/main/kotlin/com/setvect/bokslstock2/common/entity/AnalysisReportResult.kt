@@ -5,6 +5,7 @@ import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
 /**
  * 멀티 종목 매매 백테스트 분석 결과
  */
+@Deprecated("안씀")
 interface AnalysisReportResult {
     /**
      * 리포트 조건

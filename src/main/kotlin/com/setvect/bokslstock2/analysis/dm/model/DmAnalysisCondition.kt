@@ -5,7 +5,7 @@ import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 /**
  * 듀얼모멘텀 백테스트
  */
-@Deprecated("안씀")
+@Deprecated("안씀", replaceWith = ReplaceWith("폐기"))
 data class DmAnalysisCondition(
     /**
      * 분석 조건

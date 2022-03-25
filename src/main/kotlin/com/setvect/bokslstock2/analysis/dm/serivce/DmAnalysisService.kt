@@ -26,9 +26,9 @@ import org.springframework.stereotype.Service
 class DmAnalysisService(
     private val stockRepository: StockRepository,
     private val movingAverageService: MovingAverageService,
+    private val tradeService: BacktestTradeService,
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
-    val tradeService = BacktestTradeService()
 
 
     fun runTest(condition: DmBacktestCondition) {
@@ -44,7 +44,7 @@ class DmAnalysisService(
         val trades = tradeService.trade(condition.tradeCondition, preTrades)
         println(trades.size)
 //
-//        val result = tradeService.analysis(trades, analysisCondition)
+        val result = tradeService.analysis(trades, condition.tradeCondition, condition.listStock())
 //        makeReportFile(result)
     }
 
@@ -207,7 +207,7 @@ class DmAnalysisService(
      * @return <종목코드, <날짜, 캔들>>
      */
     private fun getStockPriceIndex(
-        stockCodes: List<String>,
+        stockCodes: Set<String>,
         dmCondition: DmBacktestCondition
     ): Map<String, Map<LocalDateTime, CandleDto>> {
         val stockPriceIndex = stockCodes.associateWith { code ->

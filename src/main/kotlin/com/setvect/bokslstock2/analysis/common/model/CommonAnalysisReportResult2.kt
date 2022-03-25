@@ -8,8 +8,7 @@ import kotlin.streams.toList
 /**
  * 멀티 종목 매매 백테스트 분석 결과
  */
-@Deprecated("안씀")
-data class CommonAnalysisReportResult(
+data class CommonAnalysisReportResult2(
     /**
      * 날짜별 평가금 변화 이력
      */
@@ -18,30 +17,30 @@ data class CommonAnalysisReportResult(
     /**
      * 전체 수익 결과
      */
-    val yieldTotal: TotalYield,
+    val yieldTotal: CommonAnalysisReportResult.TotalYield,
 
     /**
      * 조건 기준 승률 합
-     * <조건아이디, 승률>
+     * <종목코드, 승률>
      */
-    val winningRateCondition: Map<Long, WinningRate>,
+    val winningRateCondition: Map<String, CommonAnalysisReportResult.WinningRate>,
 
     /**
      * 조건별 종목 Buy&Hold 수익률
-     * <조건아이디, 수익률>
+     * <종목코드, 수익률>
      */
-    val buyHoldYieldCondition: Map<Long, YieldMdd>,
+    val buyHoldYieldCondition: Map<String, CommonAnalysisReportResult.YieldMdd>,
 
     /**
      * 종목 Buy&Hold 수익률
      */
-    val buyHoldYieldTotal: TotalYield,
+    val buyHoldYieldTotal: CommonAnalysisReportResult.TotalYield,
 ) {
     /**
      *@return 전체 매매 내역 승률 합
      */
-    fun getWinningRateTotal(): WinningRate {
-        return WinningRate(
+    fun getWinningRateTotal(): CommonAnalysisReportResult.WinningRate {
+        return CommonAnalysisReportResult.WinningRate(
             gainCount = winningRateCondition.values.sumOf { it.gainCount },
             lossCount = winningRateCondition.values.sumOf { it.lossCount },
             invest = winningRateCondition.values.sumOf { it.invest },
@@ -101,80 +100,5 @@ data class CommonAnalysisReportResult(
         val mean = ds.mean
         val stdev = ds.standardDeviation
         return mean / stdev * sqrt(yieldList.size.toDouble())
-    }
-
-
-    /*
-     * 수익률과 MDD
-     */
-    data class YieldMdd(
-        /**
-         * 수익률
-         */
-        val yield: Double,
-
-        /**
-         * 최대 낙폭
-         */
-        val mdd: Double,
-    )
-
-    data class TotalYield(
-        /**
-         * 수익률
-         */
-        val yield: Double,
-
-        /**
-         * 최대 낙폭
-         */
-        val mdd: Double,
-        /**
-         * 분석 일자
-         */
-        val dayCount: Int,
-
-        ) {
-        /**
-         * @return 연복리
-         */
-        fun getCagr(): Double {
-            return ApplicationUtil.getCagr(1.0, 1 + `yield`, dayCount)
-        }
-    }
-
-    /**
-     * 단위 수익 정보
-     */
-    data class WinningRate(
-        /**
-         * 수익 카운트
-         */
-        val gainCount: Int,
-
-        /**
-         * 이익 카운트
-         */
-        val lossCount: Int,
-
-        /**
-         * 수익 합계
-         */
-        val invest: Double,
-
-        ) {
-        /**
-         * @return 총 매매 횟수 (매수-매도가 한쌍)
-         */
-        fun getTradeCount(): Int {
-            return gainCount + lossCount
-        }
-
-        /**
-         * @return 총 매매에서 이익을 본 비율
-         */
-        fun getWinRate(): Double {
-            return gainCount.toDouble() / getTradeCount()
-        }
     }
 }

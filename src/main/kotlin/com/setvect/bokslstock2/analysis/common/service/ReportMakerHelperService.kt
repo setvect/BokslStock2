@@ -38,6 +38,7 @@ class ReportMakerHelperService(
     /**
      * @return <조건아이디, 투자 종목에 대한 Buy & Hold시 수익 정보>
      */
+    @Deprecated("안씀")
     fun calculateBuyAndHoldYield(
         condition: AnalysisCondition,
     ): Map<Long, CommonAnalysisReportResult.YieldMdd> {
@@ -62,6 +63,7 @@ class ReportMakerHelperService(
     /**
      *@return <조건아아디, List(캔들)>
      */
+    @Deprecated("안씀")
     fun getConditionOfCandle(condition: AnalysisCondition): Map<Long, List<CandleEntity>> {
         return condition.conditionList.associate { tradeCondition ->
             tradeCondition.getConditionId() to candleRepository.findByRange(
@@ -76,6 +78,7 @@ class ReportMakerHelperService(
      * Buy & Hold 투자금액 대비 날짜별 평가율
      * @return <날짜, 평가율>
      */
+    @Deprecated("안씀")
     fun getBuyAndHoldEvalRate(condition: AnalysisCondition): SortedMap<LocalDateTime, Double> {
         val combinedYield: SortedMap<LocalDateTime, Double> = calculateBuyAndHoldProfitRatio(condition)
         val initial = TreeMap<LocalDateTime, Double>()
@@ -91,6 +94,7 @@ class ReportMakerHelperService(
      * 수익비는 1에서 시작함
      * @return <날짜, 수익비>
      */
+    @Deprecated("안씀")
     fun calculateBuyAndHoldProfitRatio(condition: AnalysisCondition): SortedMap<LocalDateTime, Double> {
         val range = condition.basic.range
 
@@ -135,6 +139,7 @@ class ReportMakerHelperService(
     /**
      * @return 날짜별 평가금 계산
      */
+    @Deprecated("안씀", replaceWith = ReplaceWith("BacktestTradeService.applyEvaluationAmount"))
     fun applyEvaluationAmount(
         tradeItemHistory: List<TradeReportItem>,
         condition: AnalysisCondition
@@ -188,7 +193,7 @@ class ReportMakerHelperService(
             val backtestYield = ApplicationUtil.getYield(backtestLastRate, backtestRate)
 
             buyHoldLastRate = buyHoldRate
-            backtestLastRate= backtestRate
+            backtestLastRate = backtestRate
             EvaluationRateItem(
                 baseDate = date,
                 buyHoldRate = buyHoldRate,
@@ -407,6 +412,7 @@ class ReportMakerHelperService(
         /**
          * @return <조건아이디, 최초 가격>
          */
+        @Deprecated("안씀")
         fun getConditionOfFirstOpenPrice(
             conditionList: List<ConditionEntity>,
             mapOfCandleList: Map<Long, List<CandleEntity>>
@@ -421,6 +427,7 @@ class ReportMakerHelperService(
         /**
          * @return <조건아이디, Map<날짜, 종가>>
          */
+        @Deprecated("안씀")
         fun getConditionByClosePriceMap(
             tradeConditionList: List<ConditionEntity>,
             candleListMap: Map<Long, List<CandleEntity>>
@@ -434,6 +441,7 @@ class ReportMakerHelperService(
         /**
          * @return <조건아이디, 투자 종목 수익 정보>
          */
+        @Deprecated("안씀")
         fun calculateCoinInvestment(
             tradeItemHistory: List<TradeReportItem>
         ): Map<Long, CommonAnalysisReportResult.WinningRate> {

@@ -2,6 +2,7 @@ package com.setvect.bokslstock2.common.entity
 
 import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 
+@Deprecated("안씀")
 interface AnalysisCondition {
     /**
      * 분석 조건
