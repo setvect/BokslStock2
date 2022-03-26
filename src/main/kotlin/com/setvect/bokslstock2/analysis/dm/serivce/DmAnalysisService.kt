@@ -14,7 +14,6 @@ import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
-import com.setvect.bokslstock2.util.DateRange
 import com.setvect.bokslstock2.util.DateUtil
 import java.io.File
 import java.io.FileOutputStream
@@ -269,7 +268,7 @@ class DmAnalysisService(
                 .map { "${it.code}[${it.name}]" }
                 .orElse("")
         }
-        val ofNullable = Optional.ofNullable(dmBacktestCondition.holdCode).map { code ->
+        val holdStockName = Optional.ofNullable(dmBacktestCondition.holdCode).map { code ->
             stockRepository
                 .findByCode(code)
                 .map { "${it.code}[${it.name}]" }
@@ -281,7 +280,7 @@ class DmAnalysisService(
 
         val tradeCondition = dmBacktestCondition.tradeCondition
         report.append("모멘텀 대상종목\t${stockName}").append("\n")
-        report.append("모멘텀 대상종목\t$ofNullable").append("\n")
+        report.append("홀드 종목\t$holdStockName").append("\n")
         report.append("거래주기\t${dmBacktestCondition.periodType}").append("\n")
         report.append("기간별 가중치\t$timeWeight").append("\n")
         report.append("분석 대상 기간\t${tradeCondition.range}").append("\n")
@@ -432,65 +431,7 @@ class DmAnalysisService(
         val sheet = workbook.createSheet()
         val summary = getSummary(dmBacktestCondition, analysisResult.common)
         ReportMakerHelperService.textToSheet(summary, sheet)
-        log.debug(summary)
-
-        val conditionSummary = getConditionSummary(dmBacktestCondition, analysisResult)
-        ReportMakerHelperService.textToSheet(conditionSummary, sheet)
         sheet.defaultColumnWidth = 60
         return sheet
     }
-
-    /**
-     * 백테스트 조건 요약 정보
-     */
-    @Deprecated("사용안해도 될것 같은데... ", replaceWith = ReplaceWith("getSummary()"))
-    private fun getConditionSummary(
-        dmBacktestCondition: DmBacktestCondition,
-        result: AnalysisResult
-    ): String {
-        val range: DateRange = result.analysisCondition.range
-        val condition = result.analysisCondition
-
-        val report = StringBuilder()
-
-        report.append("----------- 백테스트 조건 -----------\n")
-        report.append(String.format("분석기간\t %s", range)).append("\n")
-        report.append(String.format("투자비율\t %,.2f%%", condition.investRatio * 100)).append("\n")
-        report.append(String.format("최초 투자금액\t %,f", condition.cash)).append("\n")
-        report.append(String.format("매수 수수료\t %,.2f%%", condition.feeBuy * 100)).append("\n")
-        report.append(String.format("매도 수수료\t %,.2f%%", condition.feeSell * 100)).append("\n")
-
-        report.append("----------- 테스트 조건 -----------\n")
-        val stockName = dmBacktestCondition.stockCodes.joinToString(", ") { code ->
-            stockRepository
-                .findByCode(code)
-                .map { "${it.code}[${it.name}]" }
-                .orElse("")
-        }
-
-        val ofNullable = Optional.ofNullable(dmBacktestCondition.holdCode).map { code ->
-            stockRepository
-                .findByCode(code)
-                .map { "${it.code}[${it.name}]" }
-                .orElse("")
-        }.orElse("")
-        val timeWeight = dmBacktestCondition.timeWeight.entries
-            .sortedBy { it.key }
-            .joinToString(", ") { "${it.key}월:${String.format("%.2f%%", it.value * 100)}" }
-
-        val tradeCondition = dmBacktestCondition.tradeCondition
-        report.append("모멘텀 대상종목\t${stockName}").append("\n")
-        report.append("모멘텀 대상종목\t$ofNullable").append("\n")
-        report.append("거래주기\t${dmBacktestCondition.periodType}").append("\n")
-        report.append("기간별 가중치\t$timeWeight").append("\n")
-        report.append("분석 대상 기간\t${tradeCondition.range}").append("\n")
-        report.append("투자 비율\t${String.format("%,.2f%%", tradeCondition.investRatio * 100)}").append("\n")
-        report.append("최초 투자금액\t${String.format("%,.0f", tradeCondition.cash)}").append("\n")
-        report.append("매수 수수료\t${String.format("%,.2f%%", tradeCondition.feeBuy * 100)}").append("\n")
-        report.append("매도 수수료\t${String.format("%,.2f%%", tradeCondition.feeSell * 100)}").append("\n")
-        report.append("설명\t${tradeCondition.comment}").append("\n")
-
-        return report.toString()
-    }
-
 }
