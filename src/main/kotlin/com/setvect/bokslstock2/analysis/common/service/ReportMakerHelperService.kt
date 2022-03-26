@@ -2,6 +2,7 @@ package com.setvect.bokslstock2.analysis.common.service
 
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
 import com.setvect.bokslstock2.analysis.common.model.EvaluationRateItem
+import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.common.model.TradeType
 import com.setvect.bokslstock2.analysis.common.model.YieldRateItem
 import com.setvect.bokslstock2.common.entity.AnalysisCondition
@@ -463,6 +464,7 @@ class ReportMakerHelperService(
         /**
          * @return 조건 정보가 담긴 리포트 파일명 subfix
          */
+        @Deprecated("안씀")
         fun getReportFileSuffix(
             result: AnalysisReportResult
         ): String {
@@ -473,6 +475,18 @@ class ReportMakerHelperService(
                 result.analysisCondition.basic.range.fromDateFormat,
                 result.analysisCondition.basic.range.toDateFormat,
                 tradeConditionList.joinToString(",") { it.stock.code }
+            )
+        }
+
+        /**
+         * @return 조건 정보가 담긴 리포트 파일명 suffix
+         */
+        fun getReportFileSuffix(tradeCondition: TradeCondition, listStock: Set<String>): String {
+            return String.format(
+                "%s~%s_%s.xlsx",
+                tradeCondition.range.fromDateFormat,
+                tradeCondition.range.toDateFormat,
+                listStock.joinToString(",") { it },
             )
         }
     }

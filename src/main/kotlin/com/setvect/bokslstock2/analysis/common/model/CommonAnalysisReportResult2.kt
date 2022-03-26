@@ -7,6 +7,7 @@ import kotlin.streams.toList
 
 /**
  * 멀티 종목 매매 백테스트 분석 결과
+ * TODO 이름 변경 CommonAnalysisReportResult2 -> CommonAnalysisReportResult
  */
 data class CommonAnalysisReportResult2(
     /**

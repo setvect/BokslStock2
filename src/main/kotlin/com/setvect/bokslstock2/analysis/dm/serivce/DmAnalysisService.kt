@@ -1,10 +1,12 @@
 package com.setvect.bokslstock2.analysis.dm.serivce
 
+import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
+import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult2
 import com.setvect.bokslstock2.analysis.common.model.PreTrade
 import com.setvect.bokslstock2.analysis.common.model.TradeType
 import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
-import com.setvect.bokslstock2.analysis.dm.model.DmAnalysisReportResult
+import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.analysis.dm.model.DmBacktestCondition
 import com.setvect.bokslstock2.analysis.dm.model.Stock
 import com.setvect.bokslstock2.index.dto.CandleDto
@@ -12,9 +14,14 @@ import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
+import com.setvect.bokslstock2.util.DateRange
 import com.setvect.bokslstock2.util.DateUtil
+import java.io.File
+import java.io.FileOutputStream
 import java.time.LocalDateTime
 import java.util.*
+import org.apache.poi.xssf.usermodel.XSSFSheet
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -31,9 +38,9 @@ class DmAnalysisService(
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
 
-    fun runTest(condition: DmBacktestCondition) {
-        checkValidate(condition)
-        val preTrades = processDualMomentum(condition)
+    fun runTest(dmBacktestCondition: DmBacktestCondition) {
+        checkValidate(dmBacktestCondition)
+        val preTrades = processDualMomentum(dmBacktestCondition)
         var sumYield = 1.0
         preTrades.forEach {
             log.info("${it.tradeType}\t${it.tradeDate}\t${it.stock.name}(${it.stock.code})\t${it.yield}")
@@ -41,11 +48,13 @@ class DmAnalysisService(
         }
         log.info("수익률: ${String.format("%.2f%%", (sumYield - 1) * 100)}")
 
-        val trades = tradeService.trade(condition.tradeCondition, preTrades)
+        val trades = tradeService.trade(dmBacktestCondition.tradeCondition, preTrades)
         println(trades.size)
 //
-        val result = tradeService.analysis(trades, condition.tradeCondition, condition.listStock())
-//        makeReportFile(result)
+        val result = tradeService.analysis(trades, dmBacktestCondition.tradeCondition, dmBacktestCondition.listStock())
+        val summary = getSummary(dmBacktestCondition, result.common)
+        println(summary)
+        makeReportFile(dmBacktestCondition, result)
     }
 
     private fun processDualMomentum(condition: DmBacktestCondition): List<PreTrade> {
@@ -228,65 +237,260 @@ class DmAnalysisService(
         }
     }
 
-
     /**
      * 분석 요약결과
      */
-    private fun getSummary(result: DmAnalysisReportResult): String {
+    private fun getSummary(dmBacktestCondition: DmBacktestCondition, commonAnalysisReportResult: CommonAnalysisReportResult2): String {
         val report = StringBuilder()
-        val tradeConditionList = result.dmAnalysisCondition.tradeConditionList
 
         report.append("----------- Buy&Hold 결과 -----------\n")
-        report.append(String.format("합산 동일비중 수익\t %,.2f%%", result.common.buyHoldYieldTotal.yield * 100))
+        report.append(String.format("합산 동일비중 수익\t %,.2f%%", commonAnalysisReportResult.buyHoldYieldTotal.yield * 100))
             .append("\n")
-        report.append(String.format("합산 동일비중 MDD\t %,.2f%%", result.common.buyHoldYieldTotal.mdd * 100)).append("\n")
-        report.append(String.format("합산 동일비중 CAGR\t %,.2f%%", result.common.buyHoldYieldTotal.getCagr() * 100))
+        report.append(String.format("합산 동일비중 MDD\t %,.2f%%", commonAnalysisReportResult.buyHoldYieldTotal.mdd * 100)).append("\n")
+        report.append(String.format("합산 동일비중 CAGR\t %,.2f%%", commonAnalysisReportResult.buyHoldYieldTotal.getCagr() * 100))
             .append("\n")
-        report.append(String.format("샤프지수\t %,.2f", result.common.getBuyHoldSharpeRatio())).append("\n")
+        report.append(String.format("샤프지수\t %,.2f", commonAnalysisReportResult.getBuyHoldSharpeRatio())).append("\n")
 
-//        for (i in 1..tradeConditionList.size) {
-//            val tradeCondition = tradeConditionList[i - 1]
-//            report.append(
-//                "${i}. 조건번호: ${tradeCondition.conditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), " +
-//                        "매매주기: ${tradeCondition.periodType}, 변동성 비율: ${tradeCondition.kRate}, 이동평균 단위:${tradeCondition.maPeriod}, " +
-//                        "갭상승 통과: ${tradeCondition.gapRisenSkip}, 하루에 한번 거래: ${tradeCondition.onlyOneDayTrade}\n"
-//            )
-//            val sumYield = result.common.buyHoldYieldCondition[tradeCondition.conditionSeq]
-//            if (sumYield == null) {
-//                log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${tradeCondition.conditionSeq}")
-//                break
-//            }
-//            report.append(String.format("${i}. 동일비중 수익\t %,.2f%%", sumYield.yield * 100)).append("\n")
-//            report.append(String.format("${i}. 동일비중 MDD\t %,.2f%%", sumYield.mdd * 100)).append("\n")
-//        }
 
-        val totalYield: CommonAnalysisReportResult.TotalYield = result.common.yieldTotal
+        val totalYield: CommonAnalysisReportResult.TotalYield = commonAnalysisReportResult.yieldTotal
         report.append("----------- 전략 결과 -----------\n")
         report.append(String.format("합산 실현 수익\t %,.2f%%", totalYield.yield * 100)).append("\n")
         report.append(String.format("합산 실현 MDD\t %,.2f%%", totalYield.mdd * 100)).append("\n")
-        report.append(String.format("합산 매매회수\t %d", result.common.getWinningRateTotal().getTradeCount())).append("\n")
-        report.append(String.format("합산 승률\t %,.2f%%", result.common.getWinningRateTotal().getWinRate() * 100))
+        report.append(String.format("합산 매매회수\t %d", commonAnalysisReportResult.getWinningRateTotal().getTradeCount())).append("\n")
+        report.append(String.format("합산 승률\t %,.2f%%", commonAnalysisReportResult.getWinningRateTotal().getWinRate() * 100))
             .append("\n")
         report.append(String.format("합산 CAGR\t %,.2f%%", totalYield.getCagr() * 100)).append("\n")
-        report.append(String.format("샤프지수\t %,.2f", result.common.getBacktestSharpeRatio())).append("\n")
+        report.append(String.format("샤프지수\t %,.2f", commonAnalysisReportResult.getBacktestSharpeRatio())).append("\n")
 
-        for (i in 1..tradeConditionList.size) {
-            val tradeCondition = tradeConditionList[i - 1]
-//            report.append(
-//                "${i}. 조건번호: ${tradeCondition.conditionSeq}, 종목: ${tradeCondition.stock.name}(${tradeCondition.stock.code}), " +
-//                        "매매주기: ${tradeCondition.periodType}, 변동성 비율: ${tradeCondition.kRate}, 이동평균 단위:${tradeCondition.maPeriod}, " +
-//                        "갭상승 통과: ${tradeCondition.gapRisenSkip}, 하루에 한번 거래: ${tradeCondition.onlyOneDayTrade}\n"
-//            )
-//
-//            val winningRate = result.common.winningRateCondition[tradeCondition.conditionSeq]
-//            if (winningRate == null) {
-//                log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${tradeCondition.conditionSeq}")
-//                break
-//            }
-//            report.append(String.format("${i}. 실현 수익\t %,f", winningRate.invest)).append("\n")
-//            report.append(String.format("${i}. 매매회수\t %d", winningRate.getTradeCount())).append("\n")
-//            report.append(String.format("${i}. 승률\t %,.2f%%", winningRate.getWinRate() * 100)).append("\n")
+        report.append("----------- 테스트 조건 -----------\n")
+        val stockName = dmBacktestCondition.stockCodes.joinToString(", ") { code ->
+            stockRepository
+                .findByCode(code)
+                .map { "${it.code}[${it.name}]" }
+                .orElse("")
         }
+        val ofNullable = Optional.ofNullable(dmBacktestCondition.holdCode).map { code ->
+            stockRepository
+                .findByCode(code)
+                .map { "${it.code}[${it.name}]" }
+                .orElse("")
+        }.orElse("")
+        val timeWeight = dmBacktestCondition.timeWeight.entries
+            .sortedBy { it.key }
+            .joinToString(", ") { "${it.key}월:${String.format("%.2f%%", it.value * 100)}" }
+
+        val tradeCondition = dmBacktestCondition.tradeCondition
+        report.append("모멘텀 대상종목\t${stockName}").append("\n")
+        report.append("모멘텀 대상종목\t$ofNullable").append("\n")
+        report.append("거래주기\t${dmBacktestCondition.periodType}").append("\n")
+        report.append("기간별 가중치\t$timeWeight").append("\n")
+        report.append("분석 대상 기간\t${tradeCondition.range}").append("\n")
+        report.append("투자 비율\t${String.format("%,.2f%%", tradeCondition.investRatio * 100)}").append("\n")
+        report.append("최초 투자금액\t${String.format("%,.0f", tradeCondition.cash)}").append("\n")
+        report.append("매수 수수료\t${String.format("%,.2f%%", tradeCondition.feeBuy * 100)}").append("\n")
+        report.append("매도 수수료\t${String.format("%,.2f%%", tradeCondition.feeSell * 100)}").append("\n")
+        report.append("설명\t${tradeCondition.comment}").append("\n")
+
         return report.toString()
     }
+
+
+    /**
+     * 분석건에 대한 리포트 파일 만듦
+     * @return 엑셀 파일
+     */
+    private fun makeReportFile(dmBacktestCondition: DmBacktestCondition, result: AnalysisResult): File {
+        val reportFileSubPrefix =
+            ReportMakerHelperService.getReportFileSuffix(dmBacktestCondition.tradeCondition, dmBacktestCondition.listStock())
+        val reportFile = File("./backtest-result/dm-trade-report", "dm_trade_$reportFileSubPrefix")
+
+        XSSFWorkbook().use { workbook ->
+            var sheet = createTradeReport(result, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "1. 매매이력")
+
+            sheet = ReportMakerHelperService.createReportEvalAmount(result.common.evaluationAmountHistory, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일짜별 자산비율 변화")
+
+            sheet = ReportMakerHelperService.createReportRangeReturn(result.common.getMonthlyYield(), workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "3. 월별 수익률")
+
+            sheet = ReportMakerHelperService.createReportRangeReturn(result.common.getYearlyYield(), workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "4. 년별 수익률")
+
+            sheet = createReportSummary(dmBacktestCondition, result, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "5. 매매 요약결과 및 조건")
+
+            FileOutputStream(reportFile).use { ous ->
+                workbook.write(ous)
+            }
+        }
+        println("결과 파일:" + reportFile.name)
+        return reportFile
+    }
+
+    /**
+     * 매매 내역을 시트로 만듦
+     */
+    private fun createTradeReport(result: AnalysisResult, workbook: XSSFWorkbook): XSSFSheet {
+        val sheet = workbook.createSheet()
+        val header =
+            "날짜,종목,매매 구분,매수 수량,매매 금액,체결 가격,실현 수익률,수수료,투자 수익(수수료포함),보유 주식 평가금,매매후 보유 현금,평가금(주식+현금),수익비"
+        ReportMakerHelperService.applyHeader(sheet, header)
+        var rowIdx = 1
+
+        val defaultStyle = ReportMakerHelperService.ExcelStyle.createDate(workbook)
+        val commaStyle = ReportMakerHelperService.ExcelStyle.createComma(workbook)
+        val percentStyle = ReportMakerHelperService.ExcelStyle.createPercent(workbook)
+        val decimalStyle = ReportMakerHelperService.ExcelStyle.createDecimal(workbook)
+
+        result.tradeHistory.forEach { tradeItem ->
+            val preTrade = tradeItem.preTrade
+//            val vbsConditionEntity: VbsConditionEntity = vbsTradeEntity.vbsConditionEntity
+            val tradeDate: LocalDateTime = preTrade.tradeDate
+
+            val row = sheet.createRow(rowIdx++)
+            var cellIdx = 0
+            var createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeDate)
+            createCell.cellStyle = defaultStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(preTrade.stock.code)
+            createCell.cellStyle = defaultStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(preTrade.tradeType.name)
+            createCell.cellStyle = defaultStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.qty.toDouble())
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.getBuyAmount())
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(preTrade.unitPrice)
+            if (preTrade.unitPrice > 100) {
+                createCell.cellStyle = commaStyle
+            } else {
+                createCell.cellStyle = decimalStyle
+            }
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(preTrade.yield)
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.feePrice)
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.gains)
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.stockEvalPrice)
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.cash)
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.getEvalPrice())
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx)
+            createCell.setCellValue(tradeItem.getEvalPrice() / result.analysisCondition.cash)
+            createCell.cellStyle = decimalStyle
+        }
+
+        sheet.createFreezePane(0, 1)
+        sheet.defaultColumnWidth = 12
+        sheet.setColumnWidth(0, 4000)
+        sheet.setColumnWidth(1, 4000)
+        sheet.setColumnWidth(12, 4000)
+        sheet.setColumnWidth(13, 4000)
+        sheet.setColumnWidth(14, 4000)
+        sheet.setColumnWidth(15, 4000)
+
+        ReportMakerHelperService.ExcelStyle.applyAllBorder(sheet)
+        ReportMakerHelperService.ExcelStyle.applyDefaultFont(sheet)
+        return sheet
+    }
+
+    /**
+     * 매매 결과 요약 및 조건 시트 만듦
+     */
+    private fun createReportSummary(
+        dmBacktestCondition: DmBacktestCondition,
+        analysisResult: AnalysisResult,
+        workbook: XSSFWorkbook
+    ): XSSFSheet {
+        val sheet = workbook.createSheet()
+        val summary = getSummary(dmBacktestCondition, analysisResult.common)
+        ReportMakerHelperService.textToSheet(summary, sheet)
+        log.debug(summary)
+
+        val conditionSummary = getConditionSummary(dmBacktestCondition, analysisResult)
+        ReportMakerHelperService.textToSheet(conditionSummary, sheet)
+        sheet.defaultColumnWidth = 60
+        return sheet
+    }
+
+    /**
+     * 백테스트 조건 요약 정보
+     */
+    @Deprecated("사용안해도 될것 같은데... ", replaceWith = ReplaceWith("getSummary()"))
+    private fun getConditionSummary(
+        dmBacktestCondition: DmBacktestCondition,
+        result: AnalysisResult
+    ): String {
+        val range: DateRange = result.analysisCondition.range
+        val condition = result.analysisCondition
+
+        val report = StringBuilder()
+
+        report.append("----------- 백테스트 조건 -----------\n")
+        report.append(String.format("분석기간\t %s", range)).append("\n")
+        report.append(String.format("투자비율\t %,.2f%%", condition.investRatio * 100)).append("\n")
+        report.append(String.format("최초 투자금액\t %,f", condition.cash)).append("\n")
+        report.append(String.format("매수 수수료\t %,.2f%%", condition.feeBuy * 100)).append("\n")
+        report.append(String.format("매도 수수료\t %,.2f%%", condition.feeSell * 100)).append("\n")
+
+        report.append("----------- 테스트 조건 -----------\n")
+        val stockName = dmBacktestCondition.stockCodes.joinToString(", ") { code ->
+            stockRepository
+                .findByCode(code)
+                .map { "${it.code}[${it.name}]" }
+                .orElse("")
+        }
+
+        val ofNullable = Optional.ofNullable(dmBacktestCondition.holdCode).map { code ->
+            stockRepository
+                .findByCode(code)
+                .map { "${it.code}[${it.name}]" }
+                .orElse("")
+        }.orElse("")
+        val timeWeight = dmBacktestCondition.timeWeight.entries
+            .sortedBy { it.key }
+            .joinToString(", ") { "${it.key}월:${String.format("%.2f%%", it.value * 100)}" }
+
+        val tradeCondition = dmBacktestCondition.tradeCondition
+        report.append("모멘텀 대상종목\t${stockName}").append("\n")
+        report.append("모멘텀 대상종목\t$ofNullable").append("\n")
+        report.append("거래주기\t${dmBacktestCondition.periodType}").append("\n")
+        report.append("기간별 가중치\t$timeWeight").append("\n")
+        report.append("분석 대상 기간\t${tradeCondition.range}").append("\n")
+        report.append("투자 비율\t${String.format("%,.2f%%", tradeCondition.investRatio * 100)}").append("\n")
+        report.append("최초 투자금액\t${String.format("%,.0f", tradeCondition.cash)}").append("\n")
+        report.append("매수 수수료\t${String.format("%,.2f%%", tradeCondition.feeBuy * 100)}").append("\n")
+        report.append("매도 수수료\t${String.format("%,.2f%%", tradeCondition.feeSell * 100)}").append("\n")
+        report.append("설명\t${tradeCondition.comment}").append("\n")
+
+        return report.toString()
+    }
+
 }

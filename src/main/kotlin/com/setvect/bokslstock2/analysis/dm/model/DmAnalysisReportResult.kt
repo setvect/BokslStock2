@@ -2,6 +2,7 @@ package com.setvect.bokslstock2.analysis.dm.model
 
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
 
+@Deprecated("안씀")
 class DmAnalysisReportResult(
     /**
      * 리포트 조건
