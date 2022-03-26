@@ -36,7 +36,6 @@ class DmAnalysisService(
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
-
     fun runTest(dmBacktestCondition: DmBacktestCondition) {
         checkValidate(dmBacktestCondition)
         val preTrades = processDualMomentum(dmBacktestCondition)
@@ -71,7 +70,7 @@ class DmAnalysisService(
 
         val tradeList = mutableListOf<PreTrade>()
         while (current.isBefore(condition.tradeCondition.range.to)) {
-            val stockByRate = calculateRate(stockPriceIndex, current, condition, codeByStock)
+            val stockByRate = calculateRate(stockPriceIndex, current, condition)
 
             val existBeforeBuy = beforeBuyTrade != null
 
@@ -172,34 +171,19 @@ class DmAnalysisService(
         stockPriceIndex: Map<String, Map<LocalDateTime, CandleDto>>,
         current: LocalDateTime,
         condition: DmBacktestCondition,
-        codeByStock: Map<String, StockEntity>
     ): List<Pair<String, Double>> {
         val stockByRate = stockPriceIndex.entries.map { stockEntry ->
-            val stock = codeByStock[stockEntry.key]!!
-
             val currentCandle = stockEntry.value[current]
                 ?: throw RuntimeException("${stockEntry.key}에 대한 $current 시세가 없습니다.")
-
-//            log.info(
-//                "\t${current}: ${stock.name}(${stock.code}): ${currentCandle.candleDateTimeStart}~${currentCandle.candleDateTimeEnd} - " +
-//                        "O: ${currentCandle.openPrice}, H: ${currentCandle.highPrice}, L: ${currentCandle.lowPrice}, C:${currentCandle.closePrice}, ${currentCandle.periodType}"
-//            )
 
             val average = condition.timeWeight.entries.sumOf { timeWeight ->
                 val delta = timeWeight.key
                 val weight = timeWeight.value
                 val deltaCandle = stockEntry.value[current.minusMonths(delta.toLong())]!!
-//                log.info("\t\t[${delta}] ${stock.code} - ${deltaCandle.candleDateTimeStart} - C: ${deltaCandle.closePrice}")
-//                log.info(
-//                    "\t\t$delta -   ${stock.name}(${stock.code}): ${deltaCandle.candleDateTimeStart}~${deltaCandle.candleDateTimeEnd} - " +
-//                            "O: ${deltaCandle.openPrice}, H: ${deltaCandle.highPrice}, L: ${deltaCandle.lowPrice}, C:${deltaCandle.closePrice}, ${deltaCandle.periodType}"
-//                )
-
                 deltaCandle.closePrice * weight
             }
 
             val rate = currentCandle.openPrice / average
-//            log.info("\t${average}: \t${rate}")
             stockEntry.key to rate
         }
             .filter { it.second >= 1 && it.first != condition.holdCode }
@@ -234,6 +218,55 @@ class DmAnalysisService(
         if (sumWeight != 1.0) {
             throw RuntimeException("가중치의 합계가 100이여 합니다. 현재 가중치 합계: $sumWeight")
         }
+    }
+
+    /**
+     * 분석건에 대한 리포트 파일 만듦
+     * @return 엑셀 파일
+     */
+    private fun makeReportFile(dmBacktestCondition: DmBacktestCondition, result: AnalysisResult): File {
+        val reportFileSubPrefix =
+            ReportMakerHelperService.getReportFileSuffix(dmBacktestCondition.tradeCondition, dmBacktestCondition.listStock())
+        val reportFile = File("./backtest-result/dm-trade-report", "dm_trade_$reportFileSubPrefix")
+
+        XSSFWorkbook().use { workbook ->
+            var sheet = ReportMakerHelperService.createTradeReport(result, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "1. 매매이력")
+
+            sheet = ReportMakerHelperService.createReportEvalAmount(result.common.evaluationAmountHistory, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일짜별 자산비율 변화")
+
+            sheet = ReportMakerHelperService.createReportRangeReturn(result.common.getMonthlyYield(), workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "3. 월별 수익률")
+
+            sheet = ReportMakerHelperService.createReportRangeReturn(result.common.getYearlyYield(), workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "4. 년별 수익률")
+
+            sheet = createReportSummary(dmBacktestCondition, result, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "5. 매매 요약결과 및 조건")
+
+            FileOutputStream(reportFile).use { ous ->
+                workbook.write(ous)
+            }
+        }
+        println("결과 파일:" + reportFile.name)
+        return reportFile
+    }
+
+
+    /**
+     * 매매 결과 요약 및 조건 시트 만듦
+     */
+    private fun createReportSummary(
+        dmBacktestCondition: DmBacktestCondition,
+        analysisResult: AnalysisResult,
+        workbook: XSSFWorkbook
+    ): XSSFSheet {
+        val sheet = workbook.createSheet()
+        val summary = getSummary(dmBacktestCondition, analysisResult.common)
+        ReportMakerHelperService.textToSheet(summary, sheet)
+        sheet.defaultColumnWidth = 60
+        return sheet
     }
 
     /**
@@ -291,147 +324,5 @@ class DmAnalysisService(
         report.append("설명\t${tradeCondition.comment}").append("\n")
 
         return report.toString()
-    }
-
-
-    /**
-     * 분석건에 대한 리포트 파일 만듦
-     * @return 엑셀 파일
-     */
-    private fun makeReportFile(dmBacktestCondition: DmBacktestCondition, result: AnalysisResult): File {
-        val reportFileSubPrefix =
-            ReportMakerHelperService.getReportFileSuffix(dmBacktestCondition.tradeCondition, dmBacktestCondition.listStock())
-        val reportFile = File("./backtest-result/dm-trade-report", "dm_trade_$reportFileSubPrefix")
-
-        XSSFWorkbook().use { workbook ->
-            var sheet = createTradeReport(result, workbook)
-            workbook.setSheetName(workbook.getSheetIndex(sheet), "1. 매매이력")
-
-            sheet = ReportMakerHelperService.createReportEvalAmount(result.common.evaluationAmountHistory, workbook)
-            workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일짜별 자산비율 변화")
-
-            sheet = ReportMakerHelperService.createReportRangeReturn(result.common.getMonthlyYield(), workbook)
-            workbook.setSheetName(workbook.getSheetIndex(sheet), "3. 월별 수익률")
-
-            sheet = ReportMakerHelperService.createReportRangeReturn(result.common.getYearlyYield(), workbook)
-            workbook.setSheetName(workbook.getSheetIndex(sheet), "4. 년별 수익률")
-
-            sheet = createReportSummary(dmBacktestCondition, result, workbook)
-            workbook.setSheetName(workbook.getSheetIndex(sheet), "5. 매매 요약결과 및 조건")
-
-            FileOutputStream(reportFile).use { ous ->
-                workbook.write(ous)
-            }
-        }
-        println("결과 파일:" + reportFile.name)
-        return reportFile
-    }
-
-    /**
-     * 매매 내역을 시트로 만듦
-     */
-    private fun createTradeReport(result: AnalysisResult, workbook: XSSFWorkbook): XSSFSheet {
-        val sheet = workbook.createSheet()
-        val header =
-            "날짜,종목,매매 구분,매수 수량,매매 금액,체결 가격,실현 수익률,수수료,투자 수익(수수료포함),보유 주식 평가금,매매후 보유 현금,평가금(주식+현금),수익비"
-        ReportMakerHelperService.applyHeader(sheet, header)
-        var rowIdx = 1
-
-        val defaultStyle = ReportMakerHelperService.ExcelStyle.createDate(workbook)
-        val commaStyle = ReportMakerHelperService.ExcelStyle.createComma(workbook)
-        val percentStyle = ReportMakerHelperService.ExcelStyle.createPercent(workbook)
-        val decimalStyle = ReportMakerHelperService.ExcelStyle.createDecimal(workbook)
-
-        result.tradeHistory.forEach { tradeItem ->
-            val preTrade = tradeItem.preTrade
-//            val vbsConditionEntity: VbsConditionEntity = vbsTradeEntity.vbsConditionEntity
-            val tradeDate: LocalDateTime = preTrade.tradeDate
-
-            val row = sheet.createRow(rowIdx++)
-            var cellIdx = 0
-            var createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeDate)
-            createCell.cellStyle = defaultStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(preTrade.stock.code)
-            createCell.cellStyle = defaultStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(preTrade.tradeType.name)
-            createCell.cellStyle = defaultStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.qty.toDouble())
-            createCell.cellStyle = commaStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.getBuyAmount())
-            createCell.cellStyle = commaStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(preTrade.unitPrice)
-            if (preTrade.unitPrice > 100) {
-                createCell.cellStyle = commaStyle
-            } else {
-                createCell.cellStyle = decimalStyle
-            }
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(preTrade.yield)
-            createCell.cellStyle = percentStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.feePrice)
-            createCell.cellStyle = commaStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.gains)
-            createCell.cellStyle = commaStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.stockEvalPrice)
-            createCell.cellStyle = commaStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.cash)
-            createCell.cellStyle = commaStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.getEvalPrice())
-            createCell.cellStyle = commaStyle
-
-            createCell = row.createCell(cellIdx)
-            createCell.setCellValue(tradeItem.getEvalPrice() / result.analysisCondition.cash)
-            createCell.cellStyle = decimalStyle
-        }
-
-        sheet.createFreezePane(0, 1)
-        sheet.defaultColumnWidth = 12
-        sheet.setColumnWidth(0, 4000)
-        sheet.setColumnWidth(1, 4000)
-        sheet.setColumnWidth(12, 4000)
-        sheet.setColumnWidth(13, 4000)
-        sheet.setColumnWidth(14, 4000)
-        sheet.setColumnWidth(15, 4000)
-
-        ReportMakerHelperService.ExcelStyle.applyAllBorder(sheet)
-        ReportMakerHelperService.ExcelStyle.applyDefaultFont(sheet)
-        return sheet
-    }
-
-    /**
-     * 매매 결과 요약 및 조건 시트 만듦
-     */
-    private fun createReportSummary(
-        dmBacktestCondition: DmBacktestCondition,
-        analysisResult: AnalysisResult,
-        workbook: XSSFWorkbook
-    ): XSSFSheet {
-        val sheet = workbook.createSheet()
-        val summary = getSummary(dmBacktestCondition, analysisResult.common)
-        ReportMakerHelperService.textToSheet(summary, sheet)
-        sheet.defaultColumnWidth = 60
-        return sheet
     }
 }

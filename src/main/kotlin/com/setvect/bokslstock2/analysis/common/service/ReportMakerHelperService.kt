@@ -1,5 +1,6 @@
 package com.setvect.bokslstock2.analysis.common.service
 
+import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
 import com.setvect.bokslstock2.analysis.common.model.EvaluationRateItem
 import com.setvect.bokslstock2.analysis.common.model.TradeCondition
@@ -219,6 +220,99 @@ class ReportMakerHelperService(
 
 
     companion object {
+        /**
+         * 매매 내역을 시트로 만듦
+         */
+        fun createTradeReport(result: AnalysisResult, workbook: XSSFWorkbook): XSSFSheet {
+            val sheet = workbook.createSheet()
+            val header =
+                "날짜,종목,매매 구분,매수 수량,매매 금액,체결 가격,실현 수익률,수수료,투자 수익(수수료포함),보유 주식 평가금,매매후 보유 현금,평가금(주식+현금),수익비"
+            ReportMakerHelperService.applyHeader(sheet, header)
+            var rowIdx = 1
+
+            val defaultStyle = ReportMakerHelperService.ExcelStyle.createDate(workbook)
+            val commaStyle = ReportMakerHelperService.ExcelStyle.createComma(workbook)
+            val percentStyle = ReportMakerHelperService.ExcelStyle.createPercent(workbook)
+            val decimalStyle = ReportMakerHelperService.ExcelStyle.createDecimal(workbook)
+
+            result.tradeHistory.forEach { tradeItem ->
+                val preTrade = tradeItem.preTrade
+//            val vbsConditionEntity: VbsConditionEntity = vbsTradeEntity.vbsConditionEntity
+                val tradeDate: LocalDateTime = preTrade.tradeDate
+
+                val row = sheet.createRow(rowIdx++)
+                var cellIdx = 0
+                var createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(tradeDate)
+                createCell.cellStyle = defaultStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(preTrade.stock.toString())
+                createCell.cellStyle = defaultStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(preTrade.tradeType.name)
+                createCell.cellStyle = defaultStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(tradeItem.qty.toDouble())
+                createCell.cellStyle = commaStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(tradeItem.getBuyAmount())
+                createCell.cellStyle = commaStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(preTrade.unitPrice)
+                if (preTrade.unitPrice > 100) {
+                    createCell.cellStyle = commaStyle
+                } else {
+                    createCell.cellStyle = decimalStyle
+                }
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(preTrade.yield)
+                createCell.cellStyle = percentStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(tradeItem.feePrice)
+                createCell.cellStyle = commaStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(tradeItem.gains)
+                createCell.cellStyle = commaStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(tradeItem.stockEvalPrice)
+                createCell.cellStyle = commaStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(tradeItem.cash)
+                createCell.cellStyle = commaStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(tradeItem.getEvalPrice())
+                createCell.cellStyle = commaStyle
+
+                createCell = row.createCell(cellIdx)
+                createCell.setCellValue(tradeItem.getEvalPrice() / result.analysisCondition.cash)
+                createCell.cellStyle = decimalStyle
+            }
+
+            sheet.createFreezePane(0, 1)
+            sheet.defaultColumnWidth = 12
+            sheet.setColumnWidth(0, 4000)
+            sheet.setColumnWidth(1, 4000)
+            sheet.setColumnWidth(12, 4000)
+            sheet.setColumnWidth(13, 4000)
+            sheet.setColumnWidth(14, 4000)
+            sheet.setColumnWidth(15, 4000)
+
+            ReportMakerHelperService.ExcelStyle.applyAllBorder(sheet)
+            ReportMakerHelperService.ExcelStyle.applyDefaultFont(sheet)
+            return sheet
+        }
+
         /**
          * 날짜에 따른 평가금액(Buy&Hold, 벡테스트) 변화 시트 만듦
          */

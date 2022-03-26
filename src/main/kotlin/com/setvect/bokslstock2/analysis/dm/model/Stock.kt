@@ -20,4 +20,8 @@ data class Stock(
             return Stock(entity.name, entity.code)
         }
     }
+
+    override fun toString(): String {
+        return "$name(${code})"
+    }
 }
