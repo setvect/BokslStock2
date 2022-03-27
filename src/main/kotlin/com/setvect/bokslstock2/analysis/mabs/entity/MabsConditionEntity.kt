@@ -68,7 +68,7 @@ class MabsConditionEntity(
     @Id
     @GeneratedValue(strategy = AUTO)
     @Column(name = "CONDITION_SEQ")
-    val conditionSeq = 0L
+    override val conditionSeq = 0L
 
     @OneToMany(mappedBy = "mabsConditionEntity")
     @OrderBy("tradeDate ASC")

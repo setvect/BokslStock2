@@ -44,7 +44,7 @@ class RbConditionEntity(
     @Id
     @GeneratedValue(strategy = AUTO)
     @Column(name = "CONDITION_SEQ")
-    val conditionSeq = 0L
+    override val conditionSeq = 0L
 
     @OneToMany(mappedBy = "rbConditionEntity")
     @OrderBy("tradeDate ASC")

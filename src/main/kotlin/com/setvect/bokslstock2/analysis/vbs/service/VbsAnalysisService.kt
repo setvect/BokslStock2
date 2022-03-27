@@ -6,7 +6,6 @@ import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.analysis.vbs.entity.VbsConditionEntity
 import com.setvect.bokslstock2.analysis.vbs.model.VbsAnalysisCondition
-import com.setvect.bokslstock2.util.DateRange
 import java.io.File
 import java.io.FileOutputStream
 import java.sql.Timestamp
@@ -337,68 +336,18 @@ class VbsAnalysisService(
      * 분석 요약결과
      */
     private fun getSummary(vbsAnalysisCondition: VbsAnalysisCondition, analysisResult: AnalysisResult): String {
+        return ReportMakerHelperService.createSummary(
+            analysisResult.common,
+            vbsAnalysisCondition.tradeConditionList,
+            vbsAnalysisCondition.basic,
+            getSpecialInfo(vbsAnalysisCondition)
+        )
+    }
+
+    private fun getSpecialInfo(vbsAnalysisCondition: VbsAnalysisCondition): String {
         val report = StringBuilder()
-        val tradeConditionList = vbsAnalysisCondition.tradeConditionList
-
-        report.append("----------- Buy&Hold 결과 -----------\n")
-        report.append(String.format("합산 동일비중 수익\t %,.2f%%", analysisResult.common.buyHoldYieldTotal.yield * 100))
-            .append("\n")
-        report.append(String.format("합산 동일비중 MDD\t %,.2f%%", analysisResult.common.buyHoldYieldTotal.mdd * 100)).append("\n")
-        report.append(String.format("합산 동일비중 CAGR\t %,.2f%%", analysisResult.common.buyHoldYieldTotal.getCagr() * 100))
-            .append("\n")
-        report.append(String.format("샤프지수\t %,.2f", analysisResult.common.getBuyHoldSharpeRatio())).append("\n")
-
-        for (i in 1..tradeConditionList.size) {
-            val tradeCondition = tradeConditionList[i - 1]
-            report.append(
-                "${i}. 조건번호\t${tradeCondition.conditionSeq}\n"
-            )
-            val sumYield = analysisResult.common.buyHoldYieldCondition[tradeCondition.stock.code]
-            if (sumYield == null) {
-                log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${tradeCondition.conditionSeq}")
-                break
-            }
-            report.append(String.format("${i}. 동일비중 수익\t %,.2f%%", sumYield.yield * 100)).append("\n")
-            report.append(String.format("${i}. 동일비중 MDD\t %,.2f%%", sumYield.mdd * 100)).append("\n")
-        }
-
-        val totalYield: TotalYield = analysisResult.common.yieldTotal
-        report.append("----------- 전략 결과 -----------\n")
-        report.append(String.format("합산 실현 수익\t %,.2f%%", totalYield.yield * 100)).append("\n")
-        report.append(String.format("합산 실현 MDD\t %,.2f%%", totalYield.mdd * 100)).append("\n")
-        report.append(String.format("합산 매매회수\t %d", analysisResult.common.getWinningRateTotal().getTradeCount())).append("\n")
-        report.append(String.format("합산 승률\t %,.2f%%", analysisResult.common.getWinningRateTotal().getWinRate() * 100))
-            .append("\n")
-        report.append(String.format("합산 CAGR\t %,.2f%%", totalYield.getCagr() * 100)).append("\n")
-        report.append(String.format("샤프지수\t %,.2f", analysisResult.common.getBacktestSharpeRatio())).append("\n")
-
-        for (i in 1..tradeConditionList.size) {
-            val tradeCondition = tradeConditionList[i - 1]
-            report.append(
-                "${i}. 조건번호\t${tradeCondition.conditionSeq}\n"
-            )
-
-            val winningRate = analysisResult.common.winningRateCondition[tradeCondition.stock.code]
-            if (winningRate == null) {
-                log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${tradeCondition.conditionSeq}")
-                break
-            }
-            report.append(String.format("${i}. 실현 수익\t %,f", winningRate.invest)).append("\n")
-            report.append(String.format("${i}. 매매회수\t %d", winningRate.getTradeCount())).append("\n")
-            report.append(String.format("${i}. 승률\t %,.2f%%", winningRate.getWinRate() * 100)).append("\n")
-        }
-
-        val range: DateRange = vbsAnalysisCondition.basic.range
-
-        report.append("----------- 백테스트 조건 -----------\n")
-        report.append(String.format("분석기간\t %s", range)).append("\n")
-        report.append(String.format("투자비율\t %,.2f%%", vbsAnalysisCondition.basic.investRatio * 100)).append("\n")
-        report.append(String.format("최초 투자금액\t %,f", vbsAnalysisCondition.basic.cash)).append("\n")
-        report.append(String.format("매수 수수료\t %,.2f%%", vbsAnalysisCondition.basic.feeBuy * 100)).append("\n")
-        report.append(String.format("매도 수수료\t %,.2f%%", vbsAnalysisCondition.basic.feeSell * 100)).append("\n")
-
-        for (i in 1..tradeConditionList.size) {
-            val tradeCondition = tradeConditionList[i - 1]
+        for (i in 1..vbsAnalysisCondition.tradeConditionList.size) {
+            val tradeCondition = vbsAnalysisCondition.tradeConditionList[i - 1]
             report.append(String.format("${i}. 조건아이디\t %s", tradeCondition.conditionSeq)).append("\n")
             report.append(String.format("${i}. 분석주기\t %s", tradeCondition.periodType)).append("\n")
             report.append(String.format("${i}. 대상 종목\t %s", tradeCondition.stock.getNameCode())).append("\n")

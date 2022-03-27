@@ -1,5 +1,6 @@
 package com.setvect.bokslstock2.analysis.common.service
 
+import com.setvect.bokslstock2.analysis.common.entity.ConditionEntity
 import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
 import com.setvect.bokslstock2.analysis.common.model.EvaluationRateItem
@@ -19,6 +20,8 @@ import org.apache.poi.xssf.usermodel.XSSFCellStyle
 import org.apache.poi.xssf.usermodel.XSSFFont
 import org.apache.poi.xssf.usermodel.XSSFSheet
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import kotlin.streams.toList
 
@@ -29,6 +32,8 @@ import kotlin.streams.toList
 class ReportMakerHelperService(
 ) {
     companion object {
+        val log: Logger = LoggerFactory.getLogger(javaClass)
+
         /**
          * 매매 내역을 시트로 만듦
          */
@@ -222,6 +227,76 @@ class ReportMakerHelperService(
             return sheet
         }
 
+
+        /**
+         * [specialInfo]: 분석 조건별 특별한 정보
+         */
+        fun createSummary(
+            commonAnalysisReportResult: CommonAnalysisReportResult,
+            tradeConditionList: List<ConditionEntity>,
+            tradeCondition: TradeCondition,
+            specialInfo: String
+        ): String {
+            val report = StringBuilder()
+            report.append("----------- Buy&Hold 결과 -----------\n")
+            report.append(String.format("합산 동일비중 수익\t %,.2f%%", commonAnalysisReportResult.buyHoldYieldTotal.yield * 100))
+                .append("\n")
+            report.append(String.format("합산 동일비중 MDD\t %,.2f%%", commonAnalysisReportResult.buyHoldYieldTotal.mdd * 100)).append("\n")
+            report.append(String.format("합산 동일비중 CAGR\t %,.2f%%", commonAnalysisReportResult.buyHoldYieldTotal.getCagr() * 100))
+                .append("\n")
+            report.append(String.format("샤프지수\t %,.2f", commonAnalysisReportResult.getBuyHoldSharpeRatio())).append("\n")
+
+            for (i in 1..tradeConditionList.size) {
+                val tradeCondition = tradeConditionList[i - 1]
+                report.append(
+                    "${i}. 조건번호\t${tradeCondition.conditionSeq}\n"
+                )
+                val sumYield = commonAnalysisReportResult.buyHoldYieldCondition[tradeCondition.stock.code]
+                if (sumYield == null) {
+                    log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${tradeCondition.conditionSeq}")
+                    break
+                }
+                report.append(String.format("${i}. 동일비중 수익\t %,.2f%%", sumYield.yield * 100)).append("\n")
+                report.append(String.format("${i}. 동일비중 MDD\t %,.2f%%", sumYield.mdd * 100)).append("\n")
+            }
+
+            val totalYield: CommonAnalysisReportResult.TotalYield = commonAnalysisReportResult.yieldTotal
+            report.append("----------- 전략 결과 -----------\n")
+            report.append(String.format("합산 실현 수익\t %,.2f%%", totalYield.yield * 100)).append("\n")
+            report.append(String.format("합산 실현 MDD\t %,.2f%%", totalYield.mdd * 100)).append("\n")
+            report.append(String.format("합산 매매회수\t %d", commonAnalysisReportResult.getWinningRateTotal().getTradeCount())).append("\n")
+            report.append(String.format("합산 승률\t %,.2f%%", commonAnalysisReportResult.getWinningRateTotal().getWinRate() * 100))
+                .append("\n")
+            report.append(String.format("합산 CAGR\t %,.2f%%", totalYield.getCagr() * 100)).append("\n")
+            report.append(String.format("샤프지수\t %,.2f", commonAnalysisReportResult.getBacktestSharpeRatio())).append("\n")
+
+            for (i in 1..tradeConditionList.size) {
+                val tradeCondition = tradeConditionList[i - 1]
+                report.append(
+                    "${i}. 조건번호\t${tradeCondition.conditionSeq}\n"
+                )
+
+                val winningRate = commonAnalysisReportResult.winningRateCondition[tradeCondition.stock.code]
+                if (winningRate == null) {
+                    log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${tradeCondition.conditionSeq}")
+                    break
+                }
+                report.append(String.format("${i}. 실현 수익\t %,f", winningRate.invest)).append("\n")
+                report.append(String.format("${i}. 매매회수\t %d", winningRate.getTradeCount())).append("\n")
+                report.append(String.format("${i}. 승률\t %,.2f%%", winningRate.getWinRate() * 100)).append("\n")
+            }
+
+            val range: DateRange = tradeCondition.range
+
+            report.append("----------- 백테스트 조건 -----------\n")
+            report.append(String.format("분석기간\t %s", range)).append("\n")
+            report.append(String.format("투자비율\t %,.2f%%", tradeCondition.investRatio * 100)).append("\n")
+            report.append(String.format("최초 투자금액\t %,f", tradeCondition.cash)).append("\n")
+            report.append(String.format("매수 수수료\t %,.2f%%", tradeCondition.feeBuy * 100)).append("\n")
+            report.append(String.format("매도 수수료\t %,.2f%%", tradeCondition.feeSell * 100)).append("\n")
+            report.append(specialInfo)
+            return report.toString()
+        }
 
         /**
          * @return 전체 투자 종목에 대한 Buy & Hold시 수익 정보
@@ -421,6 +496,5 @@ class ReportMakerHelperService(
                 }
             }
         }
-
     }
 }
