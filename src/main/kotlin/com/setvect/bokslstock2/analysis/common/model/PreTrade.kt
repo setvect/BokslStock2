@@ -1,6 +1,5 @@
 package com.setvect.bokslstock2.analysis.common.model
 
-import com.setvect.bokslstock2.analysis.dm.model.Stock
 import java.time.LocalDateTime
 
 /**

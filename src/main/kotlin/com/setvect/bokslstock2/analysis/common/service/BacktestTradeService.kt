@@ -131,7 +131,7 @@ class BacktestTradeService(
      * 매매 결과에 대한 통계적 분석을 함
      */
     fun analysis(
-        tradeItemHistory: List<Trade>, condition: TradeCondition, holdStockCodes: Set<String>
+        tradeItemHistory: List<Trade>, condition: TradeCondition, holdStockCodes: List<String>
     ): AnalysisResult {
         // 날짜별로 Buy&Hold 및 투자전략 평가금액 얻기
         val evaluationAmountHistory = applyEvaluationAmount(tradeItemHistory, condition, holdStockCodes)
@@ -160,7 +160,7 @@ class BacktestTradeService(
     fun applyEvaluationAmount(
         tradeItemHistory: List<Trade>,
         condition: TradeCondition,
-        holdStockCodes: Set<String>
+        holdStockCodes: List<String>
     ): List<EvaluationRateItem> {
         val buyHoldRateMap: SortedMap<LocalDateTime, Double> = getBuyAndHoldEvalRate(condition, holdStockCodes)
         // <종목 코드, List(캔들)>
@@ -240,7 +240,7 @@ class BacktestTradeService(
      * Buy&Hold 종목을 동일 비중으로 매수 했을 경우 수익률 제공
      * @return 날짜별 Buy&Hold 수익률. <날짜, 수익비>
      */
-    fun getBuyAndHoldEvalRate(condition: TradeCondition, holdStockCodes: Set<String>): SortedMap<LocalDateTime, Double> {
+    fun getBuyAndHoldEvalRate(condition: TradeCondition, holdStockCodes: List<String>): SortedMap<LocalDateTime, Double> {
         val combinedYield: SortedMap<LocalDateTime, Double> = calculateBuyAndHoldProfitRatio(condition, holdStockCodes)
         val initial = TreeMap<LocalDateTime, Double>()
         initial[condition.range.from] = 1.0
@@ -256,7 +256,7 @@ class BacktestTradeService(
      * 수익비는 1에서 시작함
      * @return <날짜, 수익비>
      */
-    fun calculateBuyAndHoldProfitRatio(condition: TradeCondition, holdStockCodes: Set<String>): SortedMap<LocalDateTime, Double> {
+    fun calculateBuyAndHoldProfitRatio(condition: TradeCondition, holdStockCodes: List<String>): SortedMap<LocalDateTime, Double> {
         val range = condition.range
 
         // <종목코드, List(캔들)>
@@ -303,7 +303,7 @@ class BacktestTradeService(
      */
     fun calculateBuyAndHoldYield(
         condition: TradeCondition,
-        holdStockCodes: Set<String>,
+        holdStockCodes: List<String>,
     ): Map<String, CommonAnalysisReportResult.YieldMdd> {
         val mapOfCandleList = getConditionOfCandle(condition, holdStockCodes)
 
@@ -323,7 +323,7 @@ class BacktestTradeService(
     /**
      *@return <종목코드, List(캔들)>
      */
-    fun getConditionOfCandle(condition: TradeCondition, stockCodes: Set<String>): Map<String, List<CandleEntity>> {
+    fun getConditionOfCandle(condition: TradeCondition, stockCodes: List<String>): Map<String, List<CandleEntity>> {
         return stockCodes.associateWith { stockCode ->
             candleRepository.findByRange(
                 stockRepository.findByCode(stockCode).get(),

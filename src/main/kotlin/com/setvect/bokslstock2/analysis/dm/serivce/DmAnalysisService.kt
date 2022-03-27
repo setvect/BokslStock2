@@ -8,7 +8,7 @@ import com.setvect.bokslstock2.analysis.common.model.TradeType
 import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.analysis.dm.model.DmBacktestCondition
-import com.setvect.bokslstock2.analysis.dm.model.Stock
+import com.setvect.bokslstock2.analysis.common.model.Stock
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.repository.StockRepository
@@ -32,7 +32,7 @@ import org.springframework.stereotype.Service
 class DmAnalysisService(
     private val stockRepository: StockRepository,
     private val movingAverageService: MovingAverageService,
-    private val tradeService: BacktestTradeService,
+    private val backtestTradeService: BacktestTradeService,
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -46,10 +46,8 @@ class DmAnalysisService(
         }
         log.info("수익률: ${String.format("%.2f%%", (sumYield - 1) * 100)}")
 
-        val trades = tradeService.trade(dmBacktestCondition.tradeCondition, preTrades)
-        println(trades.size)
-//
-        val result = tradeService.analysis(trades, dmBacktestCondition.tradeCondition, dmBacktestCondition.listStock())
+        val trades = backtestTradeService.trade(dmBacktestCondition.tradeCondition, preTrades)
+        val result = backtestTradeService.analysis(trades, dmBacktestCondition.tradeCondition, dmBacktestCondition.listStock())
         val summary = getSummary(dmBacktestCondition, result.common)
         println(summary)
         makeReportFile(dmBacktestCondition, result)
@@ -199,7 +197,7 @@ class DmAnalysisService(
      * @return <종목코드, <날짜, 캔들>>
      */
     private fun getStockPriceIndex(
-        stockCodes: Set<String>,
+        stockCodes: List<String>,
         dmCondition: DmBacktestCondition
     ): Map<String, Map<LocalDateTime, CandleDto>> {
         val stockPriceIndex = stockCodes.associateWith { code ->
@@ -224,25 +222,25 @@ class DmAnalysisService(
      * 분석건에 대한 리포트 파일 만듦
      * @return 엑셀 파일
      */
-    private fun makeReportFile(dmBacktestCondition: DmBacktestCondition, result: AnalysisResult): File {
+    private fun makeReportFile(dmBacktestCondition: DmBacktestCondition, analysisResult: AnalysisResult): File {
         val reportFileSubPrefix =
             ReportMakerHelperService.getReportFileSuffix(dmBacktestCondition.tradeCondition, dmBacktestCondition.listStock())
         val reportFile = File("./backtest-result/dm-trade-report", "dm_trade_$reportFileSubPrefix")
 
         XSSFWorkbook().use { workbook ->
-            var sheet = ReportMakerHelperService.createTradeReport(result, workbook)
+            var sheet = ReportMakerHelperService.createTradeReport(analysisResult, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "1. 매매이력")
 
-            sheet = ReportMakerHelperService.createReportEvalAmount(result.common.evaluationAmountHistory, workbook)
+            sheet = ReportMakerHelperService.createReportEvalAmount(analysisResult.common.evaluationAmountHistory, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일짜별 자산비율 변화")
 
-            sheet = ReportMakerHelperService.createReportRangeReturn(result.common.getMonthlyYield(), workbook)
+            sheet = ReportMakerHelperService.createReportRangeReturn(analysisResult.common.getMonthlyYield(), workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "3. 월별 수익률")
 
-            sheet = ReportMakerHelperService.createReportRangeReturn(result.common.getYearlyYield(), workbook)
+            sheet = ReportMakerHelperService.createReportRangeReturn(analysisResult.common.getYearlyYield(), workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "4. 년별 수익률")
 
-            sheet = createReportSummary(dmBacktestCondition, result, workbook)
+            sheet = createReportSummary(dmBacktestCondition, analysisResult, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "5. 매매 요약결과 및 조건")
 
             FileOutputStream(reportFile).use { ous ->

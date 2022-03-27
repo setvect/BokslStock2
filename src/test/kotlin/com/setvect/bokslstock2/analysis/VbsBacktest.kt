@@ -237,7 +237,7 @@ class VbsBacktest {
             comment = null
         )
         vbsBacktestService.saveCondition(condition)
-        vbsBacktestService.backtest(condition)
+        vbsBacktestService.runTest(condition)
 
         val tradeList = vbsTradeRepository.findByCondition(condition)
         condition.tradeList = tradeList

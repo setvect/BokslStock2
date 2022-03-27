@@ -39,12 +39,10 @@ data class DmBacktestCondition(
     /**
      * @return holdCode를 포함한 거래 대상 종목
      */
-    fun listStock(): Set<String> {
+    fun listStock(): List<String> {
         if (holdCode == null) {
-            return HashSet(stockCodes)
+            return emptyList()
         }
-        val stocks = stockCodes.toMutableList()
-        stocks.add(holdCode)
-        return HashSet(stocks)
+        return stockCodes.toList()
     }
 }

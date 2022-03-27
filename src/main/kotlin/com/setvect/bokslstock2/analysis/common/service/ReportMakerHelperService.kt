@@ -575,12 +575,12 @@ class ReportMakerHelperService(
         /**
          * @return 조건 정보가 담긴 리포트 파일명 suffix
          */
-        fun getReportFileSuffix(tradeCondition: TradeCondition, listStock: Set<String>): String {
+        fun getReportFileSuffix(tradeCondition: TradeCondition, stockCodes: List<String>): String {
             return String.format(
                 "%s~%s_%s.xlsx",
                 tradeCondition.range.fromDateFormat,
                 tradeCondition.range.toDateFormat,
-                listStock.joinToString(",") { it },
+                stockCodes.joinToString(",") { it },
             )
         }
     }

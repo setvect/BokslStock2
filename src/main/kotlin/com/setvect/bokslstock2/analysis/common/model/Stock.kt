@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.analysis.dm.model
+package com.setvect.bokslstock2.analysis.common.model
 
 import com.setvect.bokslstock2.index.entity.StockEntity
 

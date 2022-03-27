@@ -29,6 +29,7 @@ class TradeService<C : AnalysisCondition, E : TradeEntity, I : TradeReportItem, 
     /**
      * 매매 결과에 대한 통계적 분석을 함
      */
+    @Deprecated("안씀")
     fun analysis(
         tradeItemHistory: List<I>, condition: C
     ): R {
@@ -59,6 +60,7 @@ class TradeService<C : AnalysisCondition, E : TradeEntity, I : TradeReportItem, 
     /**
      * 매매 백테스트
      */
+    @Deprecated("안씀")
     fun trade(condition: C): List<I> {
         val rangeInList: List<List<E>> =
             condition.conditionList.map { mainList ->
