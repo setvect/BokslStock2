@@ -14,5 +14,5 @@ data class AnalysisResult(
     /**
      * 매매 결과
      */
-    val common: CommonAnalysisReportResult2
+    val common: CommonAnalysisReportResult
 )

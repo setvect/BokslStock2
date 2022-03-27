@@ -2,7 +2,6 @@ package com.setvect.bokslstock2.analysis.common.service
 
 import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
-import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult2
 import com.setvect.bokslstock2.analysis.common.model.EvaluationRateItem
 import com.setvect.bokslstock2.analysis.common.model.PreTrade
 import com.setvect.bokslstock2.analysis.common.model.Trade
@@ -146,7 +145,7 @@ class BacktestTradeService(
         val winningRate = calculateCoinInvestment(trades)
 
 
-        val common = CommonAnalysisReportResult2(
+        val common = CommonAnalysisReportResult(
             evaluationAmountHistory = evaluationAmountHistory,
             yieldTotal = yieldTotal,
             winningRateCondition = winningRate,

@@ -1,7 +1,6 @@
 package com.setvect.bokslstock2.analysis.rb.entity
 
 import com.setvect.bokslstock2.common.entity.BaseTimeEntity
-import com.setvect.bokslstock2.common.entity.ConditionEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 import javax.persistence.Column
@@ -26,7 +25,7 @@ class RbConditionEntity(
      */
     @JoinColumn(name = "STOCK_SEQ")
     @ManyToOne
-    override val stock: StockEntity,
+    val stock: StockEntity,
 
     /**
      * 매매 주기
@@ -40,7 +39,7 @@ class RbConditionEntity(
      */
     @Column(name = "COMMENT", length = 100)
     val comment: String?,
-) : ConditionEntity, BaseTimeEntity() {
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = AUTO)
     @Column(name = "CONDITION_SEQ")
@@ -48,9 +47,9 @@ class RbConditionEntity(
 
     @OneToMany(mappedBy = "rbConditionEntity")
     @OrderBy("tradeDate ASC")
-    override var tradeList: List<RbTradeEntity> = ArrayList()
+    var tradeList: List<RbTradeEntity> = ArrayList()
 
-    override fun getConditionId(): Long {
+    fun getConditionId(): Long {
         return conditionSeq
     }
 }

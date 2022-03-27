@@ -4,7 +4,6 @@ import com.setvect.bokslstock2.analysis.common.model.PreTrade
 import com.setvect.bokslstock2.analysis.common.model.Stock
 import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.mabs.entity.MabsConditionEntity
-import com.setvect.bokslstock2.common.entity.ConditionEntity
 
 /**
  * 이동평균돌파 백테스트
@@ -21,7 +20,7 @@ data class MabsAnalysisCondition(
     val basic: TradeCondition,
 ) {
 
-    val conditionList: List<ConditionEntity>
+    val conditionList: List<MabsConditionEntity>
         get() = tradeConditionList
 
     fun getStockCodes(): List<String> {

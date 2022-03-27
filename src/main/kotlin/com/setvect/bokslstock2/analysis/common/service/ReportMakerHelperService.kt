@@ -4,18 +4,10 @@ import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
 import com.setvect.bokslstock2.analysis.common.model.EvaluationRateItem
 import com.setvect.bokslstock2.analysis.common.model.TradeCondition
-import com.setvect.bokslstock2.analysis.common.model.TradeType
 import com.setvect.bokslstock2.analysis.common.model.YieldRateItem
-import com.setvect.bokslstock2.common.entity.AnalysisCondition
-import com.setvect.bokslstock2.common.entity.AnalysisReportResult
-import com.setvect.bokslstock2.common.entity.ConditionEntity
-import com.setvect.bokslstock2.common.entity.TradeReportItem
-import com.setvect.bokslstock2.index.entity.CandleEntity
-import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import java.time.LocalDateTime
-import java.util.*
 import org.apache.poi.ss.usermodel.BorderStyle
 import org.apache.poi.ss.usermodel.CreationHelper
 import org.apache.poi.ss.usermodel.DataFormat
@@ -35,190 +27,7 @@ import kotlin.streams.toList
  */
 @Service
 class ReportMakerHelperService(
-    val candleRepository: CandleRepository,
 ) {
-    /**
-     * @return <조건아이디, 투자 종목에 대한 Buy & Hold시 수익 정보>
-     */
-    @Deprecated("안씀")
-    fun calculateBuyAndHoldYield(
-        condition: AnalysisCondition,
-    ): Map<Long, CommonAnalysisReportResult.YieldMdd> {
-        val mapOfCandleList = getConditionOfCandle(condition)
-
-        // <조건아이디, 직전 가격>
-        val mapOfBeforePrice =
-            getConditionOfFirstOpenPrice(condition.conditionList, mapOfCandleList)
-
-        return mapOfCandleList.entries.associate { entry ->
-            val priceHistory = entry.value.stream().map { it.closePrice }.toList().toMutableList()
-            // 해당 캔들의 시초가를 맨 앞에 넣기
-            priceHistory.add(0, mapOfBeforePrice[entry.key])
-
-            entry.key to CommonAnalysisReportResult.YieldMdd(
-                ApplicationUtil.getYield(priceHistory),
-                ApplicationUtil.getMdd(priceHistory)
-            )
-        }
-    }
-
-    /**
-     *@return <조건아아디, List(캔들)>
-     */
-    @Deprecated("안씀")
-    fun getConditionOfCandle(condition: AnalysisCondition): Map<Long, List<CandleEntity>> {
-        return condition.conditionList.associate { tradeCondition ->
-            tradeCondition.getConditionId() to candleRepository.findByRange(
-                tradeCondition.stock,
-                condition.basic.range.from,
-                condition.basic.range.to
-            )
-        }
-    }
-
-    /**
-     * Buy & Hold 투자금액 대비 날짜별 평가율
-     * @return <날짜, 평가율>
-     */
-    @Deprecated("안씀")
-    fun getBuyAndHoldEvalRate(condition: AnalysisCondition): SortedMap<LocalDateTime, Double> {
-        val combinedYield: SortedMap<LocalDateTime, Double> = calculateBuyAndHoldProfitRatio(condition)
-        val initial = TreeMap<LocalDateTime, Double>()
-        initial[condition.basic.range.from] = 1.0
-        return combinedYield.entries.fold(initial) { acc: SortedMap<LocalDateTime, Double>, item ->
-            // 누적수익 = 직전 누적수익 * (수익률 + 1)
-            acc[item.key] = acc.entries.last().value * (item.value + 1)
-            acc
-        }
-    }
-
-    /**
-     * 수익비는 1에서 시작함
-     * @return <날짜, 수익비>
-     */
-    @Deprecated("안씀")
-    fun calculateBuyAndHoldProfitRatio(condition: AnalysisCondition): SortedMap<LocalDateTime, Double> {
-        val range = condition.basic.range
-
-        val tradeConditionList = condition.conditionList
-        // <조건아아디, List(캔들)>2
-        val mapOfCandleList = getConditionOfCandle(condition)
-
-        // <조건아이디, Map<날짜, 종가>>
-        val mapOfCondClosePrice: Map<Long, Map<LocalDateTime, Double>> =
-            getConditionByClosePriceMap(tradeConditionList, mapOfCandleList)
-
-        // <조건아이디, 직전 가격>
-        val mapOfBeforePrice = getConditionOfFirstOpenPrice(tradeConditionList, mapOfCandleList)
-        var currentDate = range.from
-        // <날짜, Map<조건아이디, 상대 수익률>>
-        val mapOfDayRelativeRate = mutableMapOf<LocalDateTime, Map<Long, Double>>()
-        while (currentDate.isBefore(range.to) || (currentDate == range.to)) {
-            // Map<조건아이디, 상대 수익률>
-            val mapCondRelativeRate: Map<Long, Double> = mapOfCondClosePrice.entries
-                .filter { it.value[currentDate] != null }
-                .associate {
-                    val beforePrice = mapOfBeforePrice[it.key]
-                    val closePrice = it.value[currentDate]!!
-                    val relativeYield = closePrice / beforePrice!!.toDouble() - 1
-                    mapOfBeforePrice[it.key] = closePrice
-                    it.key to relativeYield
-                }
-
-            if (mapCondRelativeRate.isNotEmpty()) {
-                mapOfDayRelativeRate[currentDate] = mapCondRelativeRate
-            }
-            currentDate = currentDate.plusDays(1)
-        }
-
-        // <날짜, 합산수익률>
-        return mapOfDayRelativeRate.entries
-            .associate { dayOfItem -> dayOfItem.key to dayOfItem.value.values.toList().average() }
-            .toSortedMap()
-    }
-
-
-    /**
-     * @return 날짜별 평가금 계산
-     */
-    @Deprecated("안씀", replaceWith = ReplaceWith("BacktestTradeService.applyEvaluationAmount"))
-    fun applyEvaluationAmount(
-        tradeItemHistory: List<TradeReportItem>,
-        condition: AnalysisCondition
-    ): List<EvaluationRateItem> {
-        val buyHoldRateMap: SortedMap<LocalDateTime, Double> = getBuyAndHoldEvalRate(condition)
-        // <조건아아디, List(캔들)>
-        val candleListMap = getConditionOfCandle(condition)
-
-        // <조건아이디, Map<날짜, 종가>>
-        val condClosePriceMap: Map<Long, Map<LocalDateTime, Double>> =
-            getConditionByClosePriceMap(condition.conditionList, candleListMap)
-
-        val allDateList =
-            condClosePriceMap.entries
-                .flatMap { it.value.entries }
-                .map { it.key }.toSortedSet()
-
-        var buyHoldLastRate = 1.0
-        var backtestLastRate = 1.0
-        var backtestLastCash = condition.basic.cash // 마지막 보유 현금
-
-        // <거래날짜, 거래내용>
-        val tradeByDate: Map<LocalDateTime, List<TradeReportItem>> =
-            tradeItemHistory.groupBy { it.tradeEntity.tradeDate }
-
-        // 현재 가지고 있는 주식 수
-        // <조건아이디, 주식수>
-        val condByStockQty = condition.conditionList.associate { it.getConditionId() to 0 }.toMutableMap()
-
-        val result = allDateList.map { date ->
-            val buyHoldRate = buyHoldRateMap[date] ?: buyHoldLastRate
-            val currentTradeList = tradeByDate[date] ?: emptyList()
-            for (trade in currentTradeList) {
-                val vbsConditionSeq = trade.tradeEntity.getConditionEntity().getConditionId()
-                condByStockQty[vbsConditionSeq] = trade.common.qty
-                backtestLastCash = trade.common.cash
-            }
-
-            // 종가기준으로 보유 주식 평가금액 구하기
-            val evalStockAmount =
-                condByStockQty.entries.stream().filter { it.value > 0 }
-                    .mapToDouble {
-                        val closePrice = condClosePriceMap[it.key]!![date]
-                            ?: throw RuntimeException("${date}에 대한 조건아이디(${it.key})의 종가 정보가 없습니다.")
-                        closePrice * it.value
-                    }.sum()
-
-
-            val backtestRate = (backtestLastCash + evalStockAmount) / condition.basic.cash
-            val buyHoldYield = ApplicationUtil.getYield(buyHoldLastRate, buyHoldRate)
-            val backtestYield = ApplicationUtil.getYield(backtestLastRate, backtestRate)
-
-            buyHoldLastRate = buyHoldRate
-            backtestLastRate = backtestRate
-            EvaluationRateItem(
-                baseDate = date,
-                buyHoldRate = buyHoldRate,
-                backtestRate = backtestRate,
-                buyHoldYield = buyHoldYield,
-                backtestYield = backtestYield
-            )
-        }.toMutableList()
-        // 최초 시작은 비율은 1.0
-        result.add(
-            0,
-            EvaluationRateItem(
-                baseDate = allDateList.first(),
-                buyHoldRate = 1.0,
-                backtestRate = 1.0,
-                buyHoldYield = 0.0,
-                backtestYield = 0.0
-            )
-        )
-        return result
-    }
-
-
     companion object {
         /**
          * 매매 내역을 시트로 만듦
@@ -227,13 +36,13 @@ class ReportMakerHelperService(
             val sheet = workbook.createSheet()
             val header =
                 "날짜,종목,매매 구분,매수 수량,매매 금액,체결 가격,실현 수익률,수수료,투자 수익(수수료포함),보유 주식 평가금,매매후 보유 현금,평가금(주식+현금),수익비"
-            ReportMakerHelperService.applyHeader(sheet, header)
+            applyHeader(sheet, header)
             var rowIdx = 1
 
-            val defaultStyle = ReportMakerHelperService.ExcelStyle.createDate(workbook)
-            val commaStyle = ReportMakerHelperService.ExcelStyle.createComma(workbook)
-            val percentStyle = ReportMakerHelperService.ExcelStyle.createPercent(workbook)
-            val decimalStyle = ReportMakerHelperService.ExcelStyle.createDecimal(workbook)
+            val defaultStyle = ExcelStyle.createDate(workbook)
+            val commaStyle = ExcelStyle.createComma(workbook)
+            val percentStyle = ExcelStyle.createPercent(workbook)
+            val decimalStyle = ExcelStyle.createDecimal(workbook)
 
             result.tradeHistory.forEach { tradeItem ->
                 val preTrade = tradeItem.preTrade
@@ -308,8 +117,8 @@ class ReportMakerHelperService(
             sheet.setColumnWidth(14, 4000)
             sheet.setColumnWidth(15, 4000)
 
-            ReportMakerHelperService.ExcelStyle.applyAllBorder(sheet)
-            ReportMakerHelperService.ExcelStyle.applyDefaultFont(sheet)
+            ExcelStyle.applyAllBorder(sheet)
+            ExcelStyle.applyDefaultFont(sheet)
             return sheet
         }
 
@@ -501,75 +310,6 @@ class ReportMakerHelperService(
                 cell.setCellValue(headerTxt[cellIdx])
                 cell.cellStyle = ExcelStyle.createHeaderRow(sheet.workbook)
             }
-        }
-
-
-        /**
-         * @return <조건아이디, 최초 가격>
-         */
-        @Deprecated("안씀")
-        fun getConditionOfFirstOpenPrice(
-            conditionList: List<ConditionEntity>,
-            mapOfCandleList: Map<Long, List<CandleEntity>>
-        ): MutableMap<Long, Double?> {
-            return conditionList.associate {
-                it.getConditionId() to mapOfCandleList[it.getConditionId()]?.get(0)?.openPrice
-            }
-                .toMutableMap()
-        }
-
-
-        /**
-         * @return <조건아이디, Map<날짜, 종가>>
-         */
-        @Deprecated("안씀")
-        fun getConditionByClosePriceMap(
-            tradeConditionList: List<ConditionEntity>,
-            candleListMap: Map<Long, List<CandleEntity>>
-        ): Map<Long, Map<LocalDateTime, Double>> {
-            return tradeConditionList.associate { tradeCondition ->
-                tradeCondition.getConditionId() to (candleListMap[tradeCondition.getConditionId()]
-                    ?.map { it.candleDateTime to it.closePrice })!!.toMap()
-            }
-        }
-
-        /**
-         * @return <조건아이디, 투자 종목 수익 정보>
-         */
-        @Deprecated("안씀")
-        fun calculateCoinInvestment(
-            tradeItemHistory: List<TradeReportItem>
-        ): Map<Long, CommonAnalysisReportResult.WinningRate> {
-            val sellList = tradeItemHistory.filter { it.tradeEntity.tradeType == TradeType.SELL }.toList()
-            val groupBy: Map<Long, List<TradeReportItem>> =
-                sellList.groupBy { it.tradeEntity.getConditionEntity().getConditionId() }
-
-            return groupBy.entries.associate { entity ->
-                val totalInvest = entity.value.sumOf { it.common.gains }
-                val gainCount = entity.value.count { it.common.gains > 0 }
-                entity.key to CommonAnalysisReportResult.WinningRate(
-                    gainCount,
-                    entity.value.size - gainCount,
-                    totalInvest
-                )
-            }.toMap()
-        }
-
-        /**
-         * @return 조건 정보가 담긴 리포트 파일명 subfix
-         */
-        @Deprecated("안씀")
-        fun getReportFileSuffix(
-            result: AnalysisReportResult
-        ): String {
-            val tradeConditionList = result.analysisCondition.conditionList
-            return String.format(
-                "%s_%s~%s_%s.xlsx",
-                tradeConditionList.joinToString(",") { it.getConditionId().toString() },
-                result.analysisCondition.basic.range.fromDateFormat,
-                result.analysisCondition.basic.range.toDateFormat,
-                tradeConditionList.joinToString(",") { it.stock.code }
-            )
         }
 
         /**

@@ -41,8 +41,10 @@ data class DmBacktestCondition(
      */
     fun listStock(): List<String> {
         if (holdCode == null) {
-            return emptyList()
+            return stockCodes.toList()
         }
-        return stockCodes.toList()
+        val stockCodes = stockCodes.toMutableList()
+        stockCodes.add(holdCode)
+        return stockCodes
     }
 }

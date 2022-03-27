@@ -2,7 +2,6 @@ package com.setvect.bokslstock2.analysis.dm.serivce
 
 import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
-import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult2
 import com.setvect.bokslstock2.analysis.common.model.PreTrade
 import com.setvect.bokslstock2.analysis.common.model.TradeType
 import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
@@ -270,7 +269,7 @@ class DmAnalysisService(
     /**
      * 분석 요약결과
      */
-    private fun getSummary(dmBacktestCondition: DmBacktestCondition, commonAnalysisReportResult: CommonAnalysisReportResult2): String {
+    private fun getSummary(dmBacktestCondition: DmBacktestCondition, commonAnalysisReportResult: CommonAnalysisReportResult): String {
         val report = StringBuilder()
 
         report.append("----------- Buy&Hold 결과 -----------\n")
