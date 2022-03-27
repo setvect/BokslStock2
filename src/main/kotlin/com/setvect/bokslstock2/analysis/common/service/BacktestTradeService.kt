@@ -32,7 +32,7 @@ class BacktestTradeService(
         return tradeBundle(condition, listOf(preTrades))
     }
 
-    private fun tradeBundle(condition: TradeCondition, preTrades: List<List<PreTrade>>): List<Trade> {
+    fun tradeBundle(condition: TradeCondition, preTrades: List<List<PreTrade>>): List<Trade> {
         val bundleCount = preTrades.size
 
         val tradeAllList = filterPreTrade(preTrades, condition)

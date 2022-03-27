@@ -33,7 +33,7 @@ class VbsAnalysisService(
      *  분석 리포트
      */
     fun makeReport(vbsAnalysisCondition: VbsAnalysisCondition) {
-        val tradeItemHistory = backtestTradeService.trade(vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTrades())
+        val tradeItemHistory = backtestTradeService.tradeBundle(vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTradeBundles())
         val analysisResult = backtestTradeService.analysis(tradeItemHistory, vbsAnalysisCondition.basic, vbsAnalysisCondition.getStockCodes())
         val summary = getSummary(vbsAnalysisCondition, analysisResult)
         println(summary)
@@ -80,7 +80,7 @@ class VbsAnalysisService(
         var i = 0
         val conditionResults = conditionList.map { vbsAnalysisCondition ->
 
-            val tradeItemHistory = backtestTradeService.trade(vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTrades())
+            val tradeItemHistory = backtestTradeService.tradeBundle(vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTradeBundles())
             val analysisResult = backtestTradeService.analysis(
                 tradeItemHistory,
                 vbsAnalysisCondition.basic,
