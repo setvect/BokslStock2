@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.common.entity
+package com.setvect.bokslstock2.analysis.common.entity
 
 import java.time.LocalDateTime
 import org.springframework.data.annotation.CreatedDate

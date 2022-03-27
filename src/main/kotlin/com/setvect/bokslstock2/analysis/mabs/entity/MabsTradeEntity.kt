@@ -1,6 +1,7 @@
 package com.setvect.bokslstock2.analysis.mabs.entity
 
 import com.setvect.bokslstock2.analysis.common.model.TradeType
+import com.setvect.bokslstock2.analysis.common.entity.TradeEntity
 import java.time.LocalDateTime
 import javax.persistence.Column
 import javax.persistence.Entity
@@ -40,7 +41,7 @@ class MabsTradeEntity(
      */
     @Column(name = "TRADE_TYPE", length = 20, nullable = false)
     @Enumerated(STRING)
-    val tradeType: TradeType,
+    override val tradeType: TradeType,
 
     /**
      * 최고 수익률
@@ -72,7 +73,7 @@ class MabsTradeEntity(
      * 매수는 0으로 표현
      */
     @Column(name = "YIELD")
-    val yield: Double,
+    override val yield: Double,
 
     /**
      * 거래 단가
@@ -80,25 +81,20 @@ class MabsTradeEntity(
      * - 매도일 경우 매도 단가
      */
     @Column(name = "UNIT_PRICE", nullable = false)
-    val unitPrice: Double,
+    override val unitPrice: Double,
 
     /**
      * 거래시간
      */
     @Column(name = "TRADE_DATE", nullable = false)
-    val tradeDate: LocalDateTime,
-) {
+    override val tradeDate: LocalDateTime,
+) : TradeEntity {
     @Id
     @GeneratedValue(strategy = AUTO)
     @Column(name = "TRADE_SEQ")
     val tradeSeq = 0L
 
-    fun tradeId(): Long {
-        return tradeSeq
-    }
-
-    fun getConditionEntity(): MabsConditionEntity {
+    override fun getConditionEntity(): MabsConditionEntity {
         return mabsConditionEntity
     }
-
 }
