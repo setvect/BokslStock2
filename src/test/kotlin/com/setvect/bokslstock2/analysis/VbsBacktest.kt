@@ -200,12 +200,12 @@ class VbsBacktest {
     fun 일회성_백테스팅_리포트_만듦() {
         // 거래 조건
         val range = DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.now())
-        val mabsAnalysisConditionList = listOf(
+        val vbsAnalysisCondition = listOf(
             VbsAnalysisCondition(
                 tradeConditionList = listOf(
                     makeCondition(StockCode.CODE_KODEX_KOSDAQ_2X_233740), // KODEX 코스닥150 레버리지
                 ),
-                basic = BasicAnalysisCondition(
+                basic = TradeCondition(
                     range = range,
                     investRatio = 0.99,
                     cash = 10_000_000.0,
@@ -218,7 +218,7 @@ class VbsBacktest {
                 tradeConditionList = listOf(
                     makeCondition(StockCode.CODE_KODEX_KOSDAQ_2X_233740), // KODEX 코스닥150 레버리지
                 ),
-                basic = BasicAnalysisCondition(
+                basic = TradeCondition(
                     range = range,
                     investRatio = 0.7,
                     cash = 10_000_000.0,
@@ -231,7 +231,7 @@ class VbsBacktest {
                 tradeConditionList = listOf(
                     makeCondition(StockCode.CODE_KODEX_KOSDAQ_2X_233740), // KODEX 코스닥150 레버리지
                 ),
-                basic = BasicAnalysisCondition(
+                basic = TradeCondition(
                     range = range,
                     investRatio = 0.5,
                     cash = 10_000_000.0,
@@ -241,10 +241,9 @@ class VbsBacktest {
                 )
             )
         )
-        val mabsAnalysisConditionList = listOf(vbsAnalysisCondition)
 
         // 리포트 만듦
-        analysisService.makeSummaryReport(mabsAnalysisConditionList)
+        analysisService.makeSummaryReport(vbsAnalysisCondition)
 
         log.info("끝.")
     }
