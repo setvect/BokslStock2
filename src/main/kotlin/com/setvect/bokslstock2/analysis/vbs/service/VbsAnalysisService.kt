@@ -411,7 +411,6 @@ class VbsAnalysisService(
             report.append(String.format("${i}. 조건 설명\t %s", tradeCondition.comment)).append("\n")
         }
         return report.toString()
-        return report.toString()
     }
 
     /**
