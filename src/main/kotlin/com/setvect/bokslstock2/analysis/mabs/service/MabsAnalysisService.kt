@@ -29,7 +29,6 @@ class MabsAnalysisService(
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
-
     /**
      *  분석 리포트
      */

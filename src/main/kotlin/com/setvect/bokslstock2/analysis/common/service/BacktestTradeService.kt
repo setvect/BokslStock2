@@ -121,7 +121,7 @@ class BacktestTradeService(
 
                 // 첫 거래가 매도이면 삭제
                 val compactTrade = rangeTrade.stream()
-                    .skip(if (p[0].tradeType == TradeType.SELL) 1 else 0)
+                    .skip(if (rangeTrade[0].tradeType == TradeType.SELL) 1 else 0)
                     .toList()
                 if (compactTrade.size > 1) compactTrade else emptyList()
             }

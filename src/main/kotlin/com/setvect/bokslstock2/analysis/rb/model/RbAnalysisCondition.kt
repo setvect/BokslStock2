@@ -1,8 +1,9 @@
 package com.setvect.bokslstock2.analysis.rb.model
 
+import com.setvect.bokslstock2.analysis.common.model.PreTrade
+import com.setvect.bokslstock2.analysis.common.model.Stock
 import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.rb.entity.RbConditionEntity
-import com.setvect.bokslstock2.common.entity.AnalysisCondition
 import com.setvect.bokslstock2.common.entity.ConditionEntity
 
 /**
@@ -17,8 +18,28 @@ data class RbAnalysisCondition(
     /**
      * 매매 기본 조건
      */
-    override val basic: TradeCondition,
-): AnalysisCondition {
-    override val conditionList: List<ConditionEntity>
+    val basic: TradeCondition,
+) {
+    val conditionList: List<ConditionEntity>
         get() = tradeConditionList
+
+    fun getStockCodes(): List<String> {
+        return tradeConditionList.map { it.stock.code }.toList()
+    }
+
+    fun getPreTradeBundles(): List<List<PreTrade>> {
+        // TODO 중복 제거
+        return tradeConditionList
+            .map { vc ->
+                vc.tradeList.map {
+                    PreTrade(
+                        stock = Stock(vc.stock.name, vc.stock.code),
+                        tradeDate = it.tradeDate,
+                        tradeType = it.tradeType,
+                        unitPrice = it.unitPrice,
+                        yield = it.yield
+                    )
+                }
+            }
+    }
 }

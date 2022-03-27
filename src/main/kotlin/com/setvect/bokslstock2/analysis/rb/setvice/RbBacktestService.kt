@@ -41,13 +41,13 @@ class RbBacktestService(
         var i = 0
         conditionList.forEach {
             rbTradeRepository.deleteByCondition(it)
-            backtest(it)
+            runTest(it)
             log.info("백테스트 진행 ${++i}/${conditionList.size}")
         }
     }
 
     @Transactional
-    fun backtest(condition: RbConditionEntity) {
+    fun runTest(condition: RbConditionEntity) {
         val movingAverageCandle = movingAverageService.getMovingAverage(
             condition.stock.code, condition.periodType, listOf()
         )

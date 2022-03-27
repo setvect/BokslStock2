@@ -1,5 +1,6 @@
 package com.setvect.bokslstock2.analysis
 
+import com.setvect.bokslstock2.StockCode
 import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.rb.entity.RbConditionEntity
 import com.setvect.bokslstock2.analysis.rb.model.RbAnalysisCondition
@@ -101,10 +102,7 @@ class RbBacktest {
         val realRange = DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.now())
         val rbAnalysisCondition = RbAnalysisCondition(
             tradeConditionList = listOf(
-//                makeCondition("122630"), // KODEX 레버리지
-                makeCondition("233740"), // KODEX 코스닥150 레버리지
-//                makeCondition("091170"), // KODEX 은행
-//                makeCondition("TQQQ") // TQQQ
+                makeCondition(StockCode.CODE_KODEX_2X_122630),
             ),
             basic = TradeCondition(
                 range = realRange,
@@ -131,7 +129,7 @@ class RbBacktest {
             comment = null
         )
         rbBacktestService.saveCondition(condition)
-        rbBacktestService.backtest(condition)
+        rbBacktestService.runTest(condition)
 
         val tradeList = rbTradeRepository.findByCondition(condition)
         condition.tradeList = tradeList
