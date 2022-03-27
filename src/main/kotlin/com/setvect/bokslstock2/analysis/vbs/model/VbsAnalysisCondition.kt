@@ -27,6 +27,7 @@ data class VbsAnalysisCondition(
     }
 
     fun getPreTradeBundles(): List<List<PreTrade>> {
+        // TODO 중복 제거
         return tradeConditionList
             .map { vc ->
                 vc.tradeList.map {

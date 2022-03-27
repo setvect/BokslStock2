@@ -189,10 +189,10 @@ class MabsBacktest {
     @Transactional
     fun 일회성_백테스팅_리포트_만듦() {
         // 거래 조건
-        val realRange = DateRange(LocalDateTime.of(2005, 1, 1, 0, 0), LocalDateTime.now())
+        val realRange = DateRange(LocalDateTime.of(2015, 1, 1, 0, 0), LocalDateTime.now())
         val mabsAnalysisCondition = MabsAnalysisCondition(
             tradeConditionList = listOf(
-                makeCondition(StockCode.OS_CODE_SPY),
+                makeCondition(StockCode.CODE_KODEX_2X_122630),
             ),
             basic = TradeCondition(
                 range = realRange,
@@ -224,7 +224,7 @@ class MabsBacktest {
             comment = ""
         )
         mabsBacktestService.saveCondition(condition)
-        mabsBacktestService.backtest(condition)
+        mabsBacktestService.runTest(condition)
 
         val tradeList = mabsTradeRepository.findByCondition(condition)
         condition.tradeList = tradeList

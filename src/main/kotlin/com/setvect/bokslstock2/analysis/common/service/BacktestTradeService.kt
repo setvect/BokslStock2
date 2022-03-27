@@ -19,6 +19,9 @@ import kotlin.streams.toList
 
 /**
  * 백테스팅 결과를 이용해 매매 분석
+ *
+ * 본 클래스는 매매 전략과 독립적으로 동작해야됨.
+ * 즉 특정 매매전략에 의존적인 코드가 들어가면 안됨
  */
 @Service
 class BacktestTradeService(
@@ -131,16 +134,16 @@ class BacktestTradeService(
      * 매매 결과에 대한 통계적 분석을 함
      */
     fun analysis(
-        tradeItemHistory: List<Trade>, condition: TradeCondition, holdStockCodes: List<String>
+        trades: List<Trade>, condition: TradeCondition, holdStockCodes: List<String>
     ): AnalysisResult {
         // 날짜별로 Buy&Hold 및 투자전략 평가금액 얻기
-        val evaluationAmountHistory = applyEvaluationAmount(tradeItemHistory, condition, holdStockCodes)
+        val evaluationAmountHistory = applyEvaluationAmount(trades, condition, holdStockCodes)
 
         val buyAndHoldYieldMdd = ReportMakerHelperService.calculateTotalBuyAndHoldYield(evaluationAmountHistory, condition.range)
         val buyAndHoldYieldCondition = calculateBuyAndHoldYield(condition, holdStockCodes)
 
         val yieldTotal = ReportMakerHelperService.calculateTotalYield(evaluationAmountHistory, condition.range)
-        val winningRate = calculateCoinInvestment(tradeItemHistory)
+        val winningRate = calculateCoinInvestment(trades)
 
 
         val common = CommonAnalysisReportResult2(
@@ -150,7 +153,7 @@ class BacktestTradeService(
             buyHoldYieldCondition = buyAndHoldYieldCondition,
             buyHoldYieldTotal = buyAndHoldYieldMdd,
         )
-        return AnalysisResult(condition, tradeItemHistory, common)
+        return AnalysisResult(condition, trades, common)
     }
 
 
@@ -158,7 +161,7 @@ class BacktestTradeService(
      * @return 날짜별 평가금 계산
      */
     fun applyEvaluationAmount(
-        tradeItemHistory: List<Trade>,
+        trades: List<Trade>,
         condition: TradeCondition,
         holdStockCodes: List<String>
     ): List<EvaluationRateItem> {
@@ -179,11 +182,11 @@ class BacktestTradeService(
         var backtestLastCash = condition.cash // 마지막 보유 현금
 
         // <거래날짜, 거래내용>
-        val tradeByDate = tradeItemHistory.groupBy { it.preTrade.tradeDate }
+        val tradeByDate = trades.groupBy { it.preTrade.tradeDate }
 
         // 현재 가지고 있는 주식 수
         // <종목 코드, 주식수>
-        val condByStockQty = tradeItemHistory
+        val condByStockQty = trades
             .map { it.preTrade.stock.code }
             .distinct()
             .associateWith { 0 }
