@@ -1,7 +1,7 @@
 package com.setvect.bokslstock2.analysis.mabs.entity
 
-import com.setvect.bokslstock2.common.entity.BaseTimeEntity
-import com.setvect.bokslstock2.common.entity.ConditionEntity
+import com.setvect.bokslstock2.analysis.common.entity.BaseTimeEntity
+import com.setvect.bokslstock2.analysis.common.entity.ConditionEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 import javax.persistence.Column
@@ -68,13 +68,9 @@ class MabsConditionEntity(
     @Id
     @GeneratedValue(strategy = AUTO)
     @Column(name = "CONDITION_SEQ")
-    val conditionSeq = 0L
+    override val conditionSeq = 0L
 
     @OneToMany(mappedBy = "mabsConditionEntity")
     @OrderBy("tradeDate ASC")
     override var tradeList: List<MabsTradeEntity> = ArrayList()
-
-    override fun getConditionId(): Long {
-        return conditionSeq
-    }
 }

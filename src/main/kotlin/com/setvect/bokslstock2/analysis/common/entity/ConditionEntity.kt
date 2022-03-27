@@ -1,12 +1,9 @@
-package com.setvect.bokslstock2.common.entity
+package com.setvect.bokslstock2.analysis.common.entity
 
 import com.setvect.bokslstock2.index.entity.StockEntity
 
 interface ConditionEntity {
-    /**
-     * @return 조건 아이디
-     */
-    fun getConditionId(): Long
+    val conditionSeq: Long
 
     /**
      * @return 종목

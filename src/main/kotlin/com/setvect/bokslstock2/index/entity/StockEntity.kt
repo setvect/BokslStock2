@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2.index.entity
 
-import com.setvect.bokslstock2.common.entity.BaseTimeEntity
+import com.setvect.bokslstock2.analysis.common.entity.BaseTimeEntity
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue

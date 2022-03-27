@@ -1,13 +1,13 @@
 package com.setvect.bokslstock2.analysis
 
-import com.setvect.bokslstock2.analysis.common.model.BasicAnalysisCondition
+import com.setvect.bokslstock2.StockCode
+import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.rb.entity.RbConditionEntity
 import com.setvect.bokslstock2.analysis.rb.model.RbAnalysisCondition
 import com.setvect.bokslstock2.analysis.rb.repository.RbConditionRepository
 import com.setvect.bokslstock2.analysis.rb.repository.RbTradeRepository
 import com.setvect.bokslstock2.analysis.rb.setvice.RbAnalysisService
 import com.setvect.bokslstock2.analysis.rb.setvice.RbBacktestService
-import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_MONTH
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
@@ -102,12 +102,9 @@ class RbBacktest {
         val realRange = DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.now())
         val rbAnalysisCondition = RbAnalysisCondition(
             tradeConditionList = listOf(
-//                makeCondition("122630"), // KODEX 레버리지
-                makeCondition("233740"), // KODEX 코스닥150 레버리지
-//                makeCondition("091170"), // KODEX 은행
-//                makeCondition("TQQQ") // TQQQ
+                makeCondition(StockCode.CODE_KODEX_2X_122630),
             ),
-            basic = BasicAnalysisCondition(
+            basic = TradeCondition(
                 range = realRange,
                 investRatio = 0.20,
                 cash = 10_000_000.0,
@@ -132,7 +129,7 @@ class RbBacktest {
             comment = null
         )
         rbBacktestService.saveCondition(condition)
-        rbBacktestService.backtest(condition)
+        rbBacktestService.runTest(condition)
 
         val tradeList = rbTradeRepository.findByCondition(condition)
         condition.tradeList = tradeList
@@ -156,7 +153,7 @@ class RbBacktest {
 
                 val vbsAnalysisCondition = RbAnalysisCondition(
                     tradeConditionList = listOf(it),
-                    basic = BasicAnalysisCondition(
+                    basic = TradeCondition(
                         range = priceRange,
                         investRatio = 0.5,
                         cash = 10_000_000.0,

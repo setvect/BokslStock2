@@ -1,8 +1,7 @@
 package com.setvect.bokslstock2.analysis.rb.entity
 
 import com.setvect.bokslstock2.analysis.common.model.TradeType
-import com.setvect.bokslstock2.common.entity.ConditionEntity
-import com.setvect.bokslstock2.common.entity.TradeEntity
+import com.setvect.bokslstock2.analysis.common.entity.TradeEntity
 import java.time.LocalDateTime
 import javax.persistence.Column
 import javax.persistence.Entity
@@ -70,11 +69,7 @@ class RbTradeEntity(
     @Column(name = "TRADE_SEQ")
     val tradeSeq = 0L
 
-    override fun tradeId(): Long {
-        return tradeSeq
-    }
-
-    override fun getConditionEntity(): ConditionEntity {
+    override fun getConditionEntity(): RbConditionEntity {
         return rbConditionEntity
     }
 }

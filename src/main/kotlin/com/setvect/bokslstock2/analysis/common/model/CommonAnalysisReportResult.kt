@@ -21,15 +21,15 @@ data class CommonAnalysisReportResult(
 
     /**
      * 조건 기준 승률 합
-     * <조건아이디, 승률>
+     * <종목코드, 승률>
      */
-    val winningRateCondition: Map<Long, WinningRate>,
+    val winningRateCondition: Map<String, WinningRate>,
 
     /**
      * 조건별 종목 Buy&Hold 수익률
-     * <조건아이디, 수익률>
+     * <종목코드, 수익률>
      */
-    val buyHoldYieldCondition: Map<Long, YieldMdd>,
+    val buyHoldYieldCondition: Map<String, YieldMdd>,
 
     /**
      * 종목 Buy&Hold 수익률
@@ -101,7 +101,6 @@ data class CommonAnalysisReportResult(
         val stdev = ds.standardDeviation
         return mean / stdev * sqrt(yieldList.size.toDouble())
     }
-
 
     /*
      * 수익률과 MDD

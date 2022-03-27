@@ -1,15 +1,10 @@
-package com.setvect.bokslstock2.common.entity
+package com.setvect.bokslstock2.analysis.common.entity
 
 import com.setvect.bokslstock2.analysis.common.model.TradeType
 import java.time.LocalDateTime
 
 interface TradeEntity {
     fun getConditionEntity(): ConditionEntity
-
-    /**
-     * @return 조건 아이디
-     */
-    fun tradeId(): Long
 
     /**
      * @return 매수/매도

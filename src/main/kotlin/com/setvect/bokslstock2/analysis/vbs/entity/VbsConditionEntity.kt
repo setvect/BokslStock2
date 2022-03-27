@@ -1,7 +1,7 @@
 package com.setvect.bokslstock2.analysis.vbs.entity
 
-import com.setvect.bokslstock2.common.entity.BaseTimeEntity
-import com.setvect.bokslstock2.common.entity.ConditionEntity
+import com.setvect.bokslstock2.analysis.common.entity.BaseTimeEntity
+import com.setvect.bokslstock2.analysis.common.entity.ConditionEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 import org.hibernate.annotations.Type
@@ -81,13 +81,9 @@ class VbsConditionEntity(
     @Id
     @GeneratedValue(strategy = AUTO)
     @Column(name = "CONDITION_SEQ")
-    val conditionSeq = 0L
+    override val conditionSeq = 0L
 
     @OneToMany(mappedBy = "vbsConditionEntity")
     @OrderBy("tradeDate ASC")
     override var tradeList: List<VbsTradeEntity> = ArrayList()
-
-    override fun getConditionId(): Long {
-        return conditionSeq
-    }
 }

@@ -1,7 +1,7 @@
 package com.setvect.bokslstock2.analysis
 
 import com.setvect.bokslstock2.StockCode
-import com.setvect.bokslstock2.analysis.common.model.BasicAnalysisCondition
+import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.mabs.entity.MabsConditionEntity
 import com.setvect.bokslstock2.analysis.mabs.model.MabsAnalysisCondition
 import com.setvect.bokslstock2.analysis.mabs.repository.MabsConditionRepository
@@ -137,7 +137,7 @@ class MabsBacktest {
 
                 MabsAnalysisCondition(
                     tradeConditionList = conditionList,
-                    basic = BasicAnalysisCondition(
+                    basic = TradeCondition(
                         range = realRange,
                         investRatio = 0.99,
                         cash = 10_000_000.0,
@@ -159,7 +159,7 @@ class MabsBacktest {
         val conditionList = mabsConditionRepository.listBySeq(listOf(949092))
         val mabsAnalysisCondition = MabsAnalysisCondition(
             tradeConditionList = conditionList,
-            basic = BasicAnalysisCondition(
+            basic = TradeCondition(
                 range = range,
                 investRatio = 0.99,
                 cash = 10_000_000.0,
@@ -189,12 +189,12 @@ class MabsBacktest {
     @Transactional
     fun 일회성_백테스팅_리포트_만듦() {
         // 거래 조건
-        val realRange = DateRange(LocalDateTime.of(2005, 1, 1, 0, 0), LocalDateTime.now())
+        val realRange = DateRange(LocalDateTime.of(2015, 1, 1, 0, 0), LocalDateTime.now())
         val mabsAnalysisCondition = MabsAnalysisCondition(
             tradeConditionList = listOf(
-                makeCondition(StockCode.OS_CODE_SPY),
+                makeCondition(StockCode.CODE_KODEX_2X_122630),
             ),
-            basic = BasicAnalysisCondition(
+            basic = TradeCondition(
                 range = realRange,
                 investRatio = 0.99,
                 cash = 10_000_000.0,
@@ -224,7 +224,7 @@ class MabsBacktest {
             comment = ""
         )
         mabsBacktestService.saveCondition(condition)
-        mabsBacktestService.backtest(condition)
+        mabsBacktestService.runTest(condition)
 
         val tradeList = mabsTradeRepository.findByCondition(condition)
         condition.tradeList = tradeList
@@ -424,7 +424,7 @@ class MabsBacktest {
 
             val mabsAnalysisCondition = MabsAnalysisCondition(
                 tradeConditionList = listOf(it),
-                basic = BasicAnalysisCondition(
+                basic = TradeCondition(
                     range = priceRange,
                     investRatio = 0.99,
                     cash = 10_000_000.0,

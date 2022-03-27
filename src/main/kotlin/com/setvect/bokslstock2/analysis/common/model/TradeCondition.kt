@@ -3,9 +3,9 @@ package com.setvect.bokslstock2.analysis.common.model
 import com.setvect.bokslstock2.util.DateRange
 
 /**
- * 백테스트 조건
+ * 매매조건 조건
  */
-data class BasicAnalysisCondition(
+data class TradeCondition(
     /**
      * 분석 대상 기간
      */

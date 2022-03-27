@@ -1,7 +1,7 @@
 package com.setvect.bokslstock2.analysis
 
 import com.setvect.bokslstock2.StockCode
-import com.setvect.bokslstock2.analysis.common.model.BasicAnalysisCondition
+import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.vbs.entity.VbsConditionEntity
 import com.setvect.bokslstock2.analysis.vbs.model.VbsAnalysisCondition
 import com.setvect.bokslstock2.analysis.vbs.repository.VbsConditionRepository
@@ -128,7 +128,7 @@ class VbsBacktest {
 
         val vbsAnalysisCondition = VbsAnalysisCondition(
             tradeConditionList = conditionList,
-            basic = BasicAnalysisCondition(
+            basic = TradeCondition(
                 range = realRange,
                 investRatio = 0.99,
                 cash = 10_000_000.0,
@@ -177,7 +177,7 @@ class VbsBacktest {
 
                 VbsAnalysisCondition(
                     tradeConditionList = conditionList,
-                    basic = BasicAnalysisCondition(
+                    basic = TradeCondition(
                         range = realRange,
                         investRatio = 0.99,
                         cash = 10_000_000.0,
@@ -241,6 +241,7 @@ class VbsBacktest {
                 )
             )
         )
+        val mabsAnalysisConditionList = listOf(vbsAnalysisCondition)
 
         // 리포트 만듦
         analysisService.makeSummaryReport(mabsAnalysisConditionList)
@@ -261,7 +262,7 @@ class VbsBacktest {
             comment = null
         )
         vbsBacktestService.saveCondition(condition)
-        vbsBacktestService.backtest(condition)
+        vbsBacktestService.runTest(condition)
 
         val tradeList = vbsTradeRepository.findByCondition(condition)
         condition.tradeList = tradeList
@@ -283,7 +284,7 @@ class VbsBacktest {
 
                 val vbsAnalysisCondition = VbsAnalysisCondition(
                     tradeConditionList = listOf(it),
-                    basic = BasicAnalysisCondition(
+                    basic = TradeCondition(
                         range = priceRange,
                         investRatio = 0.99,
                         cash = 10_000_000.0,

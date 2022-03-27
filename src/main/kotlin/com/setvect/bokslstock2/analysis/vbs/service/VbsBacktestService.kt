@@ -43,13 +43,13 @@ class VbsBacktestService(
         conditionList
             .forEach {
                 vbsTradeRepository.deleteByCondition(it)
-                backtest(it)
+                runTest(it)
                 log.info("백테스트 진행 ${++i}/${conditionList.size}")
             }
     }
 
     @Transactional
-    fun backtest(condition: VbsConditionEntity) {
+    fun runTest(condition: VbsConditionEntity) {
         val movingAverageCandle = movingAverageService.getMovingAverage(
             condition.stock.code, condition.periodType, listOf(condition.maPeriod)
         )
