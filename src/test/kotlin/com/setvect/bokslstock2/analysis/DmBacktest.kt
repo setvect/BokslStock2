@@ -24,13 +24,13 @@ class DmBacktest {
 
     @Test
     fun 일회성_백테스팅_리포트_만듦() {
-        val from = LocalDateTime.of(2016, 6, 1, 0, 0)
-        val to = LocalDateTime.now()
+        val from = LocalDateTime.of(2018, 1, 1, 0, 0)
+        val to = LocalDateTime.of(2019, 12, 31, 0, 0)
         val realRange = DateRange(from, to)
 
         val basic = TradeCondition(
             range = realRange,
-            investRatio = 0.99,
+            investRatio = 0.999,
             cash = 10_000_000.0,
             feeBuy = 0.00015,
             feeSell = 0.00015,
@@ -39,8 +39,8 @@ class DmBacktest {
 
         val condition = DmBacktestCondition(
             tradeCondition = basic,
-            stockCodes = listOf(StockCode.CODE_KODEX_200_069500),
-            holdCode = StockCode.CODE_KODEX_SHORT_BONDS_153130,
+            stockCodes = listOf(StockCode.OS_CODE_SPY),
+            holdCode = StockCode.OS_CODE_TLT,
             periodType = PeriodType.PERIOD_MONTH,
             timeWeight = hashMapOf(
                 1 to 0.33,
@@ -51,6 +51,4 @@ class DmBacktest {
         dmAnalysisService.runTest(condition)
         log.info("끝.")
     }
-
-
 }
