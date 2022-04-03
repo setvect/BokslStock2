@@ -3,7 +3,7 @@ package com.setvect.bokslstock2.analysis
 import com.setvect.bokslstock2.StockCode
 import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.dm.model.DmBacktestCondition
-import com.setvect.bokslstock2.analysis.dm.serivce.DmAnalysisService
+import com.setvect.bokslstock2.analysis.dm.service.DmAnalysisService
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.util.DateRange
 import java.time.LocalDateTime

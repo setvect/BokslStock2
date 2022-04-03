@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.analysis.dm.serivce
+package com.setvect.bokslstock2.analysis.dm.service
 
 import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
