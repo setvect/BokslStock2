@@ -46,16 +46,28 @@ class MovingAverageService(
             groupDateTime.withHour(0).withMinute(0).withSecond(0).withNano(0)
         }
 
-        val groupingCandleList = candleGroupMap.entries.map {
-            CandleDto(
-                candleDateTimeStart = it.value.first().candleDateTime,
-                candleDateTimeEnd = it.value.last().candleDateTime,
-                lowPrice = it.value.minOf { p -> p.lowPrice },
-                highPrice = it.value.maxOf { p -> p.highPrice },
-                openPrice = it.value.first().openPrice,
-                closePrice = it.value.last().closePrice,
+        val candleGroupList = candleGroupMap.entries.map { Pair(it.key, it.value) }
+
+        val groupingCandleList = mutableListOf<CandleDto>()
+        for (i in candleGroupList.indices) {
+            val beforeCandle = if (i == 0) {
+                candleGroupList[i]
+            } else {
+                candleGroupList[i - 1]
+            }
+            val candleGroup = candleGroupList[i]
+            val candleGroupList = candleGroup.second
+            val candle = CandleDto(
+                candleDateTimeStart = candleGroupList.first().candleDateTime,
+                candleDateTimeEnd = candleGroupList.last().candleDateTime,
+                beforeClosePrice = beforeCandle.second.last().closePrice,
+                openPrice = candleGroupList.first().openPrice,
+                highPrice = candleGroupList.maxOf { p -> p.highPrice },
+                lowPrice = candleGroupList.minOf { p -> p.lowPrice },
+                closePrice = candleGroupList.last().closePrice,
                 periodType = group
             )
+            groupingCandleList.add(candle)
         }
 
         // 이동평균에는 현재 기간을 포함하지 않음

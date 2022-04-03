@@ -59,6 +59,9 @@ class DmAnalysisService(
 
         // <종목코드, <날짜, 캔들>>
         val stockPriceIndex = getStockPriceIndex(stockCodes, condition)
+        // 듀얼모멘텀 대상 종목 <종목코드, <날짜, 캔들>>
+        val stockPriceIndexForMomentumStock =
+            stockPriceIndex.entries.filter { it.key != condition.holdCode }.associate { it.key to it.value }
 
         var current =
             DateUtil.fitMonth(condition.tradeCondition.range.from.withDayOfMonth(1), condition.periodType.getDeviceMonth())
@@ -67,25 +70,25 @@ class DmAnalysisService(
 
         val tradeList = mutableListOf<PreTrade>()
         while (current.isBefore(condition.tradeCondition.range.to)) {
-            val stockByRate = calculateRate(stockPriceIndex, current, condition)
+            val stockByRate = calculateRate(stockPriceIndexForMomentumStock, current, condition)
 
-            val existBeforeBuy = beforeBuyTrade != null
-
-            // 듀얼 모멘텀 매수 대상 종목이 없으면
+            // 듀얼 모멘텀 매수 대상 종목이 없으면, hold 종목 매수 또는 현금 보유
             if (stockByRate.isEmpty()) {
                 val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stock.code != condition.holdCode
                 val existHoldCode = condition.holdCode != null
 
-                if (existBeforeBuy && changeBuyStock) {
-                    val stockPrice = stockPriceIndex[beforeBuyTrade!!.stock.code]!![current]!!
-                    val sellTrade = makeSellTrade(stockPrice, current, beforeBuyTrade)
+                if (changeBuyStock) {
+                    // 보유 종목 매도
+                    val sellStock = stockPriceIndex[beforeBuyTrade!!.stock.code]!![current]!!
+                    val sellTrade = makeSellTrade(sellStock, current, beforeBuyTrade)
                     tradeList.add(sellTrade)
                     beforeBuyTrade = null
                 }
                 if (existHoldCode && (beforeBuyTrade == null || beforeBuyTrade.stock.code != condition.holdCode)) {
-                    val stockPrice = stockPriceIndex[condition.holdCode]!![current]!!
+                    // hold 종목 매수
+                    val buyStock = stockPriceIndex[condition.holdCode]!![current]!!
                     val stock = codeByStock[condition.holdCode]!!
-                    val buyTrade = makeBuyTrade(stockPrice, current, stock)
+                    val buyTrade = makeBuyTrade(buyStock, current, stock)
                     tradeList.add(buyTrade)
                     beforeBuyTrade = buyTrade
                 } else if (existHoldCode) {
@@ -96,15 +99,17 @@ class DmAnalysisService(
                 val stockCode = buyStockRate.first
                 val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stock.code != stockCode
 
-                if (existBeforeBuy && changeBuyStock) {
-                    val stockPrice = stockPriceIndex[beforeBuyTrade!!.stock.code]!![current]!!
-                    val sellTrade = makeSellTrade(stockPrice, current, beforeBuyTrade)
+                if (changeBuyStock) {
+                    // 보유 종목 매도
+                    val sellStock = stockPriceIndex[beforeBuyTrade!!.stock.code]!![current]!!
+                    val sellTrade = makeSellTrade(sellStock, current, beforeBuyTrade)
                     tradeList.add(sellTrade)
                 }
-                if (!existBeforeBuy || changeBuyStock) {
-                    val stockPrice = stockPriceIndex[stockCode]!![current]!!
+                if (beforeBuyTrade == null || changeBuyStock) {
+                    // 새운 종목 매수
+                    val buyStock = stockPriceIndex[stockCode]!![current]!!
                     val stock = codeByStock[stockCode]!!
-                    val buyTrade = makeBuyTrade(stockPrice, current, stock)
+                    val buyTrade = makeBuyTrade(buyStock, current, stock)
                     tradeList.add(buyTrade)
                     beforeBuyTrade = buyTrade
                 } else {
@@ -122,12 +127,11 @@ class DmAnalysisService(
             current = current.plusMonths(condition.periodType.getDeviceMonth().toLong())
         }
 
-
         return tradeList
     }
 
     private fun makeBuyTrade(
-        stockPrice: CandleDto,
+        targetStock: CandleDto,
         current: LocalDateTime,
         stock: StockEntity
     ): PreTrade {
@@ -135,7 +139,8 @@ class DmAnalysisService(
             stock = Stock.of(stock),
             tradeType = TradeType.BUY,
             yield = 0.0,
-            unitPrice = stockPrice.openPrice,
+            // TODO 아무래도 시가를 기준으로 하는게 맞는 것 같음. 하지만 비주얼포트폴리오와 맞추기 위해 직전 종가 적용
+            unitPrice = targetStock.beforeClosePrice,
             tradeDate = current,
         )
         log.info("매수: ${buyTrade.tradeDate}, ${buyTrade.stock.name}(${buyTrade.stock.code})")
@@ -144,15 +149,16 @@ class DmAnalysisService(
 
 
     private fun makeSellTrade(
-        stockPrice: CandleDto,
+        targetStock: CandleDto,
         current: LocalDateTime,
         beforeBuyTrade: PreTrade
     ): PreTrade {
         val sellTrade = PreTrade(
             stock = beforeBuyTrade.stock,
             tradeType = TradeType.SELL,
-            yield = ApplicationUtil.getYield(beforeBuyTrade.unitPrice, stockPrice.openPrice),
-            unitPrice = stockPrice.openPrice,
+            // TODO 아무래도 시가를 기준으로 하는게 맞는 것 같음. 하지만 비주얼포트폴리오와 맞추기 위해 직전 종가 적용
+            yield = ApplicationUtil.getYield(beforeBuyTrade.unitPrice, targetStock.beforeClosePrice),
+            unitPrice = targetStock.beforeClosePrice,  // TODO
             tradeDate = current,
         )
         log.info("매도: ${sellTrade.tradeDate}, ${sellTrade.stock.name}(${sellTrade.stock.code}), 수익: ${sellTrade.yield}")
@@ -178,7 +184,7 @@ class DmAnalysisService(
                         "O: ${currentCandle.openPrice}, H: ${currentCandle.highPrice}, L: ${currentCandle.lowPrice}, C:${currentCandle.closePrice}, ${currentCandle.periodType}"
             )
 
-            // 가중치 적용 종가 평균
+            // 모멘텀평균 가격(가중치 적용 종가 평균)
             val average = condition.timeWeight.entries.sumOf { timeWeight ->
                 val delta = timeWeight.key
                 val weight = timeWeight.value
@@ -186,15 +192,16 @@ class DmAnalysisService(
                 log.info("\t\t비교 날짜: [${delta}] ${stockEntry.key} - ${deltaCandle.candleDateTimeStart} - C: ${deltaCandle.closePrice}")
                 log.info(
                     "\t\t$delta -   ${stockEntry.key}: ${deltaCandle.candleDateTimeStart}~${deltaCandle.candleDateTimeEnd} - " +
-                            "O: ${deltaCandle.openPrice}, H: ${deltaCandle.highPrice}, L: ${deltaCandle.lowPrice}, C:${deltaCandle.closePrice}, ${deltaCandle.periodType}, 수익률: ${deltaCandle.getYield()}"
+                            "직전종가: ${deltaCandle.beforeClosePrice}, O: ${deltaCandle.openPrice}, H: ${deltaCandle.highPrice}, L: ${deltaCandle.lowPrice}, C:${deltaCandle.closePrice}, ${deltaCandle.periodType}, 수익률: ${deltaCandle.getYield()}"
                 )
 
-                deltaCandle.closePrice * weight
+                // TODO 아무래도 시가를 기준으로 하는게 맞는 것 같음. 하지만 비주얼포트폴리오와 맞추기 위해 직전 종가 적용
+                deltaCandle.beforeClosePrice * weight
             }
 
-            val rate = currentCandle.openPrice / average
-            // 상승 비율 = 현재 날짜 시가 / 가중치 적용 종가 평균
-            log.info("\t상승 비율: ${current}: ${stockEntry.key} = ${currentCandle.openPrice}/$average = ${rate}")
+            val rate = currentCandle.beforeClosePrice / average
+            // 수익률 = 현재 날짜 시가 / 모멘텀평균 가격
+            log.info("\t수익률: ${current}: ${stockEntry.key} = ${currentCandle.openPrice}/$average = $rate")
 
             stockEntry.key to rate
         }

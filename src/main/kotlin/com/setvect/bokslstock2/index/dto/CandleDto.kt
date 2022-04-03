@@ -11,6 +11,8 @@ data class CandleDto(
     val candleDateTimeStart: LocalDateTime,
     val candleDateTimeEnd: LocalDateTime,
     val periodType: PeriodType,
+    // 직전종가
+    val beforeClosePrice: Double,
     val openPrice: Double,
     val highPrice: Double,
     val lowPrice: Double,
@@ -23,9 +25,9 @@ data class CandleDto(
 
     /**
      *
-     * @return 시가대비 종가 수익률, 종가 / 시가
+     * @return 시가대비 종가 수익률, 현재 종가 / 직전 종가
      */
     fun getYield(): Double {
-        return closePrice / openPrice
+        return closePrice / beforeClosePrice
     }
 }

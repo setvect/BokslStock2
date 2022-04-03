@@ -78,7 +78,7 @@ class ReportMakerHelperService(
 
                 createCell = row.createCell(cellIdx++)
                 createCell.setCellValue(preTrade.unitPrice)
-                if (preTrade.unitPrice > 100) {
+                if (preTrade.unitPrice > 1000) {
                     createCell.cellStyle = commaStyle
                 } else {
                     createCell.cellStyle = decimalStyle
