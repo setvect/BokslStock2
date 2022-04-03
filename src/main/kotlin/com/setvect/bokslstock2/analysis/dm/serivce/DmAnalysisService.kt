@@ -18,8 +18,11 @@ import com.setvect.bokslstock2.util.DateRange
 import com.setvect.bokslstock2.util.DateUtil
 import java.io.File
 import java.io.FileOutputStream
+import java.sql.Timestamp
 import java.time.LocalDateTime
 import java.util.*
+import org.apache.poi.ss.usermodel.FillPatternType
+import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.xssf.usermodel.XSSFSheet
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.slf4j.Logger
@@ -40,13 +43,6 @@ class DmAnalysisService(
     fun runTest(dmBacktestCondition: DmBacktestCondition) {
         checkValidate(dmBacktestCondition)
         val preTrades = processDualMomentum(dmBacktestCondition)
-        var sumYield = 1.0
-        preTrades.forEach {
-            log.info("${it.tradeType}\t${it.tradeDate}\t${it.stock.name}(${it.stock.code})\t${it.yield}")
-            sumYield *= (it.yield + 1)
-        }
-        log.info("수익률: ${String.format("%.2f%%", (sumYield - 1) * 100)}")
-
         val tradeCondition = makeTradeDateCorrection(dmBacktestCondition, preTrades)
         val trades = backtestTradeService.trade(tradeCondition, preTrades)
         val result = backtestTradeService.analysis(trades, tradeCondition, dmBacktestCondition.stockCodes)
@@ -56,15 +52,17 @@ class DmAnalysisService(
     }
 
     /**
-     * 나도 이렇게 하기 싫다. 비주얼포트폴리오 매매 전략과 동일하게 맞추기 위해서 직전 종가 기준으로 매매가 이루어져야 되기 때문에 백테스트 시작 시점 조정이 필요하다.
+     * 나도 이렇게 하기 싫다.
+     * 비주얼포트폴리오 매매 전략과 동일하게 맞추기 위해서 직전 종가 기준으로 매매가 이루어져야 되기 때문에 백테스트 시작 시점 조정이 필요하다.
      */
     private fun makeTradeDateCorrection(
         dmBacktestCondition: DmBacktestCondition,
         preTrades: List<PreTrade>
     ): TradeCondition {
         val temp = dmBacktestCondition.tradeCondition
-        val from = if (temp.range.from.isBefore(preTrades[0].tradeDate)) temp.range.from else preTrades[0].tradeDate
-        return TradeCondition(DateRange(from, temp.range.to), temp.investRatio, temp.cash, temp.feeBuy, temp.feeSell, temp.comment)
+        val from = if (temp.range.from.isBefore(preTrades.first().tradeDate)) temp.range.from else preTrades.first().tradeDate
+        val to = if (temp.range.to.isAfter(preTrades.last().tradeDate)) temp.range.to else preTrades.last().tradeDate
+        return TradeCondition(DateRange(from, to), temp.investRatio, temp.cash, temp.feeBuy, temp.feeSell, temp.comment)
     }
 
     private fun processDualMomentum(condition: DmBacktestCondition): List<PreTrade> {
@@ -160,9 +158,8 @@ class DmAnalysisService(
             stock = Stock.of(stock),
             tradeType = TradeType.BUY,
             yield = 0.0,
-            // TODO 아무래도 시가를 기준으로 하는게 맞는 것 같음. 하지만 비주얼포트폴리오와 맞추기 위해 직전 종가 적용
-            unitPrice = targetStock.beforeClosePrice,
-            tradeDate = targetStock.beforeCandleDateTimeEnd,
+            unitPrice = targetStock.openPrice,
+            tradeDate = targetStock.candleDateTimeStart,
         )
         log.info("매수: ${targetStock.candleDateTimeStart}(${buyTrade.tradeDate}), ${buyTrade.stock.name}(${buyTrade.stock.code})")
         return buyTrade
@@ -176,10 +173,9 @@ class DmAnalysisService(
         val sellTrade = PreTrade(
             stock = beforeBuyTrade.stock,
             tradeType = TradeType.SELL,
-            // TODO 아무래도 시가를 기준으로 하는게 맞는 것 같음. 하지만 비주얼포트폴리오와 맞추기 위해 직전 종가 적용
-            yield = ApplicationUtil.getYield(beforeBuyTrade.unitPrice, targetStock.beforeClosePrice),
-            unitPrice = targetStock.beforeClosePrice,  // TODO
-            tradeDate = targetStock.beforeCandleDateTimeEnd,
+            yield = ApplicationUtil.getYield(beforeBuyTrade.unitPrice, targetStock.openPrice),
+            unitPrice = targetStock.openPrice,
+            tradeDate = targetStock.candleDateTimeStart,
         )
         log.info("매도: ${targetStock.candleDateTimeStart}(${sellTrade.tradeDate}), ${sellTrade.stock.name}(${sellTrade.stock.code}), 수익: ${sellTrade.yield}")
         return sellTrade
@@ -215,8 +211,7 @@ class DmAnalysisService(
                             "직전종가: ${deltaCandle.beforeClosePrice}, O: ${deltaCandle.openPrice}, H: ${deltaCandle.highPrice}, L: ${deltaCandle.lowPrice}, C:${deltaCandle.closePrice}, ${deltaCandle.periodType}, 수익률: ${deltaCandle.getYield()}"
                 )
 
-                // TODO 아무래도 시가를 기준으로 하는게 맞는 것 같음. 하지만 비주얼포트폴리오와 맞추기 위해 직전 종가 적용
-                deltaCandle.beforeClosePrice * weight
+                deltaCandle.openPrice * weight
             }
 
             val rate = currentCandle.beforeClosePrice / average
@@ -283,6 +278,39 @@ class DmAnalysisService(
 
             sheet = createReportSummary(dmBacktestCondition, analysisResult, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "5. 매매 요약결과 및 조건")
+
+            FileOutputStream(reportFile).use { ous ->
+                workbook.write(ous)
+            }
+        }
+        println("결과 파일:" + reportFile.name)
+        return reportFile
+    }
+
+    fun makeSummaryReport(conditionList: List<DmBacktestCondition>): File {
+        var i = 0
+        val conditionResults = conditionList.map { dmBacktestCondition ->
+            checkValidate(dmBacktestCondition)
+            val preTrades = processDualMomentum(dmBacktestCondition)
+            val tradeCondition = makeTradeDateCorrection(dmBacktestCondition, preTrades)
+            val trades = backtestTradeService.trade(tradeCondition, preTrades)
+            val analysisResult = backtestTradeService.analysis(trades, tradeCondition, dmBacktestCondition.stockCodes)
+            log.info("분석 진행 ${++i}/${conditionList.size}")
+            Pair(dmBacktestCondition, analysisResult)
+        }.toList()
+
+        for (idx in conditionResults.indices) {
+            val conditionResult = conditionResults[idx]
+            makeReportFile(conditionResult.first, conditionResult.second)
+            log.info("개별분석파일 생성 ${idx + 1}/${conditionList.size}")
+        }
+
+        // 결과 저장
+        val reportFile =
+            File("./backtest-result", "듀얼모멘텀_전략_백테스트_분석결과_" + Timestamp.valueOf(LocalDateTime.now()).time + ".xlsx")
+        XSSFWorkbook().use { workbook ->
+            val sheetBacktestSummary = createTotalSummary(workbook, conditionResults)
+            workbook.setSheetName(workbook.getSheetIndex(sheetBacktestSummary), "1. 평가표")
 
             FileOutputStream(reportFile).use { ous ->
                 workbook.write(ous)
@@ -364,4 +392,131 @@ class DmAnalysisService(
 
         return report.toString()
     }
+
+
+    /**
+     * @return 여러개 백테스트 결과 요약 시트
+     */
+    private fun createTotalSummary(
+        workbook: XSSFWorkbook,
+        conditionResults: List<Pair<DmBacktestCondition, AnalysisResult>>
+    ): XSSFSheet {
+        val sheet = workbook.createSheet()
+
+        val header = "분석기간,거래종목,홀드종목,가중치기간 및 비율,투자비율,최초 투자금액,매수 수수료,매도 수수료," +
+                "조건 설명," +
+                "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,샤프지수," +
+                "실현 수익,실현 MDD,실현 CAGR,샤프지수,매매 횟수,승률"
+        ReportMakerHelperService.applyHeader(sheet, header)
+        var rowIdx = 1
+
+        val defaultStyle = ReportMakerHelperService.ExcelStyle.createDefault(workbook)
+        val dateStyle = ReportMakerHelperService.ExcelStyle.createDate(workbook)
+        val commaStyle = ReportMakerHelperService.ExcelStyle.createComma(workbook)
+        val percentStyle = ReportMakerHelperService.ExcelStyle.createPercent(workbook)
+        val decimalStyle = ReportMakerHelperService.ExcelStyle.createDecimal(workbook)
+        val percentImportantStyle = ReportMakerHelperService.ExcelStyle.createPercent(workbook)
+        percentImportantStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        percentImportantStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
+
+
+        conditionResults.forEach { conditionResult ->
+            val multiCondition = conditionResult.first
+
+            val row = sheet.createRow(rowIdx++)
+            var cellIdx = 0
+            var createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(multiCondition.tradeCondition.toString())
+            createCell.cellStyle = dateStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(multiCondition.stockCodes.joinToString(","))
+            createCell.cellStyle = defaultStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(multiCondition.holdCode)
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            val timeWeight = multiCondition.timeWeight.entries.map { "${it.key}월: ${it.value * 100}%" }.joinToString(", ")
+            createCell.setCellValue(timeWeight)
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(multiCondition.tradeCondition.investRatio)
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(multiCondition.tradeCondition.cash)
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(multiCondition.tradeCondition.feeBuy)
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(multiCondition.tradeCondition.feeSell)
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(multiCondition.tradeCondition.comment)
+            createCell.cellStyle = defaultStyle
+
+            val result = conditionResult.second
+
+            val sumYield: CommonAnalysisReportResult.TotalYield = result.common.buyHoldYieldTotal
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(sumYield.yield)
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(sumYield.mdd)
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(sumYield.getCagr())
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(result.common.getBuyHoldSharpeRatio())
+            createCell.cellStyle = decimalStyle
+
+            val totalYield: CommonAnalysisReportResult.TotalYield = result.common.yieldTotal
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(totalYield.yield)
+            createCell.cellStyle = percentImportantStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(totalYield.mdd)
+            createCell.cellStyle = percentImportantStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(totalYield.getCagr())
+            createCell.cellStyle = percentImportantStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(result.common.getBacktestSharpeRatio())
+            createCell.cellStyle = decimalStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(result.common.getWinningRateTotal().getTradeCount().toDouble())
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx)
+            createCell.setCellValue(result.common.getWinningRateTotal().getWinRate())
+            createCell.cellStyle = percentStyle
+        }
+        sheet.createFreezePane(0, 1)
+        sheet.defaultColumnWidth = 14
+        sheet.setColumnWidth(0, 12000)
+        sheet.setColumnWidth(1, 5000)
+        sheet.setColumnWidth(2, 5000)
+
+        ReportMakerHelperService.ExcelStyle.applyAllBorder(sheet)
+        ReportMakerHelperService.ExcelStyle.applyDefaultFont(sheet)
+
+        return sheet
+    }
+
 }
