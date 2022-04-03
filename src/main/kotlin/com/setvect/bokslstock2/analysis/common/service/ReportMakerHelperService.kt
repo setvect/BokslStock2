@@ -390,11 +390,12 @@ class ReportMakerHelperService(
         /**
          * @return 조건 정보가 담긴 리포트 파일명 suffix
          */
-        fun getReportFileSuffix(tradeCondition: TradeCondition, stockCodes: List<String>): String {
+        fun getReportFileSuffix(tradeCondition: TradeCondition, stockCodes: List<String>, append: String = ""): String {
             return String.format(
-                "%s~%s_%s.xlsx",
+                "%s~%s%s.xlsx",
                 tradeCondition.range.fromDateFormat,
                 tradeCondition.range.toDateFormat,
+                append,
                 stockCodes.joinToString(",") { it },
             )
         }

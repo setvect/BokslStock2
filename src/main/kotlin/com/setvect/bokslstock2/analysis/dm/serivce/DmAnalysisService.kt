@@ -259,9 +259,13 @@ class DmAnalysisService(
      * @return 엑셀 파일
      */
     private fun makeReportFile(dmBacktestCondition: DmBacktestCondition, analysisResult: AnalysisResult): File {
+        val append = "_${dmBacktestCondition.timeWeight.entries.map { it.key }.joinToString(",")}"
         val reportFileSubPrefix =
-            ReportMakerHelperService.getReportFileSuffix(dmBacktestCondition.tradeCondition, dmBacktestCondition.listStock())
-        val reportFile = File("./backtest-result/dm-trade-report", "dm_trade_$reportFileSubPrefix")
+            ReportMakerHelperService.getReportFileSuffix(dmBacktestCondition.tradeCondition, dmBacktestCondition.listStock(), append)
+        val reportFile = File(
+            "./backtest-result/dm-trade-report",
+            "dm_trade_${reportFileSubPrefix}"
+        )
 
         XSSFWorkbook().use { workbook ->
             var sheet = ReportMakerHelperService.createTradeReport(analysisResult, workbook)
@@ -426,7 +430,7 @@ class DmAnalysisService(
             val row = sheet.createRow(rowIdx++)
             var cellIdx = 0
             var createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(multiCondition.tradeCondition.toString())
+            createCell.setCellValue(multiCondition.tradeCondition.range.toString())
             createCell.cellStyle = dateStyle
 
             createCell = row.createCell(cellIdx++)
