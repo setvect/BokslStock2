@@ -1,5 +1,6 @@
 # 복슬스톡 메모
 ## 포트폴리오 비주얼라이저
+- 샤프지수 설명 및 공식: https://www.portfoliovisualizer.com/faq  (Terms and Definitions 참고)
 ### 듀얼모엔텀 
 - 월단위 매매로 했을 경우 매매가 일어나는 시점은 직전월 종가 기준
 - MDD 계산은 월 단위로 함

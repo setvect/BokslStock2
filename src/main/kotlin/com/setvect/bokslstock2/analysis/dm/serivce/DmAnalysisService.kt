@@ -164,7 +164,7 @@ class DmAnalysisService(
             unitPrice = targetStock.beforeClosePrice,
             tradeDate = targetStock.beforeCandleDateTimeEnd,
         )
-        log.info("매수: ${buyTrade.tradeDate}, ${buyTrade.stock.name}(${buyTrade.stock.code})")
+        log.info("매수: ${targetStock.candleDateTimeStart}(${buyTrade.tradeDate}), ${buyTrade.stock.name}(${buyTrade.stock.code})")
         return buyTrade
     }
 
@@ -181,7 +181,7 @@ class DmAnalysisService(
             unitPrice = targetStock.beforeClosePrice,  // TODO
             tradeDate = targetStock.beforeCandleDateTimeEnd,
         )
-        log.info("매도: ${sellTrade.tradeDate}, ${sellTrade.stock.name}(${sellTrade.stock.code}), 수익: ${sellTrade.yield}")
+        log.info("매도: ${targetStock.candleDateTimeStart}(${sellTrade.tradeDate}), ${sellTrade.stock.name}(${sellTrade.stock.code}), 수익: ${sellTrade.yield}")
         return sellTrade
     }
 
