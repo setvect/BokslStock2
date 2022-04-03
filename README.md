@@ -52,7 +52,7 @@ TODO
   - 매수 다음날 시가 매도
 
 ### 듀얼모멘텀
-- 메인 소스:[VbsBacktestService.kt](src/main/kotlin/com/setvect/bokslstock2/analysis/dm/service/DmAnalysisService.kt)
+- 메인 소스:[DmAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/analysis/dm/service/DmAnalysisService.kt)
 - 절대 모멘텀과 상대 모멘텀 결합 
 - 매매 전략 전략
   - 직전월 종가 기준 n월 평균 종가보다 높은순으로 정렬
