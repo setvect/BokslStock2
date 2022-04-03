@@ -11,6 +11,8 @@ data class CandleDto(
     val candleDateTimeStart: LocalDateTime,
     val candleDateTimeEnd: LocalDateTime,
     val periodType: PeriodType,
+    // 직전거래일 날짜
+    val beforeCandleDateTimeEnd: LocalDateTime,
     // 직전종가
     val beforeClosePrice: Double,
     val openPrice: Double,

@@ -34,7 +34,12 @@ data class DmBacktestCondition(
      * 기간 가중치. 가중치의 합이 100이 되야됨
      * <월, 가중치>
      */
-    val timeWeight: Map<Int, Double>
+    val timeWeight: Map<Int, Double>,
+
+    /**
+     * true면 백테스트 기간 종료 시점에 보유 종목 매도
+     */
+    val endSell: Boolean,
 ) {
     /**
      * @return holdCode를 포함한 거래 대상 종목

@@ -165,8 +165,10 @@ class BacktestTradeService(
         holdStockCodes: List<String>
     ): List<EvaluationRateItem> {
         val buyHoldRateMap: SortedMap<LocalDateTime, Double> = getBuyAndHoldEvalRate(condition, holdStockCodes)
+
+        val useStockCode = trades.map { it.preTrade.stock.code }.distinct()
         // <종목 코드, List(캔들)>
-        val candleListMap = getConditionOfCandle(condition, holdStockCodes)
+        val candleListMap = getConditionOfCandle(condition, useStockCode)
 
         // <종목 코드, Map<날짜, 종가>>
         val condClosePriceMap = getConditionByClosePriceMap(candleListMap)

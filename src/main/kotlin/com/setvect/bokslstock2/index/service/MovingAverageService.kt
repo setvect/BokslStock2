@@ -11,6 +11,8 @@ import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_YEAR
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.util.DateUtil
 import java.util.*
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -18,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional
 class MovingAverageService(
     private val stockRepository: StockRepository,
 ) {
+    val log: Logger = LoggerFactory.getLogger(javaClass)
+
     /**
      * [code] 종목에 대한 [group]단위로 [avgCountList]만큼 이동 평균 계산
      * @return 날짜:해당 날의 이동평균
@@ -56,15 +60,15 @@ class MovingAverageService(
                 candleGroupList[i - 1]
             }
             val candleGroup = candleGroupList[i]
-            val candleGroupList = candleGroup.second
             val candle = CandleDto(
-                candleDateTimeStart = candleGroupList.first().candleDateTime,
-                candleDateTimeEnd = candleGroupList.last().candleDateTime,
+                candleDateTimeStart = candleGroup.second.first().candleDateTime,
+                candleDateTimeEnd = candleGroup.second.last().candleDateTime,
+                beforeCandleDateTimeEnd = beforeCandle.second.last().candleDateTime,
                 beforeClosePrice = beforeCandle.second.last().closePrice,
-                openPrice = candleGroupList.first().openPrice,
-                highPrice = candleGroupList.maxOf { p -> p.highPrice },
-                lowPrice = candleGroupList.minOf { p -> p.lowPrice },
-                closePrice = candleGroupList.last().closePrice,
+                openPrice = candleGroup.second.first().openPrice,
+                highPrice = candleGroup.second.maxOf { p -> p.highPrice },
+                lowPrice = candleGroup.second.minOf { p -> p.lowPrice },
+                closePrice = candleGroup.second.last().closePrice,
                 periodType = group
             )
             groupingCandleList.add(candle)

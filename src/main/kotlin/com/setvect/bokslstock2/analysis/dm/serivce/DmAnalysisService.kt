@@ -4,6 +4,7 @@ import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
 import com.setvect.bokslstock2.analysis.common.model.PreTrade
 import com.setvect.bokslstock2.analysis.common.model.Stock
+import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.common.model.TradeType
 import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
@@ -13,6 +14,7 @@ import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
+import com.setvect.bokslstock2.util.DateRange
 import com.setvect.bokslstock2.util.DateUtil
 import java.io.File
 import java.io.FileOutputStream
@@ -45,11 +47,24 @@ class DmAnalysisService(
         }
         log.info("수익률: ${String.format("%.2f%%", (sumYield - 1) * 100)}")
 
-        val trades = backtestTradeService.trade(dmBacktestCondition.tradeCondition, preTrades)
-        val result = backtestTradeService.analysis(trades, dmBacktestCondition.tradeCondition, dmBacktestCondition.listStock())
+        val tradeCondition = makeTradeDateCorrection(dmBacktestCondition, preTrades)
+        val trades = backtestTradeService.trade(tradeCondition, preTrades)
+        val result = backtestTradeService.analysis(trades, tradeCondition, dmBacktestCondition.stockCodes)
         val summary = getSummary(dmBacktestCondition, result.common)
         println(summary)
         makeReportFile(dmBacktestCondition, result)
+    }
+
+    /**
+     * 나도 이렇게 하기 싫다. 비주얼포트폴리오 매매 전략과 동일하게 맞추기 위해서 직전 종가 기준으로 매매가 이루어져야 되기 때문에 백테스트 시작 시점 조정이 필요하다.
+     */
+    private fun makeTradeDateCorrection(
+        dmBacktestCondition: DmBacktestCondition,
+        preTrades: List<PreTrade>
+    ): TradeCondition {
+        val temp = dmBacktestCondition.tradeCondition
+        val from = if (temp.range.from.isBefore(preTrades[0].tradeDate)) temp.range.from else preTrades[0].tradeDate
+        return TradeCondition(DateRange(from, temp.range.to), temp.investRatio, temp.cash, temp.feeBuy, temp.feeSell, temp.comment)
     }
 
     private fun processDualMomentum(condition: DmBacktestCondition): List<PreTrade> {
@@ -80,7 +95,7 @@ class DmAnalysisService(
                 if (changeBuyStock) {
                     // 보유 종목 매도
                     val sellStock = stockPriceIndex[beforeBuyTrade!!.stock.code]!![current]!!
-                    val sellTrade = makeSellTrade(sellStock, current, beforeBuyTrade)
+                    val sellTrade = makeSellTrade(sellStock, beforeBuyTrade)
                     tradeList.add(sellTrade)
                     beforeBuyTrade = null
                 }
@@ -88,7 +103,7 @@ class DmAnalysisService(
                     // hold 종목 매수
                     val buyStock = stockPriceIndex[condition.holdCode]!![current]!!
                     val stock = codeByStock[condition.holdCode]!!
-                    val buyTrade = makeBuyTrade(buyStock, current, stock)
+                    val buyTrade = makeBuyTrade(buyStock, stock)
                     tradeList.add(buyTrade)
                     beforeBuyTrade = buyTrade
                 } else if (existHoldCode) {
@@ -102,18 +117,18 @@ class DmAnalysisService(
                 if (changeBuyStock) {
                     // 보유 종목 매도
                     val sellStock = stockPriceIndex[beforeBuyTrade!!.stock.code]!![current]!!
-                    val sellTrade = makeSellTrade(sellStock, current, beforeBuyTrade)
+                    val sellTrade = makeSellTrade(sellStock, beforeBuyTrade)
                     tradeList.add(sellTrade)
                 }
                 if (beforeBuyTrade == null || changeBuyStock) {
                     // 새운 종목 매수
                     val buyStock = stockPriceIndex[stockCode]!![current]!!
                     val stock = codeByStock[stockCode]!!
-                    val buyTrade = makeBuyTrade(buyStock, current, stock)
+                    val buyTrade = makeBuyTrade(buyStock, stock)
                     tradeList.add(buyTrade)
                     beforeBuyTrade = buyTrade
                 } else {
-                    log.info("매수 유지: $current, ${beforeBuyTrade!!.stock.name}(${beforeBuyTrade.stock.code})")
+                    log.info("매수 유지: $current, ${beforeBuyTrade.stock.name}(${beforeBuyTrade.stock.code})")
                 }
             }
 
@@ -127,12 +142,18 @@ class DmAnalysisService(
             current = current.plusMonths(condition.periodType.getDeviceMonth().toLong())
         }
 
+        // 마지막 보유 종목 매도
+        if (condition.endSell && beforeBuyTrade != null) {
+            val sellStock = stockPriceIndex[beforeBuyTrade.stock.code]!![current]!!
+            val sellTrade = makeSellTrade(sellStock, beforeBuyTrade)
+            tradeList.add(sellTrade)
+        }
+
         return tradeList
     }
 
     private fun makeBuyTrade(
         targetStock: CandleDto,
-        current: LocalDateTime,
         stock: StockEntity
     ): PreTrade {
         val buyTrade = PreTrade(
@@ -141,7 +162,7 @@ class DmAnalysisService(
             yield = 0.0,
             // TODO 아무래도 시가를 기준으로 하는게 맞는 것 같음. 하지만 비주얼포트폴리오와 맞추기 위해 직전 종가 적용
             unitPrice = targetStock.beforeClosePrice,
-            tradeDate = current,
+            tradeDate = targetStock.beforeCandleDateTimeEnd,
         )
         log.info("매수: ${buyTrade.tradeDate}, ${buyTrade.stock.name}(${buyTrade.stock.code})")
         return buyTrade
@@ -150,7 +171,6 @@ class DmAnalysisService(
 
     private fun makeSellTrade(
         targetStock: CandleDto,
-        current: LocalDateTime,
         beforeBuyTrade: PreTrade
     ): PreTrade {
         val sellTrade = PreTrade(
@@ -159,7 +179,7 @@ class DmAnalysisService(
             // TODO 아무래도 시가를 기준으로 하는게 맞는 것 같음. 하지만 비주얼포트폴리오와 맞추기 위해 직전 종가 적용
             yield = ApplicationUtil.getYield(beforeBuyTrade.unitPrice, targetStock.beforeClosePrice),
             unitPrice = targetStock.beforeClosePrice,  // TODO
-            tradeDate = current,
+            tradeDate = targetStock.beforeCandleDateTimeEnd,
         )
         log.info("매도: ${sellTrade.tradeDate}, ${sellTrade.stock.name}(${sellTrade.stock.code}), 수익: ${sellTrade.yield}")
         return sellTrade

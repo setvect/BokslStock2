@@ -149,7 +149,11 @@ class DateRange {
      * @return 두 날짜 사이에 있는지에 있으면 true
      */
     fun isBetween(dateTime: LocalDateTime): Boolean {
-        return from.isBefore(dateTime) && to.isAfter(dateTime) || from.isEqual(dateTime) || to.isEqual(dateTime)
+        val before = from.isBefore(dateTime)
+        val after = to.isAfter(dateTime)
+        val fromEqual = from.isEqual(dateTime)
+        val toEqual = to.isEqual(dateTime)
+        return before && after || fromEqual || toEqual
     }
 
     override fun toString(): String {
