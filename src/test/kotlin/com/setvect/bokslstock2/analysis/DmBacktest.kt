@@ -43,9 +43,9 @@ class DmBacktest {
             holdCode = StockCode.OS_CODE_TLT,
             periodType = PeriodType.PERIOD_MONTH,
             timeWeight = hashMapOf(
-                1 to 0.33,
-                3 to 0.33,
-                6 to 0.34
+                1 to 1.0,
+//                3 to 0.33,
+//                6 to 0.34
             )
         )
         dmAnalysisService.runTest(condition)

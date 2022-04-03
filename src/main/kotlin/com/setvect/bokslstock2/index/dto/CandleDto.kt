@@ -20,4 +20,12 @@ data class CandleDto(
      * Key: 이동평균 단위, Value: 가격
      */
     var average = HashMap<Int, Double>()
+
+    /**
+     *
+     * @return 시가대비 종가 수익률, 종가 / 시가
+     */
+    fun getYield(): Double {
+        return closePrice / openPrice
+    }
 }

@@ -3,11 +3,11 @@ package com.setvect.bokslstock2.analysis.dm.serivce
 import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
 import com.setvect.bokslstock2.analysis.common.model.PreTrade
+import com.setvect.bokslstock2.analysis.common.model.Stock
 import com.setvect.bokslstock2.analysis.common.model.TradeType
 import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.analysis.dm.model.DmBacktestCondition
-import com.setvect.bokslstock2.analysis.common.model.Stock
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.repository.StockRepository
@@ -173,14 +173,29 @@ class DmAnalysisService(
             val currentCandle = stockEntry.value[current]
                 ?: throw RuntimeException("${stockEntry.key}에 대한 $current 시세가 없습니다.")
 
+            log.info(
+                "\t현재 날짜: ${current}: ${stockEntry.key}: ${currentCandle.candleDateTimeStart}~${currentCandle.candleDateTimeEnd} - " +
+                        "O: ${currentCandle.openPrice}, H: ${currentCandle.highPrice}, L: ${currentCandle.lowPrice}, C:${currentCandle.closePrice}, ${currentCandle.periodType}"
+            )
+
+            // 가중치 적용 종가 평균
             val average = condition.timeWeight.entries.sumOf { timeWeight ->
                 val delta = timeWeight.key
                 val weight = timeWeight.value
                 val deltaCandle = stockEntry.value[current.minusMonths(delta.toLong())]!!
+                log.info("\t\t비교 날짜: [${delta}] ${stockEntry.key} - ${deltaCandle.candleDateTimeStart} - C: ${deltaCandle.closePrice}")
+                log.info(
+                    "\t\t$delta -   ${stockEntry.key}: ${deltaCandle.candleDateTimeStart}~${deltaCandle.candleDateTimeEnd} - " +
+                            "O: ${deltaCandle.openPrice}, H: ${deltaCandle.highPrice}, L: ${deltaCandle.lowPrice}, C:${deltaCandle.closePrice}, ${deltaCandle.periodType}, 수익률: ${deltaCandle.getYield()}"
+                )
+
                 deltaCandle.closePrice * weight
             }
 
             val rate = currentCandle.openPrice / average
+            // 상승 비율 = 현재 날짜 시가 / 가중치 적용 종가 평균
+            log.info("\t상승 비율: ${current}: ${stockEntry.key} = ${currentCandle.openPrice}/$average = ${rate}")
+
             stockEntry.key to rate
         }
             .filter { it.second >= 1 && it.first != condition.holdCode }
