@@ -38,10 +38,12 @@ object StockCode {
     const val OS_CODE_SPY = "SPY"
     const val OS_CODE_VSS = "VSS"
     const val OS_CODE_TLT = "TLT"
+    const val OS_CODE_QLD = "QLD"
     val OVERSEAS_STOCK_CODE_MAP = mapOf(
         OS_CODE_TQQQ to "TQQQ",
         OS_CODE_SPY to "SPY",
         OS_CODE_VSS to "VSS",
         OS_CODE_TLT to "TLT",
+        OS_CODE_QLD to "QLD",
     )
 }

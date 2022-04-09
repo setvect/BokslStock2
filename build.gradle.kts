@@ -36,9 +36,10 @@ dependencies {
     implementation("com.google.code.gson:gson")
     implementation("commons-io:commons-io:2.11.0")
     implementation("org.apache.commons:commons-lang3")
-    implementation("org.apache.poi:poi:5.2.0")
-    implementation("org.apache.poi:poi-ooxml:5.2.0")
+    implementation("org.apache.poi:poi:5.2.2")
+    implementation("org.apache.poi:poi-ooxml:5.2.2")
     implementation("org.apache.commons:commons-csv:1.9.0")
+    implementation("org.jsoup:jsoup:1.14.3")
 
     compileOnly("org.projectlombok:lombok")
     runtimeOnly("com.h2database:h2")
