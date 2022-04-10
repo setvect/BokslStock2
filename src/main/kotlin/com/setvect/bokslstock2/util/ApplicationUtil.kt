@@ -1,13 +1,25 @@
 package com.setvect.bokslstock2.util
 
+import java.net.URLEncoder
 import java.util.stream.Collectors
 import java.util.stream.IntStream
+import org.apache.http.HttpStatus
+import org.apache.http.client.HttpClient
+import org.apache.http.client.config.RequestConfig
+import org.apache.http.client.methods.HttpRequestBase
+import org.apache.http.impl.client.HttpClientBuilder
+import org.apache.http.util.EntityUtils
 import kotlin.math.pow
 
 /**
  * 어플리케이션의 의존적인 유틸성 메소드
  */
 object ApplicationUtil {
+    /**
+     * API 타임 아웃
+     * connection, socket 둘다 적용
+     */
+    private const val TIMEOUT_MS = 2000
 
     /**
      * [prices] 시계열 가격 변화
@@ -139,6 +151,39 @@ object ApplicationUtil {
         makeSubSet(list, subSet, idx + 1, check)
         check[idx] = false
         makeSubSet(list, subSet, idx + 1, check)
+    }
+
+    fun getQueryString(params: Map<String, String>): String {
+        return params.entries.stream()
+            .map { (key, value): Map.Entry<String, String> ->
+                "$key=" + urlEncodeUTF8(value)
+            }
+            .reduce { p1: String, p2: String -> "$p1&$p2" }
+            .orElse("")
+    }
+
+    private fun urlEncodeUTF8(s: String): String? {
+        return URLEncoder.encode(s, "UTF-8")
+    }
+
+
+    fun request(url: String, request: HttpRequestBase): String? {
+        val client: HttpClient = HttpClientBuilder.create().build()
+        val config = RequestConfig.custom()
+            .setConnectTimeout(TIMEOUT_MS)
+            .setConnectionRequestTimeout(TIMEOUT_MS)
+            .setSocketTimeout(TIMEOUT_MS).build()
+        request.config = config
+
+        val response = client.execute(request)
+        val statusCode = response.statusLine.statusCode
+        val entity = response.entity
+        val responseText = EntityUtils.toString(entity, "UTF-8")
+        if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED) {
+            val message = String.format("Error, Status: %d, URL: %s, Message: %s", statusCode, url, responseText)
+            throw RuntimeException(message)
+        }
+        return responseText
     }
 
 }
