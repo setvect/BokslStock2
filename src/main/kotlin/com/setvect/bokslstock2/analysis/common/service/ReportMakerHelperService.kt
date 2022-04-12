@@ -44,7 +44,8 @@ class ReportMakerHelperService(
             applyHeader(sheet, header)
             var rowIdx = 1
 
-            val defaultStyle = ExcelStyle.createDate(workbook)
+            val defaultStyle = ExcelStyle.createDefault(workbook)
+            val dateStyle = ExcelStyle.createDate(workbook)
             val commaStyle = ExcelStyle.createComma(workbook)
             val percentStyle = ExcelStyle.createPercent(workbook)
             val decimalStyle = ExcelStyle.createDecimal(workbook)
@@ -58,7 +59,7 @@ class ReportMakerHelperService(
                 var cellIdx = 0
                 var createCell = row.createCell(cellIdx++)
                 createCell.setCellValue(tradeDate)
-                createCell.cellStyle = defaultStyle
+                createCell.cellStyle = dateStyle
 
                 createCell = row.createCell(cellIdx++)
                 createCell.setCellValue(preTrade.stock.toString())
@@ -247,13 +248,13 @@ class ReportMakerHelperService(
             report.append(String.format("샤프지수\t %,.2f", commonAnalysisReportResult.getBuyHoldSharpeRatio())).append("\n")
 
             for (i in 1..tradeConditionList.size) {
-                val tradeCondition = tradeConditionList[i - 1]
+                val condition = tradeConditionList[i - 1]
                 report.append(
-                    "${i}. 조건번호\t${tradeCondition.conditionSeq}\n"
+                    "${i}. 조건번호\t${condition.conditionSeq}\n"
                 )
-                val sumYield = commonAnalysisReportResult.buyHoldYieldCondition[tradeCondition.stock.code]
+                val sumYield = commonAnalysisReportResult.buyHoldYieldCondition[condition.stock.code]
                 if (sumYield == null) {
-                    log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${tradeCondition.conditionSeq}")
+                    log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${condition.conditionSeq}")
                     break
                 }
                 report.append(String.format("${i}. 동일비중 수익\t %,.2f%%", sumYield.yield * 100)).append("\n")
@@ -271,14 +272,14 @@ class ReportMakerHelperService(
             report.append(String.format("샤프지수\t %,.2f", commonAnalysisReportResult.getBacktestSharpeRatio())).append("\n")
 
             for (i in 1..tradeConditionList.size) {
-                val tradeCondition = tradeConditionList[i - 1]
+                val condition = tradeConditionList[i - 1]
                 report.append(
-                    "${i}. 조건번호\t${tradeCondition.conditionSeq}\n"
+                    "${i}. 조건번호\t${condition.conditionSeq}\n"
                 )
 
-                val winningRate = commonAnalysisReportResult.winningRateCondition[tradeCondition.stock.code]
+                val winningRate = commonAnalysisReportResult.winningRateCondition[condition.stock.code]
                 if (winningRate == null) {
-                    log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${tradeCondition.conditionSeq}")
+                    log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${condition.conditionSeq}")
                     break
                 }
                 report.append(String.format("${i}. 실현 수익\t %,f", winningRate.invest)).append("\n")
@@ -376,15 +377,22 @@ class ReportMakerHelperService(
 
         fun applyHeader(
             sheet: XSSFSheet,
-            header: String,
+            header: List<String>,
         ) {
             val rowHeader = sheet.createRow(0)
-            val headerTxt = header.split(",")
-            for (cellIdx in headerTxt.indices) {
+            for (cellIdx in header.indices) {
                 val cell = rowHeader.createCell(cellIdx)
-                cell.setCellValue(headerTxt[cellIdx])
+                cell.setCellValue(header[cellIdx])
                 cell.cellStyle = ExcelStyle.createHeaderRow(sheet.workbook)
             }
+        }
+
+        fun applyHeader(
+            sheet: XSSFSheet,
+            header: String,
+        ) {
+            val headerTxt = header.split(",")
+            applyHeader(sheet, headerTxt)
         }
 
         /**

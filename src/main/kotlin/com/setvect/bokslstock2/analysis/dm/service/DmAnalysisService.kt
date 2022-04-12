@@ -74,7 +74,7 @@ class DmAnalysisService(
         val stockPriceIndex = getStockPriceIndex(stockCodes, condition)
         // 듀얼모멘텀 대상 종목 <종목코드, <날짜, 캔들>>
         val stockPriceIndexForMomentumStock =
-            stockPriceIndex.entries.filter { it.key != condition.holdCode }.associate { it.key to it.value }
+            stockPriceIndex.entries.associate { it.key to it.value }
 
         var current =
             DateUtil.fitMonth(condition.tradeCondition.range.from.withDayOfMonth(1), condition.periodType.getDeviceMonth())
@@ -82,11 +82,18 @@ class DmAnalysisService(
         var beforeBuyTrade: PreTrade? = null
 
         val tradeList = mutableListOf<PreTrade>()
+        val dateOfStockRate = LinkedHashMap<LocalDateTime, Map<String, Double>>()
         while (current.isBefore(condition.tradeCondition.range.to)) {
-            val stockByRate = calculateRate(stockPriceIndexForMomentumStock, current, condition)
+            val stockRate = calculateRate(stockPriceIndexForMomentumStock, current, condition)
+            dateOfStockRate[current] = stockRate.toMap()
+
+            val momentTargetRate = stockRate
+                .filter { it.first != condition.holdCode }
+                .filter { it.second >= 1 }
+                .sortedByDescending { it.second }
 
             // 듀얼 모멘텀 매수 대상 종목이 없으면, hold 종목 매수 또는 현금 보유
-            if (stockByRate.isEmpty()) {
+            if (momentTargetRate.isEmpty()) {
                 val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stock.code != condition.holdCode
                 val existHoldCode = condition.holdCode != null
 
@@ -108,7 +115,7 @@ class DmAnalysisService(
                     log.info("매수 유지: $current, ${getStockName(codeByStock, condition.holdCode!!)}(${condition.holdCode})")
                 }
             } else {
-                val buyStockRate = stockByRate[0]
+                val buyStockRate = momentTargetRate[0]
                 val stockCode = buyStockRate.first
                 val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stock.code != stockCode
 
@@ -140,6 +147,8 @@ class DmAnalysisService(
             current = current.plusMonths(condition.periodType.getDeviceMonth().toLong())
         }
 
+        makeDateOfRate(condition, dateOfStockRate)
+
         // 마지막 보유 종목 매도
         if (condition.endSell && beforeBuyTrade != null) {
             val sellStock = stockPriceIndex[beforeBuyTrade.stock.code]!![current]!!
@@ -149,6 +158,7 @@ class DmAnalysisService(
 
         return tradeList
     }
+
 
     private fun makeBuyTrade(
         targetStock: CandleDto,
@@ -182,6 +192,7 @@ class DmAnalysisService(
     }
 
     /**
+     * TODO 전체 내용을 반환 하도록 변경
      * 듀얼 모멘터 대상 종목을 구함
      * [stockPriceIndex] <종목코드, <날짜, 캔들>>
      * @return <종목코드, 현재가격/모멘텀평균 가격>
@@ -220,8 +231,7 @@ class DmAnalysisService(
 
             stockEntry.key to rate
         }
-            .filter { it.second >= 1 && it.first != condition.holdCode }
-            .sortedByDescending { it.second }
+
         return stockByRate
     }
 
@@ -251,6 +261,55 @@ class DmAnalysisService(
         val sumWeight = dmCondition.timeWeight.entries.sumOf { it.value }
         if (sumWeight != 1.0) {
             throw RuntimeException("가중치의 합계가 100이여 합니다. 현재 가중치 합계: $sumWeight")
+        }
+    }
+
+    /**
+     * 기간별 듀얼모멘텀 지수 엑셀 파일 만듦
+     * [dateOfStockRate]: <날짜, <종목코드, 지수>>
+     */
+    private fun makeDateOfRate(
+        dmBacktestCondition: DmBacktestCondition,
+        dateOfStockRate: LinkedHashMap<LocalDateTime, Map<String, Double>>
+    ) {
+        val append = "_${dmBacktestCondition.timeWeight.entries.map { it.key }.joinToString(",")}"
+        val reportFileSubPrefix =
+            ReportMakerHelperService.getReportFileSuffix(dmBacktestCondition.tradeCondition, dmBacktestCondition.listStock(), append)
+        val reportFile = File(
+            "./backtest-result/dm-trade-report",
+            "dm_trade_지수_${reportFileSubPrefix}"
+        )
+        XSSFWorkbook().use { workbook ->
+            val sheet = workbook.createSheet()
+            val listStock = dmBacktestCondition.listStock()
+            val headerColumns = listStock.toMutableList()
+            headerColumns.add(0, "날짜")
+            ReportMakerHelperService.applyHeader(sheet, headerColumns)
+            var rowIdx = 1
+
+            val dateStyle = ReportMakerHelperService.ExcelStyle.createDate(workbook)
+            val commanDecimalStyle = ReportMakerHelperService.ExcelStyle.createCommaDecimal(workbook)
+            dateOfStockRate.entries.forEach { entry ->
+                val row = sheet.createRow(rowIdx++)
+                var cellIdx = 0
+                val dateCell = row.createCell(cellIdx++)
+                dateCell.setCellValue(entry.key)
+                dateCell.cellStyle = dateStyle
+
+                val rate = entry.value
+
+                listStock.forEach {
+                    val rateCell = row.createCell(cellIdx++)
+                    rateCell.setCellValue(Optional.ofNullable(rate[it]).orElse(0.0))
+                    rateCell.cellStyle = commanDecimalStyle
+                }
+            }
+            ReportMakerHelperService.ExcelStyle.applyAllBorder(sheet)
+            ReportMakerHelperService.ExcelStyle.applyDefaultFont(sheet)
+
+            FileOutputStream(reportFile).use { ous ->
+                workbook.write(ous)
+            }
         }
     }
 
