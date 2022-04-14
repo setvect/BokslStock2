@@ -40,6 +40,17 @@ class DmAnalysisService(
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
+    /**
+     * 날짜별 모멘터 스코어
+     */
+    data class MomentumScore(
+        val date: LocalDateTime,
+        /**
+         * <종목코드, 모멘텀스코어>
+         */
+        val score: Map<String, Double>,
+    )
+
     fun runTest(dmBacktestCondition: DmBacktestCondition) {
         checkValidate(dmBacktestCondition)
         val preTrades = processDualMomentum(dmBacktestCondition)
@@ -76,21 +87,16 @@ class DmAnalysisService(
         val stockPriceIndexForMomentumStock =
             stockPriceIndex.entries.associate { it.key to it.value }
 
-        var current =
-            DateUtil.fitMonth(condition.tradeCondition.range.from.withDayOfMonth(1), condition.periodType.getDeviceMonth())
-
-        var beforeBuyTrade: PreTrade? = null
+        val momentumScoreList = calcMomentumScores(condition, stockPriceIndexForMomentumStock)
 
         val tradeList = mutableListOf<PreTrade>()
-        val dateOfStockRate = LinkedHashMap<LocalDateTime, Map<String, Double>>()
-        while (current.isBefore(condition.tradeCondition.range.to)) {
-            val stockRate = calculateRate(stockPriceIndexForMomentumStock, current, condition)
-            dateOfStockRate[current] = stockRate.toMap()
-
-            val momentTargetRate = stockRate
-                .filter { it.first != condition.holdCode }
-                .filter { it.second >= 1 }
-                .sortedByDescending { it.second }
+        var beforeBuyTrade: PreTrade? = null
+        for (momentumScore in momentumScoreList) {
+            val stockRate = momentumScore.score
+            val momentTargetRate = stockRate.entries
+                .filter { it.key != condition.holdCode }
+                .filter { it.value >= 1 }
+                .sortedByDescending { it.value }
 
             // 듀얼 모멘텀 매수 대상 종목이 없으면, hold 종목 매수 또는 현금 보유
             if (momentTargetRate.isEmpty()) {
@@ -99,64 +105,72 @@ class DmAnalysisService(
 
                 if (changeBuyStock) {
                     // 보유 종목 매도
-                    val sellStock = stockPriceIndex[beforeBuyTrade!!.stock.code]!![current]!!
+                    val sellStock = stockPriceIndex[beforeBuyTrade!!.stock.code]!![momentumScore.date]!!
                     val sellTrade = makeSellTrade(sellStock, beforeBuyTrade)
                     tradeList.add(sellTrade)
                     beforeBuyTrade = null
                 }
                 if (existHoldCode && (beforeBuyTrade == null || beforeBuyTrade.stock.code != condition.holdCode)) {
                     // hold 종목 매수
-                    val buyStock = stockPriceIndex[condition.holdCode]!![current]!!
+                    val buyStock = stockPriceIndex[condition.holdCode]!![momentumScore.date]!!
                     val stock = codeByStock[condition.holdCode]!!
                     val buyTrade = makeBuyTrade(buyStock, stock)
                     tradeList.add(buyTrade)
                     beforeBuyTrade = buyTrade
                 } else if (existHoldCode) {
-                    log.info("매수 유지: $current, ${getStockName(codeByStock, condition.holdCode!!)}(${condition.holdCode})")
+                    log.info("매수 유지: $momentumScore.date, ${getStockName(codeByStock, condition.holdCode!!)}(${condition.holdCode})")
                 }
             } else {
                 val buyStockRate = momentTargetRate[0]
-                val stockCode = buyStockRate.first
+                val stockCode = buyStockRate.key
                 val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stock.code != stockCode
 
                 if (changeBuyStock) {
                     // 보유 종목 매도
-                    val sellStock = stockPriceIndex[beforeBuyTrade!!.stock.code]!![current]!!
+                    val sellStock = stockPriceIndex[beforeBuyTrade!!.stock.code]!![momentumScore.date]!!
                     val sellTrade = makeSellTrade(sellStock, beforeBuyTrade)
                     tradeList.add(sellTrade)
                 }
                 if (beforeBuyTrade == null || changeBuyStock) {
                     // 새운 종목 매수
-                    val buyStock = stockPriceIndex[stockCode]!![current]!!
+                    val buyStock = stockPriceIndex[stockCode]!![momentumScore.date]!!
                     val stock = codeByStock[stockCode]!!
                     val buyTrade = makeBuyTrade(buyStock, stock)
                     tradeList.add(buyTrade)
                     beforeBuyTrade = buyTrade
                 } else {
-                    log.info("매수 유지: $current, ${beforeBuyTrade.stock.name}(${beforeBuyTrade.stock.code})")
+                    log.info("매수 유지: $momentumScore.date, ${beforeBuyTrade.stock.name}(${beforeBuyTrade.stock.code})")
                 }
             }
-
-//            stockByRate.forEach {
-//                log.info("$current - ${getStockName(codeByStock, it.first)}(${it.first}) : ${it.second}")
-//            }
-
-//            if (stockByRate.isEmpty()) {
-//                log.info("$current - empty")
-//            }
-            current = current.plusMonths(condition.periodType.getDeviceMonth().toLong())
         }
-
-        makeDateOfRate(condition, dateOfStockRate)
 
         // 마지막 보유 종목 매도
         if (condition.endSell && beforeBuyTrade != null) {
-            val sellStock = stockPriceIndex[beforeBuyTrade.stock.code]!![current]!!
+            val date = momentumScoreList.last().date.plusMonths(condition.periodType.getDeviceMonth().toLong())
+            val sellStock = stockPriceIndex[beforeBuyTrade.stock.code]!![date]!!
             val sellTrade = makeSellTrade(sellStock, beforeBuyTrade)
             tradeList.add(sellTrade)
         }
 
         return tradeList
+    }
+
+    /**
+     * 모멘텀 스코어 계산
+     */
+    private fun calcMomentumScores(
+        condition: DmBacktestCondition,
+        stockPriceIndexForMomentumStock: Map<String, Map<LocalDateTime, CandleDto>>
+    ): MutableList<MomentumScore> {
+        var current =
+            DateUtil.fitMonth(condition.tradeCondition.range.from.withDayOfMonth(1), condition.periodType.getDeviceMonth())
+        val momentumScoreList = mutableListOf<MomentumScore>()
+        while (current.isBefore(condition.tradeCondition.range.to)) {
+            val stockRate = calculateRate(stockPriceIndexForMomentumStock, current, condition)
+            momentumScoreList.add(MomentumScore(current, stockRate.toMap()))
+            current = current.plusMonths(condition.periodType.getDeviceMonth().toLong())
+        }
+        return momentumScoreList
     }
 
 
