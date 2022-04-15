@@ -161,7 +161,7 @@ class DmAnalysisService(
     private fun calcMomentumScores(
         condition: DmBacktestCondition,
         stockPriceIndexForMomentumStock: Map<String, Map<LocalDateTime, CandleDto>>
-    ): MutableList<MomentumScore> {
+    ): List<MomentumScore> {
         var current =
             DateUtil.fitMonth(condition.tradeCondition.range.from.withDayOfMonth(1), condition.periodType.getDeviceMonth())
         val momentumScoreList = mutableListOf<MomentumScore>()
@@ -170,7 +170,7 @@ class DmAnalysisService(
             momentumScoreList.add(MomentumScore(current, stockRate.toMap()))
             current = current.plusMonths(condition.periodType.getDeviceMonth().toLong())
         }
-        return momentumScoreList
+        return momentumScoreList.toList()
     }
 
 
@@ -279,55 +279,6 @@ class DmAnalysisService(
     }
 
     /**
-     * 기간별 듀얼모멘텀 지수 엑셀 파일 만듦
-     * [dateOfStockRate]: <날짜, <종목코드, 지수>>
-     */
-    private fun makeDateOfRate(
-        dmBacktestCondition: DmBacktestCondition,
-        dateOfStockRate: LinkedHashMap<LocalDateTime, Map<String, Double>>
-    ) {
-        val append = "_${dmBacktestCondition.timeWeight.entries.map { it.key }.joinToString(",")}"
-        val reportFileSubPrefix =
-            ReportMakerHelperService.getReportFileSuffix(dmBacktestCondition.tradeCondition, dmBacktestCondition.listStock(), append)
-        val reportFile = File(
-            "./backtest-result/dm-trade-report",
-            "dm_trade_지수_${reportFileSubPrefix}"
-        )
-        XSSFWorkbook().use { workbook ->
-            val sheet = workbook.createSheet()
-            val listStock = dmBacktestCondition.listStock()
-            val headerColumns = listStock.toMutableList()
-            headerColumns.add(0, "날짜")
-            ReportMakerHelperService.applyHeader(sheet, headerColumns)
-            var rowIdx = 1
-
-            val dateStyle = ReportMakerHelperService.ExcelStyle.createDate(workbook)
-            val commanDecimalStyle = ReportMakerHelperService.ExcelStyle.createCommaDecimal(workbook)
-            dateOfStockRate.entries.forEach { entry ->
-                val row = sheet.createRow(rowIdx++)
-                var cellIdx = 0
-                val dateCell = row.createCell(cellIdx++)
-                dateCell.setCellValue(entry.key)
-                dateCell.cellStyle = dateStyle
-
-                val rate = entry.value
-
-                listStock.forEach {
-                    val rateCell = row.createCell(cellIdx++)
-                    rateCell.setCellValue(Optional.ofNullable(rate[it]).orElse(0.0))
-                    rateCell.cellStyle = commanDecimalStyle
-                }
-            }
-            ReportMakerHelperService.ExcelStyle.applyAllBorder(sheet)
-            ReportMakerHelperService.ExcelStyle.applyDefaultFont(sheet)
-
-            FileOutputStream(reportFile).use { ous ->
-                workbook.write(ous)
-            }
-        }
-    }
-
-    /**
      * 분석건에 대한 리포트 파일 만듦
      * @return 엑셀 파일
      */
@@ -356,6 +307,10 @@ class DmAnalysisService(
             sheet = createReportSummary(dmBacktestCondition, analysisResult, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "5. 매매 요약결과 및 조건")
 
+            // TODO momentumScoreList(모멘텀 스코어 받기)
+            sheet = createDateOfRate(dmBacktestCondition, listOf(), workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "6. 모멘텀 지수")
+
             FileOutputStream(reportFile).use { ous ->
                 workbook.write(ous)
             }
@@ -368,6 +323,7 @@ class DmAnalysisService(
         var i = 0
         val conditionResults = conditionList.map { dmBacktestCondition ->
             checkValidate(dmBacktestCondition)
+            // TODO momentumScoreList(모멘텀 스코어 받기)
             val preTrades = processDualMomentum(dmBacktestCondition)
             val tradeCondition = makeTradeDateCorrection(dmBacktestCondition, preTrades)
             val trades = backtestTradeService.trade(tradeCondition, preTrades)
@@ -412,6 +368,46 @@ class DmAnalysisService(
         sheet.defaultColumnWidth = 60
         return sheet
     }
+
+
+    /**
+     * 기간별 듀얼모멘텀 지수 엑셀 파일 만듦
+     * [dateOfStockRate]: <날짜, <종목코드, 지수>>
+     */
+    private fun createDateOfRate(
+        dmBacktestCondition: DmBacktestCondition,
+        dateOfStockRate: List<MomentumScore>,
+        workbook: XSSFWorkbook,
+    ): XSSFSheet {
+        val sheet = workbook.createSheet()
+        val listStock = dmBacktestCondition.listStock()
+        val headerColumns = listStock.toMutableList()
+        headerColumns.add(0, "날짜")
+        ReportMakerHelperService.applyHeader(sheet, headerColumns)
+        var rowIdx = 1
+
+        val dateStyle = ReportMakerHelperService.ExcelStyle.createDate(workbook)
+        val commaDecimalStyle = ReportMakerHelperService.ExcelStyle.createCommaDecimal(workbook)
+        dateOfStockRate.forEach { momentumScore ->
+            val row = sheet.createRow(rowIdx++)
+            var cellIdx = 0
+            val dateCell = row.createCell(cellIdx++)
+            dateCell.setCellValue(momentumScore.date)
+            dateCell.cellStyle = dateStyle
+
+            val rate = momentumScore.score
+
+            listStock.forEach {
+                val rateCell = row.createCell(cellIdx++)
+                rateCell.setCellValue(Optional.ofNullable(rate[it]).orElse(0.0))
+                rateCell.cellStyle = commaDecimalStyle
+            }
+        }
+        ReportMakerHelperService.ExcelStyle.applyAllBorder(sheet)
+        ReportMakerHelperService.ExcelStyle.applyDefaultFont(sheet)
+        return sheet
+    }
+
 
     /**
      * 분석 요약결과
