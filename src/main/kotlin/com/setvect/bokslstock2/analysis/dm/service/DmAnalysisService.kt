@@ -51,16 +51,64 @@ class DmAnalysisService(
         val score: Map<String, Double>,
     )
 
+    /**
+     * 모멘텀 결과
+     */
+    data class DualMomentumResult(
+        /**
+         * 거래 내역
+         */
+        val preTrades: List<PreTrade>,
+        /**
+         * 기간별 모멘텀 스코어
+         */
+        val momentumScoreList: List<MomentumScore>
+    )
+
     fun runTest(dmBacktestCondition: DmBacktestCondition) {
         checkValidate(dmBacktestCondition)
-        val preTrades = processDualMomentum(dmBacktestCondition)
-        val tradeCondition = makeTradeDateCorrection(dmBacktestCondition, preTrades)
-        val trades = backtestTradeService.trade(tradeCondition, preTrades)
+        val momentumResult = processDualMomentum(dmBacktestCondition)
+        val tradeCondition = makeTradeDateCorrection(dmBacktestCondition, momentumResult.preTrades)
+        val trades = backtestTradeService.trade(tradeCondition, momentumResult.preTrades)
         val result = backtestTradeService.analysis(trades, tradeCondition, dmBacktestCondition.stockCodes)
         val summary = getSummary(dmBacktestCondition, result.common)
         println(summary)
-        makeReportFile(dmBacktestCondition, result)
+        makeReportFile(dmBacktestCondition, result, momentumResult.momentumScoreList)
     }
+
+    fun makeSummaryReport(conditionList: List<DmBacktestCondition>): File {
+        var i = 0
+        val conditionResults = conditionList.map { dmBacktestCondition ->
+            checkValidate(dmBacktestCondition)
+            val momentumResult = processDualMomentum(dmBacktestCondition)
+            val tradeCondition = makeTradeDateCorrection(dmBacktestCondition, momentumResult.preTrades)
+            val trades = backtestTradeService.trade(tradeCondition, momentumResult.preTrades)
+            val analysisResult = backtestTradeService.analysis(trades, tradeCondition, dmBacktestCondition.stockCodes)
+            log.info("분석 진행 ${++i}/${conditionList.size}")
+            Triple(dmBacktestCondition, analysisResult, momentumResult.momentumScoreList)
+        }.toList()
+
+        for (idx in conditionResults.indices) {
+            val conditionResult = conditionResults[idx]
+            makeReportFile(conditionResult.first, conditionResult.second, conditionResult.third)
+            log.info("개별분석파일 생성 ${idx + 1}/${conditionList.size}")
+        }
+
+        // 결과 저장
+        val reportFile =
+            File("./backtest-result", "듀얼모멘텀_전략_백테스트_분석결과_" + Timestamp.valueOf(LocalDateTime.now()).time + ".xlsx")
+        XSSFWorkbook().use { workbook ->
+            val sheetBacktestSummary = createTotalSummary(workbook, conditionResults)
+            workbook.setSheetName(workbook.getSheetIndex(sheetBacktestSummary), "1. 평가표")
+
+            FileOutputStream(reportFile).use { ous ->
+                workbook.write(ous)
+            }
+        }
+        println("결과 파일:" + reportFile.name)
+        return reportFile
+    }
+
 
     /**
      * 나도 이렇게 하기 싫다.
@@ -76,19 +124,14 @@ class DmAnalysisService(
         return TradeCondition(DateRange(from, to), temp.investRatio, temp.cash, temp.feeBuy, temp.feeSell, temp.comment)
     }
 
-    private fun processDualMomentum(condition: DmBacktestCondition): List<PreTrade> {
+    private fun processDualMomentum(condition: DmBacktestCondition): DualMomentumResult {
         val stockCodes = condition.listStock()
-        // <종목코드, 종목정보>
-        val codeByStock = stockCodes.associateWith { stockRepository.findByCode(it).get() }
-
         // <종목코드, <날짜, 캔들>>
         val stockPriceIndex = getStockPriceIndex(stockCodes, condition)
-        // 듀얼모멘텀 대상 종목 <종목코드, <날짜, 캔들>>
-        val stockPriceIndexForMomentumStock =
-            stockPriceIndex.entries.associate { it.key to it.value }
+        val momentumScoreList = calcMomentumScores(condition, stockPriceIndex)
 
-        val momentumScoreList = calcMomentumScores(condition, stockPriceIndexForMomentumStock)
-
+        // <종목코드, 종목정보>
+        val codeByStock = stockCodes.associateWith { stockRepository.findByCode(it).get() }
         val tradeList = mutableListOf<PreTrade>()
         var beforeBuyTrade: PreTrade? = null
         for (momentumScore in momentumScoreList) {
@@ -152,7 +195,7 @@ class DmAnalysisService(
             tradeList.add(sellTrade)
         }
 
-        return tradeList
+        return DualMomentumResult(tradeList, momentumScoreList)
     }
 
     /**
@@ -160,8 +203,12 @@ class DmAnalysisService(
      */
     private fun calcMomentumScores(
         condition: DmBacktestCondition,
-        stockPriceIndexForMomentumStock: Map<String, Map<LocalDateTime, CandleDto>>
+        stockPriceIndex: Map<String, Map<LocalDateTime, CandleDto>>
     ): List<MomentumScore> {
+        // 듀얼모멘텀 대상 종목 <종목코드, <날짜, 캔들>>
+        val stockPriceIndexForMomentumStock =
+            stockPriceIndex.entries.associate { it.key to it.value }
+
         var current =
             DateUtil.fitMonth(condition.tradeCondition.range.from.withDayOfMonth(1), condition.periodType.getDeviceMonth())
         val momentumScoreList = mutableListOf<MomentumScore>()
@@ -282,7 +329,11 @@ class DmAnalysisService(
      * 분석건에 대한 리포트 파일 만듦
      * @return 엑셀 파일
      */
-    private fun makeReportFile(dmBacktestCondition: DmBacktestCondition, analysisResult: AnalysisResult): File {
+    private fun makeReportFile(
+        dmBacktestCondition: DmBacktestCondition,
+        analysisResult: AnalysisResult,
+        momentumScoreList: List<MomentumScore>
+    ): File {
         val append = "_${dmBacktestCondition.timeWeight.entries.map { it.key }.joinToString(",")}"
         val reportFileSubPrefix =
             ReportMakerHelperService.getReportFileSuffix(dmBacktestCondition.tradeCondition, dmBacktestCondition.listStock(), append)
@@ -307,8 +358,7 @@ class DmAnalysisService(
             sheet = createReportSummary(dmBacktestCondition, analysisResult, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "5. 매매 요약결과 및 조건")
 
-            // TODO momentumScoreList(모멘텀 스코어 받기)
-            sheet = createDateOfRate(dmBacktestCondition, listOf(), workbook)
+            sheet = createDateOfRate(dmBacktestCondition, momentumScoreList, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "6. 모멘텀 지수")
 
             FileOutputStream(reportFile).use { ous ->
@@ -318,41 +368,6 @@ class DmAnalysisService(
         println("결과 파일:" + reportFile.name)
         return reportFile
     }
-
-    fun makeSummaryReport(conditionList: List<DmBacktestCondition>): File {
-        var i = 0
-        val conditionResults = conditionList.map { dmBacktestCondition ->
-            checkValidate(dmBacktestCondition)
-            // TODO momentumScoreList(모멘텀 스코어 받기)
-            val preTrades = processDualMomentum(dmBacktestCondition)
-            val tradeCondition = makeTradeDateCorrection(dmBacktestCondition, preTrades)
-            val trades = backtestTradeService.trade(tradeCondition, preTrades)
-            val analysisResult = backtestTradeService.analysis(trades, tradeCondition, dmBacktestCondition.stockCodes)
-            log.info("분석 진행 ${++i}/${conditionList.size}")
-            Pair(dmBacktestCondition, analysisResult)
-        }.toList()
-
-        for (idx in conditionResults.indices) {
-            val conditionResult = conditionResults[idx]
-            makeReportFile(conditionResult.first, conditionResult.second)
-            log.info("개별분석파일 생성 ${idx + 1}/${conditionList.size}")
-        }
-
-        // 결과 저장
-        val reportFile =
-            File("./backtest-result", "듀얼모멘텀_전략_백테스트_분석결과_" + Timestamp.valueOf(LocalDateTime.now()).time + ".xlsx")
-        XSSFWorkbook().use { workbook ->
-            val sheetBacktestSummary = createTotalSummary(workbook, conditionResults)
-            workbook.setSheetName(workbook.getSheetIndex(sheetBacktestSummary), "1. 평가표")
-
-            FileOutputStream(reportFile).use { ous ->
-                workbook.write(ous)
-            }
-        }
-        println("결과 파일:" + reportFile.name)
-        return reportFile
-    }
-
 
     /**
      * 매매 결과 요약 및 조건 시트 만듦
@@ -472,7 +487,7 @@ class DmAnalysisService(
      */
     private fun createTotalSummary(
         workbook: XSSFWorkbook,
-        conditionResults: List<Pair<DmBacktestCondition, AnalysisResult>>
+        conditionResults: List<Triple<DmBacktestCondition, AnalysisResult, List<MomentumScore>>>
     ): XSSFSheet {
         val sheet = workbook.createSheet()
 

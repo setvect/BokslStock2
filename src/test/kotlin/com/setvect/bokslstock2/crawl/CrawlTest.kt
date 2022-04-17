@@ -84,8 +84,7 @@ class CrawlTest {
     @Test
     fun downloadStoreCsv() {
         val downloadSource = mapOf(
-            StockCode.OS_CODE_SPY to "spy.us",
-            StockCode.OS_CODE_QLD to "qld.us"
+            StockCode.OS_CODE_SCZ to "scz.us",
         )
         downloadSource.entries.forEach { entry ->
             val url = URL("https://stooq.com/q/d/l/?s=${entry.value}&i=d")
