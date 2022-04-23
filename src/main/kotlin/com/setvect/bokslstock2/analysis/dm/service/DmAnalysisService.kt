@@ -121,7 +121,7 @@ class DmAnalysisService(
         val temp = dmBacktestCondition.tradeCondition
         val from = if (temp.range.from.isBefore(preTrades.first().tradeDate)) temp.range.from else preTrades.first().tradeDate
         val to = if (temp.range.to.isAfter(preTrades.last().tradeDate)) temp.range.to else preTrades.last().tradeDate
-        return TradeCondition(DateRange(from, to), temp.investRatio, temp.cash, temp.feeBuy, temp.feeSell, temp.comment)
+        return TradeCondition(DateRange(from, to), temp.investRatio, temp.cash, temp.feeBuy, temp.feeSell, temp.comment, temp.benchmark)
     }
 
     private fun processDualMomentum(condition: DmBacktestCondition): DualMomentumResult {
@@ -437,6 +437,7 @@ class DmAnalysisService(
         )
         report.append(buyHoldText)
 
+        report.append("----------- Benchmark 결과 -----------\n")
         val benchmarkText = makeSummaryCompareStock(
             commonAnalysisReportResult.benchmarkTotalYield.benchmarkTotalYield,
             commonAnalysisReportResult.getBenchmarkSharpeRatio()
