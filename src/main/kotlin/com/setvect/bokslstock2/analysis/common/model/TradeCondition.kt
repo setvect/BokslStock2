@@ -29,5 +29,10 @@ data class TradeCondition(
     /**
      * 조건에 대한 설명. 리포트에서 사용하기 위함
      */
-    val comment: String
+    val comment: String,
+
+    /**
+     * 밴치마크 종목코드
+     */
+    val benchmark: List<String> = listOf()
 )

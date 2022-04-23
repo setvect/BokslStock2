@@ -182,21 +182,39 @@ class RbAnalysisService(
             createCell.cellStyle = defaultStyle
 
             val result = conditionResult.second
-            val sumYield: TotalYield = result.common.buyHoldYieldTotal
+
+            val buyHoldTotalYield: TotalYield = result.common.benchmarkTotalYield.buyHoldTotalYield
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(sumYield.yield)
+            createCell.setCellValue(buyHoldTotalYield.yield)
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(sumYield.mdd)
+            createCell.setCellValue(buyHoldTotalYield.mdd)
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(sumYield.getCagr())
+            createCell.setCellValue(buyHoldTotalYield.getCagr())
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(result.common.getBuyHoldSharpeRatio())
+            createCell.cellStyle = decimalStyle
+
+            val benchmarkTotalYield: TotalYield = result.common.benchmarkTotalYield.benchmarkTotalYield
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(benchmarkTotalYield.yield)
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(benchmarkTotalYield.mdd)
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(benchmarkTotalYield.getCagr())
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(result.common.getBenchmarkSharpeRatio())
             createCell.cellStyle = decimalStyle
 
             val totalYield: TotalYield = result.common.yieldTotal

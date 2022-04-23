@@ -1,6 +1,7 @@
 package com.setvect.bokslstock2.analysis.common.model
 
 import com.setvect.bokslstock2.util.ApplicationUtil
+import java.time.LocalDateTime
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import kotlin.math.sqrt
 import kotlin.streams.toList
@@ -20,30 +21,30 @@ data class CommonAnalysisReportResult(
     val yieldTotal: TotalYield,
 
     /**
-     * 조건 기준 승률 합
+     * 전략 종목 기준 승률 합
      * <종목코드, 승률>
      */
-    val winningRateCondition: Map<String, WinningRate>,
+    val winningRateTarget: Map<String, WinningRate>,
 
     /**
-     * 조건별 종목 Buy&Hold 수익률
+     * 전략 종목 Buy&Hold 수익률
      * <종목코드, 수익률>
      */
-    val buyHoldYieldCondition: Map<String, YieldMdd>,
+    val baseStockYieldCode: CompareYieldCode,
 
     /**
-     * 종목 Buy&Hold 수익률
+     * 전략 종목 Buy&Hold 수익률
      */
-    val buyHoldYieldTotal: TotalYield,
+    val benchmarkTotalYield: CompareTotalYield,
 ) {
     /**
      *@return 전체 매매 내역 승률 합
      */
     fun getWinningRateTotal(): WinningRate {
         return WinningRate(
-            gainCount = winningRateCondition.values.sumOf { it.gainCount },
-            lossCount = winningRateCondition.values.sumOf { it.lossCount },
-            invest = winningRateCondition.values.sumOf { it.invest },
+            gainCount = winningRateTarget.values.sumOf { it.gainCount },
+            lossCount = winningRateTarget.values.sumOf { it.lossCount },
+            invest = winningRateTarget.values.sumOf { it.invest },
         )
     }
 
@@ -52,14 +53,7 @@ data class CommonAnalysisReportResult(
      */
     fun getMonthlyYield(): List<YieldRateItem> {
         val monthEval = evaluationAmountHistory.groupBy { it.baseDate.withDayOfMonth(1) }
-        return monthEval.entries.stream().map {
-            YieldRateItem(
-                baseDate = it.key,
-                buyHoldYield = ApplicationUtil.getYield(it.value.first().buyHoldRate, it.value.last().buyHoldRate),
-                backtestYield = ApplicationUtil.getYield(it.value.first().backtestRate, it.value.last().backtestRate),
-            )
-        }
-            .toList()
+        return groupByYield(monthEval)
     }
 
     /**
@@ -67,10 +61,15 @@ data class CommonAnalysisReportResult(
      */
     fun getYearlyYield(): List<YieldRateItem> {
         val yearEval = evaluationAmountHistory.groupBy { it.baseDate.withMonth(1).withDayOfMonth(1) }
-        return yearEval.entries.stream().map {
+        return groupByYield(yearEval)
+    }
+
+    private fun groupByYield(monthEval: Map<LocalDateTime, List<EvaluationRateItem>>): List<YieldRateItem> {
+        return monthEval.entries.stream().map {
             YieldRateItem(
                 baseDate = it.key,
                 buyHoldYield = ApplicationUtil.getYield(it.value.first().buyHoldRate, it.value.last().buyHoldRate),
+                benchmarkYield = ApplicationUtil.getYield(it.value.first().benchmarkRate, it.value.last().benchmarkRate),
                 backtestYield = ApplicationUtil.getYield(it.value.first().backtestRate, it.value.last().backtestRate),
             )
         }
@@ -82,6 +81,13 @@ data class CommonAnalysisReportResult(
      */
     fun getBuyHoldSharpeRatio(): Double {
         return getSharpeRatio(evaluationAmountHistory.stream().map { it.buyHoldYield }.toList())
+    }
+
+    /**
+     * @return 밴치마크 사프지수
+     */
+    fun getBenchmarkSharpeRatio(): Double {
+        return getSharpeRatio(evaluationAmountHistory.stream().map { it.benchmarkYield }.toList())
     }
 
     /**

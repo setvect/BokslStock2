@@ -124,7 +124,8 @@ class MabsAnalysisService(
                 "종목,종목코드,매매주기,단기 이동평균 기간,장기 이동평균 기간," +
                 "투자비율,최초 투자금액,하락 매도률,상승 매도률,매수 수수료,매도 수수료," +
                 "조건 설명," +
-                "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,샤프지수," +
+                "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,매수 후 보유 샤프지수," +
+                "매치 마크 수익,매치 마크 MDD,매치 마크 CAGR,매치 마크 샤프지수," +
                 "실현 수익,실현 MDD,실현 CAGR,샤프지수,매매 횟수,승률"
         ReportMakerHelperService.applyHeader(sheet, header)
         var rowIdx = 1
@@ -202,22 +203,41 @@ class MabsAnalysisService(
             createCell.cellStyle = defaultStyle
 
             val result = conditionResult.second
-            val sumYield: TotalYield = result.common.buyHoldYieldTotal
+
+            val buyHoldTotalYield: TotalYield = result.common.benchmarkTotalYield.buyHoldTotalYield
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(sumYield.yield)
+            createCell.setCellValue(buyHoldTotalYield.yield)
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(sumYield.mdd)
+            createCell.setCellValue(buyHoldTotalYield.mdd)
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(sumYield.getCagr())
+            createCell.setCellValue(buyHoldTotalYield.getCagr())
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(result.common.getBuyHoldSharpeRatio())
+            createCell.cellStyle = decimalStyle
+
+            val benchmarkTotalYield: TotalYield = result.common.benchmarkTotalYield.benchmarkTotalYield
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(benchmarkTotalYield.yield)
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(benchmarkTotalYield.mdd)
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(benchmarkTotalYield.getCagr())
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(result.common.getBenchmarkSharpeRatio())
             createCell.cellStyle = decimalStyle
 
             val totalYield: TotalYield = result.common.yieldTotal

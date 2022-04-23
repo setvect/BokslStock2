@@ -3,6 +3,7 @@ package com.setvect.bokslstock2.analysis.common.service
 import com.setvect.bokslstock2.analysis.common.entity.ConditionEntity
 import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
+import com.setvect.bokslstock2.analysis.common.model.CompareTotalYield
 import com.setvect.bokslstock2.analysis.common.model.EvaluationRateItem
 import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.common.model.YieldRateItem
@@ -129,14 +130,16 @@ class ReportMakerHelperService(
         }
 
         /**
-         * 날짜에 따른 평가금액(Buy&Hold, 벡테스트) 변화 시트 만듦
+         * 날짜에 따른 평가금액(Buy&Hold, 밴치마크, 벡테스트) 변화 시트 만듦
          */
         fun createReportEvalAmount(
             evaluationAmountHistory: List<EvaluationRateItem>,
             workbook: XSSFWorkbook
         ): XSSFSheet {
             val sheet = workbook.createSheet()
-            val header = "날짜,Buy&Hold 평가금,백테스트 평가금,Buy&Hold 일일 수익률,백테스트 일일 수익률,Buy&Hold Maxdrawdown,백테스트 Maxdrawdown"
+            val header = "날짜,Buy&Hold 평가금,밴치마크 평가금,백테스트 평가금" +
+                    ",Buy&Hold 일일 수익률,밴치마크 일일 수익률,백테스트 일일 수익률" +
+                    ",Buy&Hold Maxdrawdown,밴치마크 Maxdrawdown,백테스트 Maxdrawdown"
             applyHeader(sheet, header)
             var rowIdx = 1
 
@@ -145,6 +148,7 @@ class ReportMakerHelperService(
             val percentStyle = ExcelStyle.createPercent(workbook)
 
             var buyAndHoldMax = 0.0
+            var benchmarkMax = 0.0
             var backtestMax = 0.0
 
             evaluationAmountHistory.forEach { evalItem: EvaluationRateItem ->
@@ -152,6 +156,7 @@ class ReportMakerHelperService(
                 var cellIdx = 0
                 var createCell = row.createCell(cellIdx++)
                 buyAndHoldMax = buyAndHoldMax.coerceAtLeast(evalItem.buyHoldRate)
+                benchmarkMax = benchmarkMax.coerceAtLeast(evalItem.benchmarkRate)
                 backtestMax = backtestMax.coerceAtLeast(evalItem.backtestRate)
 
                 createCell.setCellValue(evalItem.baseDate)
@@ -160,6 +165,10 @@ class ReportMakerHelperService(
                 // 변화량
                 createCell = row.createCell(cellIdx++)
                 createCell.setCellValue(evalItem.buyHoldRate)
+                createCell.cellStyle = commaStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(evalItem.benchmarkRate)
                 createCell.cellStyle = commaStyle
 
                 createCell = row.createCell(cellIdx++)
@@ -172,12 +181,20 @@ class ReportMakerHelperService(
                 createCell.cellStyle = percentStyle
 
                 createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(evalItem.benchmarkYield)
+                createCell.cellStyle = percentStyle
+
+                createCell = row.createCell(cellIdx++)
                 createCell.setCellValue(evalItem.backtestYield)
                 createCell.cellStyle = percentStyle
 
                 // Maxdrawdown
                 createCell = row.createCell(cellIdx++)
                 createCell.setCellValue((evalItem.buyHoldRate - buyAndHoldMax) / buyAndHoldMax)
+                createCell.cellStyle = percentStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue((evalItem.benchmarkRate - benchmarkMax) / benchmarkMax)
                 createCell.cellStyle = percentStyle
 
                 createCell = row.createCell(cellIdx)
@@ -199,7 +216,7 @@ class ReportMakerHelperService(
             workbook: XSSFWorkbook
         ): XSSFSheet {
             val sheet = workbook.createSheet()
-            val header = "날짜,Buy&Hold 수익률,백테스트 수익률"
+            val header = "날짜,Buy&Hold 수익률,밴치마크 수익률,백테스트 수익률"
             applyHeader(sheet, header)
             var rowIdx = 1
 
@@ -215,6 +232,10 @@ class ReportMakerHelperService(
 
                 createCell = row.createCell(cellIdx++)
                 createCell.setCellValue(monthYield.buyHoldYield)
+                createCell.cellStyle = percentStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(monthYield.benchmarkYield)
                 createCell.cellStyle = percentStyle
 
                 createCell = row.createCell(cellIdx)
@@ -240,26 +261,20 @@ class ReportMakerHelperService(
         ): String {
             val report = StringBuilder()
             report.append("----------- Buy&Hold 결과 -----------\n")
-            report.append(String.format("합산 동일비중 수익\t %,.2f%%", commonAnalysisReportResult.buyHoldYieldTotal.yield * 100))
-                .append("\n")
-            report.append(String.format("합산 동일비중 MDD\t %,.2f%%", commonAnalysisReportResult.buyHoldYieldTotal.mdd * 100)).append("\n")
-            report.append(String.format("합산 동일비중 CAGR\t %,.2f%%", commonAnalysisReportResult.buyHoldYieldTotal.getCagr() * 100))
-                .append("\n")
-            report.append(String.format("샤프지수\t %,.2f", commonAnalysisReportResult.getBuyHoldSharpeRatio())).append("\n")
+            val buyHoldText = makeSummaryCompareStock(
+                commonAnalysisReportResult.benchmarkTotalYield.buyHoldTotalYield,
+                commonAnalysisReportResult.getBuyHoldSharpeRatio(),
+                commonAnalysisReportResult.baseStockYieldCode.buyHoldYieldByCode
+            )
+            report.append(buyHoldText)
 
-            for (i in 1..tradeConditionList.size) {
-                val condition = tradeConditionList[i - 1]
-                report.append(
-                    "${i}. 조건번호\t${condition.conditionSeq}\n"
-                )
-                val sumYield = commonAnalysisReportResult.buyHoldYieldCondition[condition.stock.code]
-                if (sumYield == null) {
-                    log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${condition.conditionSeq}")
-                    break
-                }
-                report.append(String.format("${i}. 동일비중 수익\t %,.2f%%", sumYield.yield * 100)).append("\n")
-                report.append(String.format("${i}. 동일비중 MDD\t %,.2f%%", sumYield.mdd * 100)).append("\n")
-            }
+            report.append("----------- Benchmark 결과 -----------\n")
+            val benchmarkText = makeSummaryCompareStock(
+                commonAnalysisReportResult.benchmarkTotalYield.benchmarkTotalYield,
+                commonAnalysisReportResult.getBenchmarkSharpeRatio(),
+                commonAnalysisReportResult.baseStockYieldCode.benchmarkYieldByCode
+            )
+            report.append(benchmarkText)
 
             val totalYield: CommonAnalysisReportResult.TotalYield = commonAnalysisReportResult.yieldTotal
             report.append("----------- 전략 결과 -----------\n")
@@ -277,7 +292,7 @@ class ReportMakerHelperService(
                     "${i}. 조건번호\t${condition.conditionSeq}\n"
                 )
 
-                val winningRate = commonAnalysisReportResult.winningRateCondition[condition.stock.code]
+                val winningRate = commonAnalysisReportResult.winningRateTarget[condition.stock.code]
                 if (winningRate == null) {
                     log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${condition.conditionSeq}")
                     break
@@ -299,19 +314,53 @@ class ReportMakerHelperService(
             return report.toString()
         }
 
+        private fun makeSummaryCompareStock(
+            totalYield: CommonAnalysisReportResult.TotalYield,
+            sharpeRatio: Double,
+            yieldByCode: Map<String, CommonAnalysisReportResult.YieldMdd>
+        ): StringBuilder {
+            val report = StringBuilder()
+            report.append(String.format("합산 동일비중 수익\t %,.2f%%", totalYield.yield * 100))
+                .append("\n")
+            report.append(String.format("합산 동일비중 MDD\t %,.2f%%", totalYield.mdd * 100)).append("\n")
+            report.append(String.format("합산 동일비중 CAGR\t %,.2f%%", totalYield.getCagr() * 100))
+                .append("\n")
+            report.append(String.format("샤프지수\t %,.2f", sharpeRatio)).append("\n")
+
+            var i = 0
+            yieldByCode.entries.forEach {
+                i++
+                report.append(
+                    "$i. 종목 코드: ${it.key}\n"
+                )
+                val sumYield = it.value
+                report.append(String.format("$i. 동일비중 수익\t %,.2f%%", sumYield.yield * 100)).append("\n")
+                report.append(String.format("$i. 동일비중 MDD\t %,.2f%%", sumYield.mdd * 100)).append("\n")
+            }
+            return report
+        }
+
         /**
-         * @return 전체 투자 종목에 대한 Buy & Hold시 수익 정보
+         * 전체 투자 종목에 대한 수익 정보
+         * @return <buyAndHold 종목 수익, 밴치마크 종목 수익>
          */
-        fun calculateTotalBuyAndHoldYield(
+        fun calculateTotalBenchmarkYield(
             evaluationRateList: List<EvaluationRateItem>,
             range: DateRange
-        ): CommonAnalysisReportResult.TotalYield {
-            val rateList = evaluationRateList.map { it.buyHoldRate }.toList()
-            return CommonAnalysisReportResult.TotalYield(
-                ApplicationUtil.getYield(rateList),
-                ApplicationUtil.getMdd(rateList),
+        ): CompareTotalYield {
+            val buyHold = evaluationRateList.map { it.buyHoldRate }.toList()
+            val buyHoldTotalYield = CommonAnalysisReportResult.TotalYield(
+                ApplicationUtil.getYield(buyHold),
+                ApplicationUtil.getMdd(buyHold),
                 range.diffDays.toInt()
             )
+            val benchmark = evaluationRateList.map { it.benchmarkRate }.toList()
+            val benchmarkTotalYield = CommonAnalysisReportResult.TotalYield(
+                ApplicationUtil.getYield(benchmark),
+                ApplicationUtil.getMdd(benchmark),
+                range.diffDays.toInt()
+            )
+            return CompareTotalYield(buyHoldTotalYield, benchmarkTotalYield)
         }
 
         /**

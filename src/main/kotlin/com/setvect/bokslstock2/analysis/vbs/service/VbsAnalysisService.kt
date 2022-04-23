@@ -78,7 +78,6 @@ class VbsAnalysisService(
     fun makeSummaryReport(conditionList: List<VbsAnalysisCondition>): File {
         var i = 0
         val conditionResults = conditionList.map { vbsAnalysisCondition ->
-
             val tradeItemHistory = backtestTradeService.tradeBundle(vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTradeBundles())
             val analysisResult = backtestTradeService.analysis(
                 tradeItemHistory,
@@ -124,7 +123,8 @@ class VbsAnalysisService(
         val header = "분석기간,분석 아이디,종목,투자비율,최초 투자금액,매수 수수료,매도 수수료," +
                 "매매주기,변동성비율,이동평균단위,갭 상승 매도 넘김,하루에 한번 거래,호가단위," +
                 "조건 설명," +
-                "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,샤프지수," +
+                "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,매수 후 보유 샤프지수," +
+                "밴치마크 수익,밴치마크 MDD,밴치마크 보유 CAGR,밴치마크 샤프지수," +
                 "실현 수익,실현 MDD,실현 CAGR,샤프지수,매매 횟수,승률"
         ReportMakerHelperService.applyHeader(sheet, header)
         var rowIdx = 1
@@ -203,21 +203,41 @@ class VbsAnalysisService(
 
             val result = conditionResult.second
 
-            val sumYield: TotalYield = result.common.buyHoldYieldTotal
+
+
+            
+            val buyHoldTotalYield: TotalYield = result.common.benchmarkTotalYield.buyHoldTotalYield
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(sumYield.yield)
+            createCell.setCellValue(buyHoldTotalYield.yield)
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(sumYield.mdd)
+            createCell.setCellValue(buyHoldTotalYield.mdd)
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(sumYield.getCagr())
+            createCell.setCellValue(buyHoldTotalYield.getCagr())
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(result.common.getBuyHoldSharpeRatio())
+            createCell.cellStyle = decimalStyle
+
+            val benchmarkTotalYield: TotalYield = result.common.benchmarkTotalYield.benchmarkTotalYield
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(benchmarkTotalYield.yield)
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(benchmarkTotalYield.mdd)
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(benchmarkTotalYield.getCagr())
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(result.common.getBenchmarkSharpeRatio())
             createCell.cellStyle = decimalStyle
 
             val totalYield: TotalYield = result.common.yieldTotal
@@ -275,7 +295,7 @@ class VbsAnalysisService(
             .toList()
 
         var rowIdx = 1
-        val defaultStyle = ReportMakerHelperService.ExcelStyle.createDate(workbook)
+        val defaultStyle = ReportMakerHelperService.ExcelStyle.createDefault(workbook)
         val percentStyle = ReportMakerHelperService.ExcelStyle.createPercent(workbook)
         val decimalStyle = ReportMakerHelperService.ExcelStyle.createDecimal(workbook)
 
@@ -321,7 +341,7 @@ class VbsAnalysisService(
 
             createCell = row.createCell(cellIdx)
             createCell.setCellValue(condition.comment)
-            createCell.cellStyle = percentStyle
+            createCell.cellStyle = defaultStyle
         }
 
         sheet.createFreezePane(0, 1)

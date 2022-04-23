@@ -203,7 +203,8 @@ class VbsBacktest {
         val vbsAnalysisCondition = listOf(
             VbsAnalysisCondition(
                 tradeConditionList = listOf(
-                    makeCondition(StockCode.CODE_KODEX_KOSDAQ_2X_233740), // KODEX 코스닥150 레버리지
+                    makeCondition(StockCode.CODE_KODEX_KOSDAQ_2X_233740),
+                    makeCondition(StockCode.CODE_KODEX_BANK_091170),
                 ),
                 basic = TradeCondition(
                     range = range,
@@ -211,35 +212,36 @@ class VbsBacktest {
                     cash = 10_000_000.0,
                     feeBuy = 0.0002,
                     feeSell = 0.0002,
-                    comment = ""
+                    comment = "",
+                    benchmark = listOf(StockCode.CODE_KODEX_200_069500)
                 )
             ),
-            VbsAnalysisCondition(
-                tradeConditionList = listOf(
-                    makeCondition(StockCode.CODE_KODEX_KOSDAQ_2X_233740), // KODEX 코스닥150 레버리지
-                ),
-                basic = TradeCondition(
-                    range = range,
-                    investRatio = 0.7,
-                    cash = 10_000_000.0,
-                    feeBuy = 0.0002,
-                    feeSell = 0.0002,
-                    comment = ""
-                )
-            ),
-            VbsAnalysisCondition(
-                tradeConditionList = listOf(
-                    makeCondition(StockCode.CODE_KODEX_KOSDAQ_2X_233740), // KODEX 코스닥150 레버리지
-                ),
-                basic = TradeCondition(
-                    range = range,
-                    investRatio = 0.5,
-                    cash = 10_000_000.0,
-                    feeBuy = 0.0002,
-                    feeSell = 0.0002,
-                    comment = ""
-                )
-            )
+//            VbsAnalysisCondition(
+//                tradeConditionList = listOf(
+//                    makeCondition(StockCode.CODE_KODEX_KOSDAQ_2X_233740),
+//                ),
+//                basic = TradeCondition(
+//                    range = range,
+//                    investRatio = 0.7,
+//                    cash = 10_000_000.0,
+//                    feeBuy = 0.0002,
+//                    feeSell = 0.0002,
+//                    comment = ""
+//                )
+//            ),
+//            VbsAnalysisCondition(
+//                tradeConditionList = listOf(
+//                    makeCondition(StockCode.CODE_KODEX_KOSDAQ_2X_233740),
+//                ),
+//                basic = TradeCondition(
+//                    range = range,
+//                    investRatio = 0.5,
+//                    cash = 10_000_000.0,
+//                    feeBuy = 0.0002,
+//                    feeSell = 0.0002,
+//                    comment = ""
+//                )
+//            )
         )
 
         // 리포트 만듦

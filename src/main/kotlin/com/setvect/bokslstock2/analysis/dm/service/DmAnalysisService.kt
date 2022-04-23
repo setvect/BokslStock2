@@ -431,13 +431,17 @@ class DmAnalysisService(
         val report = StringBuilder()
 
         report.append("----------- Buy&Hold 결과 -----------\n")
-        report.append(String.format("합산 동일비중 수익\t %,.2f%%", commonAnalysisReportResult.buyHoldYieldTotal.yield * 100))
-            .append("\n")
-        report.append(String.format("합산 동일비중 MDD\t %,.2f%%", commonAnalysisReportResult.buyHoldYieldTotal.mdd * 100)).append("\n")
-        report.append(String.format("합산 동일비중 CAGR\t %,.2f%%", commonAnalysisReportResult.buyHoldYieldTotal.getCagr() * 100))
-            .append("\n")
-        report.append(String.format("샤프지수\t %,.2f", commonAnalysisReportResult.getBuyHoldSharpeRatio())).append("\n")
+        val buyHoldText = makeSummaryCompareStock(
+            commonAnalysisReportResult.benchmarkTotalYield.buyHoldTotalYield,
+            commonAnalysisReportResult.getBuyHoldSharpeRatio()
+        )
+        report.append(buyHoldText)
 
+        val benchmarkText = makeSummaryCompareStock(
+            commonAnalysisReportResult.benchmarkTotalYield.benchmarkTotalYield,
+            commonAnalysisReportResult.getBenchmarkSharpeRatio()
+        )
+        report.append(benchmarkText)
 
         val totalYield: CommonAnalysisReportResult.TotalYield = commonAnalysisReportResult.yieldTotal
         report.append("----------- 전략 결과 -----------\n")
@@ -481,6 +485,20 @@ class DmAnalysisService(
         return report.toString()
     }
 
+    private fun makeSummaryCompareStock(
+        buyHoldTotalYield: CommonAnalysisReportResult.TotalYield,
+        buyHoldSharpeRatio: Double
+    ): String {
+        val report = StringBuilder()
+        report.append(String.format("합산 동일비중 수익\t %,.2f%%", buyHoldTotalYield.yield * 100))
+            .append("\n")
+        report.append(String.format("합산 동일비중 MDD\t %,.2f%%", buyHoldTotalYield.mdd * 100)).append("\n")
+        report.append(String.format("합산 동일비중 CAGR\t %,.2f%%", buyHoldTotalYield.getCagr() * 100))
+            .append("\n")
+        report.append(String.format("샤프지수\t %,.2f", buyHoldSharpeRatio)).append("\n")
+        return report.toString()
+    }
+
 
     /**
      * @return 여러개 백테스트 결과 요약 시트
@@ -493,7 +511,8 @@ class DmAnalysisService(
 
         val header = "분석기간,거래종목,홀드종목,가중치기간 및 비율,투자비율,최초 투자금액,매수 수수료,매도 수수료," +
                 "조건 설명," +
-                "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,샤프지수," +
+                "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,매수 후 샤프지수," +
+                "밴치마크 보유 수익,밴치마크 보유 MDD,밴치마크 보유 CAGR,밴치마크 샤프지수," +
                 "실현 수익,실현 MDD,실현 CAGR,샤프지수,매매 횟수,승률"
         ReportMakerHelperService.applyHeader(sheet, header)
         var rowIdx = 1
@@ -506,7 +525,6 @@ class DmAnalysisService(
         val percentImportantStyle = ReportMakerHelperService.ExcelStyle.createPercent(workbook)
         percentImportantStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
         percentImportantStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
-
 
         conditionResults.forEach { conditionResult ->
             val multiCondition = conditionResult.first
@@ -552,21 +570,38 @@ class DmAnalysisService(
 
             val result = conditionResult.second
 
-            val sumYield: CommonAnalysisReportResult.TotalYield = result.common.buyHoldYieldTotal
+            val buyHoldTotalYield: CommonAnalysisReportResult.TotalYield = result.common.benchmarkTotalYield.buyHoldTotalYield
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(sumYield.yield)
+            createCell.setCellValue(buyHoldTotalYield.yield)
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(sumYield.mdd)
+            createCell.setCellValue(buyHoldTotalYield.mdd)
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(sumYield.getCagr())
+            createCell.setCellValue(buyHoldTotalYield.getCagr())
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(result.common.getBuyHoldSharpeRatio())
+            createCell.cellStyle = decimalStyle
+
+            val benchmarkTotalYield: CommonAnalysisReportResult.TotalYield = result.common.benchmarkTotalYield.benchmarkTotalYield
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(benchmarkTotalYield.yield)
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(benchmarkTotalYield.mdd)
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(benchmarkTotalYield.getCagr())
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(result.common.getBenchmarkSharpeRatio())
             createCell.cellStyle = decimalStyle
 
             val totalYield: CommonAnalysisReportResult.TotalYield = result.common.yieldTotal

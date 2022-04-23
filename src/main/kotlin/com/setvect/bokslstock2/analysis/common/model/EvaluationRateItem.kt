@@ -15,6 +15,10 @@ data class EvaluationRateItem(
      */
     val buyHoldRate: Double,
     /**
+     * 밴치마크 비율
+     */
+    val benchmarkRate: Double,
+    /**
      * 백테스팅 전략 비율
      */
     val backtestRate: Double,
@@ -22,6 +26,10 @@ data class EvaluationRateItem(
      * buy&hold 전일대비 수익률
      */
     val buyHoldYield: Double,
+    /**
+     * 밴치 마크 비율
+     */
+    val benchmarkYield: Double,
     /**
      * 백테스팅 전략 전일대비 수익률
      */

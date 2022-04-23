@@ -2,6 +2,7 @@ package com.setvect.bokslstock2.analysis.common.service
 
 import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
+import com.setvect.bokslstock2.analysis.common.model.CompareYieldCode
 import com.setvect.bokslstock2.analysis.common.model.EvaluationRateItem
 import com.setvect.bokslstock2.analysis.common.model.PreTrade
 import com.setvect.bokslstock2.analysis.common.model.Trade
@@ -11,6 +12,7 @@ import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.util.ApplicationUtil
+import com.setvect.bokslstock2.util.DateRange
 import java.time.LocalDateTime
 import java.util.*
 import org.springframework.stereotype.Service
@@ -135,22 +137,22 @@ class BacktestTradeService(
     fun analysis(
         trades: List<Trade>, condition: TradeCondition, holdStockCodes: List<String>
     ): AnalysisResult {
-        // 날짜별로 Buy&Hold 및 투자전략 평가금액 얻기
+        // 대상 종목으로 날짜별로 Buy&Hold 및 투자전략 평가금액 얻기
         val evaluationAmountHistory = applyEvaluationAmount(trades, condition, holdStockCodes)
 
-        val buyAndHoldYieldMdd = ReportMakerHelperService.calculateTotalBuyAndHoldYield(evaluationAmountHistory, condition.range)
-        val buyAndHoldYieldCondition = calculateBuyAndHoldYield(condition, holdStockCodes)
+        val benchmarkTotalYield = ReportMakerHelperService.calculateTotalBenchmarkYield(evaluationAmountHistory, condition.range)
+        val buyHoldYieldByCode = calculateBenchmarkYield(condition.range, holdStockCodes)
+        val benchmarkYieldByCode = calculateBenchmarkYield(condition.range, condition.benchmark)
 
         val yieldTotal = ReportMakerHelperService.calculateTotalYield(evaluationAmountHistory, condition.range)
         val winningRate = calculateCoinInvestment(trades)
 
-
         val common = CommonAnalysisReportResult(
             evaluationAmountHistory = evaluationAmountHistory,
             yieldTotal = yieldTotal,
-            winningRateCondition = winningRate,
-            buyHoldYieldCondition = buyAndHoldYieldCondition,
-            buyHoldYieldTotal = buyAndHoldYieldMdd,
+            winningRateTarget = winningRate,
+            baseStockYieldCode = CompareYieldCode(buyHoldYieldByCode, benchmarkYieldByCode),
+            benchmarkTotalYield = benchmarkTotalYield,
         )
         return AnalysisResult(condition, trades, common)
     }
@@ -164,11 +166,10 @@ class BacktestTradeService(
         condition: TradeCondition,
         holdStockCodes: List<String>
     ): List<EvaluationRateItem> {
-        val buyHoldRateMap: SortedMap<LocalDateTime, Double> = getBuyAndHoldEvalRate(condition, holdStockCodes)
 
         val useStockCode = trades.map { it.preTrade.stock.code }.distinct()
         // <종목 코드, List(캔들)>
-        val candleListMap = getConditionOfCandle(condition, useStockCode)
+        val candleListMap = getConditionOfCandle(condition.range, useStockCode)
 
         // <종목 코드, Map<날짜, 종가>>
         val condClosePriceMap = getConditionByClosePriceMap(candleListMap)
@@ -179,6 +180,7 @@ class BacktestTradeService(
                 .map { it.key }.toSortedSet()
 
         var buyHoldLastRate = 1.0
+        var benchmarkLastRate = 1.0
         var backtestLastRate = 1.0
         var backtestLastCash = condition.cash // 마지막 보유 현금
 
@@ -193,8 +195,12 @@ class BacktestTradeService(
             .associateWith { 0 }
             .toMutableMap()
 
+        val buyHoldRateMap: SortedMap<LocalDateTime, Double> = getBuyAndHoldEvalRate(condition.range, holdStockCodes)
+        val benchmarkRateMap: SortedMap<LocalDateTime, Double> = getBuyAndHoldEvalRate(condition.range, condition.benchmark)
+
         val result = allDateList.map { date ->
             val buyHoldRate = buyHoldRateMap[date] ?: buyHoldLastRate
+            val benchmarkRate = benchmarkRateMap[date] ?: benchmarkLastRate
             val currentTradeList = tradeByDate[date] ?: emptyList()
             for (trade in currentTradeList) {
                 val stockCode = trade.preTrade.stock.code
@@ -214,15 +220,19 @@ class BacktestTradeService(
 
             val backtestRate = (backtestLastCash + evalStockAmount) / condition.cash
             val buyHoldYield = ApplicationUtil.getYield(buyHoldLastRate, buyHoldRate)
+            val benchmarkYield = ApplicationUtil.getYield(benchmarkLastRate, benchmarkRate)
             val backtestYield = ApplicationUtil.getYield(backtestLastRate, backtestRate)
 
             buyHoldLastRate = buyHoldRate
+            benchmarkLastRate = benchmarkRate
             backtestLastRate = backtestRate
             EvaluationRateItem(
                 baseDate = date,
                 buyHoldRate = buyHoldRate,
+                benchmarkRate = benchmarkRate,
                 backtestRate = backtestRate,
                 buyHoldYield = buyHoldYield,
+                benchmarkYield = benchmarkYield,
                 backtestYield = backtestYield
             )
         }.toMutableList()
@@ -232,9 +242,11 @@ class BacktestTradeService(
             EvaluationRateItem(
                 baseDate = allDateList.first(),
                 buyHoldRate = 1.0,
+                benchmarkRate = 1.0,
                 backtestRate = 1.0,
                 buyHoldYield = 0.0,
-                backtestYield = 0.0
+                benchmarkYield = 0.0,
+                backtestYield = 0.0,
             )
         )
         return result
@@ -244,10 +256,10 @@ class BacktestTradeService(
      * Buy&Hold 종목을 동일 비중으로 매수 했을 경우 수익률 제공
      * @return 날짜별 Buy&Hold 수익률. <날짜, 수익비>
      */
-    fun getBuyAndHoldEvalRate(condition: TradeCondition, holdStockCodes: List<String>): SortedMap<LocalDateTime, Double> {
-        val combinedYield: SortedMap<LocalDateTime, Double> = calculateBuyAndHoldProfitRatio(condition, holdStockCodes)
+    fun getBuyAndHoldEvalRate(range: DateRange, holdStockCodes: List<String>): SortedMap<LocalDateTime, Double> {
+        val combinedYield: SortedMap<LocalDateTime, Double> = calculateBuyAndHoldProfitRatio(range, holdStockCodes)
         val initial = TreeMap<LocalDateTime, Double>()
-        initial[condition.range.from] = 1.0
+        initial[range.from] = 1.0
         return combinedYield.entries.fold(initial) { acc: SortedMap<LocalDateTime, Double>, item ->
             // 누적수익 = 직전 누적수익 * (수익률 + 1)
             acc[item.key] = acc.entries.last().value * (item.value + 1)
@@ -260,11 +272,10 @@ class BacktestTradeService(
      * 수익비는 1에서 시작함
      * @return <날짜, 수익비>
      */
-    fun calculateBuyAndHoldProfitRatio(condition: TradeCondition, holdStockCodes: List<String>): SortedMap<LocalDateTime, Double> {
-        val range = condition.range
+    fun calculateBuyAndHoldProfitRatio(range: DateRange, holdStockCodes: List<String>): SortedMap<LocalDateTime, Double> {
 
         // <종목코드, List(캔들)>
-        val mapOfCandleList = getConditionOfCandle(condition, holdStockCodes)
+        val mapOfCandleList = getConditionOfCandle(range, holdStockCodes)
 
         // <종목코드, Map<날짜, 종가>>
         val mapOfCondClosePrice = getConditionByClosePriceMap(mapOfCandleList)
@@ -305,11 +316,11 @@ class BacktestTradeService(
     /**
      * @return <종목 아이디, 투자 종목에 대한 Buy & Hold시 수익 정보>
      */
-    fun calculateBuyAndHoldYield(
-        condition: TradeCondition,
-        holdStockCodes: List<String>,
+    fun calculateBenchmarkYield(
+        range: DateRange,
+        stockCodes: List<String>,
     ): Map<String, CommonAnalysisReportResult.YieldMdd> {
-        val mapOfCandleList = getConditionOfCandle(condition, holdStockCodes)
+        val mapOfCandleList = getConditionOfCandle(range, stockCodes)
 
         // <조건아이디, 직전 가격>
         val mapOfBeforePrice = getConditionOfFirstOpenPrice(mapOfCandleList)
@@ -327,12 +338,12 @@ class BacktestTradeService(
     /**
      *@return <종목코드, List(캔들)>
      */
-    fun getConditionOfCandle(condition: TradeCondition, stockCodes: List<String>): Map<String, List<CandleEntity>> {
+    fun getConditionOfCandle(range: DateRange, stockCodes: List<String>): Map<String, List<CandleEntity>> {
         return stockCodes.associateWith { stockCode ->
             candleRepository.findByRange(
                 stockRepository.findByCode(stockCode).get(),
-                condition.range.from,
-                condition.range.to
+                range.from,
+                range.to
             )
         }
     }
