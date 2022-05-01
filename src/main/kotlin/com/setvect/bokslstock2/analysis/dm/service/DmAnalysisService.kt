@@ -111,7 +111,7 @@ class DmAnalysisService(
 
 
     /**
-     * 나도 이렇게 하기 싫다.
+     * `나도` 이렇게 하기 싫다.
      * 비주얼포트폴리오 매매 전략과 동일하게 맞추기 위해서 직전 종가 기준으로 매매가 이루어져야 되기 때문에 백테스트 시작 시점 조정이 필요하다.
      */
     private fun makeTradeDateCorrection(
@@ -189,7 +189,7 @@ class DmAnalysisService(
 
         // 마지막 보유 종목 매도
         if (condition.endSell && beforeBuyTrade != null) {
-            val date = momentumScoreList.last().date.plusMonths(condition.periodType.getDeviceMonth().toLong())
+            var date = momentumScoreList.last().date.plusMonths(condition.periodType.getDeviceMonth().toLong())
             val sellStock = stockPriceIndex[beforeBuyTrade.stock.code]!![date]!!
             val sellTrade = makeSellTrade(sellStock, beforeBuyTrade)
             tradeList.add(sellTrade)
@@ -205,15 +205,13 @@ class DmAnalysisService(
         condition: DmBacktestCondition,
         stockPriceIndex: Map<String, Map<LocalDateTime, CandleDto>>
     ): List<MomentumScore> {
-        // 듀얼모멘텀 대상 종목 <종목코드, <날짜, 캔들>>
-        val stockPriceIndexForMomentumStock =
-            stockPriceIndex.entries.associate { it.key to it.value }
-
         var current =
             DateUtil.fitMonth(condition.tradeCondition.range.from.withDayOfMonth(1), condition.periodType.getDeviceMonth())
         val momentumScoreList = mutableListOf<MomentumScore>()
         while (current.isBefore(condition.tradeCondition.range.to)) {
-            val stockRate = calculateRate(stockPriceIndexForMomentumStock, current, condition)
+            // 현재 월의 이전 종가를 기준으로 계산해야 되기 때문에 직전월에 모멘텀 지수를 계산함
+            val baseDate = current.minusMonths(1)
+            val stockRate = calculateRate(stockPriceIndex, baseDate, condition)
             momentumScoreList.add(MomentumScore(current, stockRate.toMap()))
             current = current.plusMonths(condition.periodType.getDeviceMonth().toLong())
         }
@@ -272,23 +270,26 @@ class DmAnalysisService(
                         "O: ${currentCandle.openPrice}, H: ${currentCandle.highPrice}, L: ${currentCandle.lowPrice}, C:${currentCandle.closePrice}, ${currentCandle.periodType}"
             )
 
+            val momentFormula = StringBuilder()
             // 모멘텀평균 가격(가중치 적용 종가 평균)
-            val average = condition.timeWeight.entries.sumOf { timeWeight ->
+            val sumScore = condition.timeWeight.entries.sumOf { timeWeight ->
                 val delta = timeWeight.key
                 val weight = timeWeight.value
                 val deltaCandle = stockEntry.value[current.minusMonths(delta.toLong())]!!
                 log.info("\t\t비교 날짜: [${delta}] ${stockEntry.key} - ${deltaCandle.candleDateTimeStart} - C: ${deltaCandle.closePrice}")
                 log.info(
                     "\t\t$delta -   ${stockEntry.key}: ${deltaCandle.candleDateTimeStart}~${deltaCandle.candleDateTimeEnd} - " +
-                            "직전종가: ${deltaCandle.beforeClosePrice}, O: ${deltaCandle.openPrice}, H: ${deltaCandle.highPrice}, L: ${deltaCandle.lowPrice}, C:${deltaCandle.closePrice}, ${deltaCandle.periodType}, 수익률: ${deltaCandle.getYield()}"
+                            "직전종가: ${deltaCandle.beforeClosePrice}, O: ${deltaCandle.openPrice}, H: ${deltaCandle.highPrice}, L: ${deltaCandle.lowPrice}, C:${deltaCandle.closePrice}, ${deltaCandle.periodType}, 수익률(현재 종가 / 직전 종가) : ${deltaCandle.getYield()}"
                 )
 
-                deltaCandle.openPrice * weight
+                val score = deltaCandle.closePrice * weight
+                momentFormula.append("  ${deltaCandle.closePrice} * $weight = ${score}\n")
+                score
             }
-
-            val rate = currentCandle.beforeClosePrice / average
+            log.info("SUM(\n${momentFormula.toString()}) = $sumScore")
+            val rate = currentCandle.closePrice / sumScore
             // 수익률 = 현재 날짜 시가 / 모멘텀평균 가격
-            log.info("\t수익률: ${current}: ${stockEntry.key} = ${currentCandle.openPrice}/$average = $rate")
+            log.info("모멘텀 스코어: ${current}: ${stockEntry.key} = ${currentCandle.closePrice} / $sumScore = $rate")
 
             stockEntry.key to rate
         }

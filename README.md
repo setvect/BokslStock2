@@ -61,5 +61,14 @@ TODO
 - 포트폴리오 비주얼라이저와 차이점
   - 복슬스톡2: 현재 월 시가 기준 매매
   - 포트폴리오 비주얼라이저: 직전 월 종가 기준 매매 
+- 모멘텀 계산 예시
+  - 조건
+    - 모멘텀 가중치: 1개월 전: 33%, 3개월 전: 33%, 6개월 전: 34%
+    - 현재 날짜: 2022년 5월 1일
+    - 2022년 04월 종가: 105
+    - 2022년 03월 종가: 110
+    - 2022년 01월 종가: 100
+    - 2021년 10월 종가: 95
+  - 모멘텀 스코어 = 105 / (110 * 0.33 + 100 * 0.33 + 95 * 0.34) = 1.033464567
 - [포트폴리오 비주얼라이저](https://www.portfoliovisualizer.com/)
 - [예시](https://www.portfoliovisualizer.com/test-market-timing-model?s=y&coreSatellite=false&timingModel=6&timePeriod=4&startYear=2018&firstMonth=1&endYear=2019&lastMonth=12&calendarAligned=true&includeYTD=false&initialAmount=10000&periodicAdjustment=0&adjustmentAmount=0&inflationAdjusted=true&adjustmentPercentage=0.0&adjustmentFrequency=4&symbols=SPY&singleAbsoluteMomentum=false&volatilityTarget=9.0&downsideVolatility=false&outOfMarketStartMonth=5&outOfMarketEndMonth=10&outOfMarketAssetType=2&outOfMarketAsset=TLT&movingAverageSignal=1&movingAverageType=1&multipleTimingPeriods=true&periodWeighting=2&windowSize=1&windowSizeInDays=105&movingAverageType2=1&windowSize2=10&windowSizeInDays2=105&excludePreviousMonth=false&normalizeReturns=false&volatilityWindowSize=0&volatilityWindowSizeInDays=0&assetsToHold=1&allocationWeights=1&riskControlType=0&riskWindowSize=10&riskWindowSizeInDays=0&stopLossMode=0&stopLossThreshold=2.0&stopLossAssetType=1&rebalancePeriod=1&separateSignalAsset=false&tradeExecution=0&leverageType=0&leverageRatio=0.0&debtAmount=0&debtInterest=0.0&maintenanceMargin=25.0&leveragedBenchmark=false&comparedAllocation=0&benchmark=VFINX&timingPeriods%5B0%5D=1&timingUnits%5B0%5D=2&timingWeights%5B0%5D=100&timingUnits%5B1%5D=2&timingUnits%5B2%5D=2&timingUnits%5B3%5D=2&timingWeights%5B3%5D=0&timingUnits%5B4%5D=2&timingWeights%5B4%5D=0&volatilityPeriodUnit=2&volatilityPeriodWeight=0)

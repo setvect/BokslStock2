@@ -27,7 +27,7 @@ data class CandleDto(
 
     /**
      *
-     * @return 시가대비 종가 수익률, 현재 종가 / 직전 종가
+     * @return 수익률(현재 종가 / 직전 종가)
      */
     fun getYield(): Double {
         return closePrice / beforeClosePrice
