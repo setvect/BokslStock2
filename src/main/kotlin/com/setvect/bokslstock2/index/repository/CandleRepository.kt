@@ -38,6 +38,20 @@ interface CandleRepository : JpaRepository<CandleEntity, Long> {
 
 
     /**
+     * [base] 기준으로 이전 캔들 중 가장 마지막 캔들
+     */
+    @Query(
+        "select c from CandleEntity c " +
+                " where c.stock.code = :stockCode and c.candleDateTime <= :base" +
+                " order by c.candleDateTime desc"
+    )
+    fun findByBeforeLastCandle(
+        @Param("stockCode") stockCode: String,
+        @Param("base") base: LocalDateTime,
+        page: Pageable,
+    ): List<CandleEntity>
+
+    /**
      * [stockList] 종목에서 [start] [end] 범위 안에 시세가 포함된 범위를 반환
      */
     @Query(

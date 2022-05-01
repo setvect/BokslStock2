@@ -11,6 +11,7 @@ import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.analysis.dm.model.DmBacktestCondition
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.entity.StockEntity
+import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
@@ -27,6 +28,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 
 /**
@@ -37,6 +39,7 @@ class DmAnalysisService(
     private val stockRepository: StockRepository,
     private val movingAverageService: MovingAverageService,
     private val backtestTradeService: BacktestTradeService,
+    private val candleRepository: CandleRepository,
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -141,6 +144,11 @@ class DmAnalysisService(
                 .filter { it.value >= 1 }
                 .sortedByDescending { it.value }
 
+            if (!isExistStockIndex(stockPriceIndex, momentumScore.date)) {
+                log.info("${momentumScore.date} 가격 정보 없음")
+                break;
+            }
+
             // 듀얼 모멘텀 매수 대상 종목이 없으면, hold 종목 매수 또는 현금 보유
             if (momentTargetRate.isEmpty()) {
                 val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stock.code != condition.holdCode
@@ -190,12 +198,39 @@ class DmAnalysisService(
         // 마지막 보유 종목 매도
         if (condition.endSell && beforeBuyTrade != null) {
             var date = momentumScoreList.last().date.plusMonths(condition.periodType.getDeviceMonth().toLong())
-            val sellStock = stockPriceIndex[beforeBuyTrade.stock.code]!![date]!!
-            val sellTrade = makeSellTrade(sellStock, beforeBuyTrade)
-            tradeList.add(sellTrade)
+            val sellStock = stockPriceIndex[beforeBuyTrade.stock.code]!![date]
+            if (sellStock != null) {
+                val sellTrade = makeSellTrade(sellStock, beforeBuyTrade)
+                tradeList.add(sellTrade)
+            } else {
+                // 마지막 시세로 매도
+                val candleEntityList = candleRepository.findByBeforeLastCandle(beforeBuyTrade.stock.code, date, PageRequest.of(0, 1))
+                val candleEntity = candleEntityList[0]
+                val candleDto = CandleDto(
+                    candleDateTimeStart = candleEntity.candleDateTime,
+                    candleDateTimeEnd = candleEntity.candleDateTime,
+                    beforeCandleDateTimeEnd = candleEntity.candleDateTime,
+                    beforeClosePrice = candleEntity.closePrice,
+                    openPrice = candleEntity.openPrice,
+                    highPrice = candleEntity.highPrice,
+                    lowPrice = candleEntity.lowPrice,
+                    closePrice = candleEntity.closePrice,
+                    periodType = candleEntity.periodType
+                )
+                val sellTrade = makeSellTrade(candleDto, beforeBuyTrade)
+                tradeList.add(sellTrade)
+            }
         }
 
         return DualMomentumResult(tradeList, momentumScoreList)
+    }
+
+
+    /**
+     * @return 해당 날짜에 모든 종목에 대한 가격이 존재하면 true
+     */
+    private fun isExistStockIndex(stockPriceIndex: Map<String, Map<LocalDateTime, CandleDto>>, date: LocalDateTime): Boolean {
+        return stockPriceIndex.entries.all { it.value[date] != null }
     }
 
     /**
@@ -208,7 +243,7 @@ class DmAnalysisService(
         var current =
             DateUtil.fitMonth(condition.tradeCondition.range.from.withDayOfMonth(1), condition.periodType.getDeviceMonth())
         val momentumScoreList = mutableListOf<MomentumScore>()
-        while (current.isBefore(condition.tradeCondition.range.to)) {
+        while (current.isBefore(condition.tradeCondition.range.to) || current.isEqual(condition.tradeCondition.range.to)) {
             // 현재 월의 이전 종가를 기준으로 계산해야 되기 때문에 직전월에 모멘텀 지수를 계산함
             val baseDate = current.minusMonths(1)
             val stockRate = calculateRate(stockPriceIndex, baseDate, condition)
@@ -289,7 +324,8 @@ class DmAnalysisService(
             log.info("SUM(\n${momentFormula.toString()}) = $sumScore")
             val rate = currentCandle.closePrice / sumScore
             // 수익률 = 현재 날짜 시가 / 모멘텀평균 가격
-            log.info("모멘텀 스코어: ${current}: ${stockEntry.key} = ${currentCandle.closePrice} / $sumScore = $rate")
+            log.info("모멘텀 스코어: ${DateUtil.format(current, "yyyy-MM")}: ${stockEntry.key} = ${currentCandle.closePrice} / $sumScore = $rate")
+            log.info("--------------")
 
             stockEntry.key to rate
         }
@@ -359,7 +395,7 @@ class DmAnalysisService(
             sheet = createReportSummary(dmBacktestCondition, analysisResult, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "5. 매매 요약결과 및 조건")
 
-            sheet = createDateOfRate(dmBacktestCondition, momentumScoreList, workbook)
+            sheet = createMomentumScore(dmBacktestCondition, momentumScoreList, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "6. 모멘텀 지수")
 
             FileOutputStream(reportFile).use { ous ->
@@ -390,7 +426,7 @@ class DmAnalysisService(
      * 기간별 듀얼모멘텀 지수 엑셀 파일 만듦
      * [dateOfStockRate]: <날짜, <종목코드, 지수>>
      */
-    private fun createDateOfRate(
+    private fun createMomentumScore(
         dmBacktestCondition: DmBacktestCondition,
         dateOfStockRate: List<MomentumScore>,
         workbook: XSSFWorkbook,
@@ -402,7 +438,7 @@ class DmAnalysisService(
         ReportMakerHelperService.applyHeader(sheet, headerColumns)
         var rowIdx = 1
 
-        val dateStyle = ReportMakerHelperService.ExcelStyle.createDate(workbook)
+        val dateStyle = ReportMakerHelperService.ExcelStyle.createYearMonth(workbook)
         val commaDecimalStyle = ReportMakerHelperService.ExcelStyle.createCommaDecimal(workbook)
         dateOfStockRate.forEach { momentumScore ->
             val row = sheet.createRow(rowIdx++)

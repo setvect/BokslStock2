@@ -41,7 +41,7 @@ class BacktestTradeService(
 
         val tradeAllList = filterPreTrade(preTrades, condition)
 
-        if (tradeAllList.size < 2) {
+        if (tradeAllList.isEmpty()) {
             throw RuntimeException("매수/매도 기록이 없습니다.")
         }
         var cash = condition.cash
