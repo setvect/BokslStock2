@@ -11,6 +11,7 @@ import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.analysis.dm.model.DmBacktestCondition
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.entity.StockEntity
+import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService
@@ -20,6 +21,7 @@ import com.setvect.bokslstock2.util.DateUtil
 import java.io.File
 import java.io.FileOutputStream
 import java.sql.Timestamp
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import org.apache.poi.ss.usermodel.FillPatternType
@@ -47,7 +49,7 @@ class DmAnalysisService(
      * 날짜별 모멘터 스코어
      */
     data class MomentumScore(
-        val date: LocalDateTime,
+        val date: LocalDate,
         /**
          * <종목코드, 모멘텀스코어>
          */
@@ -110,6 +112,39 @@ class DmAnalysisService(
         }
         println("결과 파일:" + reportFile.name)
         return reportFile
+    }
+
+    /**
+     * @return [date]에 대한 모멘텀 값
+     */
+    fun getMomentumScore(date: LocalDate, stockCodes: List<String>, holdCode: String, timeWeight: Map<Int, Double>): MomentumScore {
+        // TODO 모멘텀 스코어 계산을 위한 로직으로 변경. 현재는 필요 없는 연산이 많음
+        val from = date.atTime(0, 0)
+        val to = date.atTime(0, 0)
+        val realRange = DateRange(from, to)
+
+        val basic = TradeCondition(
+            range = realRange,
+            investRatio = 0.999,
+            cash = 10_000_000.0,
+            feeBuy = 0.001,
+            feeSell = 0.001,
+            comment = "",
+            benchmark = listOf()
+        )
+
+        val condition = DmBacktestCondition(
+            tradeCondition = basic,
+            stockCodes = stockCodes,
+            holdCode = holdCode,
+            periodType = PeriodType.PERIOD_MONTH,
+            timeWeight = timeWeight,
+            endSell = true
+        )
+        val stockCodes = condition.listStock()
+        val stockPriceIndex = getStockPriceIndex(stockCodes, condition)
+        val momentumScoreList = calcMomentumScores(condition, stockPriceIndex)
+        return momentumScoreList.first { it.date == date };
     }
 
 
@@ -204,7 +239,8 @@ class DmAnalysisService(
                 tradeList.add(sellTrade)
             } else {
                 // 마지막 시세로 매도
-                val candleEntityList = candleRepository.findByBeforeLastCandle(beforeBuyTrade.stock.code, date, PageRequest.of(0, 1))
+                val candleEntityList =
+                    candleRepository.findByBeforeLastCandle(beforeBuyTrade.stock.code, date.atTime(0, 0), PageRequest.of(0, 1))
                 val candleEntity = candleEntityList[0]
                 val candleDto = CandleDto(
                     candleDateTimeStart = candleEntity.candleDateTime,
@@ -229,7 +265,7 @@ class DmAnalysisService(
     /**
      * @return 해당 날짜에 모든 종목에 대한 가격이 존재하면 true
      */
-    private fun isExistStockIndex(stockPriceIndex: Map<String, Map<LocalDateTime, CandleDto>>, date: LocalDateTime): Boolean {
+    private fun isExistStockIndex(stockPriceIndex: Map<String, Map<LocalDate, CandleDto>>, date: LocalDate): Boolean {
         return stockPriceIndex.entries.all { it.value[date] != null }
     }
 
@@ -238,12 +274,12 @@ class DmAnalysisService(
      */
     private fun calcMomentumScores(
         condition: DmBacktestCondition,
-        stockPriceIndex: Map<String, Map<LocalDateTime, CandleDto>>
+        stockPriceIndex: Map<String, Map<LocalDate, CandleDto>>
     ): List<MomentumScore> {
         var current =
             DateUtil.fitMonth(condition.tradeCondition.range.from.withDayOfMonth(1), condition.periodType.getDeviceMonth())
         val momentumScoreList = mutableListOf<MomentumScore>()
-        while (current.isBefore(condition.tradeCondition.range.to) || current.isEqual(condition.tradeCondition.range.to)) {
+        while (current.isBefore(condition.tradeCondition.range.to.toLocalDate()) || current.isEqual(condition.tradeCondition.range.to.toLocalDate())) {
             // 현재 월의 이전 종가를 기준으로 계산해야 되기 때문에 직전월에 모멘텀 지수를 계산함
             val baseDate = current.minusMonths(1)
             val stockRate = calculateRate(stockPriceIndex, baseDate, condition)
@@ -292,8 +328,8 @@ class DmAnalysisService(
      * @return <종목코드, 현재가격/모멘텀평균 가격>
      */
     private fun calculateRate(
-        stockPriceIndex: Map<String, Map<LocalDateTime, CandleDto>>,
-        current: LocalDateTime,
+        stockPriceIndex: Map<String, Map<LocalDate, CandleDto>>,
+        current: LocalDate,
         condition: DmBacktestCondition,
     ): List<Pair<String, Double>> {
         val stockByRate = stockPriceIndex.entries.map { stockEntry ->
@@ -343,14 +379,14 @@ class DmAnalysisService(
     private fun getStockPriceIndex(
         stockCodes: List<String>,
         dmCondition: DmBacktestCondition
-    ): Map<String, Map<LocalDateTime, CandleDto>> {
+    ): Map<String, Map<LocalDate, CandleDto>> {
         val stockPriceIndex = stockCodes.associateWith { code ->
             movingAverageService.getMovingAverage(
                 code,
                 dmCondition.periodType,
                 Collections.emptyList()
             )
-                .associateBy { it.candleDateTimeStart.withDayOfMonth(1) }
+                .associateBy { it.candleDateTimeStart.toLocalDate().withDayOfMonth(1) }
         }
         return stockPriceIndex
     }

@@ -56,7 +56,7 @@ object DateUtil {
      * @param localDateTime 날짜시간
      * @return yyyy-MM-dd 형태로 반환
      */
-    fun format(localDateTime: LocalDateTime, pattern: String? = yyyy_MM_dd): String {
+    fun format(localDateTime: LocalDateTime, pattern: String = yyyy_MM_dd): String {
         val formatter = DateTimeFormatter.ofPattern(pattern)
         return localDateTime.format(formatter)
     }
@@ -65,7 +65,12 @@ object DateUtil {
         return format(localDateTime, yyyy_MM_dd_HH_mm_ss)
     }
 
-    fun format(localTime: LocalTime, pattern: String?): String {
+    fun format(localTime: LocalDate, pattern: String): String {
+        val formatter = DateTimeFormatter.ofPattern(pattern)
+        return localTime.format(formatter)
+    }
+
+    fun format(localTime: LocalTime, pattern: String): String {
         val formatter = DateTimeFormatter.ofPattern(pattern)
         return localTime.format(formatter)
     }
@@ -84,11 +89,15 @@ object DateUtil {
      *
      * @return 입력 기간을 [deviceMonth]로 나눠 제일 작은 날짜로 반환
      */
-    fun fitMonth(date: LocalDateTime, deviceMonth: Int): LocalDateTime {
+    fun fitMonth(date: LocalDate, deviceMonth: Int): LocalDate {
         if (deviceMonth < 1 || deviceMonth > 12) {
             throw RuntimeException("입력값은 1~12 사이 입니다.")
         }
         return date.withMonth((date.monthValue - 1) / deviceMonth * deviceMonth + 1)
+    }
+
+    fun fitMonth(date: LocalDateTime, deviceMonth: Int): LocalDate {
+        return fitMonth(date.toLocalDate(), deviceMonth)
     }
 
 }

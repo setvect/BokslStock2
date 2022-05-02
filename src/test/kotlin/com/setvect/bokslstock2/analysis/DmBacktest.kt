@@ -6,6 +6,7 @@ import com.setvect.bokslstock2.analysis.dm.model.DmBacktestCondition
 import com.setvect.bokslstock2.analysis.dm.service.DmAnalysisService
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.util.DateRange
+import java.time.LocalDate
 import java.time.LocalDateTime
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
@@ -24,8 +25,9 @@ class DmBacktest {
 
     @Test
     fun 일회성_백테스팅_리포트_만듦() {
+        val from = LocalDateTime.of(2008, 7, 1, 0, 0)
 //        val from = LocalDateTime.of(2012, 1, 1, 0, 0)
-        val from = LocalDateTime.of(2022, 4, 1, 0, 0)
+//        val from = LocalDateTime.of(2022, 4, 1, 0, 0)
         val to = LocalDateTime.of(2022, 5, 1, 0, 0)
         val realRange = DateRange(from, to)
 
@@ -130,5 +132,18 @@ class DmBacktest {
 
 
         log.info("끝.")
+    }
+
+    @Test
+    fun momentumScore() {
+        val date = LocalDate.of(2022, 5, 1)
+        val momentumScore = dmAnalysisService.getMomentumScore(
+            date, listOf(StockCode.OS_CODE_SPY, StockCode.OS_CODE_SCZ), StockCode.OS_CODE_TLT, hashMapOf(
+                1 to 0.33,
+                3 to 0.33,
+                6 to 0.34
+            )
+        )
+        println(momentumScore)
     }
 }
