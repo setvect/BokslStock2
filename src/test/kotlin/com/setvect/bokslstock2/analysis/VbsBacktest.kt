@@ -199,7 +199,7 @@ class VbsBacktest {
     @Transactional
     fun 일회성_백테스팅_리포트_만듦() {
         // 거래 조건
-        val range = DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.now())
+        val range = DateRange(LocalDateTime.of(2021, 9, 1, 0, 0), LocalDateTime.now())
         val vbsAnalysisCondition = listOf(
             VbsAnalysisCondition(
                 tradeConditionList = listOf(
@@ -209,7 +209,7 @@ class VbsBacktest {
                 basic = TradeCondition(
                     range = range,
                     investRatio = 0.99,
-                    cash = 10_000_000.0,
+                    cash = 20_000_000.0,
                     feeBuy = 0.0002,
                     feeSell = 0.0002,
                     comment = "",

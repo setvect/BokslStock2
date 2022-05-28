@@ -10,9 +10,15 @@ import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.util.DateRange
 import com.setvect.bokslstock2.util.DateUtil
+import java.io.File
+import java.net.URL
 import java.time.LocalDateTime
 import java.util.*
+import java.util.concurrent.TimeUnit
+import org.apache.commons.io.FileUtils
+import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.http.HttpEntity
@@ -35,23 +41,30 @@ class CrawlService(
         private val START_DATE = LocalDateTime.of(1991, 1, 1, 0, 0)
     }
 
+    @Autowired
+    private lateinit var csvStoreService: CsvStoreService
+
     private val log = LoggerFactory.getLogger(javaClass)
 
     /**
      * 등록된 모든 종목에 대한 시세 데이터를 삭제하고 다시 수집
      */
     @Transactional
-    fun crawlStock() {
+    fun crawlStockAll() {
         val stockEntities = stockRepository.findAll()
         stockEntities.forEach {
             val deleteCount = candleRepository.deleteByStock(it)
             log.info("시세 데이터 삭제: ${it.name}(${it.code}) - ${String.format("%,d", deleteCount)}건")
-            crawlStock(it.code)
+            if (NumberUtils.isDigits(it.code)) {
+                crawlStock(it.code)
+            } else {
+                crawlStockStooq(it.code)
+            }
         }
     }
 
     /**
-     * 기존 수집된 데이터를 모두 지우고 전체 기간 수집
+     * 전체 기간 수집
      */
     fun crawlStock(code: String) {
         val stockEntityOptional = stockRepository.findByCode(code)
@@ -66,7 +79,26 @@ class CrawlService(
     fun crawlStockIncremental() {
         val stockEntities = stockRepository.findAll()
         stockEntities.forEach {
-            crawlStockIncremental(it.code)
+            if (NumberUtils.isDigits(it.code)) {
+                crawlStockIncremental(it.code)
+            } else {
+                crawlStockStooq(it.code)
+            }
+        }
+    }
+
+    private fun crawlStockStooq(code: String) {
+        val parameter = code.lowercase()
+        val url = URL("https://stooq.com/q/d/l/?s=${parameter}.us&i=d")
+        url.openStream().use { outputStream ->
+            val csvFile = File("./data_source/", "${code}.csv")
+
+            log.info("$code downloading from $url")
+            FileUtils.copyInputStreamToFile(outputStream, csvFile)
+            log.info("$code complete")
+            csvStoreService.store(code, csvFile)
+            log.info("$code store complete")
+            TimeUnit.SECONDS.sleep(3)
         }
     }
 

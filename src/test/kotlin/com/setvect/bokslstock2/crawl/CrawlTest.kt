@@ -4,11 +4,6 @@ import com.setvect.bokslstock2.StockCode
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.index.service.CrawlService
-import com.setvect.bokslstock2.index.service.CsvStoreService
-import java.io.File
-import java.net.URL
-import java.util.concurrent.TimeUnit
-import org.apache.commons.io.FileUtils
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
@@ -27,9 +22,6 @@ class CrawlTest {
 
     @Autowired
     private lateinit var stockRepository: StockRepository
-
-    @Autowired
-    private lateinit var csvStoreService: CsvStoreService
 
     @Test
     fun addStock() {
@@ -57,7 +49,7 @@ class CrawlTest {
     @Test
     @Disabled
     fun crawBatch() {
-        crawlService.crawlStock()
+        crawlService.crawlStockAll()
         println("끝.")
     }
 
@@ -68,39 +60,5 @@ class CrawlTest {
     fun crawlIncremental() {
         crawlService.crawlStockIncremental()
         println("끝.")
-    }
-
-    // ---------
-    @Test
-    fun storeCsv() {
-        var csvStock = File("./data_source/spy_us_d.csv")
-        csvStoreService.store(StockCode.OS_CODE_SPY, csvStock)
-        csvStock = File("./data_source/vss_us_d.csv")
-        csvStoreService.store(StockCode.OS_CODE_VSS, csvStock)
-        csvStock = File("./data_source/tlt_us_d.csv")
-        csvStoreService.store(StockCode.OS_CODE_TLT, csvStock)
-    }
-
-    @Test
-    fun downloadStoreCsv() {
-        val downloadSource = mapOf(
-            StockCode.OS_CODE_SCZ to "scz.us",
-            StockCode.OS_CODE_SPY to "spy.us",
-            StockCode.OS_CODE_TLT to "tlt.us",
-        )
-        downloadSource.entries.forEach { entry ->
-            val url = URL("https://stooq.com/q/d/l/?s=${entry.value}&i=d")
-            url.openStream().use { outputStream ->
-                val csvFile = File("./data_source/", "${entry.value}.csv")
-
-                log.info("${entry.value} to ${entry.key} downloading")
-                FileUtils.copyInputStreamToFile(outputStream, csvFile)
-                log.info("${entry.value} to ${entry.key} complete")
-                csvStoreService.store(entry.key, csvFile)
-                log.info("${entry.value} to ${entry.key} store complete")
-                TimeUnit.SECONDS.sleep(3)
-            }
-        }
-        log.info("end")
     }
 }
