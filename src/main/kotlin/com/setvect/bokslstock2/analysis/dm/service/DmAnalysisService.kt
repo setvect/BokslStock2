@@ -564,6 +564,7 @@ class DmAnalysisService(
         buyHoldSharpeRatio: Double
     ): String {
         val report = StringBuilder()
+        // TODO '합산 동일비중', '밴치마크' 이름 조건에 따라 변경
         report.append(String.format("합산 동일비중 수익\t %,.2f%%", buyHoldTotalYield.yield * 100))
             .append("\n")
         report.append(String.format("합산 동일비중 MDD\t %,.2f%%", buyHoldTotalYield.mdd * 100)).append("\n")

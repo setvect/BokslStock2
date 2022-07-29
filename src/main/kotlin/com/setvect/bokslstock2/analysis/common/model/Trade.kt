@@ -1,7 +1,7 @@
 package com.setvect.bokslstock2.analysis.common.model
 
 /**
- * 단위 거래 건별 내역
+ * 거래 건별 내역
  */
 data class Trade(
     val preTrade: PreTrade,

@@ -27,6 +27,7 @@ TODO
 - 미국 주식 시세 크롤링
 - https://stooq.com/q/d/?s=spy.us
 - `dividends` 항목 체크하지 않음 
+- 메인 소스: [CrawlService.kt](src/main/kotlin/com/setvect/bokslstock2/index/service/CrawlService.kt)
 
 ## 백테스트 전략
 
