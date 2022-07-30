@@ -14,7 +14,7 @@ import org.springframework.test.context.ActiveProfiles
 
 @SpringBootTest
 @ActiveProfiles("local")
-class CrawlTest {
+class CrawlStockTest {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
     @Autowired

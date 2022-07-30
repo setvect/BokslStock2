@@ -12,7 +12,8 @@ import org.springframework.boot.context.properties.ConstructorBinding
 data class CrawlResourceProperties(
     val url: UrlCollection,
     val config: Config,
-    val userAgent: String
+    val userAgent: String,
+    val savePath: String
 ) {
     data class UrlCollection(
         val stockList: String,
