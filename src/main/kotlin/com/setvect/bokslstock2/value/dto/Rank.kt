@@ -1,7 +1,11 @@
 package com.setvect.bokslstock2.value.dto
 
 data class Rank(
-    val per: Int,
-    val pbr: Int,
-    val dvr: Int,
-)
+    var per: Int = 0,
+    var pbr: Int = 0,
+    var dvr: Int = 0,
+) {
+    fun total(): Int {
+        return per + pbr + dvr
+    }
+}

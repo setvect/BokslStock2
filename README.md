@@ -93,3 +93,21 @@ TODO
 | tradingview.com | X             | '조정' 체크 안함            | 449.91          |
 | tradingview.com | O             | tradingview.com '조정' 체크 | 446.59          |
 
+
+## 전략
+### 가치평가 전략
+- 메인 소스: [ValueAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/value/service/ValueAnalysisService.kt)
+- 매수조건
+  - 필터
+    - 시총 순위 70% ~ 90% 사이 기업
+    - 기타금융, 생명보험, 손해보험, 은행, 증권, 창업투자
+  - 순위 매김
+    - 1/PER
+    - 1/PBR
+    - 배당수익률
+  - 각각의 등수를 더해 오름차순 정렬 
+  - 후처리(수동)
+    - 중국기업 제외 
+  - 상위 20개 기업 매수
+- 매도 조건
+  - 1년에 한 번 또는 두 번 리벨런싱

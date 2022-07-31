@@ -2,8 +2,8 @@ package com.setvect.bokslstock2.value.service
 
 import com.google.gson.GsonBuilder
 import com.setvect.bokslstock2.config.CrawlResourceProperties
-import com.setvect.bokslstock2.value.dto.CompanyDetailDto
-import com.setvect.bokslstock2.value.dto.CompanySummaryDto
+import com.setvect.bokslstock2.value.dto.CompanyDetail
+import com.setvect.bokslstock2.value.dto.CompanySummary
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
 import org.jsoup.Jsoup
@@ -11,7 +11,6 @@ import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.io.File
 import java.util.concurrent.TimeUnit
 import java.util.stream.IntStream
 import kotlin.streams.toList
@@ -20,18 +19,19 @@ import kotlin.streams.toList
 
 @Service
 class CrawlerCompanyValueService(
-    val crawlResourceProperties: CrawlResourceProperties
+    val crawlResourceProperties: CrawlResourceProperties,
+    val valueCommonService: ValueCommonService
 ) {
     private val regexCompanyLink = Regex("code=(\\w*).*>(.*)<")
     private val log = LoggerFactory.getLogger(javaClass)
     private val gson = GsonBuilder().setPrettyPrinting().create()
 
     fun crawlDetailList() {
-        val listFile = getSummaryListFile()
+        val listFile = valueCommonService.getSummaryListFile()
         val listJson = FileUtils.readFileToString(listFile, "utf-8")
-        val companyList = gson.fromJson(listJson, Array<CompanySummaryDto>::class.java).asList()
+        val companyList = gson.fromJson(listJson, Array<CompanySummary>::class.java).asList()
 
-        val companyDetailList = mutableListOf<CompanyDetailDto>()
+        val companyDetailList = mutableListOf<CompanyDetail>()
         var count = 0
         companyList.forEach { company ->
             val url = crawlResourceProperties.url.info.replace("{code}", company.code)
@@ -51,18 +51,22 @@ class CrawlerCompanyValueService(
                 saveDetailList(companyDetailList)
             }
 
-            val wait = 1500 + (Math.random() * 1000).toLong()
-            TimeUnit.MILLISECONDS.sleep(wait)
+            sleep(1500, 1000)
         }
         saveDetailList(companyDetailList)
         log.info("수집 종료")
     }
 
+    private fun sleep(baseSleep: Int, randomSleep: Int) {
+        val wait = baseSleep + (Math.random() * randomSleep).toLong()
+        TimeUnit.MILLISECONDS.sleep(wait)
+    }
+
     private fun parsingCompanyDetail(
         infoBox: Elements,
         document: Document,
-        company: CompanySummaryDto
-    ): CompanyDetailDto {
+        company: CompanySummary
+    ): CompanyDetail {
         val currentIndicator = extractCurrentIndicator(infoBox)
         val industry = document.select(".sub_tit7 em a").text()
         val valueHistory = document.select(".tb_type1_ifrs")
@@ -71,7 +75,7 @@ class CrawlerCompanyValueService(
             if (StringUtils.isEmpty(date)) {
                 return@mapToObj null
             }
-            val historyData = CompanyDetailDto.HistoryData(
+            val historyData = CompanyDetail.HistoryData(
                 date = date,
                 sales = elementToIntOrNull(
                     valueHistory.select("tbody tr:eq(0)").select("td:eq(${colIdx + 1})")
@@ -105,9 +109,9 @@ class CrawlerCompanyValueService(
                 )
             )
             historyData
-        }.filter { it != null }.toList() as List<CompanyDetailDto.HistoryData>
-        return CompanyDetailDto(
-            companySummaryDto = company,
+        }.filter { it != null }.toList() as List<CompanyDetail.HistoryData>
+        return CompanyDetail(
+            summary = company,
             normalStock = true,
             industry = industry,
             currentIndicator = currentIndicator,
@@ -119,10 +123,10 @@ class CrawlerCompanyValueService(
     /**
      * 현재 지표
      */
-    private fun extractCurrentIndicator(infoBox: Elements): CompanyDetailDto.CurrentIndicator {
+    private fun extractCurrentIndicator(infoBox: Elements): CompanyDetail.CurrentIndicator {
         val select = infoBox.select("#tab_con1 > .first tbody tr")
         val shareText = select[2].select("td")[0].text()
-        return CompanyDetailDto.CurrentIndicator(
+        return CompanyDetail.CurrentIndicator(
             shareNumber = shareText.replace(",", "").toLong(),
             per = elementToDoubleOrNull(infoBox.select("#_per")),
             eps = elementToDoubleOrNull(infoBox.select("#_eps")),
@@ -136,16 +140,8 @@ class CrawlerCompanyValueService(
         saveSummaryList(crawCompanyList)
     }
 
-    private fun getDetailListFile(): File {
-        return File(crawlResourceProperties.savePath, ValueConstant.LIST_DETAIL_JSON)
-    }
-
-    private fun getSummaryListFile(): File {
-        return File(crawlResourceProperties.savePath, ValueConstant.LIST_SUMMARY_JSON)
-    }
-
-    private fun crawlList(): List<CompanySummaryDto> {
-        val companyList = mutableListOf<CompanySummaryDto>()
+    private fun crawlList(): List<CompanySummary> {
+        val companyList = mutableListOf<CompanySummary>()
 
         KoreaMarket.values().forEach { stockType ->
             var page = 1
@@ -153,8 +149,7 @@ class CrawlerCompanyValueService(
                 val url = crawlResourceProperties.url.list
                     .replace("{marketSeq}", stockType.code.toString())
                     .replace("{page}", page.toString())
-
-
+                log.info("페이지: $url")
                 val document = Jsoup.connect(url).get()
 
                 val elements = document.select("table.type_2 tbody tr[onmouseover]")
@@ -167,7 +162,7 @@ class CrawlerCompanyValueService(
                     val matchGroup = matchResult!!.groupValues
 
                     companyList.add(
-                        CompanySummaryDto(
+                        CompanySummary(
                             code = matchGroup[1],
                             name = matchGroup[2],
                             market = stockType.name,
@@ -177,23 +172,24 @@ class CrawlerCompanyValueService(
                     )
                 }
                 page++
+                sleep(500, 200)
             }
         }
         return companyList.toList()
     }
 
-    private fun saveDetailList(detailList: List<CompanyDetailDto>) {
+    private fun saveDetailList(detailList: List<CompanyDetail>) {
         val companyListJson = gson.toJson(detailList)
 
-        val listFile = getDetailListFile()
+        val listFile = valueCommonService.getDetailListFile()
         FileUtils.writeStringToFile(listFile, companyListJson, "utf-8")
         log.info("상세 정보 저장. 건수: ${detailList.size}, 경로: ${listFile.absoluteFile}")
     }
 
-    private fun saveSummaryList(crawCompanyList: List<CompanySummaryDto>) {
+    private fun saveSummaryList(crawCompanyList: List<CompanySummary>) {
         val companyListJson = gson.toJson(crawCompanyList)
 
-        val listFile = getSummaryListFile()
+        val listFile = valueCommonService.getSummaryListFile()
         FileUtils.writeStringToFile(listFile, companyListJson, "utf-8")
         log.info("요약 정보 저장. 건수: ${crawCompanyList.size}, 경로: ${listFile.absoluteFile}")
     }

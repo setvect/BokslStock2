@@ -1,7 +1,7 @@
 package com.setvect.bokslstock2.value.dto
 
-data class CompanyDetailDto(
-    val companySummaryDto: CompanySummaryDto,
+data class CompanyDetail(
+    val summary: CompanySummary,
     // true: 일반 주식, false: etf, 리츠 등
     val normalStock: Boolean,
     // 업종
