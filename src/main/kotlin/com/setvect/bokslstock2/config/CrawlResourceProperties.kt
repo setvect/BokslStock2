@@ -18,7 +18,7 @@ data class CrawlResourceProperties(
     data class UrlCollection(
         val list: String,
         val info: String,
-        val marketPrice: String
+        val stockPrice: String
     )
 
     data class Config(

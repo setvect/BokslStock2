@@ -30,7 +30,7 @@ import kotlin.streams.toList
 
 
 @Service
-class CrawlService(
+class CrawlStockPriceService(
 
     private val crawlResourceProperties: CrawlResourceProperties,
     private val stockRepository: StockRepository,
@@ -50,15 +50,15 @@ class CrawlService(
      * 등록된 모든 종목에 대한 시세 데이터를 삭제하고 다시 수집
      */
     @Transactional
-    fun crawlStockAll() {
+    fun crawlStockPriceAll() {
         val stockEntities = stockRepository.findAll()
         stockEntities.forEach {
             val deleteCount = candleRepository.deleteByStock(it)
             log.info("시세 데이터 삭제: ${it.name}(${it.code}) - ${String.format("%,d", deleteCount)}건")
             if (NumberUtils.isDigits(it.code)) {
-                crawlStock(it.code)
+                crawlStockPrice(it.code)
             } else {
-                crawlStockStooq(it.code)
+                crawlStockPriceStooq(it.code)
             }
         }
     }
@@ -66,7 +66,7 @@ class CrawlService(
     /**
      * 전체 기간 수집
      */
-    fun crawlStock(code: String) {
+    fun crawlStockPrice(code: String) {
         val stockEntityOptional = stockRepository.findByCode(code)
         checkExistStock(stockEntityOptional)
         saveCandleEntityList(stockEntityOptional, DateRange(START_DATE, LocalDateTime.now()))
@@ -76,20 +76,21 @@ class CrawlService(
     /**
      * 등록된 모든 종목에 대한 증분 시세 수집
      */
-    fun crawlStockIncremental() {
+    fun crawlStockPriceIncremental() {
         val stockEntities = stockRepository.findAll()
         stockEntities.forEach {
             if (NumberUtils.isDigits(it.code)) {
-                crawlStockIncremental(it.code)
+                crawlStockPriceIncremental(it.code)
             } else {
-                crawlStockStooq(it.code)
+                crawlStockPriceStooq(it.code)
             }
         }
     }
 
-    private fun crawlStockStooq(code: String) {
+    private fun crawlStockPriceStooq(code: String) {
         val parameter = code.lowercase()
-        val url = URL("https://stooq.com/q/d/l/?s=${parameter}.us&i=d")
+        // o=0100000: 수정주가 의미(adjusted)
+        val url = URL("https://stooq.com/q/d/l/?s=${parameter}.us&i=d&o=0100000")
         url.openStream().use { outputStream ->
             val csvFile = File("./data_source/", "${code}.csv")
 
@@ -105,7 +106,7 @@ class CrawlService(
     /**
      *  마지막 수집일 부터 [end]까지 [code]종목을 시세 수집
      */
-    fun crawlStockIncremental(code: String, end: LocalDateTime = LocalDateTime.now()) {
+    fun crawlStockPriceIncremental(code: String, end: LocalDateTime = LocalDateTime.now()) {
         val stockEntityOptional = stockRepository.findByCode(code)
         checkExistStock(stockEntityOptional)
 
@@ -123,7 +124,7 @@ class CrawlService(
     }
 
     private fun saveCandleEntityList(stockEntityOptional: Optional<StockEntity>, range: DateRange) {
-        val stockList = crawlResourceProperties.url.marketPrice
+        val stockList = crawlResourceProperties.url.stockPrice
         val url = stockList.replace("{code}", stockEntityOptional.get().code)
             .replace("{start}", range.getFromDateTimeFormat("yyyyMMdd"))
             .replace("{end}", range.getToDateTimeFormat("yyyyMMdd"))

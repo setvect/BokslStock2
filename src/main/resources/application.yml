@@ -36,7 +36,7 @@ com:
         url:
           list: https://finance.naver.com/sise/sise_market_sum.nhn?sosok={marketSeq}&page={page}
           info: https://finance.naver.com/item/main.nhn?code={code}
-          marketPrice: https://api.finance.naver.com/siseJson.naver?symbol={code}&requestType=1&startTime={start}&endTime={end}&timeframe=day
+          stockPrice: https://api.finance.naver.com/siseJson.naver?symbol={code}&requestType=1&startTime={start}&endTime={end}&timeframe=day
         config:
           connectionTimeoutMs: 1000
           readTimeoutMs: 1000

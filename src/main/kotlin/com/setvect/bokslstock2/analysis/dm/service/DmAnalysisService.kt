@@ -144,7 +144,7 @@ class DmAnalysisService(
         val stockCodes = condition.listStock()
         val stockPriceIndex = getStockPriceIndex(stockCodes, condition)
         val momentumScoreList = calcMomentumScores(condition, stockPriceIndex)
-        return momentumScoreList.first { it.date == date };
+        return momentumScoreList.first { it.date == date }
     }
 
 
@@ -181,7 +181,7 @@ class DmAnalysisService(
 
             if (!isExistStockIndex(stockPriceIndex, momentumScore.date)) {
                 log.info("${momentumScore.date} 가격 정보 없음")
-                break;
+                break
             }
 
             // 듀얼 모멘텀 매수 대상 종목이 없으면, hold 종목 매수 또는 현금 보유
@@ -232,7 +232,7 @@ class DmAnalysisService(
 
         // 마지막 보유 종목 매도
         if (condition.endSell && beforeBuyTrade != null) {
-            var date = momentumScoreList.last().date.plusMonths(condition.periodType.getDeviceMonth().toLong())
+            val date = momentumScoreList.last().date.plusMonths(condition.periodType.getDeviceMonth().toLong())
             val sellStock = stockPriceIndex[beforeBuyTrade.stock.code]!![date]
             if (sellStock != null) {
                 val sellTrade = makeSellTrade(sellStock, beforeBuyTrade)
@@ -433,6 +433,8 @@ class DmAnalysisService(
 
             sheet = createMomentumScore(dmBacktestCondition, momentumScoreList, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "6. 모멘텀 지수")
+
+            sheet.createFreezePane(0, 1)
 
             FileOutputStream(reportFile).use { ous ->
                 workbook.write(ous)

@@ -17,11 +17,9 @@ import java.util.stream.IntStream
 import kotlin.streams.toList
 
 
-private const val LIST_SUMMARY_JSON = "summary-list.json"
-private const val LIST_DETAIL_JSON = "detail-list.json"
 
 @Service
-class CompanyCrawlValueService(
+class CrawlerCompanyValueService(
     val crawlResourceProperties: CrawlResourceProperties
 ) {
     private val regexCompanyLink = Regex("code=(\\w*).*>(.*)<")
@@ -139,11 +137,11 @@ class CompanyCrawlValueService(
     }
 
     private fun getDetailListFile(): File {
-        return File(crawlResourceProperties.savePath, LIST_DETAIL_JSON)
+        return File(crawlResourceProperties.savePath, ValueConstant.LIST_DETAIL_JSON)
     }
 
     private fun getSummaryListFile(): File {
-        return File(crawlResourceProperties.savePath, LIST_SUMMARY_JSON)
+        return File(crawlResourceProperties.savePath, ValueConstant.LIST_SUMMARY_JSON)
     }
 
     private fun crawlList(): List<CompanySummaryDto> {
