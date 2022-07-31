@@ -1,22 +1,10 @@
 package com.setvect.bokslstock2.analysis.common.service
 
 import com.setvect.bokslstock2.analysis.common.entity.ConditionEntity
-import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
-import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
-import com.setvect.bokslstock2.analysis.common.model.CompareTotalYield
-import com.setvect.bokslstock2.analysis.common.model.EvaluationRateItem
-import com.setvect.bokslstock2.analysis.common.model.TradeCondition
-import com.setvect.bokslstock2.analysis.common.model.YieldRateItem
+import com.setvect.bokslstock2.analysis.common.model.*
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
-import java.time.LocalDateTime
-import org.apache.poi.ss.usermodel.BorderStyle
-import org.apache.poi.ss.usermodel.CreationHelper
-import org.apache.poi.ss.usermodel.DataFormat
-import org.apache.poi.ss.usermodel.FillPatternType
-import org.apache.poi.ss.usermodel.HorizontalAlignment
-import org.apache.poi.ss.usermodel.IndexedColors
-import org.apache.poi.ss.usermodel.VerticalAlignment
+import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFCellStyle
 import org.apache.poi.xssf.usermodel.XSSFFont
 import org.apache.poi.xssf.usermodel.XSSFSheet
@@ -24,6 +12,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import kotlin.streams.toList
 
 /**
@@ -524,6 +513,14 @@ class ReportMakerHelperService(
             return cellStyle
         }
 
+        fun createHyperlink(workbook: XSSFWorkbook): XSSFCellStyle {
+            val cellStyle = workbook.createCellStyle()
+            val font = workbook.createFont()
+            font.underline = XSSFFont.U_SINGLE
+            font.color = IndexedColors.BLUE.index
+            cellStyle.setFont(font)
+            return cellStyle
+        }
         /**
          * 모든 셀 border 적용
          */

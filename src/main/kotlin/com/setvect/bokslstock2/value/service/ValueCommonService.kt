@@ -6,6 +6,7 @@ import java.io.File
 
 private const val LIST_SUMMARY_JSON = "summary-list.json"
 private const val LIST_DETAIL_JSON = "detail-list.json"
+private const val RESULT = "value-result.xlsx"
 
 @Service
 class ValueCommonService(
@@ -17,5 +18,13 @@ class ValueCommonService(
 
     fun getSummaryListFile(): File {
         return File(crawlResourceProperties.savePath, LIST_SUMMARY_JSON)
+    }
+
+    fun getResultFile(): File {
+        return File(crawlResourceProperties.savePath, RESULT)
+    }
+
+    fun getDetailUrl(code: String): String {
+        return crawlResourceProperties.url.info.replace("{code}", code)
     }
 }

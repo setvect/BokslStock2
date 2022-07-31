@@ -16,7 +16,6 @@ import java.util.stream.IntStream
 import kotlin.streams.toList
 
 
-
 @Service
 class CrawlerCompanyValueService(
     val crawlResourceProperties: CrawlResourceProperties,
@@ -34,7 +33,7 @@ class CrawlerCompanyValueService(
         val companyDetailList = mutableListOf<CompanyDetail>()
         var count = 0
         companyList.forEach { company ->
-            val url = crawlResourceProperties.url.info.replace("{code}", company.code)
+            val url = valueCommonService.getDetailUrl(company.code)
             log.info("${company.name} 조회, $url, [${count++}]")
 
             val document = Jsoup.connect(url).get()
@@ -56,6 +55,7 @@ class CrawlerCompanyValueService(
         saveDetailList(companyDetailList)
         log.info("수집 종료")
     }
+
 
     private fun sleep(baseSleep: Int, randomSleep: Int) {
         val wait = baseSleep + (Math.random() * randomSleep).toLong()
@@ -110,6 +110,7 @@ class CrawlerCompanyValueService(
             )
             historyData
         }.filter { it != null }.toList() as List<CompanyDetail.HistoryData>
+
         return CompanyDetail(
             summary = company,
             normalStock = true,
