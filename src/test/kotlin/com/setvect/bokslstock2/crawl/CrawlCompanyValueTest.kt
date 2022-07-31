@@ -1,6 +1,7 @@
 package com.setvect.bokslstock2.crawl
 
-import com.setvect.bokslstock2.value.service.CrawlCompanyValueService
+import com.setvect.bokslstock2.value.service.CompanyCrawlValueService
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -10,10 +11,15 @@ import org.springframework.test.context.ActiveProfiles
 @ActiveProfiles("local")
 class CrawlCompanyValueTest {
     @Autowired
-    private lateinit var crawlCompanyValueService: CrawlCompanyValueService
+    private lateinit var crawlCompanyValueService: CompanyCrawlValueService
 
     @Test
-    fun crawlTest(){
-        crawlCompanyValueService.craw()
+    @Disabled
+    fun crawlCompanyListTest(){
+        crawlCompanyValueService.crawlCompanyList()
+    }
+    @Test
+    fun crawlCompanyInfoTest(){
+        crawlCompanyValueService.crawlCompanyDetail()
     }
 }
