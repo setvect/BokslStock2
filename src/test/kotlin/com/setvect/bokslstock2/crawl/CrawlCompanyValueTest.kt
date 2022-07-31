@@ -16,10 +16,10 @@ class CrawlCompanyValueTest {
     @Test
     @Disabled
     fun crawlCompanyListTest(){
-        crawlCompanyValueService.crawlCompanyList()
+        crawlCompanyValueService.crawlSummaryList()
     }
     @Test
-    fun crawlCompanyInfoTest(){
-        crawlCompanyValueService.crawlCompanyDetail()
+    fun crawlDetailListTest(){
+        crawlCompanyValueService.crawlDetailList()
     }
 }

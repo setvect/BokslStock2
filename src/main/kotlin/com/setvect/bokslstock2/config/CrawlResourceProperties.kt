@@ -8,16 +8,16 @@ import org.springframework.boot.context.properties.ConstructorBinding
  */
 
 @ConstructorBinding
-@ConfigurationProperties(prefix = "com.setvect.bokslstock.crawl")
+@ConfigurationProperties(prefix = "com.setvect.bokslstock.company-crawl")
 data class CrawlResourceProperties(
     val url: UrlCollection,
     val config: Config,
     val userAgent: String,
-    val savePath: String
+    val savePath: String,
 ) {
     data class UrlCollection(
-        val stockList: String,
-        val companyInfo: String,
+        val list: String,
+        val info: String,
         val marketPrice: String
     )
 

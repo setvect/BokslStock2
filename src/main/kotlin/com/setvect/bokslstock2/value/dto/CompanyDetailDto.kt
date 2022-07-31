@@ -5,11 +5,10 @@ data class CompanyDetailDto(
     // true: 일반 주식, false: etf, 리츠 등
     val normalStock: Boolean,
     // 업종
-    val industry: Boolean,
+    val industry: String,
     // 투자지표
     val currentIndicator: CurrentIndicator,
     val historyData: List<HistoryData>,
-    val rank: Rank,
 ) {
     /**
      * 투자 지표
@@ -18,8 +17,8 @@ data class CompanyDetailDto(
         // 상장주식수
         val shareNumber: Long,
         val per: Double?,
-        val eps: Double,
-        val pbr: Double,
+        val eps: Double?,
+        val pbr: Double?,
         // 현금배당 수익률 (%단위)
         val dvr: Double? = null,
     )
@@ -45,9 +44,4 @@ data class CompanyDetailDto(
         val dvrPayout: Double?,
         )
 
-    data class Rank(
-        val per: Int,
-        val pbr: Int,
-        val dvr: Int,
-    )
 }
