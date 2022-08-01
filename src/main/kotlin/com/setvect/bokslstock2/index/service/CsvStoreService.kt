@@ -5,15 +5,15 @@ import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.util.DateUtil
-import java.io.File
-import java.io.FileReader
-import java.util.stream.Collectors
-import java.util.stream.StreamSupport
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVRecord
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.io.File
+import java.io.FileReader
+import java.util.stream.Collectors
+import java.util.stream.StreamSupport
 
 
 @Service
@@ -38,14 +38,18 @@ class CsvStoreService(
             val candleList = StreamSupport
                 .stream(records.spliterator(), false)
                 .map {
+                    val close = it.get("Close").toDouble()
+                    val adjClose = it.get("Adj Close").toDouble()
+                    // 수정주가 비율를 구해 Open, High, Low 역산
+                    val ratio = adjClose / close
                     CandleEntity(
                         stock = stock,
                         candleDateTime = DateUtil.getLocalDate(it.get("Date")).atTime(0, 0),
                         periodType = PeriodType.PERIOD_DAY,
-                        openPrice = it.get("Open").toDouble(),
-                        highPrice = it.get("High").toDouble(),
-                        lowPrice = it.get("Low").toDouble(),
-                        closePrice = it.get("Close").toDouble()
+                        openPrice = it.get("Open").toDouble() * ratio,
+                        highPrice = it.get("High").toDouble() * ratio,
+                        lowPrice = it.get("Low").toDouble() * ratio,
+                        closePrice = adjClose
                     )
                 }
                 .collect(Collectors.toList())

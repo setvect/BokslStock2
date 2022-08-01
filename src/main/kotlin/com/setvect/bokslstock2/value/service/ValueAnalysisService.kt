@@ -7,6 +7,7 @@ import com.setvect.bokslstock2.value.dto.Rank
 import org.apache.commons.io.FileUtils
 import org.apache.poi.common.usermodel.HyperlinkType
 import org.apache.poi.ss.usermodel.CreationHelper
+import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -44,6 +45,7 @@ class ValueAnalysisService(
             val defaultStyle = ReportMakerHelperService.ExcelStyle.createDefault(workbook)
             val commaStyle = ReportMakerHelperService.ExcelStyle.createComma(workbook)
             val decimalStyle = ReportMakerHelperService.ExcelStyle.createDecimal(workbook)
+            val percentStyle = ReportMakerHelperService.ExcelStyle.createPercent(workbook)
             val hyperlinkStyle = ReportMakerHelperService.ExcelStyle.createHyperlink(workbook)
 
             val createHelper: CreationHelper = workbook.creationHelper
@@ -65,11 +67,60 @@ class ValueAnalysisService(
                 createCell.setHyperlink(link)
                 createCell.setCellValue(valueCommonService.getDetailUrl(it.first.summary.code))
                 createCell.cellStyle = hyperlinkStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(it.first.summary.market)
+                createCell.cellStyle = defaultStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(it.first.summary.capitalization.toDouble())
+                createCell.cellStyle = commaStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(it.first.summary.currentPrice.toDouble())
+                createCell.cellStyle = commaStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(it.first.industry)
+                createCell.cellStyle = commaStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(it.first.currentIndicator.per!!)
+                createCell.cellStyle = decimalStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(it.first.currentIndicator.pbr!!)
+                createCell.cellStyle = decimalStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(it.first.currentIndicator.dvr!! / 100.0)
+                createCell.cellStyle = percentStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(it.second.per!!.toDouble())
+                createCell.cellStyle = commaStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(it.second.pbr!!.toDouble())
+                createCell.cellStyle = commaStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(it.second.dvr!!.toDouble())
+                createCell.cellStyle = commaStyle
+
+                createCell = row.createCell(cellIdx++)
+                createCell.setCellValue(it.second.total()!!.toDouble())
+                createCell.cellStyle = commaStyle
             }
             sheet.createFreezePane(0, 1)
             sheet.defaultColumnWidth = 14
             sheet.setColumnWidth(0, 6000)
             sheet.setColumnWidth(2, 12000)
+            sheet.setAutoFilter(CellRangeAddress(0, 0, 0, header.split(",").size - 1))
+
+            ReportMakerHelperService.ExcelStyle.applyAllBorder(sheet)
+            ReportMakerHelperService.ExcelStyle.applyDefaultFont(sheet)
+
             workbook.setSheetName(workbook.getSheetIndex(sheet), "매수 대상 순위")
 
             log.info("결과 저장: ${resultFile.absoluteFile}")

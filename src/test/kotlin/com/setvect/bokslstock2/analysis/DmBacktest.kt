@@ -25,7 +25,7 @@ class DmBacktest {
 
     @Test
     fun 일회성_백테스팅_리포트_만듦() {
-        val from = LocalDateTime.of(2022, 6, 1, 0, 0)
+        val from = LocalDateTime.of(2022, 7, 1, 0, 0)
 //        val from = LocalDateTime.of(2012, 1, 1, 0, 0)
 //        val from = LocalDateTime.of(2022, 4, 1, 0, 0)
         val to = LocalDateTime.of(2022, 8, 1, 0, 0)

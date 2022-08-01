@@ -2,8 +2,6 @@
 # 복슬스톡 TODO
 
 ## 진행예정
-- NEW-20220731: 외국 주가 수집 출처 변경
-  - stooq -> https://finance.yahoo.com/quote/SPY/history?p=SPY
 - NEW-20220729: 재무지표 수집
 - NEW-20220423: 샤프지수 계산 제대로 하기
 - NEW-20220403: 듀얼모멘텀 매매 알림(슬랙)
@@ -12,6 +10,8 @@
 - NEW-20220116: 재무 백테스트
 
 ## 완료
+- NEW-20220731(20220801): 외국 주가 수집 출처 변경
+  - stooq -> https://finance.yahoo.com/quote/SPY/history?p=SPY
 - PBM-20220501: 모멘텀 점수 계산 변경
 - NEW-20220417(20220423): 전략 기준 지수 추가(밴치마크)
 - NEW-20220403(20220409): stooq.com 주가 데이터 자동 수집

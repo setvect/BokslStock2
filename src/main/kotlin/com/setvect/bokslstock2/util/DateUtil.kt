@@ -2,10 +2,7 @@ package com.setvect.bokslstock2.util
 
 import java.text.DecimalFormat
 import java.text.NumberFormat
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
+import java.time.*
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -100,4 +97,11 @@ object DateUtil {
         return fitMonth(date.toLocalDate(), deviceMonth)
     }
 
+    fun getUnixTime(date: LocalDate): Long {
+        return date.atStartOfDay(ZoneId.systemDefault()).toInstant().epochSecond
+    }
+
+    fun getUnixTimeCurrent(): Long {
+        return LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().epochSecond
+    }
 }

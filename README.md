@@ -81,6 +81,7 @@ TODO
 - 서로 값이 조금씩 달라 뭐가 맞는지 모르겠다 ㅡㅡ;
   - https://stooq.com/q/d/?s=spy.us&c=0&i=m
   - 야후 파이낸스: https://finance.yahoo.com/quote/SPY/history?period1=1627731136&period2=1659267136&interval=1mo&filter=history&frequency=1mo&includeAdjustedClose=true
+    - 다운로드 예시: https://query1.finance.yahoo.com/v7/finance/download/SPY?period1=757382400&period2=1659267136
   - https://kr.tradingview.com/chart/Y75mi3ck/?symbol=SPY
 - 상황: 2022년 7월 31일 기준 SPY 2022년 1월 종가
 
@@ -101,6 +102,7 @@ TODO
   - 필터
     - 시총 순위 70% ~ 90% 사이 기업
     - 기타금융, 생명보험, 손해보험, 은행, 증권, 창업투자
+    - `홀딩스` 포함 기업제외 
   - 순위 매김
     - 1/PER
     - 1/PBR
@@ -108,6 +110,8 @@ TODO
   - 각각의 등수를 더해 오름차순 정렬 
   - 후처리(수동)
     - 중국기업 제외 
+    - 지주회사 제외 
   - 상위 20개 기업 매수
 - 매도 조건
   - 1년에 한 번 또는 두 번 리벨런싱
+

@@ -10,11 +10,6 @@ import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.util.DateRange
 import com.setvect.bokslstock2.util.DateUtil
-import java.io.File
-import java.net.URL
-import java.time.LocalDateTime
-import java.util.*
-import java.util.concurrent.TimeUnit
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
@@ -26,6 +21,12 @@ import org.springframework.http.HttpMethod.GET
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.RestTemplate
+import java.io.File
+import java.net.URL
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.streams.toList
 
 
@@ -58,7 +59,7 @@ class CrawlStockPriceService(
             if (NumberUtils.isDigits(it.code)) {
                 crawlStockPrice(it.code)
             } else {
-                crawlStockPriceStooq(it.code)
+                crawlStockPriceYahoo(it.code)
             }
         }
     }
@@ -82,15 +83,17 @@ class CrawlStockPriceService(
             if (NumberUtils.isDigits(it.code)) {
                 crawlStockPriceIncremental(it.code)
             } else {
-                crawlStockPriceStooq(it.code)
+                crawlStockPriceYahoo(it.code)
             }
         }
     }
 
-    private fun crawlStockPriceStooq(code: String) {
-        val parameter = code.lowercase()
-        // o=0100000: 수정주가 의미(adjusted)
-        val url = URL("https://stooq.com/q/d/l/?s=${parameter}.us&i=d&o=0100000")
+    private fun crawlStockPriceYahoo(code: String) {
+        val from = DateUtil.getUnixTime(LocalDate.of(1994, 1, 1))
+        val to = DateUtil.getUnixTimeCurrent()
+        val url = URL("https://query1.finance.yahoo.com/v7/finance/download/${code}?period1=${from}&period2=${to}")
+        log.info("call: $url")
+
         url.openStream().use { outputStream ->
             val csvFile = File("./data_source/", "${code}.csv")
 
@@ -131,7 +134,10 @@ class CrawlStockPriceService(
 
         log.info("crawl: $url")
 
-        val httpEntity = HttpEntity<Map<String, Any>>(Collections.emptyMap())
+        val parameter: MutableMap<String, Any> = HashMap()
+        parameter["User-Agent"] = crawlResourceProperties.userAgent
+        val httpEntity = HttpEntity<Map<String, Any>>(parameter)
+
         val result = crawlRestTemplate.exchange(url, GET, httpEntity, String::class.java)
         val body = result.body ?: throw RuntimeException("JSON 결과 없음")
 
