@@ -38,7 +38,7 @@ class StockEntity(
      */
     @Id
     @GeneratedValue(strategy = SEQUENCE)
-    @Column(name = "STOCK_ID", nullable = false)
+    @Column(name = "STOCK_SEQ", nullable = false)
     var stockSeq: Long? = null
 
     /**

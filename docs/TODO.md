@@ -8,6 +8,7 @@
 - NEW-20220116: 재무 백테스트
 
 ## 완료
+- NEW-20220806(20220807): 필드명 변경, CA_STOCK.STOCK_ID -> STOCK_SEQ
 - NEW-20220731(20220801): 외국 주가 수집 출처 변경
   - stooq -> https://finance.yahoo.com/quote/SPY/history?p=SPY
 - NEW-20220729(20220731): 재무지표 수집

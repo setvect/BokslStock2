@@ -34,18 +34,54 @@ object StockCode {
     )
 
     // 해외 주식
-    const val OS_CODE_TQQQ = "TQQQ"
-    const val OS_CODE_SPY = "SPY"
-    const val OS_CODE_VSS = "VSS"
-    const val OS_CODE_TLT = "TLT"
+    const val OS_CODE_QQQ = "QQQ"
     const val OS_CODE_QLD = "QLD"
+    const val OS_CODE_TQQQ = "TQQQ"
+
+    const val OS_CODE_SPY = "SPY"
+    const val OS_CODE_SSO = "SSO"
+    const val OS_CODE_SPXL = "SPXL"
+
+    // 단기채
+    const val OS_CODE_SHY = "SHY"
+
+    // 중기채
+    const val OS_CODE_IEF = "IEF"
+
+    // 장기채
+    const val OS_CODE_TLT = "TLT"
+    const val OS_CODE_UBT = "UBT"
+    const val OS_CODE_TMF = "TMF"
+
+    // 금
+    const val OS_CODE_GLD = "GLD"
+    const val OS_CODE_UGL = "UGL"
+
+    // 소형주
+    const val OS_CODE_VSS = "VSS"
+
+    // 소형주
     const val OS_CODE_SCZ = "SCZ"
+
+    // 대형 중형 가치주
+    const val OS_CODE_IWD = "IWD"
+
     val OVERSEAS_STOCK_CODE_MAP = mapOf(
+        OS_CODE_QQQ to "QQQ",
+        OS_CODE_QLD to "QLD",
         OS_CODE_TQQQ to "TQQQ",
         OS_CODE_SPY to "SPY",
-        OS_CODE_VSS to "VSS",
+        OS_CODE_SSO to "SSO",
+        OS_CODE_SPXL to "SPXL",
+        OS_CODE_SHY to "SHY",
+        OS_CODE_IEF to "IEF",
         OS_CODE_TLT to "TLT",
-        OS_CODE_QLD to "QLD",
+        OS_CODE_UBT to "UBT",
+        OS_CODE_TMF to "TMF",
+        OS_CODE_GLD to "GLD",
+        OS_CODE_UGL to "UGL",
+        OS_CODE_VSS to "VSS",
         OS_CODE_SCZ to "SCZ",
+        OS_CODE_IWD to "IWD",
     )
 }
