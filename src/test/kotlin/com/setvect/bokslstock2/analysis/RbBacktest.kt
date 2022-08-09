@@ -102,15 +102,16 @@ class RbBacktest {
         val realRange = DateRange(LocalDateTime.of(2016, 1, 1, 0, 0), LocalDateTime.now())
         val rbAnalysisCondition = RbAnalysisCondition(
             tradeConditionList = listOf(
-                makeCondition(StockCode.CODE_KODEX_2X_122630),
+                makeCondition(StockCode.OS_CODE_SPY),
             ),
             basic = TradeCondition(
                 range = realRange,
-                investRatio = 0.20,
+                investRatio = 1.0,
                 cash = 10_000_000.0,
                 feeBuy = 0.0002,
                 feeSell = 0.0002,
-                comment = ""
+                comment = "",
+                benchmark = listOf(StockCode.OS_CODE_SPY),
             )
         )
         val rbAnalysisConditionList = listOf(rbAnalysisCondition)

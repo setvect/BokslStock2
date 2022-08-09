@@ -1,11 +1,6 @@
 package com.setvect.bokslstock2.analysis.dm.service
 
-import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
-import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
-import com.setvect.bokslstock2.analysis.common.model.PreTrade
-import com.setvect.bokslstock2.analysis.common.model.Stock
-import com.setvect.bokslstock2.analysis.common.model.TradeCondition
-import com.setvect.bokslstock2.analysis.common.model.TradeType
+import com.setvect.bokslstock2.analysis.common.model.*
 import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.analysis.dm.model.DmBacktestCondition
@@ -14,16 +9,9 @@ import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
-import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import com.setvect.bokslstock2.util.DateUtil
-import java.io.File
-import java.io.FileOutputStream
-import java.sql.Timestamp
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.*
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.xssf.usermodel.XSSFSheet
@@ -32,6 +20,12 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
+import java.io.File
+import java.io.FileOutputStream
+import java.sql.Timestamp
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.*
 
 /**
  * 듀얼모멘텀 백테스트
@@ -39,7 +33,6 @@ import org.springframework.stereotype.Service
 @Service
 class DmAnalysisService(
     private val stockRepository: StockRepository,
-    private val movingAverageService: MovingAverageService,
     private val backtestTradeService: BacktestTradeService,
     private val candleRepository: CandleRepository,
 ) {
@@ -117,7 +110,12 @@ class DmAnalysisService(
     /**
      * @return [date]에 대한 모멘텀 값
      */
-    fun getMomentumScore(date: LocalDate, stockCodes: List<String>, holdCode: String, timeWeight: Map<Int, Double>): MomentumScore {
+    fun getMomentumScore(
+        date: LocalDate,
+        stockCodes: List<String>,
+        holdCode: String,
+        timeWeight: Map<Int, Double>
+    ): MomentumScore {
         // TODO 모멘텀 스코어 계산을 위한 로직으로 변경. 현재는 필요 없는 연산이 많음
         val from = date.atTime(0, 0)
         val to = date.atTime(0, 0)
@@ -142,7 +140,7 @@ class DmAnalysisService(
             endSell = true
         )
         val stockCodes = condition.listStock()
-        val stockPriceIndex = getStockPriceIndex(stockCodes, condition)
+        val stockPriceIndex = backtestTradeService.getStockPriceIndex(stockCodes, condition.periodType)
         val momentumScoreList = calcMomentumScores(condition, stockPriceIndex)
         return momentumScoreList.first { it.date == date }
     }
@@ -157,15 +155,24 @@ class DmAnalysisService(
         preTrades: List<PreTrade>
     ): TradeCondition {
         val temp = dmBacktestCondition.tradeCondition
-        val from = if (temp.range.from.isBefore(preTrades.first().tradeDate)) temp.range.from else preTrades.first().tradeDate
+        val from =
+            if (temp.range.from.isBefore(preTrades.first().tradeDate)) temp.range.from else preTrades.first().tradeDate
         val to = if (temp.range.to.isAfter(preTrades.last().tradeDate)) temp.range.to else preTrades.last().tradeDate
-        return TradeCondition(DateRange(from, to), temp.investRatio, temp.cash, temp.feeBuy, temp.feeSell, temp.comment, temp.benchmark)
+        return TradeCondition(
+            DateRange(from, to),
+            temp.investRatio,
+            temp.cash,
+            temp.feeBuy,
+            temp.feeSell,
+            temp.comment,
+            temp.benchmark
+        )
     }
 
     private fun processDualMomentum(condition: DmBacktestCondition): DualMomentumResult {
         val stockCodes = condition.listStock()
         // <종목코드, <날짜, 캔들>>
-        val stockPriceIndex = getStockPriceIndex(stockCodes, condition)
+        val stockPriceIndex = backtestTradeService.getStockPriceIndex(stockCodes, condition.periodType)
         val momentumScoreList = calcMomentumScores(condition, stockPriceIndex)
 
         // <종목코드, 종목정보>
@@ -204,7 +211,14 @@ class DmAnalysisService(
                     tradeList.add(buyTrade)
                     beforeBuyTrade = buyTrade
                 } else if (existHoldCode) {
-                    log.info("매수 유지: $momentumScore.date, ${getStockName(codeByStock, condition.holdCode!!)}(${condition.holdCode})")
+                    log.info(
+                        "매수 유지: $momentumScore.date, ${
+                            getStockName(
+                                codeByStock,
+                                condition.holdCode!!
+                            )
+                        }(${condition.holdCode})"
+                    )
                 }
             } else {
                 val buyStockRate = momentTargetRate[0]
@@ -240,7 +254,11 @@ class DmAnalysisService(
             } else {
                 // 마지막 시세로 매도
                 val candleEntityList =
-                    candleRepository.findByBeforeLastCandle(beforeBuyTrade.stock.code, date.atTime(0, 0), PageRequest.of(0, 1))
+                    candleRepository.findByBeforeLastCandle(
+                        beforeBuyTrade.stock.code,
+                        date.atTime(0, 0),
+                        PageRequest.of(0, 1)
+                    )
                 val candleEntity = candleEntityList[0]
                 val candleDto = CandleDto(
                     candleDateTimeStart = candleEntity.candleDateTime,
@@ -277,7 +295,10 @@ class DmAnalysisService(
         stockPriceIndex: Map<String, Map<LocalDate, CandleDto>>
     ): List<MomentumScore> {
         var current =
-            DateUtil.fitMonth(condition.tradeCondition.range.from.withDayOfMonth(1), condition.periodType.getDeviceMonth())
+            DateUtil.fitMonth(
+                condition.tradeCondition.range.from.withDayOfMonth(1),
+                condition.periodType.getDeviceMonth()
+            )
         val momentumScoreList = mutableListOf<MomentumScore>()
         while (current.isBefore(condition.tradeCondition.range.to.toLocalDate()) || current.isEqual(condition.tradeCondition.range.to.toLocalDate())) {
             // 현재 월의 이전 종가를 기준으로 계산해야 되기 때문에 직전월에 모멘텀 지수를 계산함
@@ -360,7 +381,14 @@ class DmAnalysisService(
             log.info("SUM(\n${momentFormula.toString()}) = $sumScore")
             val rate = currentCandle.closePrice / sumScore
             // 수익률 = 현재 날짜 시가 / 모멘텀평균 가격
-            log.info("모멘텀 스코어: ${DateUtil.format(current, "yyyy-MM")}: ${stockEntry.key} = ${currentCandle.closePrice} / $sumScore = $rate")
+            log.info(
+                "모멘텀 스코어: ${
+                    DateUtil.format(
+                        current,
+                        "yyyy-MM"
+                    )
+                }: ${stockEntry.key} = ${currentCandle.closePrice} / $sumScore = $rate"
+            )
             log.info("--------------")
 
             stockEntry.key to rate
@@ -373,23 +401,6 @@ class DmAnalysisService(
         return codeByStock[code]!!.name
     }
 
-    /**
-     * @return <종목코드, <날짜, 캔들>>
-     */
-    private fun getStockPriceIndex(
-        stockCodes: List<String>,
-        dmCondition: DmBacktestCondition
-    ): Map<String, Map<LocalDate, CandleDto>> {
-        val stockPriceIndex = stockCodes.associateWith { code ->
-            movingAverageService.getMovingAverage(
-                code,
-                dmCondition.periodType,
-                Collections.emptyList()
-            )
-                .associateBy { it.candleDateTimeStart.toLocalDate().withDayOfMonth(1) }
-        }
-        return stockPriceIndex
-    }
 
     private fun checkValidate(dmCondition: DmBacktestCondition) {
         val sumWeight = dmCondition.timeWeight.entries.sumOf { it.value }
@@ -409,7 +420,11 @@ class DmAnalysisService(
     ): File {
         val append = "_${dmBacktestCondition.timeWeight.entries.map { it.key }.joinToString(",")}"
         val reportFileSubPrefix =
-            ReportMakerHelperService.getReportFileSuffix(dmBacktestCondition.tradeCondition, dmBacktestCondition.listStock(), append)
+            ReportMakerHelperService.getReportFileSuffix(
+                dmBacktestCondition.tradeCondition,
+                dmBacktestCondition.listStock(),
+                append
+            )
         val reportFile = File(
             "./backtest-result/dm-trade-report",
             "dm_trade_${reportFileSubPrefix}"
@@ -419,7 +434,8 @@ class DmAnalysisService(
             var sheet = ReportMakerHelperService.createTradeReport(analysisResult, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "1. 매매이력")
 
-            sheet = ReportMakerHelperService.createReportEvalAmount(analysisResult.common.evaluationAmountHistory, workbook)
+            sheet =
+                ReportMakerHelperService.createReportEvalAmount(analysisResult.common.evaluationAmountHistory, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일짜별 자산비율 변화")
 
             sheet = ReportMakerHelperService.createReportRangeReturn(analysisResult.common.getMonthlyYield(), workbook)
@@ -502,7 +518,10 @@ class DmAnalysisService(
     /**
      * 분석 요약결과
      */
-    private fun getSummary(dmBacktestCondition: DmBacktestCondition, commonAnalysisReportResult: CommonAnalysisReportResult): String {
+    private fun getSummary(
+        dmBacktestCondition: DmBacktestCondition,
+        commonAnalysisReportResult: CommonAnalysisReportResult
+    ): String {
         val report = StringBuilder()
 
         report.append("----------- Buy&Hold 결과 -----------\n")
@@ -523,8 +542,14 @@ class DmAnalysisService(
         report.append("----------- 전략 결과 -----------\n")
         report.append(String.format("합산 실현 수익\t %,.2f%%", totalYield.yield * 100)).append("\n")
         report.append(String.format("합산 실현 MDD\t %,.2f%%", totalYield.mdd * 100)).append("\n")
-        report.append(String.format("합산 매매회수\t %d", commonAnalysisReportResult.getWinningRateTotal().getTradeCount())).append("\n")
-        report.append(String.format("합산 승률\t %,.2f%%", commonAnalysisReportResult.getWinningRateTotal().getWinRate() * 100))
+        report.append(String.format("합산 매매회수\t %d", commonAnalysisReportResult.getWinningRateTotal().getTradeCount()))
+            .append("\n")
+        report.append(
+            String.format(
+                "합산 승률\t %,.2f%%",
+                commonAnalysisReportResult.getWinningRateTotal().getWinRate() * 100
+            )
+        )
             .append("\n")
         report.append(String.format("합산 CAGR\t %,.2f%%", totalYield.getCagr() * 100)).append("\n")
         report.append(String.format("샤프지수\t %,.2f", commonAnalysisReportResult.getBacktestSharpeRatio())).append("\n")
@@ -621,7 +646,8 @@ class DmAnalysisService(
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
-            val timeWeight = multiCondition.timeWeight.entries.map { "${it.key}월: ${it.value * 100}%" }.joinToString(", ")
+            val timeWeight =
+                multiCondition.timeWeight.entries.map { "${it.key}월: ${it.value * 100}%" }.joinToString(", ")
             createCell.setCellValue(timeWeight)
             createCell.cellStyle = percentStyle
 
@@ -647,7 +673,8 @@ class DmAnalysisService(
 
             val result = conditionResult.second
 
-            val buyHoldTotalYield: CommonAnalysisReportResult.TotalYield = result.common.benchmarkTotalYield.buyHoldTotalYield
+            val buyHoldTotalYield: CommonAnalysisReportResult.TotalYield =
+                result.common.benchmarkTotalYield.buyHoldTotalYield
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(buyHoldTotalYield.yield)
             createCell.cellStyle = percentStyle
@@ -664,7 +691,8 @@ class DmAnalysisService(
             createCell.setCellValue(result.common.getBuyHoldSharpeRatio())
             createCell.cellStyle = decimalStyle
 
-            val benchmarkTotalYield: CommonAnalysisReportResult.TotalYield = result.common.benchmarkTotalYield.benchmarkTotalYield
+            val benchmarkTotalYield: CommonAnalysisReportResult.TotalYield =
+                result.common.benchmarkTotalYield.benchmarkTotalYield
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(benchmarkTotalYield.yield)
             createCell.cellStyle = percentStyle

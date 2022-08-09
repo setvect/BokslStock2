@@ -342,7 +342,7 @@ class RbAnalysisService(
     ): XSSFSheet {
         val sheet = workbook.createSheet()
         val summary = getSummary(rbAnalysisCondition, analysisResult)
-        log.debug(summary)
+        log.info(summary)
 
         ReportMakerHelperService.textToSheet(summary, sheet)
         sheet.defaultColumnWidth = 60

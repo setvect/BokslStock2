@@ -1,21 +1,18 @@
 package com.setvect.bokslstock2.analysis.common.service
 
-import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
-import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
-import com.setvect.bokslstock2.analysis.common.model.CompareYieldCode
-import com.setvect.bokslstock2.analysis.common.model.EvaluationRateItem
-import com.setvect.bokslstock2.analysis.common.model.PreTrade
-import com.setvect.bokslstock2.analysis.common.model.Trade
-import com.setvect.bokslstock2.analysis.common.model.TradeCondition
-import com.setvect.bokslstock2.analysis.common.model.TradeType
+import com.setvect.bokslstock2.analysis.common.model.*
+import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.entity.CandleEntity
+import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
+import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
+import org.springframework.stereotype.Service
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import org.springframework.stereotype.Service
 import kotlin.streams.toList
 
 /**
@@ -28,6 +25,7 @@ import kotlin.streams.toList
 class BacktestTradeService(
     val candleRepository: CandleRepository,
     val stockRepository: StockRepository,
+    val movingAverageService: MovingAverageService,
 ) {
     /**
      * @return 수수료등 각종 조건을 적용시킨 매매 내역
@@ -140,7 +138,8 @@ class BacktestTradeService(
         // 대상 종목으로 날짜별로 Buy&Hold 및 투자전략 평가금액 얻기
         val evaluationAmountHistory = applyEvaluationAmount(trades, condition, holdStockCodes)
 
-        val benchmarkTotalYield = ReportMakerHelperService.calculateTotalBenchmarkYield(evaluationAmountHistory, condition.range)
+        val benchmarkTotalYield =
+            ReportMakerHelperService.calculateTotalBenchmarkYield(evaluationAmountHistory, condition.range)
         val buyHoldYieldByCode = calculateBenchmarkYield(condition.range, holdStockCodes)
         val benchmarkYieldByCode = calculateBenchmarkYield(condition.range, condition.benchmark)
 
@@ -196,7 +195,8 @@ class BacktestTradeService(
             .toMutableMap()
 
         val buyHoldRateMap: SortedMap<LocalDateTime, Double> = getBuyAndHoldEvalRate(condition.range, holdStockCodes)
-        val benchmarkRateMap: SortedMap<LocalDateTime, Double> = getBuyAndHoldEvalRate(condition.range, condition.benchmark)
+        val benchmarkRateMap: SortedMap<LocalDateTime, Double> =
+            getBuyAndHoldEvalRate(condition.range, condition.benchmark)
 
         val result = allDateList.map { date ->
             val buyHoldRate = buyHoldRateMap[date] ?: buyHoldLastRate
@@ -272,7 +272,10 @@ class BacktestTradeService(
      * 수익비는 1에서 시작함
      * @return <날짜, 수익비>
      */
-    fun calculateBuyAndHoldProfitRatio(range: DateRange, holdStockCodes: List<String>): SortedMap<LocalDateTime, Double> {
+    fun calculateBuyAndHoldProfitRatio(
+        range: DateRange,
+        holdStockCodes: List<String>
+    ): SortedMap<LocalDateTime, Double> {
 
         // <종목코드, List(캔들)>
         val mapOfCandleList = getConditionOfCandle(range, holdStockCodes)
@@ -329,7 +332,10 @@ class BacktestTradeService(
             val priceHistory = entry.value.stream().map { it.closePrice }.toList().toMutableList()
             // 해당 캔들의 시초가를 맨 앞에 넣기
             priceHistory.add(0, mapOfBeforePrice[entry.key])
-            val yieldMdd = CommonAnalysisReportResult.YieldMdd(ApplicationUtil.getYield(priceHistory), ApplicationUtil.getMdd(priceHistory))
+            val yieldMdd = CommonAnalysisReportResult.YieldMdd(
+                ApplicationUtil.getYield(priceHistory),
+                ApplicationUtil.getMdd(priceHistory)
+            )
 
             entry.key to yieldMdd
         }
@@ -367,6 +373,25 @@ class BacktestTradeService(
             )
         }.toMap()
     }
+
+    /**
+     * @return <종목코드, <날짜, 캔들>>
+     */
+    fun getStockPriceIndex(
+        stockCodes: List<String>,
+        periodType: PeriodType
+    ): Map<String, Map<LocalDate, CandleDto>> {
+        val stockPriceIndex = stockCodes.associateWith { code ->
+            movingAverageService.getMovingAverage(
+                code,
+                periodType,
+                Collections.emptyList()
+            )
+                .associateBy { it.candleDateTimeStart.toLocalDate().withDayOfMonth(1) }
+        }
+        return stockPriceIndex
+    }
+
 
     /**
      * @return <종목코드, Map<날짜, 종가>>
