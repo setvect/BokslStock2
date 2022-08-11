@@ -104,4 +104,13 @@ object DateUtil {
     fun getUnixTimeCurrent(): Long {
         return LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().epochSecond
     }
+
+    /**
+     * [current]을 기준으로 가장 앞에 있는 월요일 날짜 반환
+     * 예) 2022-08-12(금) -> 2022-08-08(월)
+     */
+    fun convertDateOfMonday(current: LocalDateTime): LocalDateTime {
+        var week = current.dayOfWeek
+        return current.minusDays(week.value.toLong() - 1);
+    }
 }
