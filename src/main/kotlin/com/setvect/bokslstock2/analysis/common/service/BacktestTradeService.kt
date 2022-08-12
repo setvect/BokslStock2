@@ -379,15 +379,17 @@ class BacktestTradeService(
      */
     fun getStockPriceIndex(
         stockCodes: List<String>,
-        periodType: PeriodType
+        periodType: PeriodType,
+        extractRange: DateRange = DateRange.maxRange
     ): Map<String, Map<LocalDate, CandleDto>> {
         val stockPriceIndex = stockCodes.associateWith { code ->
             movingAverageService.getMovingAverage(
                 code,
                 periodType,
-                Collections.emptyList()
+                Collections.emptyList(),
+                extractRange
             )
-                .associateBy { it.candleDateTimeStart.toLocalDate().withDayOfMonth(1) }
+                .associateBy { it.candleDateTimeStart.toLocalDate() }
         }
         return stockPriceIndex
     }

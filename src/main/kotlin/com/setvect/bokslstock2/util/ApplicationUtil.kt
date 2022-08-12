@@ -1,14 +1,17 @@
 package com.setvect.bokslstock2.util
 
-import java.net.URLEncoder
-import java.util.stream.Collectors
-import java.util.stream.IntStream
+import com.setvect.bokslstock2.index.model.PeriodType
 import org.apache.http.HttpStatus
 import org.apache.http.client.HttpClient
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.HttpRequestBase
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.util.EntityUtils
+import java.net.URLEncoder
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.stream.Collectors
+import java.util.stream.IntStream
 import kotlin.math.pow
 
 /**
@@ -186,4 +189,50 @@ object ApplicationUtil {
         return responseText
     }
 
+
+    /**
+     * [periodType]범위를 맞춘다. [date]포함된 범위의 시작 날짜. 글로 쓸라고 하니 엄청 어렵네. ㅡㅡ;
+     * 예)
+     * [periodType] = WEEK, [date] = 2022-08-12(금), return: 2022-08-08(월)
+     * [periodType] = MONTH, [date] = 2022-08-12, return: 2022-08-01
+     */
+    fun fitStartDate(periodType: PeriodType, date: LocalDate): LocalDate {
+        return when (periodType) {
+            PeriodType.PERIOD_DAY -> date
+            PeriodType.PERIOD_WEEK -> DateUtil.convertDateOfMonday(date)
+            PeriodType.PERIOD_MONTH -> date.withDayOfMonth(1)
+            PeriodType.PERIOD_QUARTER, PeriodType.PERIOD_HALF, PeriodType.PERIOD_YEAR
+            -> DateUtil.fitMonth(
+                date.withDayOfMonth(1),
+                periodType.getDeviceMonth()
+            )
+        }
+    }
+
+    fun fitStartDateTime(periodType: PeriodType, dateTime: LocalDateTime): LocalDateTime {
+        return fitStartDate(periodType, dateTime.toLocalDate()).atTime(dateTime.toLocalTime())
+    }
+
+    /**
+     * [periodType]범위를 맞춘다. [date]포함된 범위의 종료 날짜. 글로 쓸라고 하니 엄청 어렵네. ㅡㅡ;
+     * 예)
+     * [periodType] = WEEK, [date] = 2022-08-11(목), return: 2022-08-12(금)
+     * [periodType] = MONTH, [date] = 2022-08-12, return: 2022-08-31
+     */
+    fun fitEndDate(periodType: PeriodType, date: LocalDate): LocalDate {
+        return when (periodType) {
+            PeriodType.PERIOD_DAY -> date
+            PeriodType.PERIOD_WEEK -> DateUtil.convertDateOfMonday(date)
+            PeriodType.PERIOD_MONTH -> date.withDayOfMonth(1)
+            PeriodType.PERIOD_QUARTER, PeriodType.PERIOD_HALF, PeriodType.PERIOD_YEAR
+            -> DateUtil.fitMonth(
+                date.withDayOfMonth(1),
+                periodType.getDeviceMonth()
+            ).plusMonths(periodType.getDeviceMonth().toLong()).minusDays(1)
+        }
+    }
+
+    fun fitEndDateTime(periodType: PeriodType, dateTime: LocalDateTime): LocalDateTime {
+        return fitStartDate(periodType, dateTime.toLocalDate()).atTime(dateTime.toLocalTime())
+    }
 }

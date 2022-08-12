@@ -5,6 +5,7 @@ import com.setvect.bokslstock2.util.DateUtil.format
 import com.setvect.bokslstock2.util.DateUtil.formatDateTime
 import com.setvect.bokslstock2.util.DateUtil.getLocalDateTime
 import java.time.Duration
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
@@ -18,12 +19,12 @@ class DateRange {
         /**
          * 기간 제한 없는 날짜 시작일
          */
-        const val UNLIMITED_DATE_START = "1990-01-01"
+        private const val UNLIMITED_DATE_START = "1990-01-01"
 
         /**
          * 기간 제한 없는 날짜 종료일
          */
-        const val UNLIMITED_DATE_END = "2100-12-31"
+        private const val UNLIMITED_DATE_END = "2100-12-31"
 
         /**
          * @return 1990-01-01 ~ 2100-12-31 날짜 범위 리턴
@@ -103,6 +104,18 @@ class DateRange {
         this.to = to
     }
 
+
+    /**
+     * 날짜영역 객체 생성.
+     *
+     * [from] 시작일
+     * [to]   종료일
+     */
+    constructor(from: LocalDate, to: LocalDate) {
+        this.from = from.atTime(0, 0)
+        this.to = to.atTime(0, 0)
+    }
+
     /**
      * @return 종료날짜를 "yyyy-MM-dd" 형태로 리턴합니다.
      */
@@ -126,6 +139,12 @@ class DateRange {
      */
     val fromDateTimeFormat: String
         get() = format(from, "yyyy-MM-dd HH:mm:ss")
+
+    val fromDate: LocalDate
+        get() = from.toLocalDate()
+
+    val toDate: LocalDate
+        get() = to.toLocalDate()
 
     /**
      * @param format 날짜 패턴 "yyyy, MM, dd, HH, mm, ss and more"

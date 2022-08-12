@@ -2,19 +2,14 @@ package com.setvect.bokslstock2.index.service
 
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType
-import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
-import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_HALF
-import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_MONTH
-import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_QUARTER
-import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_WEEK
-import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_YEAR
 import com.setvect.bokslstock2.index.repository.StockRepository
-import com.setvect.bokslstock2.util.DateUtil
-import java.util.*
+import com.setvect.bokslstock2.util.ApplicationUtil
+import com.setvect.bokslstock2.util.DateRange
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.util.*
 
 @Service
 class MovingAverageService(
@@ -28,27 +23,17 @@ class MovingAverageService(
      */
     @Transactional
     fun getMovingAverage(
-        code: String, group: PeriodType, avgCountList: List<Int>
+        code: String, group: PeriodType, avgCountList: List<Int>, dateRange: DateRange = DateRange.maxRange
     ): List<CandleDto> {
         val stockOptional = stockRepository.findByCode(code)
         val stock = stockOptional.orElseThrow { RuntimeException("$code 종목 정보가 없습니다.") }
 
         val candleList = stock.candleList
-        val candleGroupMap = candleList.groupByTo(TreeMap()) {
-            // 날짜 기준으로 시세 그룹핑
-            val groupDateTime = when (group) {
-                PERIOD_DAY -> {
-                    it.candleDateTime
-                }
-                PERIOD_WEEK -> {
-                    it.candleDateTime.minusDays(it.candleDateTime.dayOfWeek.value.toLong() - 1)
-                }
-                PERIOD_MONTH, PERIOD_QUARTER, PERIOD_HALF, PERIOD_YEAR -> {
-                    DateUtil.fitMonth(it.candleDateTime.withDayOfMonth(1), group.getDeviceMonth())
-                }
+        val candleGroupMap = candleList
+            .filter { dateRange.isBetween(it.candleDateTime) }
+            .groupByTo(TreeMap()) {
+                return@groupByTo ApplicationUtil.fitStartDateTime(group, it.candleDateTime)
             }
-            groupDateTime
-        }
 
         val candleGroupList = candleGroupMap.entries.map { Pair(it.key, it.value) }
 
@@ -61,8 +46,14 @@ class MovingAverageService(
             }
             val candleGroup = candleGroupList[i]
             val candle = CandleDto(
-                candleDateTimeStart = candleGroup.second.first().candleDateTime,
-                candleDateTimeEnd = candleGroup.second.last().candleDateTime,
+                candleDateTimeStart = ApplicationUtil.fitStartDateTime(
+                    group,
+                    candleGroup.second.first().candleDateTime
+                ),
+                candleDateTimeEnd = ApplicationUtil.fitEndDateTime(
+                    group,
+                    candleGroup.second.last().candleDateTime
+                ),
                 beforeCandleDateTimeEnd = beforeCandle.second.last().candleDateTime,
                 beforeClosePrice = beforeCandle.second.last().closePrice,
                 openPrice = candleGroup.second.first().openPrice,

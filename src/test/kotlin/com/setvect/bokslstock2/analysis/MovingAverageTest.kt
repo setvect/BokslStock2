@@ -7,13 +7,13 @@ import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_MONTH
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_WEEK
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService
-import java.io.File
-import java.io.FileOutputStream
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
+import java.io.File
+import java.io.FileOutputStream
 
 @SpringBootTest
 @ActiveProfiles("local")
@@ -87,7 +87,8 @@ class MovingAverageTest {
         ExcelStyle.applyAllBorder(sheet)
         ExcelStyle.applyDefaultFont(sheet)
 
-        val reportFile = File("./temp", "주가정보_${stockRepository.findByCode(code).get().name}(${code})_${periodType}.xlsx")
+        val reportFile =
+            File("./temp", "주가정보_${stockRepository.findByCode(code).get().name}(${code})_${periodType}.xlsx")
         FileOutputStream(reportFile).use { ous ->
             workbook.write(ous)
         }

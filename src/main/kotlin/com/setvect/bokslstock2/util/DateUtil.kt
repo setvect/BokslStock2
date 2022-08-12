@@ -106,11 +106,34 @@ object DateUtil {
     }
 
     /**
-     * [current]을 기준으로 가장 앞에 있는 월요일 날짜 반환
+     * [current] 날짜가 포함된 월요일 날짜 반환
      * 예) 2022-08-12(금) -> 2022-08-08(월)
      */
     fun convertDateOfMonday(current: LocalDateTime): LocalDateTime {
-        var week = current.dayOfWeek
-        return current.minusDays(week.value.toLong() - 1);
+        return current.minusDays(current.dayOfWeek.value.toLong() - 1)
+    }
+
+    /**
+     * [current] 날짜가 포함된 월요일 날짜 반환
+     * 예) 2022-08-12(금) -> 2022-08-08(월)
+     */
+    fun convertDateOfMonday(current: LocalDate): LocalDate {
+        return current.minusDays(current.dayOfWeek.value.toLong() - 1)
+    }
+
+    /**
+     * [current] 날짜가 포함된 주(week)의 금요일 설정
+     * 예) 2022-08-11(목) -> 2022-08-12(금)
+     */
+    fun convertDateOfFriday(current: LocalDateTime): LocalDateTime {
+        return current.plusDays(DayOfWeek.FRIDAY.value - current.dayOfWeek.value.toLong())
+    }
+
+    /**
+     * [current] 날짜가 포함된 주(week)의 금요일 설정
+     * 예) 2022-08-11(목) -> 2022-08-12(금)
+     */
+    fun convertDateOfFriday(current: LocalDate): LocalDate {
+        return current.plusDays(DayOfWeek.FRIDAY.value - current.dayOfWeek.value.toLong())
     }
 }

@@ -31,5 +31,10 @@ class EtcTest {
         Assertions.assertThat(convertDateOfMonday.year).isEqualTo(2022)
         Assertions.assertThat(convertDateOfMonday.monthValue).isEqualTo(7)
         Assertions.assertThat(convertDateOfMonday.dayOfMonth).isEqualTo(25)
+
+        convertDateOfMonday = DateUtil.convertDateOfFriday(LocalDateTime.of(2022, 8, 11, 0, 0))
+        Assertions.assertThat(convertDateOfMonday.year).isEqualTo(2022)
+        Assertions.assertThat(convertDateOfMonday.monthValue).isEqualTo(8)
+        Assertions.assertThat(convertDateOfMonday.dayOfMonth).isEqualTo(12)
     }
 }

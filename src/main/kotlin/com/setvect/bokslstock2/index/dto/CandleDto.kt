@@ -32,4 +32,5 @@ data class CandleDto(
     fun getYield(): Double {
         return closePrice / beforeClosePrice
     }
+
 }

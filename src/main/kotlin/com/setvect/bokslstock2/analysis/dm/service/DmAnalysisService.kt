@@ -139,8 +139,10 @@ class DmAnalysisService(
             timeWeight = timeWeight,
             endSell = true
         )
-        val stockCodes = condition.listStock()
-        val stockPriceIndex = backtestTradeService.getStockPriceIndex(stockCodes, condition.periodType)
+        val stockPriceIndex = backtestTradeService.getStockPriceIndex(
+            condition.listStock(),
+            condition.periodType
+        )
         val momentumScoreList = calcMomentumScores(condition, stockPriceIndex)
         return momentumScoreList.first { it.date == date }
     }
@@ -172,7 +174,10 @@ class DmAnalysisService(
     private fun processDualMomentum(condition: DmBacktestCondition): DualMomentumResult {
         val stockCodes = condition.listStock()
         // <종목코드, <날짜, 캔들>>
-        val stockPriceIndex = backtestTradeService.getStockPriceIndex(stockCodes, condition.periodType)
+        val stockPriceIndex = backtestTradeService.getStockPriceIndex(
+            stockCodes,
+            condition.periodType
+        )
         val momentumScoreList = calcMomentumScores(condition, stockPriceIndex)
 
         // <종목코드, 종목정보>
