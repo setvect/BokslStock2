@@ -46,6 +46,7 @@ class MovingAverageService(
             }
             val candleGroup = candleGroupList[i]
             val candle = CandleDto(
+                code = code,
                 candleDateTimeStart = ApplicationUtil.fitStartDateTime(
                     group,
                     candleGroup.second.first().candleDateTime

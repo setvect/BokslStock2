@@ -31,7 +31,7 @@ class RebalanceBacktest {
         val basic = TradeCondition(
             range = realRange,
             investRatio = 0.999,
-            cash = 10_000_000.0,
+            cash = 20_000.0,
             feeBuy = 0.001,
             feeSell = 0.001,
             comment = "",
@@ -39,18 +39,17 @@ class RebalanceBacktest {
         )
 
         val timeWeights = listOf(
-            RebalanceBacktestCondition.RebalanceFacter(PeriodType.PERIOD_WEEK, 10.0),
-            RebalanceBacktestCondition.RebalanceFacter(PeriodType.PERIOD_MONTH, 115.0)
+            RebalanceBacktestCondition.RebalanceFacter(PeriodType.PERIOD_MONTH, 0.001),
         )
 
         val conditions = timeWeights.map {
             RebalanceBacktestCondition(
                 tradeCondition = basic,
                 stockCodes = listOf(
-                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_SPY, 25),
-                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_TLT, 25),
-                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_GLD, 25),
-                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_SHY, 25),
+                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_SPY, 50),
+                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_TLT, 50),
+//                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_GLD, 25),
+//                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_SHY, 25),
                 ),
                 rebalanceFacter = it,
             )

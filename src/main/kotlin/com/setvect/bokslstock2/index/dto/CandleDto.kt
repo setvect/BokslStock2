@@ -8,6 +8,7 @@ import java.time.LocalDateTime
  * @see CandleEntity
  */
 data class CandleDto(
+    val code: String,
     val candleDateTimeStart: LocalDateTime,
     val candleDateTimeEnd: LocalDateTime,
     val periodType: PeriodType,

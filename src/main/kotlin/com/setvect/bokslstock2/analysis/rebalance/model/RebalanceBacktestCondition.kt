@@ -5,7 +5,7 @@ import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 
 /**
- * 듀얼모멘텀 백테스트 조건
+ * 리벨런싱 백테스트 조건
  */
 data class RebalanceBacktestCondition(
     /**
@@ -14,7 +14,7 @@ data class RebalanceBacktestCondition(
     val tradeCondition: TradeCondition,
 
     /**
-     * 듀얼 모멘텀 대상 종목 코드
+     * 대상 종목 코드
      */
     val stockCodes: List<TradeStock>,
 
@@ -48,7 +48,7 @@ data class RebalanceBacktestCondition(
         /**
          * 리벨런싱 임계점
          */
-        val changeWeight: Double
+        val threshold: Double
     )
 
     fun listStock(): List<String> {

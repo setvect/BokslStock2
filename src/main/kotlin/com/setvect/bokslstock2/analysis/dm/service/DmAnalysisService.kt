@@ -266,6 +266,7 @@ class DmAnalysisService(
                     )
                 val candleEntity = candleEntityList[0]
                 val candleDto = CandleDto(
+                    code = candleEntity.stock.code,
                     candleDateTimeStart = candleEntity.candleDateTime,
                     candleDateTimeEnd = candleEntity.candleDateTime,
                     beforeCandleDateTimeEnd = candleEntity.candleDateTime,
