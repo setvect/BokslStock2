@@ -256,7 +256,7 @@ class RebalanceAnalysisService(
 
             sheet =
                 ReportMakerHelperService.createReportEvalAmount(analysisResult.common.evaluationAmountHistory, workbook)
-            workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일짜별 자산비율 변화")
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일자별 자산비율 변화")
 
             sheet = ReportMakerHelperService.createReportRangeReturn(analysisResult.common.getMonthlyYield(), workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "3. 월별 수익률")
@@ -329,10 +329,10 @@ class RebalanceAnalysisService(
 
         report.append("----------- 테스트 조건 -----------\n")
         val stockName = rebalanceBacktestCondition
-            .stockCodes.joinToString("\n\t") { stock ->
+            .stockCodes.joinToString("\n") { stock ->
                 stockRepository
                     .findByCode(stock.stockCode)
-                    .map { "${it.code}[${it.name}]\t비율: ${stock.weight}%" }
+                    .map { "\t${it.code}[${it.name}]\t비율: ${stock.weight}%" }
                     .orElse("")
             }
 

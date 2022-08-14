@@ -442,7 +442,7 @@ class DmAnalysisService(
 
             sheet =
                 ReportMakerHelperService.createReportEvalAmount(analysisResult.common.evaluationAmountHistory, workbook)
-            workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일짜별 자산비율 변화")
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일자별 자산비율 변화")
 
             sheet = ReportMakerHelperService.createReportRangeReturn(analysisResult.common.getMonthlyYield(), workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "3. 월별 수익률")

@@ -32,8 +32,10 @@ class VbsAnalysisService(
      *  분석 리포트
      */
     fun makeReport(vbsAnalysisCondition: VbsAnalysisCondition) {
-        val trades = backtestTradeService.tradeBundle(vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTradeBundles())
-        val analysisResult = backtestTradeService.analysis(trades, vbsAnalysisCondition.basic, vbsAnalysisCondition.getStockCodes())
+        val trades =
+            backtestTradeService.tradeBundle(vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTradeBundles())
+        val analysisResult =
+            backtestTradeService.analysis(trades, vbsAnalysisCondition.basic, vbsAnalysisCondition.getStockCodes())
         val summary = getSummary(vbsAnalysisCondition, analysisResult)
         println(summary)
         makeReportFile(vbsAnalysisCondition, analysisResult)
@@ -45,15 +47,19 @@ class VbsAnalysisService(
      */
     private fun makeReportFile(vbsAnalysisCondition: VbsAnalysisCondition, analysisResult: AnalysisResult): File {
         val reportFileSubPrefix =
-            ReportMakerHelperService.getReportFileSuffix(vbsAnalysisCondition.basic, vbsAnalysisCondition.getStockCodes())
+            ReportMakerHelperService.getReportFileSuffix(
+                vbsAnalysisCondition.basic,
+                vbsAnalysisCondition.getStockCodes()
+            )
         val reportFile = File("./backtest-result/vbs-trade-report", "vbs_trade_$reportFileSubPrefix")
 
         XSSFWorkbook().use { workbook ->
             var sheet = ReportMakerHelperService.createTradeReport(analysisResult, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "1. 매매이력")
 
-            sheet = ReportMakerHelperService.createReportEvalAmount(analysisResult.common.evaluationAmountHistory, workbook)
-            workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일짜별 자산비율 변화")
+            sheet =
+                ReportMakerHelperService.createReportEvalAmount(analysisResult.common.evaluationAmountHistory, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일자별 자산비율 변화")
 
             sheet = ReportMakerHelperService.createReportRangeReturn(analysisResult.common.getMonthlyYield(), workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "3. 월별 수익률")
@@ -78,7 +84,8 @@ class VbsAnalysisService(
     fun makeSummaryReport(conditionList: List<VbsAnalysisCondition>): File {
         var i = 0
         val conditionResults = conditionList.map { vbsAnalysisCondition ->
-            val tradeItemHistory = backtestTradeService.tradeBundle(vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTradeBundles())
+            val tradeItemHistory =
+                backtestTradeService.tradeBundle(vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTradeBundles())
             val analysisResult = backtestTradeService.analysis(
                 tradeItemHistory,
                 vbsAnalysisCondition.basic,
@@ -204,8 +211,6 @@ class VbsAnalysisService(
             val result = conditionResult.second
 
 
-
-            
             val buyHoldTotalYield: TotalYield = result.common.benchmarkTotalYield.buyHoldTotalYield
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(buyHoldTotalYield.yield)

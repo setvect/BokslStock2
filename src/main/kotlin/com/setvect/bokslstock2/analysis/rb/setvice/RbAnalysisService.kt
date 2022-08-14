@@ -32,8 +32,10 @@ class RbAnalysisService(
      *  분석 리포트
      */
     fun makeReport(rbAnalysisCondition: RbAnalysisCondition) {
-        val trades = backtestTradeService.tradeBundle(rbAnalysisCondition.basic, rbAnalysisCondition.getPreTradeBundles())
-        val analysisResult = backtestTradeService.analysis(trades, rbAnalysisCondition.basic, rbAnalysisCondition.getStockCodes())
+        val trades =
+            backtestTradeService.tradeBundle(rbAnalysisCondition.basic, rbAnalysisCondition.getPreTradeBundles())
+        val analysisResult =
+            backtestTradeService.analysis(trades, rbAnalysisCondition.basic, rbAnalysisCondition.getStockCodes())
         val summary = getSummary(rbAnalysisCondition, analysisResult)
         println(summary)
         makeReportFile(rbAnalysisCondition, analysisResult)
@@ -52,8 +54,9 @@ class RbAnalysisService(
             var sheet = ReportMakerHelperService.createTradeReport(analysisResult, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "1. 매매이력")
 
-            sheet = ReportMakerHelperService.createReportEvalAmount(analysisResult.common.evaluationAmountHistory, workbook)
-            workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일짜별 자산비율 변화")
+            sheet =
+                ReportMakerHelperService.createReportEvalAmount(analysisResult.common.evaluationAmountHistory, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일자별 자산비율 변화")
 
             sheet = ReportMakerHelperService.createReportRangeReturn(analysisResult.common.getMonthlyYield(), workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "3. 월별 수익률")
@@ -78,7 +81,8 @@ class RbAnalysisService(
     fun makeSummaryReport(conditionList: List<RbAnalysisCondition>): File {
         var i = 0
         val conditionResults = conditionList.map { rbAnalysisCondition ->
-            val tradeItemHistory = backtestTradeService.tradeBundle(rbAnalysisCondition.basic, rbAnalysisCondition.getPreTradeBundles())
+            val tradeItemHistory =
+                backtestTradeService.tradeBundle(rbAnalysisCondition.basic, rbAnalysisCondition.getPreTradeBundles())
             val analysisResult = backtestTradeService.analysis(
                 tradeItemHistory,
                 rbAnalysisCondition.basic,

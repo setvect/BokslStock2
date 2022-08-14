@@ -32,8 +32,10 @@ class MabsAnalysisService(
      *  분석 리포트
      */
     fun makeReport(mabsAnalysisCondition: MabsAnalysisCondition) {
-        val trades = backtestTradeService.tradeBundle(mabsAnalysisCondition.basic, mabsAnalysisCondition.getPreTradeBundles())
-        val analysisResult = backtestTradeService.analysis(trades, mabsAnalysisCondition.basic, mabsAnalysisCondition.getStockCodes())
+        val trades =
+            backtestTradeService.tradeBundle(mabsAnalysisCondition.basic, mabsAnalysisCondition.getPreTradeBundles())
+        val analysisResult =
+            backtestTradeService.analysis(trades, mabsAnalysisCondition.basic, mabsAnalysisCondition.getStockCodes())
         val summary = getSummary(mabsAnalysisCondition, analysisResult)
         println(summary)
         makeReportFile(mabsAnalysisCondition, analysisResult)
@@ -45,15 +47,19 @@ class MabsAnalysisService(
      */
     private fun makeReportFile(mabsAnalysisCondition: MabsAnalysisCondition, analysisResult: AnalysisResult): File {
         val reportFileSubPrefix =
-            ReportMakerHelperService.getReportFileSuffix(mabsAnalysisCondition.basic, mabsAnalysisCondition.getStockCodes())
+            ReportMakerHelperService.getReportFileSuffix(
+                mabsAnalysisCondition.basic,
+                mabsAnalysisCondition.getStockCodes()
+            )
         val reportFile = File("./backtest-result/mabs-trade-report", "mabs_trade_$reportFileSubPrefix")
 
         XSSFWorkbook().use { workbook ->
             var sheet = ReportMakerHelperService.createTradeReport(analysisResult, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "1. 매매이력")
 
-            sheet = ReportMakerHelperService.createReportEvalAmount(analysisResult.common.evaluationAmountHistory, workbook)
-            workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일짜별 자산변화")
+            sheet =
+                ReportMakerHelperService.createReportEvalAmount(analysisResult.common.evaluationAmountHistory, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일자별 자산변화")
 
             sheet = ReportMakerHelperService.createReportRangeReturn(analysisResult.common.getMonthlyYield(), workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "3. 월별 수익률")
@@ -78,7 +84,10 @@ class MabsAnalysisService(
     fun makeSummaryReport(conditionList: List<MabsAnalysisCondition>): File {
         var i = 0
         val conditionResults = conditionList.map { mabsAnalysisCondition ->
-            val tradeItemHistory = backtestTradeService.tradeBundle(mabsAnalysisCondition.basic, mabsAnalysisCondition.getPreTradeBundles())
+            val tradeItemHistory = backtestTradeService.tradeBundle(
+                mabsAnalysisCondition.basic,
+                mabsAnalysisCondition.getPreTradeBundles()
+            )
             val analysisResult = backtestTradeService.analysis(
                 tradeItemHistory,
                 mabsAnalysisCondition.basic,
