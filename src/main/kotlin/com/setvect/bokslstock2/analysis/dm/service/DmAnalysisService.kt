@@ -9,6 +9,7 @@ import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
+import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import com.setvect.bokslstock2.util.DateUtil
@@ -35,6 +36,7 @@ class DmAnalysisService(
     private val stockRepository: StockRepository,
     private val backtestTradeService: BacktestTradeService,
     private val candleRepository: CandleRepository,
+    private val movingAverageService: MovingAverageService
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -139,10 +141,7 @@ class DmAnalysisService(
             timeWeight = timeWeight,
             endSell = true
         )
-        val stockPriceIndex = backtestTradeService.getStockPriceIndex(
-            condition.listStock(),
-            condition.periodType
-        )
+        val stockPriceIndex = getStockPriceIndex(condition.listStock())
         val momentumScoreList = calcMomentumScores(condition, stockPriceIndex)
         return momentumScoreList.first { it.date == date }
     }
@@ -174,10 +173,7 @@ class DmAnalysisService(
     private fun processDualMomentum(condition: DmBacktestCondition): DualMomentumResult {
         val stockCodes = condition.listStock()
         // <종목코드, <날짜, 캔들>>
-        val stockPriceIndex = backtestTradeService.getStockPriceIndex(
-            stockCodes,
-            condition.periodType
-        )
+        val stockPriceIndex = getStockPriceIndex(stockCodes)
         val momentumScoreList = calcMomentumScores(condition, stockPriceIndex)
 
         // <종목코드, 종목정보>
@@ -217,12 +213,8 @@ class DmAnalysisService(
                     beforeBuyTrade = buyTrade
                 } else if (existHoldCode) {
                     log.info(
-                        "매수 유지: $momentumScore.date, ${
-                            getStockName(
-                                codeByStock,
-                                condition.holdCode!!
-                            )
-                        }(${condition.holdCode})"
+                        "매수 유지: $momentumScore.date, ${getStockName(codeByStock, condition.holdCode!!)}" +
+                                "(${condition.holdCode})"
                     )
                 }
             } else {
@@ -349,7 +341,7 @@ class DmAnalysisService(
     }
 
     /**
-     * TODO 전체 내용을 반환 하도록 변경
+     * TODO 전체 내용을 반환 하도록 변경 <-- 2022년 8월 14일 다시 보니 무슨 의미 인지 모르겠다. ㅜㅜ
      * 듀얼 모멘터 대상 종목을 구함
      * [stockPriceIndex] <종목코드, <날짜, 캔들>>
      * @return <종목코드, 현재가격/모멘텀평균 가격>
@@ -407,11 +399,31 @@ class DmAnalysisService(
         return codeByStock[code]!!.name
     }
 
+    /**
+     * @return <종목코드, <날짜, 캔들>>
+     */
+    private fun getStockPriceIndex(
+        stockCodes: List<String>,
+    ): Map<String, Map<LocalDate, CandleDto>> {
+        val stockPriceIndex = stockCodes.associateWith { code ->
+            movingAverageService.getMovingAverage(
+                code,
+                PeriodType.PERIOD_MONTH,
+                Collections.emptyList(),
+            )
+                .associateBy { it.candleDateTimeStart.toLocalDate().withDayOfMonth(1) }
+        }
+        return stockPriceIndex
+    }
 
     private fun checkValidate(dmCondition: DmBacktestCondition) {
+        // TODO 부동소수점으로 인한 합계 오차가 발생할 수 있음. timeWeight 값을 Int 변경
         val sumWeight = dmCondition.timeWeight.entries.sumOf { it.value }
         if (sumWeight != 1.0) {
             throw RuntimeException("가중치의 합계가 100이여 합니다. 현재 가중치 합계: $sumWeight")
+        }
+        if (dmCondition.periodType != PeriodType.PERIOD_MONTH) {
+            throw RuntimeException("듀얼 모멘텀 백테스트는 분석주기가 MONTH 이여야 합니다. 현재 설정: ${dmCondition.periodType}")
         }
     }
 

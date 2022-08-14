@@ -47,14 +47,8 @@ class MovingAverageService(
             val candleGroup = candleGroupList[i]
             val candle = CandleDto(
                 code = code,
-                candleDateTimeStart = ApplicationUtil.fitStartDateTime(
-                    group,
-                    candleGroup.second.first().candleDateTime
-                ),
-                candleDateTimeEnd = ApplicationUtil.fitEndDateTime(
-                    group,
-                    candleGroup.second.last().candleDateTime
-                ),
+                candleDateTimeStart = candleGroup.second.first().candleDateTime,
+                candleDateTimeEnd = candleGroup.second.last().candleDateTime,
                 beforeCandleDateTimeEnd = beforeCandle.second.last().candleDateTime,
                 beforeClosePrice = beforeCandle.second.last().closePrice,
                 openPrice = candleGroup.second.first().openPrice,

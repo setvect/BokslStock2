@@ -1,16 +1,13 @@
 package com.setvect.bokslstock2.analysis.common.service
 
 import com.setvect.bokslstock2.analysis.common.model.*
-import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.entity.CandleEntity
-import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import org.springframework.stereotype.Service
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.streams.toList
@@ -184,6 +181,7 @@ class BacktestTradeService(
         var backtestLastCash = condition.cash // 마지막 보유 현금
 
         // <거래날짜, 거래내용>
+        // FIXME 거래 날짜 제대로 하기
         val tradeByDate = trades.groupBy { it.preTrade.tradeDate }
 
         // 현재 가지고 있는 주식 수
@@ -372,26 +370,6 @@ class BacktestTradeService(
                 totalInvest
             )
         }.toMap()
-    }
-
-    /**
-     * @return <종목코드, <날짜, 캔들>>
-     */
-    fun getStockPriceIndex(
-        stockCodes: List<String>,
-        periodType: PeriodType,
-        extractRange: DateRange = DateRange.maxRange
-    ): Map<String, Map<LocalDate, CandleDto>> {
-        val stockPriceIndex = stockCodes.associateWith { code ->
-            movingAverageService.getMovingAverage(
-                code,
-                periodType,
-                Collections.emptyList(),
-                extractRange
-            )
-                .associateBy { it.candleDateTimeStart.toLocalDate() }
-        }
-        return stockPriceIndex
     }
 
 

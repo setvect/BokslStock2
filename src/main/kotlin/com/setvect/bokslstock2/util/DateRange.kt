@@ -19,12 +19,12 @@ class DateRange {
         /**
          * 기간 제한 없는 날짜 시작일
          */
-        private const val UNLIMITED_DATE_START = "1990-01-01"
+        private const val UNLIMITED_DATE_START = "1990-01-01T00:00:00"
 
         /**
          * 기간 제한 없는 날짜 종료일
          */
-        private const val UNLIMITED_DATE_END = "2100-12-31"
+        private const val UNLIMITED_DATE_END = "2100-12-31T00:00:00"
 
         /**
          * @return 1990-01-01 ~ 2100-12-31 날짜 범위 리턴

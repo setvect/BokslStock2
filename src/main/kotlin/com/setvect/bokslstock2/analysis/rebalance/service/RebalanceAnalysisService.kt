@@ -8,6 +8,7 @@ import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
+import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import org.apache.poi.ss.usermodel.FillPatternType
@@ -22,6 +23,7 @@ import java.io.FileOutputStream
 import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.*
 import kotlin.math.abs
 
 /**
@@ -32,6 +34,7 @@ class RebalanceAnalysisService(
     private val stockRepository: StockRepository,
     private val backtestTradeService: BacktestTradeService,
     private val candleRepository: CandleRepository,
+    private val movingAverageService: MovingAverageService
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -360,7 +363,7 @@ class RebalanceAnalysisService(
             ApplicationUtil.fitStartDate(condition.rebalanceFacter.periodType, condition.tradeCondition.range.toDate),
         )
 
-        val stockPriceIndex = backtestTradeService.getStockPriceIndex(stockCodes, periodType, extractRange)
+        val stockPriceIndex = getStockPriceIndex(stockCodes, periodType, extractRange)
 
         var current =
             ApplicationUtil.fitStartDate(condition.rebalanceFacter.periodType, condition.tradeCondition.range.fromDate)
@@ -550,6 +553,25 @@ class RebalanceAnalysisService(
         if (sumWeight != 100) {
             throw RuntimeException("비중 합계는 100이여야 됩니다.")
         }
+    }
+
+    /**
+     * @return <종목코드, <날짜, 캔들>>
+     */
+    private fun getStockPriceIndex(
+        stockCodes: List<String>,
+        periodType: PeriodType,
+        extractRange: DateRange,
+    ): Map<String, Map<LocalDate, CandleDto>> {
+        val stockPriceIndex = stockCodes.associateWith { code ->
+            movingAverageService.getMovingAverage(
+                code,
+                PeriodType.PERIOD_MONTH,
+                Collections.emptyList(),
+            )
+                .associateBy { it.candleDateTimeStart.toLocalDate().withDayOfMonth(1) }
+        }
+        return stockPriceIndex
     }
 
     /**

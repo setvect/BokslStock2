@@ -234,7 +234,7 @@ object ApplicationUtil {
     }
 
     fun fitEndDateTime(periodType: PeriodType, dateTime: LocalDateTime): LocalDateTime {
-        return fitStartDate(periodType, dateTime.toLocalDate()).atTime(dateTime.toLocalTime())
+        return fitEndDate(periodType, dateTime.toLocalDate()).atTime(dateTime.toLocalTime())
     }
 
     fun makeSummaryCompareStock(
