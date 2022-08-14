@@ -24,7 +24,7 @@ class RebalanceBacktest {
 
     @Test
     fun 일회성_백테스팅_리포트_만듦() {
-        val from = LocalDateTime.of(2022, 1, 1, 0, 0)
+        val from = LocalDateTime.of(2012, 1, 1, 0, 0)
         val to = LocalDateTime.of(2022, 8, 1, 0, 0)
         val realRange = DateRange(from, to)
 
@@ -39,7 +39,7 @@ class RebalanceBacktest {
         )
 
         val timeWeights = listOf(
-            RebalanceBacktestCondition.RebalanceFacter(PeriodType.PERIOD_MONTH, 0.001),
+            RebalanceBacktestCondition.RebalanceFacter(PeriodType.PERIOD_MONTH, 0.15),
         )
 
         val conditions = timeWeights.map {
@@ -49,6 +49,11 @@ class RebalanceBacktest {
                     RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_SPY, 50),
                     RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_TLT, 50),
 //                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_GLD, 25),
+//                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_SHY, 25),
+
+//                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_SSO, 25),
+//                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_UBT, 25),
+//                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_UGL, 25),
 //                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_SHY, 25),
                 ),
                 rebalanceFacter = it,

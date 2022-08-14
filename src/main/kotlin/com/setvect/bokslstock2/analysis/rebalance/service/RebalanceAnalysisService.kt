@@ -384,7 +384,7 @@ class RebalanceAnalysisService(
             else {
                 val buyStocks = beforeTrade.buyStocks.map {
                     val candleDto: CandleDto = stockPriceIndex[it.candle.code]!![current]!!
-                    BuyStock(candleDto, it.qty, it.weight, it.unitPrice)
+                    BuyStock(candleDto, it.qty, it.weight)
                 }
                 rebalanceTradeHistory.add(TradeInfo(current, buyStocks, beforeTrade.cash, false))
             }
@@ -432,16 +432,16 @@ class RebalanceAnalysisService(
                     val candle: CandleDto = rebalStock.candle
                     val stock = codeByStock[candle.code]!!
 
+                    val buyTrade = buyStock[candle.code] ?: throw RuntimeException("${candle.code} 매수 내역이 없습니다.")
+
                     val preTrade = PreTrade(
                         stock = Stock.of(stock),
                         tradeType = TradeType.SELL,
-                        yield = ApplicationUtil.getYield(rebalStock.unitPrice, candle.closePrice),
-                        unitPrice = candle.closePrice,
+                        yield = ApplicationUtil.getYield(buyTrade.preTrade.unitPrice, candle.openPrice),
+                        unitPrice = candle.openPrice,
                         tradeDate = candle.candleDateTimeStart,
                     )
 
-                    val buyTrade = buyStock[preTrade.stock.code]
-                        ?: throw RuntimeException("${preTrade.stock.code} 매수 내역이 없습니다.")
 
                     buyStock.remove(preTrade.stock.code)
                     val sellPrice = buyTrade.getBuyAmount() * (1 + preTrade.yield)
@@ -487,6 +487,7 @@ class RebalanceAnalysisService(
                 // 매수후 현금
                 currentCash -= buyAmount + feePrice
 
+                // 현재 매수 종목 포함해 보유하고 있는 주식 평가 금액
                 val stockEvalPrice = buyStock.entries.map { it.value }
                     .sumOf { it.preTrade.unitPrice * it.qty } + rebalStock.qty * preTrade.unitPrice
 
@@ -527,7 +528,7 @@ class RebalanceAnalysisService(
 
             val buyPrice = currentCash * (stock.weight / 100.0)
             val quantify = (buyPrice / candleDto.openPrice).toInt()
-            BuyStock(candleDto, quantify, stock.weight, candleDto.openPrice)
+            BuyStock(candleDto, quantify, stock.weight)
         }
         val afterCash = currentCash - buyStocks.sumOf { it.getEvalPriceOpen() }
         return Pair(buyStocks, afterCash)
@@ -634,9 +635,8 @@ class RebalanceAnalysisService(
      * @property candle 매수 종목 정보
      * @property qty 매수 수량
      * @property weight 해당 종목의 전체 투자대비 비중(%)
-     * @property unitPrice 매수 가격
      */
-    data class BuyStock(val candle: CandleDto, val qty: Int, val weight: Int, val unitPrice: Double) {
+    data class BuyStock(val candle: CandleDto, val qty: Int, val weight: Int) {
 
         fun getEvalPriceOpen(): Double {
             return candle.openPrice * qty

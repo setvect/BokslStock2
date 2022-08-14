@@ -181,7 +181,6 @@ class BacktestTradeService(
         var backtestLastCash = condition.cash // 마지막 보유 현금
 
         // <거래날짜, 거래내용>
-        // FIXME 거래 날짜 제대로 하기
         val tradeByDate = trades.groupBy { it.preTrade.tradeDate }
 
         // 현재 가지고 있는 주식 수
