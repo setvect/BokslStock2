@@ -22,7 +22,7 @@ import kotlin.streams.toList
 class ReportMakerHelperService(
 ) {
     companion object {
-        val log: Logger = LoggerFactory.getLogger(javaClass)
+        private val log: Logger = LoggerFactory.getLogger(ReportMakerHelperService::class.java)
 
         /**
          * 매매 내역을 시트로 만듦
@@ -269,11 +269,22 @@ class ReportMakerHelperService(
             report.append("----------- 전략 결과 -----------\n")
             report.append(String.format("합산 실현 수익\t %,.2f%%", totalYield.yield * 100)).append("\n")
             report.append(String.format("합산 실현 MDD\t %,.2f%%", totalYield.mdd * 100)).append("\n")
-            report.append(String.format("합산 매매회수\t %d", commonAnalysisReportResult.getWinningRateTotal().getTradeCount())).append("\n")
-            report.append(String.format("합산 승률\t %,.2f%%", commonAnalysisReportResult.getWinningRateTotal().getWinRate() * 100))
+            report.append(
+                String.format(
+                    "합산 매매회수\t %d",
+                    commonAnalysisReportResult.getWinningRateTotal().getTradeCount()
+                )
+            ).append("\n")
+            report.append(
+                String.format(
+                    "합산 승률\t %,.2f%%",
+                    commonAnalysisReportResult.getWinningRateTotal().getWinRate() * 100
+                )
+            )
                 .append("\n")
             report.append(String.format("합산 CAGR\t %,.2f%%", totalYield.getCagr() * 100)).append("\n")
-            report.append(String.format("샤프지수\t %,.2f", commonAnalysisReportResult.getBacktestSharpeRatio())).append("\n")
+            report.append(String.format("샤프지수\t %,.2f", commonAnalysisReportResult.getBacktestSharpeRatio()))
+                .append("\n")
 
             for (i in 1..tradeConditionList.size) {
                 val condition = tradeConditionList[i - 1]
@@ -309,12 +320,8 @@ class ReportMakerHelperService(
             yieldByCode: Map<String, CommonAnalysisReportResult.YieldMdd>
         ): StringBuilder {
             val report = StringBuilder()
-            report.append(String.format("합산 동일비중 수익\t %,.2f%%", totalYield.yield * 100))
-                .append("\n")
-            report.append(String.format("합산 동일비중 MDD\t %,.2f%%", totalYield.mdd * 100)).append("\n")
-            report.append(String.format("합산 동일비중 CAGR\t %,.2f%%", totalYield.getCagr() * 100))
-                .append("\n")
-            report.append(String.format("샤프지수\t %,.2f", sharpeRatio)).append("\n")
+            val buyHoldText = ApplicationUtil.makeSummaryCompareStock(totalYield, sharpeRatio)
+            report.append(buyHoldText)
 
             var i = 0
             yieldByCode.entries.forEach {
@@ -521,6 +528,7 @@ class ReportMakerHelperService(
             cellStyle.setFont(font)
             return cellStyle
         }
+
         /**
          * 모든 셀 border 적용
          */

@@ -531,14 +531,14 @@ class DmAnalysisService(
         val report = StringBuilder()
 
         report.append("----------- Buy&Hold 결과 -----------\n")
-        val buyHoldText = makeSummaryCompareStock(
+        val buyHoldText = ApplicationUtil.makeSummaryCompareStock(
             commonAnalysisReportResult.benchmarkTotalYield.buyHoldTotalYield,
             commonAnalysisReportResult.getBuyHoldSharpeRatio()
         )
         report.append(buyHoldText)
 
         report.append("----------- Benchmark 결과 -----------\n")
-        val benchmarkText = makeSummaryCompareStock(
+        val benchmarkText = ApplicationUtil.makeSummaryCompareStock(
             commonAnalysisReportResult.benchmarkTotalYield.benchmarkTotalYield,
             commonAnalysisReportResult.getBenchmarkSharpeRatio()
         )
@@ -589,21 +589,6 @@ class DmAnalysisService(
         report.append("매도 수수료\t${String.format("%,.2f%%", tradeCondition.feeSell * 100)}").append("\n")
         report.append("설명\t${tradeCondition.comment}").append("\n")
 
-        return report.toString()
-    }
-
-    private fun makeSummaryCompareStock(
-        buyHoldTotalYield: CommonAnalysisReportResult.TotalYield,
-        buyHoldSharpeRatio: Double
-    ): String {
-        val report = StringBuilder()
-        // TODO '합산 동일비중', '밴치마크' 이름 조건에 따라 변경
-        report.append(String.format("합산 동일비중 수익\t %,.2f%%", buyHoldTotalYield.yield * 100))
-            .append("\n")
-        report.append(String.format("합산 동일비중 MDD\t %,.2f%%", buyHoldTotalYield.mdd * 100)).append("\n")
-        report.append(String.format("합산 동일비중 CAGR\t %,.2f%%", buyHoldTotalYield.getCagr() * 100))
-            .append("\n")
-        report.append(String.format("샤프지수\t %,.2f", buyHoldSharpeRatio)).append("\n")
         return report.toString()
     }
 

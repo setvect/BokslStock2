@@ -1,5 +1,6 @@
 package com.setvect.bokslstock2.util
 
+import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
 import com.setvect.bokslstock2.index.model.PeriodType
 import org.apache.http.HttpStatus
 import org.apache.http.client.HttpClient
@@ -234,5 +235,20 @@ object ApplicationUtil {
 
     fun fitEndDateTime(periodType: PeriodType, dateTime: LocalDateTime): LocalDateTime {
         return fitStartDate(periodType, dateTime.toLocalDate()).atTime(dateTime.toLocalTime())
+    }
+
+    fun makeSummaryCompareStock(
+        buyHoldTotalYield: CommonAnalysisReportResult.TotalYield,
+        buyHoldSharpeRatio: Double
+    ): String {
+        val report = StringBuilder()
+        // TODO '합산 동일비중', '밴치마크' 이름 조건에 따라 변경
+        report.append(String.format("합산 동일비중 수익\t %,.2f%%", buyHoldTotalYield.yield * 100))
+            .append("\n")
+        report.append(String.format("합산 동일비중 MDD\t %,.2f%%", buyHoldTotalYield.mdd * 100)).append("\n")
+        report.append(String.format("합산 동일비중 CAGR\t %,.2f%%", buyHoldTotalYield.getCagr() * 100))
+            .append("\n")
+        report.append(String.format("샤프지수\t %,.2f", buyHoldSharpeRatio)).append("\n")
+        return report.toString()
     }
 }
