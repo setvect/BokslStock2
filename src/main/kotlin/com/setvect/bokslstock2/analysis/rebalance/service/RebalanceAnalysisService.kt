@@ -1,5 +1,9 @@
 package com.setvect.bokslstock2.analysis.rebalance.service
 
+import com.setvect.bokslstock2.analysis.common.model.PreTrade
+import com.setvect.bokslstock2.analysis.common.model.Stock
+import com.setvect.bokslstock2.analysis.common.model.Trade
+import com.setvect.bokslstock2.analysis.common.model.TradeType
 import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
 import com.setvect.bokslstock2.analysis.rebalance.model.RebalanceBacktestCondition
 import com.setvect.bokslstock2.index.dto.CandleDto
@@ -36,7 +40,7 @@ class RebalanceAnalysisService(
     }
 
 
-    private fun processRebalance(condition: RebalanceBacktestCondition) {
+    private fun processRebalance(condition: RebalanceBacktestCondition): MutableList<Trade> {
         val stockCodes = condition.listStock()
         // <종목코드, <날짜, 캔들>>
         val periodType = condition.rebalanceFacter.periodType
@@ -51,7 +55,7 @@ class RebalanceAnalysisService(
             ApplicationUtil.fitStartDate(condition.rebalanceFacter.periodType, condition.tradeCondition.range.fromDate)
         var beforeTrade = TradeInfo(date = current, buyStocks = listOf(), cash = condition.tradeCondition.cash, false)
 
-        val tradeHistory = mutableListOf<TradeInfo>()
+        val rebalanceTradeHistory = mutableListOf<TradeInfo>()
 
         while (current.isBefore(condition.tradeCondition.range.toDate) || current.isEqual(condition.tradeCondition.range.to.toLocalDate())) {
             val changeDeviation = beforeTrade.deviation() >= condition.rebalanceFacter.threshold
@@ -60,21 +64,21 @@ class RebalanceAnalysisService(
                 // 원래는 부분적으로 샀다 팔아야 되는데 개발하기 귄찮아 전체 매도후 매수하는 방법으로 함
                 val (buyStocks, afterCash) = rebalance(beforeTrade, condition, stockPriceIndex, current)
 
-                tradeHistory.add(TradeInfo(current, buyStocks, afterCash, true))
+                rebalanceTradeHistory.add(TradeInfo(current, buyStocks, afterCash, true))
             }
             // 편차가 기준이 미만이면 종목 가격만 교체
             else {
                 val buyStocks = beforeTrade.buyStocks.map {
                     val candleDto: CandleDto = stockPriceIndex[it.candle.code]!![current]!!
-                    BuyStock(candleDto, it.quantity, it.weight)
+                    BuyStock(candleDto, it.qty, it.weight, it.unitPrice)
                 }
-                tradeHistory.add(TradeInfo(current, buyStocks, beforeTrade.cash, false))
+                rebalanceTradeHistory.add(TradeInfo(current, buyStocks, beforeTrade.cash, false))
             }
             current = incrementDate(periodType, current)
-            beforeTrade = tradeHistory.last()
+            beforeTrade = rebalanceTradeHistory.last()
         }
 
-        tradeHistory.forEach { trade ->
+        rebalanceTradeHistory.forEach { trade ->
             log.info(
                 "날짜: ${trade.date}, " +
                         "종가 평가가격: ${trade.getEvalPriceClose()}, " +
@@ -84,7 +88,7 @@ class RebalanceAnalysisService(
             trade.buyStocks.forEach { stock ->
                 log.info(
                     "\t종목:${stock.candle.code}, " +
-                            "수량: ${stock.quantity}, " +
+                            "수량: ${stock.qty}, " +
                             "종가: ${stock.candle.closePrice}, " +
                             "평가금액: ${stock.getEvalPriceClose()}, " +
                             "설정비중: ${stock.weight}%, " +
@@ -92,6 +96,97 @@ class RebalanceAnalysisService(
                 )
             }
         }
+
+        // -----------------------
+
+        val tradeItemHistory = mutableListOf<Trade>()
+        // <종목코드, 종목정보>
+        val codeByStock = stockCodes.associateWith { stockRepository.findByCode(it).get() }
+        // <종목코드, 직전 preTrade>
+        val buyStock = HashMap<String, Trade>()
+
+        var currentCash = 0.0
+
+        rebalanceTradeHistory.forEach { rebalanceItem ->
+            // 리벨런싱 됐을 때만 매매
+            if (!rebalanceItem.rebalance) {
+                return@forEach
+            }
+            var priceAfterSell = 0.0
+            // ---------- 매도
+            rebalanceItem.buyStocks.forEach { rebalStock ->
+                val candle: CandleDto = rebalStock.candle
+                val stock = codeByStock[candle.code]!!
+
+                val tradeItem = PreTrade(
+                    stock = Stock.of(stock),
+                    tradeType = TradeType.SELL,
+                    yield = ApplicationUtil.getYield(rebalStock.unitPrice, candle.openPrice),
+                    unitPrice = candle.openPrice,
+                    tradeDate = candle.candleDateTimeStart,
+                )
+
+                // 투자수익금 = 매수금액 * 수익률 - 수수료
+                val buyTrade = buyStock[tradeItem.stock.code]
+                    ?: throw RuntimeException("${tradeItem.stock.code} 매수 내역이 없습니다.")
+
+                buyStock.remove(tradeItem.stock.code)
+                val sellPrice = buyTrade.getBuyAmount() * (1 + tradeItem.yield)
+                val sellFee = sellPrice * condition.tradeCondition.feeSell
+                val gains = sellPrice - buyTrade.getBuyAmount()
+
+                // 매매후 현금
+                priceAfterSell += sellPrice - sellFee
+                val stockEvalPrice =
+                    buyStock.entries.map { it.value }.sumOf { it.preTrade.unitPrice * it.qty }
+                val tradeReportItem = Trade(
+                    preTrade = tradeItem,
+                    qty = 0,
+                    cash = currentCash,
+                    feePrice = sellFee,
+                    gains = gains,
+                    stockEvalPrice = stockEvalPrice
+                )
+                tradeItemHistory.add(tradeReportItem)
+            }
+            currentCash += rebalanceItem.cash
+
+
+            // ---------- 매수
+            rebalanceItem.buyStocks.forEach { rebalStock ->
+                val candle: CandleDto = rebalStock.candle
+                val stock = codeByStock[candle.code]!!
+
+                val tradeItem = PreTrade(
+                    stock = Stock.of(stock),
+                    tradeType = TradeType.BUY,
+                    yield = 0.0,
+                    unitPrice = candle.openPrice,
+                    tradeDate = candle.candleDateTimeStart,
+                )
+                // 매수 금액
+                val buyAmount = rebalStock.getEvalPriceOpen()
+                val feePrice = condition.tradeCondition.feeBuy * buyAmount
+
+                // 매수후 현금
+                currentCash -= buyAmount + feePrice
+
+                val stockEvalPrice = buyStock.entries.map { it.value }
+                    .sumOf { it.preTrade.unitPrice * it.qty } + rebalStock.qty * tradeItem.unitPrice
+
+                val tradeReportItem = Trade(
+                    preTrade = tradeItem,
+                    qty = rebalStock.qty,
+                    cash = currentCash,
+                    feePrice = feePrice,
+                    gains = 0.0,
+                    stockEvalPrice = stockEvalPrice
+                )
+                tradeItemHistory.add(tradeReportItem)
+                buyStock[tradeItem.stock.code] = tradeReportItem
+            }
+        }
+        return tradeItemHistory
     }
 
     /**
@@ -107,7 +202,7 @@ class RebalanceAnalysisService(
         val sellAmount =
             beforeTrade.buyStocks.sumOf {
                 val candleDto: CandleDto = stockPriceIndex[it.candle.code]!![current]!!
-                it.quantity * candleDto.openPrice * (1 - condition.tradeCondition.feeSell)
+                it.qty * candleDto.openPrice
             }
         val currentCash = sellAmount + beforeTrade.cash
 
@@ -116,11 +211,9 @@ class RebalanceAnalysisService(
 
             val buyPrice = currentCash * (stock.weight / 100.0)
             val quantify = (buyPrice / candleDto.openPrice).toInt()
-            BuyStock(candleDto, quantify, stock.weight)
+            BuyStock(candleDto, quantify, stock.weight, candleDto.openPrice)
         }
-        // 수수료 때문에 가진 돈에 비해 초과 될 수 있음, 하지만 가능성이 거의 없기 때문에 무시함
-        val afterCash =
-            currentCash - buyStocks.sumOf { it.getEvalPriceOpen() } * (1 + condition.tradeCondition.feeBuy)
+        val afterCash = currentCash - buyStocks.sumOf { it.getEvalPriceOpen() }
         return Pair(buyStocks, afterCash)
     }
 
@@ -204,17 +297,18 @@ class RebalanceAnalysisService(
 
     /**
      * @property candle 매수 종목 정보
-     * @property quantity 매수 수량
+     * @property qty 매수 수량
      * @property weight 해당 종목의 전체 투자대비 비중(%)
+     * @property unitPrice 매수 가격
      */
-    data class BuyStock(val candle: CandleDto, val quantity: Int, val weight: Int) {
+    data class BuyStock(val candle: CandleDto, val qty: Int, val weight: Int, val unitPrice: Double) {
 
         fun getEvalPriceOpen(): Double {
-            return candle.openPrice * quantity
+            return candle.openPrice * qty
         }
 
         fun getEvalPriceClose(): Double {
-            return candle.closePrice * quantity
+            return candle.closePrice * qty
         }
 
         /**

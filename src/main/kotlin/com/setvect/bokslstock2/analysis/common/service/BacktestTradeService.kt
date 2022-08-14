@@ -76,7 +76,7 @@ class BacktestTradeService(
                 tradeItemHistory.add(tradeReportItem)
                 buyStock[tradeItem.stock.code] = tradeReportItem
             } else if (tradeItem.tradeType == TradeType.SELL) {
-                // 매수 처리
+                // 매도 처리
                 // 투자수익금 = 매수금액 * 수익률 - 수수료
                 val buyTrade = buyStock[tradeItem.stock.code]
                     ?: throw RuntimeException("${tradeItem.stock.code} 매수 내역이 없습니다.")
