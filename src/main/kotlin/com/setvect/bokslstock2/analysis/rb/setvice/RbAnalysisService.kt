@@ -6,10 +6,6 @@ import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.analysis.rb.entity.RbConditionEntity
 import com.setvect.bokslstock2.analysis.rb.model.RbAnalysisCondition
-import java.io.File
-import java.io.FileOutputStream
-import java.sql.Timestamp
-import java.time.LocalDateTime
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.xssf.usermodel.XSSFSheet
@@ -17,12 +13,17 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.io.File
+import java.io.FileOutputStream
+import java.sql.Timestamp
+import java.time.LocalDateTime
 
 
 /**
  * 리밸런싱 매매 분석
  */
 @Service
+@Deprecated("삭제할 백테스트")
 class RbAnalysisService(
     val backtestTradeService: BacktestTradeService
 ) {
