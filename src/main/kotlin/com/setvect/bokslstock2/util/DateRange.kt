@@ -34,7 +34,6 @@ class DateRange {
         val maxRange: DateRange get() = DateRange(UNLIMITED_DATE_START, UNLIMITED_DATE_END)
     }
 
-    // TODO LocalDate로 변경
     /**
      * 시작 날짜
      */

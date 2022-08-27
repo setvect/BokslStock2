@@ -84,6 +84,8 @@ class DmAnalysisService(
             val tradeCondition = makeTradeDateCorrection(dmBacktestCondition, momentumResult.preTrades)
             val trades = backtestTradeService.trade(tradeCondition, momentumResult.preTrades)
             val analysisResult = backtestTradeService.analysis(trades, tradeCondition, dmBacktestCondition.stockCodes)
+
+
             log.info("분석 진행 ${++i}/${conditionList.size}")
             Triple(dmBacktestCondition, analysisResult, momentumResult.momentumScoreList)
         }.toList()
@@ -396,10 +398,6 @@ class DmAnalysisService(
         }
 
         return stockByRate
-    }
-
-    private fun getStockName(codeByStock: Map<String, StockEntity>, code: String): String {
-        return codeByStock[code]!!.name
     }
 
     /**

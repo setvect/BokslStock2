@@ -9,13 +9,10 @@ import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.xssf.usermodel.XSSFSheet
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
-import org.springframework.stereotype.Service
 import java.io.File
 import java.io.FileOutputStream
 
-@Service
-// TODO spring bean에 의존하지 않음. static한 helper class로 변경 가능
-class RebalanceReportService() {
+object RebalanceReportHelper {
     /**
      * 분석건에 대한 리포트 파일 만듦
      * @return 엑셀 파일

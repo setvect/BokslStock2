@@ -31,7 +31,6 @@ class RebalanceAnalysisService(
     private val stockRepository: StockRepository,
     private val backtestTradeService: BacktestTradeService,
     private val movingAverageService: MovingAverageService,
-    val rebalanceReportService: RebalanceReportService
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -47,7 +46,7 @@ class RebalanceAnalysisService(
                 backtestCondition.tradeCondition,
                 backtestCondition.stockCodes.map { it.stockCode }
             )
-            val summary = rebalanceReportService.getSummary(backtestCondition, result.common)
+            val summary = RebalanceReportHelper.getSummary(backtestCondition, result.common)
             log.info(summary)
 
             log.info("분석 진행 ${++i}/${conditionList.size}")
@@ -56,7 +55,7 @@ class RebalanceAnalysisService(
 
         for (idx in conditionResults.indices) {
             val conditionResult = conditionResults[idx]
-            rebalanceReportService.makeReportFile(conditionResult.first, conditionResult.second)
+            RebalanceReportHelper.makeReportFile(conditionResult.first, conditionResult.second)
             log.info("개별분석파일 생성 ${idx + 1}/${conditionList.size}")
         }
 
@@ -64,7 +63,7 @@ class RebalanceAnalysisService(
         val reportFile =
             File("./backtest-result", "리벨런싱_전략_백테스트_분석결과_" + Timestamp.valueOf(LocalDateTime.now()).time + ".xlsx")
         XSSFWorkbook().use { workbook ->
-            val sheetBacktestSummary = rebalanceReportService.createTotalSummary(workbook, conditionResults)
+            val sheetBacktestSummary = RebalanceReportHelper.createTotalSummary(workbook, conditionResults)
             workbook.setSheetName(workbook.getSheetIndex(sheetBacktestSummary), "1. 평가표")
 
             FileOutputStream(reportFile).use { ous ->

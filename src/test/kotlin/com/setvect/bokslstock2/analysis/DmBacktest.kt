@@ -127,8 +127,10 @@ class DmBacktest {
                 endSell = true
             )
         }
-//        dmAnalysisService.runTest(condition)
-        dmAnalysisService.makeSummaryReport(conditions)
+        conditions.forEach {
+            dmAnalysisService.runTest(it)
+        }
+//        dmAnalysisService.makeSummaryReport(conditions)
 
 
         log.info("끝.")
