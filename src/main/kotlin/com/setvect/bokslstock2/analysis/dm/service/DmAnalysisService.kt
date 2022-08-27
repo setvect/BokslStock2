@@ -48,7 +48,7 @@ class DmAnalysisService(
         /**
          * <종목코드, 모멘텀스코어>
          */
-        val score: Map<String, Double>,
+        val score: Map<StockCode, Double>,
     )
 
     /**
@@ -114,8 +114,8 @@ class DmAnalysisService(
      */
     fun getMomentumScore(
         date: LocalDate,
-        stockCodes: List<String>,
-        holdCode: String,
+        stockCodes: List<StockCode>,
+        holdCode: StockCode,
         timeWeight: Map<Int, Double>
     ): MomentumScore {
         // TODO 모멘텀 스코어 계산을 위한 로직으로 변경. 현재는 필요 없는 연산이 많음
@@ -177,7 +177,7 @@ class DmAnalysisService(
         val momentumScoreList = calcMomentumScores(condition, stockPriceIndex)
 
         // <종목코드, 종목정보>
-        val codeByStock = stockCodes.associateWith { stockRepository.findByCode(it).get() }
+        val codeByStock = stockCodes.associateWith { stockRepository.findByCode(it.code).get() }
         val tradeList = mutableListOf<PreTrade>()
         var beforeBuyTrade: PreTrade? = null
         for (momentumScore in momentumScoreList) {
@@ -194,17 +194,18 @@ class DmAnalysisService(
 
             // 듀얼 모멘텀 매수 대상 종목이 없으면, hold 종목 매수 또는 현금 보유
             if (momentTargetRate.isEmpty()) {
-                val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stock.code != condition.holdCode
+                val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stock.code != condition.holdCode!!.code
                 val existHoldCode = condition.holdCode != null
 
                 if (changeBuyStock) {
+                    val code = StockCode.findByCode(beforeBuyTrade!!.stock.code)
                     // 보유 종목 매도
-                    val sellStock = stockPriceIndex[beforeBuyTrade!!.stock.code]!![momentumScore.date]!!
+                    val sellStock = stockPriceIndex[code]!![momentumScore.date]!!
                     val sellTrade = makeSellTrade(sellStock, beforeBuyTrade)
                     tradeList.add(sellTrade)
                     beforeBuyTrade = null
                 }
-                if (existHoldCode && (beforeBuyTrade == null || beforeBuyTrade.stock.code != condition.holdCode)) {
+                if (existHoldCode && (beforeBuyTrade == null || beforeBuyTrade.stock.code != condition.holdCode!!.code)) {
                     // hold 종목 매수
                     val buyStock = stockPriceIndex[condition.holdCode]!![momentumScore.date]!!
                     val stock = codeByStock[condition.holdCode]!!
@@ -213,18 +214,19 @@ class DmAnalysisService(
                     beforeBuyTrade = buyTrade
                 } else if (existHoldCode) {
                     log.info(
-                        "매수 유지: $momentumScore.date, ${getStockName(codeByStock, condition.holdCode!!)}" +
-                                "(${condition.holdCode})"
+                        "매수 유지: $momentumScore.date, ${condition.holdCode!!.desc}" +
+                            "(${condition.holdCode})"
                     )
                 }
             } else {
                 val buyStockRate = momentTargetRate[0]
                 val stockCode = buyStockRate.key
-                val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stock.code != stockCode
+                val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stock.code != stockCode.code
 
                 if (changeBuyStock) {
+                    val code = StockCode.findByCode(beforeBuyTrade!!.stock.code)
                     // 보유 종목 매도
-                    val sellStock = stockPriceIndex[beforeBuyTrade!!.stock.code]!![momentumScore.date]!!
+                    val sellStock = stockPriceIndex[code]!![momentumScore.date]!!
                     val sellTrade = makeSellTrade(sellStock, beforeBuyTrade)
                     tradeList.add(sellTrade)
                 }
@@ -244,7 +246,8 @@ class DmAnalysisService(
         // 마지막 보유 종목 매도
         if (condition.endSell && beforeBuyTrade != null) {
             val date = momentumScoreList.last().date.plusMonths(condition.periodType.getDeviceMonth().toLong())
-            val sellStock = stockPriceIndex[beforeBuyTrade.stock.code]!![date]
+            val code = StockCode.findByCode(beforeBuyTrade.stock.code)
+            val sellStock = stockPriceIndex[code]!![date]
             if (sellStock != null) {
                 val sellTrade = makeSellTrade(sellStock, beforeBuyTrade)
                 tradeList.add(sellTrade)
@@ -258,7 +261,7 @@ class DmAnalysisService(
                     )
                 val candleEntity = candleEntityList[0]
                 val candleDto = CandleDto(
-                    code = candleEntity.stock.code,
+                    stockCode = StockCode.findByCode(candleEntity.stock.code),
                     candleDateTimeStart = candleEntity.candleDateTime,
                     candleDateTimeEnd = candleEntity.candleDateTime,
                     beforeCandleDateTimeEnd = candleEntity.candleDateTime,
@@ -281,7 +284,7 @@ class DmAnalysisService(
     /**
      * @return 해당 날짜에 모든 종목에 대한 가격이 존재하면 true
      */
-    private fun isExistStockIndex(stockPriceIndex: Map<String, Map<LocalDate, CandleDto>>, date: LocalDate): Boolean {
+    private fun isExistStockIndex(stockPriceIndex: Map<StockCode, Map<LocalDate, CandleDto>>, date: LocalDate): Boolean {
         return stockPriceIndex.entries.all { it.value[date] != null }
     }
 
@@ -290,7 +293,7 @@ class DmAnalysisService(
      */
     private fun calcMomentumScores(
         condition: DmBacktestCondition,
-        stockPriceIndex: Map<String, Map<LocalDate, CandleDto>>
+        stockPriceIndex: Map<StockCode, Map<LocalDate, CandleDto>>
     ): List<MomentumScore> {
         var current =
             DateUtil.fitMonth(
@@ -347,17 +350,17 @@ class DmAnalysisService(
      * @return <종목코드, 현재가격/모멘텀평균 가격>
      */
     private fun calculateRate(
-        stockPriceIndex: Map<String, Map<LocalDate, CandleDto>>,
+        stockPriceIndex: Map<StockCode, Map<LocalDate, CandleDto>>,
         current: LocalDate,
         condition: DmBacktestCondition,
-    ): List<Pair<String, Double>> {
+    ): List<Pair<StockCode, Double>> {
         val stockByRate = stockPriceIndex.entries.map { stockEntry ->
             val currentCandle = stockEntry.value[current]
                 ?: throw RuntimeException("${stockEntry.key}에 대한 $current 시세가 없습니다.")
 
             log.info(
                 "\t현재 날짜: ${current}: ${stockEntry.key}: ${currentCandle.candleDateTimeStart}~${currentCandle.candleDateTimeEnd} - " +
-                        "O: ${currentCandle.openPrice}, H: ${currentCandle.highPrice}, L: ${currentCandle.lowPrice}, C:${currentCandle.closePrice}, ${currentCandle.periodType}"
+                    "O: ${currentCandle.openPrice}, H: ${currentCandle.highPrice}, L: ${currentCandle.lowPrice}, C:${currentCandle.closePrice}, ${currentCandle.periodType}"
             )
 
             val momentFormula = StringBuilder()
@@ -369,7 +372,7 @@ class DmAnalysisService(
                 log.info("\t\t비교 날짜: [${delta}] ${stockEntry.key} - ${deltaCandle.candleDateTimeStart} - C: ${deltaCandle.closePrice}")
                 log.info(
                     "\t\t$delta -   ${stockEntry.key}: ${deltaCandle.candleDateTimeStart}~${deltaCandle.candleDateTimeEnd} - " +
-                            "직전종가: ${deltaCandle.beforeClosePrice}, O: ${deltaCandle.openPrice}, H: ${deltaCandle.highPrice}, L: ${deltaCandle.lowPrice}, C:${deltaCandle.closePrice}, ${deltaCandle.periodType}, 수익률(현재 종가 / 직전 종가) : ${deltaCandle.getYield()}"
+                        "직전종가: ${deltaCandle.beforeClosePrice}, O: ${deltaCandle.openPrice}, H: ${deltaCandle.highPrice}, L: ${deltaCandle.lowPrice}, C:${deltaCandle.closePrice}, ${deltaCandle.periodType}, 수익률(현재 종가 / 직전 종가) : ${deltaCandle.getYield()}"
                 )
 
                 val score = deltaCandle.closePrice * weight
@@ -403,11 +406,11 @@ class DmAnalysisService(
      * @return <종목코드, <날짜, 캔들>>
      */
     private fun getStockPriceIndex(
-        stockCodes: List<String>,
-    ): Map<String, Map<LocalDate, CandleDto>> {
-        val stockPriceIndex = stockCodes.associateWith { code ->
+        stockCodes: List<StockCode>,
+    ): Map<StockCode, Map<LocalDate, CandleDto>> {
+        val stockPriceIndex = stockCodes.associateWith { stockCode ->
             movingAverageService.getMovingAverage(
-                code,
+                stockCode,
                 PeriodType.PERIOD_MONTH,
                 Collections.emptyList(),
             )
@@ -505,7 +508,7 @@ class DmAnalysisService(
     ): XSSFSheet {
         val sheet = workbook.createSheet()
         val listStock = dmBacktestCondition.listStock()
-        val headerColumns = listStock.toMutableList()
+        val headerColumns = listStock.map { it.code }.toMutableList()
         headerColumns.add(0, "날짜")
         ReportMakerHelperService.applyHeader(sheet, headerColumns)
         var rowIdx = 1
@@ -573,15 +576,10 @@ class DmAnalysisService(
         report.append(String.format("샤프지수\t %,.2f", commonAnalysisReportResult.getBacktestSharpeRatio())).append("\n")
 
         report.append("----------- 테스트 조건 -----------\n")
-        val stockName = dmBacktestCondition.stockCodes.joinToString(", ") { code ->
-            stockRepository
-                .findByCode(code)
-                .map { "${it.code}[${it.name}]" }
-                .orElse("")
-        }
+        val stockName = dmBacktestCondition.stockCodes.joinToString(", ") { "${it.code}[${it.name}]" }
         val holdStockName = Optional.ofNullable(dmBacktestCondition.holdCode).map { code ->
             stockRepository
-                .findByCode(code)
+                .findByCode(code.code)
                 .map { "${it.code}[${it.name}]" }
                 .orElse("")
         }.orElse("")
@@ -615,10 +613,10 @@ class DmAnalysisService(
         val sheet = workbook.createSheet()
 
         val header = "분석기간,거래종목,홀드종목,가중치기간 및 비율,투자비율,최초 투자금액,매수 수수료,매도 수수료," +
-                "조건 설명," +
-                "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,매수 후 샤프지수," +
-                "밴치마크 보유 수익,밴치마크 보유 MDD,밴치마크 보유 CAGR,밴치마크 샤프지수," +
-                "실현 수익,실현 MDD,실현 CAGR,샤프지수,매매 횟수,승률"
+            "조건 설명," +
+            "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,매수 후 샤프지수," +
+            "밴치마크 보유 수익,밴치마크 보유 MDD,밴치마크 보유 CAGR,밴치마크 샤프지수," +
+            "실현 수익,실현 MDD,실현 CAGR,샤프지수,매매 횟수,승률"
         ReportMakerHelperService.applyHeader(sheet, header)
         var rowIdx = 1
 
@@ -645,7 +643,7 @@ class DmAnalysisService(
             createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(multiCondition.holdCode)
+            createCell.setCellValue(multiCondition.holdCode!!.code)
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)

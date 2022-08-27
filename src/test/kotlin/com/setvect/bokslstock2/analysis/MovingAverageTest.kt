@@ -1,11 +1,10 @@
 package com.setvect.bokslstock2.analysis
 
-import com.setvect.bokslstock2.StockCode
+import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService.ExcelStyle
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_MONTH
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_WEEK
-import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.junit.jupiter.api.Test
@@ -20,9 +19,6 @@ import java.io.FileOutputStream
 class MovingAverageTest {
     @Autowired
     private lateinit var movingAverageService: MovingAverageService
-
-    @Autowired
-    private lateinit var stockRepository: StockRepository
 
     @Test
     fun 이동평균계산() {
@@ -41,9 +37,9 @@ class MovingAverageTest {
     @Test
     fun 이동평균계산_엑셀_내보내기() {
         val periodType = PERIOD_MONTH
-        val code = StockCode.KODEX_KOSDAQ_2X_233740
+        val stockCode = StockCode.KODEX_KOSDAQ_2X_233740
         val movingAverage =
-            movingAverageService.getMovingAverage(code, periodType, listOf(1))
+            movingAverageService.getMovingAverage(stockCode, periodType, listOf(1))
 
         val workbook = XSSFWorkbook()
         val sheet = workbook.createSheet()!!
@@ -88,7 +84,7 @@ class MovingAverageTest {
         ExcelStyle.applyDefaultFont(sheet)
 
         val reportFile =
-            File("./temp", "주가정보_${stockRepository.findByCode(code).get().name}(${code})_${periodType}.xlsx")
+            File("./temp", "주가정보_${stockCode.desc}(${stockCode})_${periodType}.xlsx")
         FileOutputStream(reportFile).use { ous ->
             workbook.write(ous)
         }

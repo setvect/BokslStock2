@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2.analysis
 
-import com.setvect.bokslstock2.StockCode
+import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.rb.entity.RbConditionEntity
 import com.setvect.bokslstock2.analysis.rb.model.RbAnalysisCondition
@@ -123,8 +123,8 @@ class RbBacktest {
         log.info("끝.")
     }
 
-    private fun makeCondition(codeNam: String): RbConditionEntity {
-        val stock = stockRepository.findByCode(codeNam).get()
+    private fun makeCondition(codeNam: StockCode): RbConditionEntity {
+        val stock = stockRepository.findByCode(codeNam.code).get()
         val condition = RbConditionEntity(
             stock = stock,
             periodType = PERIOD_MONTH,

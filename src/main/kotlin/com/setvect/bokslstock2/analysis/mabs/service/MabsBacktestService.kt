@@ -51,7 +51,7 @@ class MabsBacktestService(
     @Transactional
     fun runTest(condition: MabsConditionEntity) {
         val movingAverageCandle = movingAverageService.getMovingAverage(
-            condition.stock.code, condition.periodType, listOf(condition.shortPeriod, condition.longPeriod)
+            condition.stock.convertStockCode(), condition.periodType, listOf(condition.shortPeriod, condition.longPeriod)
         )
 
         var lastStatus = SELL

@@ -1,5 +1,6 @@
 package com.setvect.bokslstock2.analysis.rebalance.model
 
+import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
@@ -29,7 +30,7 @@ data class RebalanceBacktestCondition(
          * 매매 코드
          * @see StockEntity
          */
-        val stockCode: String,
+        val stockCode: StockCode,
         /**
          * 비중
          */
@@ -51,7 +52,7 @@ data class RebalanceBacktestCondition(
         val threshold: Double
     )
 
-    fun listStock(): List<String> {
+    fun listStock(): List<StockCode> {
         return stockCodes.map { it.stockCode }
     }
 

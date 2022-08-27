@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2.analysis
 
-import com.setvect.bokslstock2.StockCode
+import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.vbs.entity.VbsConditionEntity
 import com.setvect.bokslstock2.analysis.vbs.model.VbsAnalysisCondition
@@ -250,8 +250,8 @@ class VbsBacktest {
         log.info("끝.")
     }
 
-    private fun makeCondition(codeNam: String): VbsConditionEntity {
-        val stock = stockRepository.findByCode(codeNam).get()
+    private fun makeCondition(stockCode: StockCode): VbsConditionEntity {
+        val stock = stockRepository.findByCode(stockCode.code).get()
         val condition = VbsConditionEntity(
             stock = stock,
             periodType = PERIOD_DAY,

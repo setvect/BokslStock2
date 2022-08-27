@@ -1,19 +1,19 @@
 package com.setvect.bokslstock2.analysis
 
-import com.setvect.bokslstock2.StockCode
+import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.dm.model.DmBacktestCondition
 import com.setvect.bokslstock2.analysis.dm.service.DmAnalysisService
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.util.DateRange
-import java.time.LocalDate
-import java.time.LocalDateTime
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 @SpringBootTest
 @ActiveProfiles("local")
@@ -28,7 +28,7 @@ class DmBacktest {
 //        val from = LocalDateTime.of(2022, 7, 1, 0, 0)
         val from = LocalDateTime.of(2012, 1, 1, 0, 0)
 //        val from = LocalDateTime.of(2022, 4, 1, 0, 0)
-        val to = LocalDateTime.of(2022, 8, 1, 0, 0)
+        val to = LocalDateTime.of(2022, 9, 1, 0, 0)
         val realRange = DateRange(from, to)
 
         val basic = TradeCondition(
@@ -139,10 +139,10 @@ class DmBacktest {
         val date = LocalDate.of(2022, 5, 1)
         val momentumScore = dmAnalysisService.getMomentumScore(
             date, listOf(StockCode.OS_CODE_SPY, StockCode.OS_CODE_SCZ), StockCode.OS_CODE_TLT, hashMapOf(
-                1 to 0.33,
-                3 to 0.33,
-                6 to 0.34
-            )
+            1 to 0.33,
+            3 to 0.33,
+            6 to 0.34
+        )
         )
         println(momentumScore)
     }

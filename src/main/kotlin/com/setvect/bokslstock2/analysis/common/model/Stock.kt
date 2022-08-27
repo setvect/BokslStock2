@@ -5,6 +5,7 @@ import com.setvect.bokslstock2.index.entity.StockEntity
 /**
  * 주식 종목
  */
+@Deprecated("StockCode로 변경")
 data class Stock(
     /**
      * 종목이름

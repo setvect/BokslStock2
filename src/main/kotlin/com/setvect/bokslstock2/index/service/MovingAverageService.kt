@@ -1,5 +1,6 @@
 package com.setvect.bokslstock2.index.service
 
+import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.StockRepository
@@ -18,15 +19,15 @@ class MovingAverageService(
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
     /**
-     * [code] 종목에 대한 [group]단위로 [avgCountList]만큼 이동 평균 계산
+     * [stockCode] 종목에 대한 [group]단위로 [avgCountList]만큼 이동 평균 계산
      * @return 날짜:해당 날의 이동평균
      */
     @Transactional
     fun getMovingAverage(
-        code: String, group: PeriodType, avgCountList: List<Int>, dateRange: DateRange = DateRange.maxRange
+        stockCode: StockCode, group: PeriodType, avgCountList: List<Int>, dateRange: DateRange = DateRange.maxRange
     ): List<CandleDto> {
-        val stockOptional = stockRepository.findByCode(code)
-        val stock = stockOptional.orElseThrow { RuntimeException("$code 종목 정보가 없습니다.") }
+        val stockOptional = stockRepository.findByCode(stockCode.code)
+        val stock = stockOptional.orElseThrow { RuntimeException("$stockCode 종목 정보가 없습니다.") }
 
         val candleList = stock.candleList
         val candleGroupMap = candleList
@@ -46,7 +47,7 @@ class MovingAverageService(
             }
             val candleGroup = candleGroupList[i]
             val candle = CandleDto(
-                code = code,
+                stockCode = stockCode,
                 candleDateTimeStart = candleGroup.second.first().candleDateTime,
                 candleDateTimeEnd = candleGroup.second.last().candleDateTime,
                 beforeCandleDateTimeEnd = beforeCandle.second.last().candleDateTime,

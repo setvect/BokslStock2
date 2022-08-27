@@ -4,7 +4,6 @@ import com.setvect.bokslstock2.analysis.common.model.*
 import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
-import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import org.springframework.stereotype.Service
@@ -22,7 +21,6 @@ import kotlin.streams.toList
 class BacktestTradeService(
     val candleRepository: CandleRepository,
     val stockRepository: StockRepository,
-    val movingAverageService: MovingAverageService,
 ) {
     /**
      * @return 수수료등 각종 조건을 적용시킨 매매 내역
@@ -130,7 +128,7 @@ class BacktestTradeService(
      * 매매 결과에 대한 통계적 분석을 함
      */
     fun analysis(
-        trades: List<Trade>, condition: TradeCondition, holdStockCodes: List<String>
+        trades: List<Trade>, condition: TradeCondition, holdStockCodes: List<StockCode>
     ): AnalysisResult {
         // 대상 종목으로 날짜별로 Buy&Hold 및 투자전략 평가금액 얻기
         val evaluationAmountHistory = applyEvaluationAmount(trades, condition, holdStockCodes)
@@ -160,7 +158,7 @@ class BacktestTradeService(
     fun applyEvaluationAmount(
         trades: List<Trade>,
         condition: TradeCondition,
-        holdStockCodes: List<String>
+        holdStockCodes: List<StockCode>
     ): List<EvaluationRateItem> {
 
         val useStockCode = trades.map { it.preTrade.stock.code }.distinct()
@@ -253,7 +251,7 @@ class BacktestTradeService(
      * Buy&Hold 종목을 동일 비중으로 매수 했을 경우 수익률 제공
      * @return 날짜별 Buy&Hold 수익률. <날짜, 수익비>
      */
-    fun getBuyAndHoldEvalRate(range: DateRange, holdStockCodes: List<String>): SortedMap<LocalDateTime, Double> {
+    fun getBuyAndHoldEvalRate(range: DateRange, holdStockCodes: List<StockCode>): SortedMap<LocalDateTime, Double> {
         val combinedYield: SortedMap<LocalDateTime, Double> = calculateBuyAndHoldProfitRatio(range, holdStockCodes)
         val initial = TreeMap<LocalDateTime, Double>()
         initial[range.from] = 1.0
@@ -271,11 +269,11 @@ class BacktestTradeService(
      */
     fun calculateBuyAndHoldProfitRatio(
         range: DateRange,
-        holdStockCodes: List<String>
+        holdStockCodes: List<StockCode>
     ): SortedMap<LocalDateTime, Double> {
 
         // <종목코드, List(캔들)>
-        val mapOfCandleList = getConditionOfCandle(range, holdStockCodes)
+        val mapOfCandleList = getConditionOfCandle(range, holdStockCodes.map { it.code })
 
         // <종목코드, Map<날짜, 종가>>
         val mapOfCondClosePrice = getConditionByClosePriceMap(mapOfCandleList)
@@ -318,9 +316,9 @@ class BacktestTradeService(
      */
     fun calculateBenchmarkYield(
         range: DateRange,
-        stockCodes: List<String>,
-    ): Map<String, CommonAnalysisReportResult.YieldMdd> {
-        val mapOfCandleList = getConditionOfCandle(range, stockCodes)
+        stockCodes: List<StockCode>,
+    ): Map<StockCode, CommonAnalysisReportResult.YieldMdd> {
+        val mapOfCandleList = getConditionOfCandle(range, stockCodes.map { it.code })
 
         // <조건아이디, 직전 가격>
         val mapOfBeforePrice = getConditionOfFirstOpenPrice(mapOfCandleList)
@@ -333,8 +331,7 @@ class BacktestTradeService(
                 ApplicationUtil.getYield(priceHistory),
                 ApplicationUtil.getMdd(priceHistory)
             )
-
-            entry.key to yieldMdd
+            StockCode.findByCode(entry.key) to yieldMdd
         }
     }
 

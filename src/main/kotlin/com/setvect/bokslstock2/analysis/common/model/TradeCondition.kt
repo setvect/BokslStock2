@@ -34,5 +34,5 @@ data class TradeCondition(
     /**
      * 밴치마크 종목코드
      */
-    val benchmark: List<String> = listOf()
+    val benchmark: List<StockCode> = listOf()
 )

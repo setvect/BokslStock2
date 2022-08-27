@@ -4,7 +4,6 @@ import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.analysis.rebalance.model.RebalanceBacktestCondition
-import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.util.ApplicationUtil
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.IndexedColors
@@ -15,26 +14,25 @@ import java.io.File
 import java.io.FileOutputStream
 
 @Service
-class RebalanceReportService(
-        private val stockRepository: StockRepository
-) {
+// TODO spring bean에 의존하지 않음. static한 helper class로 변경 가능
+class RebalanceReportService() {
     /**
      * 분석건에 대한 리포트 파일 만듦
      * @return 엑셀 파일
      */
     internal fun makeReportFile(
-            backtestCondition: RebalanceBacktestCondition,
-            analysisResult: AnalysisResult
+        backtestCondition: RebalanceBacktestCondition,
+        analysisResult: AnalysisResult
     ): File {
         val rebalanceFacter = backtestCondition.rebalanceFacter
         val stockCodes = backtestCondition.stockCodes
         val append =
-                "_${stockCodes.joinToString { it.stockCode }}_${rebalanceFacter.periodType},${rebalanceFacter.threshold}"
+            "_${stockCodes.joinToString { it.stockCode.code }}_${rebalanceFacter.periodType},${rebalanceFacter.threshold}"
 
         val reportFileSubPrefix = ReportMakerHelperService.getReportFileSuffix(backtestCondition.tradeCondition, backtestCondition.listStock(), append)
         val reportFile = File(
-                "./backtest-result/rebalance-trade-report",
-                "rebalance_trade_${reportFileSubPrefix}"
+            "./backtest-result/rebalance-trade-report",
+            "rebalance_trade_${reportFileSubPrefix}"
         )
 
         XSSFWorkbook().use { workbook ->
@@ -42,8 +40,8 @@ class RebalanceReportService(
             workbook.setSheetName(workbook.getSheetIndex(sheet), "1. 매매이력")
 
             sheet = ReportMakerHelperService.createReportEvalAmount(
-                    analysisResult.common.evaluationAmountHistory,
-                    workbook
+                analysisResult.common.evaluationAmountHistory,
+                workbook
             )
             workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일자별 자산비율 변화")
 
@@ -70,9 +68,9 @@ class RebalanceReportService(
      * 매매 결과 요약 및 조건 시트 만듦
      */
     private fun createReportSummary(
-            backtestCondition: RebalanceBacktestCondition,
-            analysisResult: AnalysisResult,
-            workbook: XSSFWorkbook
+        backtestCondition: RebalanceBacktestCondition,
+        analysisResult: AnalysisResult,
+        workbook: XSSFWorkbook
     ): XSSFSheet {
         val sheet = workbook.createSheet()
         val summary = getSummary(backtestCondition, analysisResult.common)
@@ -82,21 +80,21 @@ class RebalanceReportService(
     }
 
     internal fun getSummary(
-            rebalanceBacktestCondition: RebalanceBacktestCondition,
-            commonAnalysisReportResult: CommonAnalysisReportResult
+        rebalanceBacktestCondition: RebalanceBacktestCondition,
+        commonAnalysisReportResult: CommonAnalysisReportResult
     ): String {
         val report = StringBuilder()
         report.append("----------- Buy&Hold 결과 -----------\n")
         val buyHoldText = ApplicationUtil.makeSummaryCompareStock(
-                commonAnalysisReportResult.benchmarkTotalYield.buyHoldTotalYield,
-                commonAnalysisReportResult.getBuyHoldSharpeRatio()
+            commonAnalysisReportResult.benchmarkTotalYield.buyHoldTotalYield,
+            commonAnalysisReportResult.getBuyHoldSharpeRatio()
         )
         report.append(buyHoldText)
 
         report.append("----------- Benchmark 결과 -----------\n")
         val benchmarkText = ApplicationUtil.makeSummaryCompareStock(
-                commonAnalysisReportResult.benchmarkTotalYield.benchmarkTotalYield,
-                commonAnalysisReportResult.getBenchmarkSharpeRatio()
+            commonAnalysisReportResult.benchmarkTotalYield.benchmarkTotalYield,
+            commonAnalysisReportResult.getBenchmarkSharpeRatio()
         )
         report.append(benchmarkText)
 
@@ -105,20 +103,20 @@ class RebalanceReportService(
         report.append(String.format("합산 실현 수익\t %,.2f%%", totalYield.yield * 100)).append("\n")
         report.append(String.format("합산 실현 MDD\t %,.2f%%", totalYield.mdd * 100)).append("\n")
         report.append(String.format("합산 매매회수\t %d", commonAnalysisReportResult.getWinningRateTotal().getTradeCount()))
-                .append("\n")
+            .append("\n")
         report.append(
-                String.format(
-                        "합산 승률\t %,.2f%%",
-                        commonAnalysisReportResult.getWinningRateTotal().getWinRate() * 100
-                )
+            String.format(
+                "합산 승률\t %,.2f%%",
+                commonAnalysisReportResult.getWinningRateTotal().getWinRate() * 100
+            )
         )
-                .append("\n")
+            .append("\n")
         report.append(String.format("합산 CAGR\t %,.2f%%", totalYield.getCagr() * 100)).append("\n")
         report.append(String.format("샤프지수\t %,.2f", commonAnalysisReportResult.getBacktestSharpeRatio())).append("\n")
 
         report.append("----------- 테스트 조건 -----------\n")
         val stockName = rebalanceBacktestCondition.stockCodes.joinToString("\n") { stock ->
-            stockRepository.findByCode(stock.stockCode).map { "\t${it.code}[${it.name}]\t비율: ${stock.weight}%" }.orElse("")
+            "\t${stock.stockCode.code}[${stock.stockCode.desc}]\t비율: ${stock.weight}%"
         }
 
         val tradeCondition = rebalanceBacktestCondition.tradeCondition
@@ -139,16 +137,16 @@ class RebalanceReportService(
      * @return 여러개 백테스트 결과 요약 시트
      */
     internal fun createTotalSummary(
-            workbook: XSSFWorkbook,
-            conditionResults: List<Pair<RebalanceBacktestCondition, AnalysisResult>>
+        workbook: XSSFWorkbook,
+        conditionResults: List<Pair<RebalanceBacktestCondition, AnalysisResult>>
     ): XSSFSheet {
         val sheet = workbook.createSheet()
 
         val header = "분석기간,거래종목,리벨런싱주기,리벨런싱입계치,종복별비율,투자비율,최초 투자금액,매수 수수료,매도 수수료," +
-                "조건 설명," +
-                "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,매수 후 샤프지수," +
-                "밴치마크 보유 수익,밴치마크 보유 MDD,밴치마크 보유 CAGR,밴치마크 샤프지수," +
-                "실현 수익,실현 MDD,실현 CAGR,샤프지수,매매 횟수,승률"
+            "조건 설명," +
+            "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,매수 후 샤프지수," +
+            "밴치마크 보유 수익,밴치마크 보유 MDD,밴치마크 보유 CAGR,밴치마크 샤프지수," +
+            "실현 수익,실현 MDD,실현 CAGR,샤프지수,매매 횟수,승률"
         ReportMakerHelperService.applyHeader(sheet, header)
         var rowIdx = 1
 
@@ -184,9 +182,9 @@ class RebalanceReportService(
 
             createCell = row.createCell(cellIdx++)
             val stockWeight = multiCondition.stockCodes
-                    .joinToString(",") { stock ->
-                        "${stock.stockCode}:${stock.weight}"
-                    }
+                .joinToString(",") { stock ->
+                    "${stock.stockCode}:${stock.weight}"
+                }
             createCell.setCellValue(stockWeight)
             createCell.cellStyle = percentStyle
 
@@ -213,7 +211,7 @@ class RebalanceReportService(
             val result = conditionResult.second
 
             val buyHoldTotalYield: CommonAnalysisReportResult.TotalYield =
-                    result.common.benchmarkTotalYield.buyHoldTotalYield
+                result.common.benchmarkTotalYield.buyHoldTotalYield
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(buyHoldTotalYield.yield)
             createCell.cellStyle = percentStyle
@@ -231,7 +229,7 @@ class RebalanceReportService(
             createCell.cellStyle = decimalStyle
 
             val benchmarkTotalYield: CommonAnalysisReportResult.TotalYield =
-                    result.common.benchmarkTotalYield.benchmarkTotalYield
+                result.common.benchmarkTotalYield.benchmarkTotalYield
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(benchmarkTotalYield.yield)
             createCell.cellStyle = percentStyle

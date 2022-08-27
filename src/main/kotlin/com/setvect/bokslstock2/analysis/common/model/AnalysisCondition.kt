@@ -8,8 +8,8 @@ abstract class AnalysisCondition {
      */
     abstract val tradeConditionList: List<ConditionEntity>
 
-    fun getStockCodes(): List<String> {
-        return tradeConditionList.map { it.stock.code }.toList()
+    fun getStockCodes(): List<StockCode> {
+        return tradeConditionList.map { StockCode.findByCode(it.stock.code) }.toList()
     }
 
     fun getPreTradeBundles(): List<List<PreTrade>> {

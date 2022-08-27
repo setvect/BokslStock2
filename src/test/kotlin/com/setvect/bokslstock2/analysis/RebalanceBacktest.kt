@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2.analysis
 
-import com.setvect.bokslstock2.StockCode
+import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.rebalance.model.RebalanceBacktestCondition
 import com.setvect.bokslstock2.analysis.rebalance.service.RebalanceAnalysisService
@@ -24,7 +24,7 @@ class RebalanceBacktest {
 
     @Test
     fun 일회성_백테스팅_리포트_만듦() {
-        val from = LocalDateTime.of(2020, 1, 1, 0, 0)
+        val from = LocalDateTime.of(2010, 1, 1, 0, 0)
         val to = LocalDateTime.of(2021, 1, 1, 0, 0)
         val realRange = DateRange(from, to)
 
@@ -35,7 +35,7 @@ class RebalanceBacktest {
             feeBuy = 0.0001,
             feeSell = 0.0001,
             comment = "",
-            benchmark = listOf(StockCode.OS_CODE_SSO)
+            benchmark = listOf(StockCode.OS_CODE_SPY)
         )
 
         val timeWeights = listOf(

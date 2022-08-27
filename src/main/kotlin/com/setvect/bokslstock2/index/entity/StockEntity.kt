@@ -1,15 +1,9 @@
 package com.setvect.bokslstock2.index.entity
 
 import com.setvect.bokslstock2.analysis.common.entity.BaseTimeEntity
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
+import com.setvect.bokslstock2.analysis.common.model.StockCode
+import javax.persistence.*
 import javax.persistence.GenerationType.SEQUENCE
-import javax.persistence.Id
-import javax.persistence.OneToMany
-import javax.persistence.OrderBy
-import javax.persistence.Table
-import javax.persistence.UniqueConstraint
 
 /**
  * 주식 종목
@@ -17,8 +11,8 @@ import javax.persistence.UniqueConstraint
 @Entity
 @Table(
     name = "CA_STOCK", uniqueConstraints = [
-        UniqueConstraint(name = "UC_STOCK_ENTITY_CODE", columnNames = ["CODE"])
-    ]
+    UniqueConstraint(name = "UC_STOCK_ENTITY_CODE", columnNames = ["CODE"])
+]
 )
 class StockEntity(
     /**
@@ -51,5 +45,9 @@ class StockEntity(
 
     fun getNameCode(): String {
         return "${name}(${code})"
+    }
+
+    fun convertStockCode(): StockCode {
+        return StockCode.findByCode(code)
     }
 }

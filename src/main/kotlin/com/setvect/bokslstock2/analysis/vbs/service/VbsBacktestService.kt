@@ -51,7 +51,7 @@ class VbsBacktestService(
     @Transactional
     fun runTest(condition: VbsConditionEntity) {
         val movingAverageCandle = movingAverageService.getMovingAverage(
-            condition.stock.code, condition.periodType, listOf(condition.maPeriod)
+            condition.stock.convertStockCode(), condition.periodType, listOf(condition.maPeriod)
         )
 
         var lastBuyInfo: VbsTradeEntity? = null

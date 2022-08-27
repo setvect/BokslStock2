@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2.analysis
 
-import com.setvect.bokslstock2.StockCode
+import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.analysis.mabs.entity.MabsConditionEntity
 import com.setvect.bokslstock2.analysis.mabs.model.MabsAnalysisCondition
@@ -72,7 +72,7 @@ class MabsBacktest {
     @Test
     @Transactional
     fun 종목과_시세조회() {
-        val stockOp = stockRepository.findByCode(StockCode.KODEX_200_069500)
+        val stockOp = stockRepository.findByCode(StockCode.KODEX_200_069500.code)
         val stock = stockOp.get()
 
         log.info("${stock.name}(${stock.code}) ${stock.candleList.size}")
@@ -190,7 +190,7 @@ class MabsBacktest {
         val realRange = DateRange(LocalDateTime.of(2015, 1, 1, 0, 0), LocalDateTime.now())
         val mabsAnalysisCondition = MabsAnalysisCondition(
             tradeConditionList = listOf(
-                makeCondition(StockCode.KODEX_2X_122630),
+                makeCondition(StockCode.KODEX_2X_122630.code),
             ),
             basic = TradeCondition(
                 range = realRange,

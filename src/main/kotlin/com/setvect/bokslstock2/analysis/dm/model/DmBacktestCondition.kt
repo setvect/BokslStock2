@@ -1,5 +1,6 @@
 package com.setvect.bokslstock2.analysis.dm.model
 
+import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
@@ -17,13 +18,13 @@ data class DmBacktestCondition(
      * 듀얼 모멘텀 대상 종목 코드
      * @see StockEntity
      */
-    val stockCodes: List<String>,
+    val stockCodes: List<StockCode>,
 
     /**
      * 거래가 없을 때 살 종목, null 경우 현금 보유
      * @see StockEntity
      */
-    val holdCode: String?,
+    val holdCode: StockCode?,
 
     /**
      * 거래 주기
@@ -44,7 +45,7 @@ data class DmBacktestCondition(
     /**
      * @return holdCode를 포함한 거래 대상 종목
      */
-    fun listStock(): List<String> {
+    fun listStock(): List<StockCode> {
         if (holdCode == null) {
             return stockCodes.toList()
         }
