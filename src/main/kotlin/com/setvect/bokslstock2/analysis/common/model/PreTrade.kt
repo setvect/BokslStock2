@@ -9,7 +9,7 @@ data class PreTrade(
     /**
      * 매매 종목
      */
-    val stock: Stock,
+    val stockCode: StockCode,
 
     val tradeType: TradeType,
 

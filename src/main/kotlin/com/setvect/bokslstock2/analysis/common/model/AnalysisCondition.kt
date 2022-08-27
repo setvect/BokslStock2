@@ -17,7 +17,7 @@ abstract class AnalysisCondition {
             .map { vc ->
                 vc.tradeList.map {
                     PreTrade(
-                        stock = Stock(vc.stock.name, vc.stock.code),
+                        stockCode = StockCode.findByCode(vc.stock.code),
                         tradeDate = it.tradeDate,
                         tradeType = it.tradeType,
                         unitPrice = it.unitPrice,

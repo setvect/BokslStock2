@@ -194,18 +194,18 @@ class DmAnalysisService(
 
             // 듀얼 모멘텀 매수 대상 종목이 없으면, hold 종목 매수 또는 현금 보유
             if (momentTargetRate.isEmpty()) {
-                val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stock.code != condition.holdCode!!.code
+                val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stockCode.code != condition.holdCode!!.code
                 val existHoldCode = condition.holdCode != null
 
                 if (changeBuyStock) {
-                    val code = StockCode.findByCode(beforeBuyTrade!!.stock.code)
+                    val code = StockCode.findByCode(beforeBuyTrade!!.stockCode.code)
                     // 보유 종목 매도
                     val sellStock = stockPriceIndex[code]!![momentumScore.date]!!
                     val sellTrade = makeSellTrade(sellStock, beforeBuyTrade)
                     tradeList.add(sellTrade)
                     beforeBuyTrade = null
                 }
-                if (existHoldCode && (beforeBuyTrade == null || beforeBuyTrade.stock.code != condition.holdCode!!.code)) {
+                if (existHoldCode && (beforeBuyTrade == null || beforeBuyTrade.stockCode.code != condition.holdCode!!.code)) {
                     // hold 종목 매수
                     val buyStock = stockPriceIndex[condition.holdCode]!![momentumScore.date]!!
                     val stock = codeByStock[condition.holdCode]!!
@@ -221,10 +221,10 @@ class DmAnalysisService(
             } else {
                 val buyStockRate = momentTargetRate[0]
                 val stockCode = buyStockRate.key
-                val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stock.code != stockCode.code
+                val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stockCode.code != stockCode.code
 
                 if (changeBuyStock) {
-                    val code = StockCode.findByCode(beforeBuyTrade!!.stock.code)
+                    val code = StockCode.findByCode(beforeBuyTrade!!.stockCode.code)
                     // 보유 종목 매도
                     val sellStock = stockPriceIndex[code]!![momentumScore.date]!!
                     val sellTrade = makeSellTrade(sellStock, beforeBuyTrade)
@@ -238,7 +238,7 @@ class DmAnalysisService(
                     tradeList.add(buyTrade)
                     beforeBuyTrade = buyTrade
                 } else {
-                    log.info("매수 유지: $momentumScore.date, ${beforeBuyTrade.stock.name}(${beforeBuyTrade.stock.code})")
+                    log.info("매수 유지: $momentumScore.date, ${beforeBuyTrade.stockCode.name}(${beforeBuyTrade.stockCode.code})")
                 }
             }
         }
@@ -246,7 +246,7 @@ class DmAnalysisService(
         // 마지막 보유 종목 매도
         if (condition.endSell && beforeBuyTrade != null) {
             val date = momentumScoreList.last().date.plusMonths(condition.periodType.getDeviceMonth().toLong())
-            val code = StockCode.findByCode(beforeBuyTrade.stock.code)
+            val code = StockCode.findByCode(beforeBuyTrade.stockCode.code)
             val sellStock = stockPriceIndex[code]!![date]
             if (sellStock != null) {
                 val sellTrade = makeSellTrade(sellStock, beforeBuyTrade)
@@ -255,7 +255,7 @@ class DmAnalysisService(
                 // 마지막 시세로 매도
                 val candleEntityList =
                     candleRepository.findByBeforeLastCandle(
-                        beforeBuyTrade.stock.code,
+                        beforeBuyTrade.stockCode.code,
                         date.atTime(0, 0),
                         PageRequest.of(0, 1)
                     )
@@ -317,13 +317,13 @@ class DmAnalysisService(
         stock: StockEntity
     ): PreTrade {
         val buyTrade = PreTrade(
-            stock = Stock.of(stock),
+            stockCode = StockCode.findByCode(stock.code),
             tradeType = TradeType.BUY,
             yield = 0.0,
             unitPrice = targetStock.openPrice,
             tradeDate = targetStock.candleDateTimeStart,
         )
-        log.info("매수: ${targetStock.candleDateTimeStart}(${buyTrade.tradeDate}), ${buyTrade.stock.name}(${buyTrade.stock.code})")
+        log.info("매수: ${targetStock.candleDateTimeStart}(${buyTrade.tradeDate}), ${buyTrade.stockCode.name}(${buyTrade.stockCode.code})")
         return buyTrade
     }
 
@@ -333,13 +333,13 @@ class DmAnalysisService(
         beforeBuyTrade: PreTrade
     ): PreTrade {
         val sellTrade = PreTrade(
-            stock = beforeBuyTrade.stock,
+            stockCode = beforeBuyTrade.stockCode,
             tradeType = TradeType.SELL,
             yield = ApplicationUtil.getYield(beforeBuyTrade.unitPrice, targetStock.openPrice),
             unitPrice = targetStock.openPrice,
             tradeDate = targetStock.candleDateTimeStart,
         )
-        log.info("매도: ${targetStock.candleDateTimeStart}(${sellTrade.tradeDate}), ${sellTrade.stock.name}(${sellTrade.stock.code}), 수익: ${sellTrade.yield}")
+        log.info("매도: ${targetStock.candleDateTimeStart}(${sellTrade.tradeDate}), ${sellTrade.stockCode.name}(${sellTrade.stockCode.code}), 수익: ${sellTrade.yield}")
         return sellTrade
     }
 

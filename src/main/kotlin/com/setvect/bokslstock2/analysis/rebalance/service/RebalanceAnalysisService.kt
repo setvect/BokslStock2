@@ -1,6 +1,9 @@
 package com.setvect.bokslstock2.analysis.rebalance.service
 
-import com.setvect.bokslstock2.analysis.common.model.*
+import com.setvect.bokslstock2.analysis.common.model.PreTrade
+import com.setvect.bokslstock2.analysis.common.model.StockCode
+import com.setvect.bokslstock2.analysis.common.model.Trade
+import com.setvect.bokslstock2.analysis.common.model.TradeType
 import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
 import com.setvect.bokslstock2.analysis.rebalance.model.RebalanceBacktestCondition
 import com.setvect.bokslstock2.index.dto.CandleDto
@@ -161,7 +164,7 @@ class RebalanceAnalysisService(
                         ?: throw RuntimeException("${candle.stockCode} 매수 내역이 없습니다.")
 
                     val preTrade = PreTrade(
-                        stock = Stock.of(stock),
+                        stockCode = StockCode.findByCode(stock.code),
                         tradeType = TradeType.SELL,
                         yield = ApplicationUtil.getYield(buyTrade.preTrade.unitPrice, candle.openPrice),
                         unitPrice = candle.openPrice,
@@ -169,7 +172,7 @@ class RebalanceAnalysisService(
                     )
 
 
-                    buyStock.remove(StockCode.findByCode(preTrade.stock.code))
+                    buyStock.remove(StockCode.findByCode(preTrade.stockCode.code))
                     val sellPrice = buyTrade.getBuyAmount() * (1 + preTrade.yield)
                     val sellFee = sellPrice * condition.tradeCondition.feeSell
                     val gains = sellPrice - buyTrade.getBuyAmount()
@@ -200,7 +203,7 @@ class RebalanceAnalysisService(
                 val stock = codeByStock[candle.stockCode]!!
 
                 val preTrade = PreTrade(
-                    stock = Stock.of(stock),
+                    stockCode = StockCode.findByCode(stock.code),
                     tradeType = TradeType.BUY,
                     yield = 0.0,
                     unitPrice = candle.openPrice,
@@ -226,7 +229,7 @@ class RebalanceAnalysisService(
                     stockEvalPrice = stockEvalPrice
                 )
                 tradeItemHistory.add(tradeReportItem)
-                buyStock[StockCode.findByCode(preTrade.stock.code)] = tradeReportItem
+                buyStock[StockCode.findByCode(preTrade.stockCode.code)] = tradeReportItem
             }
         }
         return tradeItemHistory

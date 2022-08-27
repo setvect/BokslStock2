@@ -69,13 +69,13 @@ class BacktestTradeService(
                     stockEvalPrice = stockEvalPrice
                 )
                 tradeItemHistory.add(tradeReportItem)
-                buyStock[tradeItem.stock.code] = tradeReportItem
+                buyStock[tradeItem.stockCode.code] = tradeReportItem
             } else if (tradeItem.tradeType == TradeType.SELL) {
                 // 매도 처리
                 // 투자수익금 = 매수금액 * 수익률 - 수수료
-                val buyTrade = buyStock[tradeItem.stock.code]
-                    ?: throw RuntimeException("${tradeItem.stock.code} 매수 내역이 없습니다.")
-                buyStock.remove(tradeItem.stock.code)
+                val buyTrade = buyStock[tradeItem.stockCode.code]
+                    ?: throw RuntimeException("${tradeItem.stockCode.code} 매수 내역이 없습니다.")
+                buyStock.remove(tradeItem.stockCode.code)
                 val sellPrice = buyTrade.getBuyAmount() * (1 + tradeItem.yield)
                 val sellFee = sellPrice * condition.feeSell
                 val gains = sellPrice - buyTrade.getBuyAmount()
@@ -161,7 +161,7 @@ class BacktestTradeService(
         holdStockCodes: List<StockCode>
     ): List<EvaluationRateItem> {
 
-        val useStockCode = trades.map { it.preTrade.stock.code }.distinct()
+        val useStockCode = trades.map { it.preTrade.stockCode.code }.distinct()
         // <종목 코드, List(캔들)>
         val candleListMap = getConditionOfCandle(condition.range, useStockCode)
 
@@ -184,7 +184,7 @@ class BacktestTradeService(
         // 현재 가지고 있는 주식 수
         // <종목 코드, 주식수>
         val condByStockQty = trades
-            .map { it.preTrade.stock.code }
+            .map { it.preTrade.stockCode.code }
             .distinct()
             .associateWith { 0 }
             .toMutableMap()
@@ -198,7 +198,7 @@ class BacktestTradeService(
             val benchmarkRate = benchmarkRateMap[date] ?: benchmarkLastRate
             val currentTradeList = tradeByDate[date] ?: emptyList()
             for (trade in currentTradeList) {
-                val stockCode = trade.preTrade.stock.code
+                val stockCode = trade.preTrade.stockCode.code
                 condByStockQty[stockCode] = trade.qty
                 backtestLastCash = trade.cash
             }
@@ -355,7 +355,7 @@ class BacktestTradeService(
         tradeItemHistory: List<Trade>
     ): Map<String, CommonAnalysisReportResult.WinningRate> {
         val sellList = tradeItemHistory.filter { it.preTrade.tradeType == TradeType.SELL }.toList()
-        val groupBy = sellList.groupBy { it.preTrade.stock.code }
+        val groupBy = sellList.groupBy { it.preTrade.stockCode.code }
 
         return groupBy.entries.associate { entity ->
             val totalInvest = entity.value.sumOf { it.gains }

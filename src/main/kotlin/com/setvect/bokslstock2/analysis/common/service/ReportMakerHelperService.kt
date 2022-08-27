@@ -52,7 +52,7 @@ class ReportMakerHelperService(
                 createCell.cellStyle = dateStyle
 
                 createCell = row.createCell(cellIdx++)
-                createCell.setCellValue(preTrade.stock.toString())
+                createCell.setCellValue(preTrade.stockCode.toString())
                 createCell.cellStyle = defaultStyle
 
                 createCell = row.createCell(cellIdx++)
