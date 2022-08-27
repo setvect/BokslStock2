@@ -27,6 +27,7 @@ TODO
 - 한국 및 미국주식 크롤링
   - 한국주식: https://finance.naver.com
   - 미국주식: https://query1.finance.yahoo.com
+  - 원달러환율: https://spot.wooribank.com/pot/Dream?withyou=FXXRT0014
 - 메인 소스: [CrawlService.kt](src/main/kotlin/com/setvect/bokslstock2/index/service/CrawlStockPriceService.kt)
 - 실행 소스: [CrawlStockPriceTest.kt](src/test/kotlin/com/setvect/bokslstock2/crawl/CrawlStockPriceTest.kt)
 

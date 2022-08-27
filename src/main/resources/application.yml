@@ -45,6 +45,8 @@ com:
           savePath: ./crawl
         global:
           url: https://query1.finance.yahoo.com/v7/finance/download/{code}?period1={from}&period2={to}
+        exchangeRate:
+          url: https://spot.wooribank.com/pot/jcc?withyou=FXXRT0014&__ID=c008217
       slack:
         # 이벤트 발생시 슬랙메시지 전달 여부
         # 만약 슬렉 메시지를 받고 싶지 않으면 false로 셋팅 후 항목 token, channelId 값을 비워둠

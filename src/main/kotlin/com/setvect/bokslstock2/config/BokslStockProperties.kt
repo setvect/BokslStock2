@@ -16,6 +16,7 @@ data class BokslStockProperties(
     data class Crawl(
         val korea: Korea,
         val global: Global,
+        val exchangeRate: ExchangeRate,
     ) {
         data class Korea(
             val url: UrlCollection,
@@ -36,6 +37,11 @@ data class BokslStockProperties(
         }
 
         data class Global(
+            val url: String
+        ) {
+        }
+
+        data class ExchangeRate(
             val url: String
         ) {
         }

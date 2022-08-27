@@ -207,8 +207,8 @@ class BacktestTradeService(
             val evalStockAmount =
                 condByStockQty.entries.stream().filter { it.value > 0 }
                     .mapToDouble {
-                        val closePrice = condClosePriceMap[it.key]!![date]
-                            ?: throw RuntimeException("${date}에 대한 조건아이디(${it.key})의 종가 정보가 없습니다.")
+
+                        val closePrice: Double = getBeforeNearPrice(condClosePriceMap[it.key]!!, date, it.key)
                         closePrice * it.value
                     }.sum()
 
@@ -245,6 +245,23 @@ class BacktestTradeService(
             )
         )
         return result
+    }
+
+    /**
+     * [date]날짜와 가장 가까운 가격을 반환함. 최대 7일 이전까지 가격을 찾고 없으면 예외 발생
+     */
+    private fun getBeforeNearPrice(condClosePriceMap: Map<LocalDateTime, Double>, date: LocalDateTime, code: String): Double {
+        var closePrice: Double? = null
+        for (i in 0L..7L) {
+            closePrice = condClosePriceMap[date.minusDays(i)]
+            if (closePrice != null) {
+                break
+            }
+        }
+        if (closePrice == null) {
+            throw RuntimeException("${date}에 대한 조건아이디(${code})의 종가 정보가 없습니다.")
+        }
+        return closePrice
     }
 
     /**
