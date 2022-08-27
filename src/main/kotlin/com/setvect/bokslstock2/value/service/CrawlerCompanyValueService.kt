@@ -1,7 +1,7 @@
 package com.setvect.bokslstock2.value.service
 
 import com.google.gson.GsonBuilder
-import com.setvect.bokslstock2.config.CrawlResourceProperties
+import com.setvect.bokslstock2.config.BokslStockProperties
 import com.setvect.bokslstock2.value.dto.CompanyDetail
 import com.setvect.bokslstock2.value.dto.CompanySummary
 import org.apache.commons.io.FileUtils
@@ -18,7 +18,7 @@ import kotlin.streams.toList
 
 @Service
 class CrawlerCompanyValueService(
-    val crawlResourceProperties: CrawlResourceProperties,
+    val bokslStockProperties: BokslStockProperties,
     val valueCommonService: ValueCommonService
 ) {
     private val regexCompanyLink = Regex("code=(\\w*).*>(.*)<")
@@ -147,7 +147,7 @@ class CrawlerCompanyValueService(
         KoreaMarket.values().forEach { stockType ->
             var page = 1
             while (true) {
-                val url = crawlResourceProperties.url.list
+                val url = bokslStockProperties.crawl.korea.url.list
                     .replace("{marketSeq}", stockType.code.toString())
                     .replace("{page}", page.toString())
                 log.info("페이지: $url")

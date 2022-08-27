@@ -32,17 +32,19 @@ logging.level:
 com:
   setvect:
     bokslstock:
-      companyCrawl:
-        url:
-          list: https://finance.naver.com/sise/sise_market_sum.nhn?sosok={marketSeq}&page={page}
-          info: https://finance.naver.com/item/main.nhn?code={code}
-          stockPrice: https://api.finance.naver.com/siseJson.naver?symbol={code}&requestType=1&startTime={start}&endTime={end}&timeframe=day
-        config:
-          connectionTimeoutMs: 1000
-          readTimeoutMs: 1000
-        userAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36
-        savePath: ./crawl
-
+      crawl:
+        korea:
+          url:
+            list: https://finance.naver.com/sise/sise_market_sum.nhn?sosok={marketSeq}&page={page}
+            info: https://finance.naver.com/item/main.nhn?code={code}
+            stockPrice: https://api.finance.naver.com/siseJson.naver?symbol={code}&requestType=1&startTime={start}&endTime={end}&timeframe=day
+          config:
+            connectionTimeoutMs: 1000
+            readTimeoutMs: 1000
+          userAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36
+          savePath: ./crawl
+        global:
+          url: https://query1.finance.yahoo.com/v7/finance/download/{code}?period1={from}&period2={to}
       slack:
         # 이벤트 발생시 슬랙메시지 전달 여부
         # 만약 슬렉 메시지를 받고 싶지 않으면 false로 셋팅 후 항목 token, channelId 값을 비워둠
@@ -51,6 +53,3 @@ com:
         token:
         # 메시지 전달 채널 ID
         channelId:
-
-
-

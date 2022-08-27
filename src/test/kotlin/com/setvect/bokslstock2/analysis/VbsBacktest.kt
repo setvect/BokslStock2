@@ -13,7 +13,6 @@ import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
-import java.time.LocalDateTime
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -22,6 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.annotation.Rollback
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
 import javax.persistence.EntityManager
 
 @SpringBootTest
@@ -203,8 +203,8 @@ class VbsBacktest {
         val vbsAnalysisCondition = listOf(
             VbsAnalysisCondition(
                 tradeConditionList = listOf(
-                    makeCondition(StockCode.CODE_KODEX_KOSDAQ_2X_233740),
-                    makeCondition(StockCode.CODE_KODEX_BANK_091170),
+                    makeCondition(StockCode.KODEX_KOSDAQ_2X_233740),
+                    makeCondition(StockCode.KODEX_BANK_091170),
                 ),
                 basic = TradeCondition(
                     range = range,
@@ -213,7 +213,7 @@ class VbsBacktest {
                     feeBuy = 0.0002,
                     feeSell = 0.0002,
                     comment = "",
-                    benchmark = listOf(StockCode.CODE_KODEX_200_069500)
+                    benchmark = listOf(StockCode.KODEX_200_069500)
                 )
             ),
 //            VbsAnalysisCondition(

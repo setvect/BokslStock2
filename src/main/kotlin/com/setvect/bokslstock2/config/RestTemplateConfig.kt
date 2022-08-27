@@ -1,7 +1,5 @@
 package com.setvect.bokslstock2.config
 
-import java.io.IOException
-import java.nio.charset.Charset
 import lombok.extern.slf4j.Slf4j
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -9,20 +7,20 @@ import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpRequest
-import org.springframework.http.client.BufferingClientHttpRequestFactory
-import org.springframework.http.client.ClientHttpRequestExecution
-import org.springframework.http.client.ClientHttpRequestInterceptor
-import org.springframework.http.client.ClientHttpResponse
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
+import org.springframework.http.client.*
 import org.springframework.util.StreamUtils
 import org.springframework.web.client.RestTemplate
+import java.io.IOException
+import java.nio.charset.Charset
 
 /**
  * RestTemplate
  */
 @Slf4j
 @Configuration
-class RestTemplateConfig(private val crawlResourceProperties: CrawlResourceProperties) {
+class RestTemplateConfig(
+    private val bokslStockProperties: BokslStockProperties
+) {
 
     /**
      * @param restTemplateBuilder .
@@ -32,8 +30,8 @@ class RestTemplateConfig(private val crawlResourceProperties: CrawlResourcePrope
     fun crawlRestTemplate(restTemplateBuilder: RestTemplateBuilder): RestTemplate {
         return getDefaultRestTemplate(
             restTemplateBuilder,
-            crawlResourceProperties.config.connectionTimeoutMs,
-            crawlResourceProperties.config.readTimeoutMs
+            bokslStockProperties.crawl.korea.config.connectionTimeoutMs,
+            bokslStockProperties.crawl.korea.config.readTimeoutMs
         )
     }
 

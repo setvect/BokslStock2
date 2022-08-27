@@ -27,7 +27,7 @@ class MovingAverageTest {
     @Test
     fun 이동평균계산() {
         val movingAverage =
-            movingAverageService.getMovingAverage(StockCode.CODE_KODEX_KOSDAQ_2X_233740, PERIOD_WEEK, listOf(1))
+            movingAverageService.getMovingAverage(StockCode.KODEX_KOSDAQ_2X_233740, PERIOD_WEEK, listOf(1))
 
         movingAverage.forEach {
             val avgInfo = it.average.entries
@@ -41,7 +41,7 @@ class MovingAverageTest {
     @Test
     fun 이동평균계산_엑셀_내보내기() {
         val periodType = PERIOD_MONTH
-        val code = StockCode.CODE_KODEX_KOSDAQ_2X_233740
+        val code = StockCode.KODEX_KOSDAQ_2X_233740
         val movingAverage =
             movingAverageService.getMovingAverage(code, periodType, listOf(1))
 

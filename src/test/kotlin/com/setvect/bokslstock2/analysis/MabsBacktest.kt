@@ -8,14 +8,11 @@ import com.setvect.bokslstock2.analysis.mabs.repository.MabsConditionRepository
 import com.setvect.bokslstock2.analysis.mabs.repository.MabsTradeRepository
 import com.setvect.bokslstock2.analysis.mabs.service.MabsAnalysisService
 import com.setvect.bokslstock2.analysis.mabs.service.MabsBacktestService
-import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
-import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_MONTH
-import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_WEEK
+import com.setvect.bokslstock2.index.model.PeriodType.*
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
-import java.time.LocalDateTime
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -24,6 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.annotation.Rollback
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
 import javax.persistence.EntityManager
 
 @SpringBootTest
@@ -74,7 +72,7 @@ class MabsBacktest {
     @Test
     @Transactional
     fun 종목과_시세조회() {
-        val stockOp = stockRepository.findByCode(StockCode.CODE_KODEX_200_069500)
+        val stockOp = stockRepository.findByCode(StockCode.KODEX_200_069500)
         val stock = stockOp.get()
 
         log.info("${stock.name}(${stock.code}) ${stock.candleList.size}")
@@ -192,7 +190,7 @@ class MabsBacktest {
         val realRange = DateRange(LocalDateTime.of(2015, 1, 1, 0, 0), LocalDateTime.now())
         val mabsAnalysisCondition = MabsAnalysisCondition(
             tradeConditionList = listOf(
-                makeCondition(StockCode.CODE_KODEX_2X_122630),
+                makeCondition(StockCode.KODEX_2X_122630),
             ),
             basic = TradeCondition(
                 range = realRange,

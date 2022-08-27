@@ -2,7 +2,7 @@ package com.setvect.bokslstock2.index.service
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.setvect.bokslstock2.config.CrawlResourceProperties
+import com.setvect.bokslstock2.config.BokslStockProperties
 import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
@@ -33,7 +33,7 @@ import kotlin.streams.toList
 @Service
 class CrawlStockPriceService(
 
-    private val crawlResourceProperties: CrawlResourceProperties,
+    private val bokslStockProperties: BokslStockProperties,
     private val stockRepository: StockRepository,
     private val candleRepository: CandleRepository,
     private val crawlRestTemplate: RestTemplate,
@@ -59,7 +59,7 @@ class CrawlStockPriceService(
             if (NumberUtils.isDigits(it.code)) {
                 crawlStockPrice(it.code)
             } else {
-                crawlStockPriceYahoo(it.code)
+                crawlStockPriceGlobal(it.code)
             }
         }
     }
@@ -83,15 +83,19 @@ class CrawlStockPriceService(
             if (NumberUtils.isDigits(it.code)) {
                 crawlStockPriceIncremental(it.code)
             } else {
-                crawlStockPriceYahoo(it.code)
+                crawlStockPriceGlobal(it.code)
             }
         }
     }
 
-    private fun crawlStockPriceYahoo(code: String) {
+    private fun crawlStockPriceGlobal(code: String) {
         val from = DateUtil.getUnixTime(LocalDate.of(1994, 1, 1))
         val to = DateUtil.getUnixTimeCurrent()
-        val url = URL("https://query1.finance.yahoo.com/v7/finance/download/${code}?period1=${from}&period2=${to}")
+        val urlStr = bokslStockProperties.crawl.global.url
+            .replace("{code}", code)
+            .replace("{from}", from.toString())
+            .replace("{to}", to.toString())
+        val url = URL(urlStr)
         log.info("call: $url")
 
         url.openStream().use { outputStream ->
@@ -127,7 +131,7 @@ class CrawlStockPriceService(
     }
 
     private fun saveCandleEntityList(stockEntityOptional: Optional<StockEntity>, range: DateRange) {
-        val stockList = crawlResourceProperties.url.stockPrice
+        val stockList = bokslStockProperties.crawl.korea.url.stockPrice
         val url = stockList.replace("{code}", stockEntityOptional.get().code)
             .replace("{start}", range.getFromDateTimeFormat("yyyyMMdd"))
             .replace("{end}", range.getToDateTimeFormat("yyyyMMdd"))
@@ -135,7 +139,7 @@ class CrawlStockPriceService(
         log.info("crawl: $url")
 
         val parameter: MutableMap<String, Any> = HashMap()
-        parameter["User-Agent"] = crawlResourceProperties.userAgent
+        parameter["User-Agent"] = bokslStockProperties.crawl.korea.userAgent
         val httpEntity = HttpEntity<Map<String, Any>>(parameter)
 
         val result = crawlRestTemplate.exchange(url, GET, httpEntity, String::class.java)
