@@ -40,6 +40,10 @@ class RebalanceAnalysisService(
 
         val conditionResults = conditionList.map { backtestCondition ->
             checkValidate(backtestCondition)
+            val range = backtestTradeService.fitBacktestRange(backtestCondition.stockCodes.map { it.stockCode }, backtestCondition.tradeCondition.range)
+            log.info("범위 조건 변경: ${backtestCondition.tradeCondition.range} -> $range")
+            backtestCondition.tradeCondition.range = range
+
             val trades = processRebalance(backtestCondition)
             val result = backtestTradeService.analysis(
                 trades,

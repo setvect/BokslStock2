@@ -6,10 +6,6 @@ import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.analysis.vbs.entity.VbsConditionEntity
 import com.setvect.bokslstock2.analysis.vbs.model.VbsAnalysisCondition
-import java.io.File
-import java.io.FileOutputStream
-import java.sql.Timestamp
-import java.time.LocalDateTime
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.xssf.usermodel.XSSFSheet
@@ -17,6 +13,10 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.io.File
+import java.io.FileOutputStream
+import java.sql.Timestamp
+import java.time.LocalDateTime
 
 
 /**
@@ -84,8 +84,11 @@ class VbsAnalysisService(
     fun makeSummaryReport(conditionList: List<VbsAnalysisCondition>): File {
         var i = 0
         val conditionResults = conditionList.map { vbsAnalysisCondition ->
-            val tradeItemHistory =
-                backtestTradeService.tradeBundle(vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTradeBundles())
+            val range = backtestTradeService.fitBacktestRange(vbsAnalysisCondition.getStockCodes(), vbsAnalysisCondition.basic.range)
+            log.info("범위 조건 변경: ${vbsAnalysisCondition.basic.range} -> $range")
+            vbsAnalysisCondition.basic.range = range
+
+            val tradeItemHistory = backtestTradeService.tradeBundle(vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTradeBundles())
             val analysisResult = backtestTradeService.analysis(
                 tradeItemHistory,
                 vbsAnalysisCondition.basic,
@@ -128,11 +131,11 @@ class VbsAnalysisService(
         val sheet = workbook.createSheet()
 
         val header = "분석기간,분석 아이디,종목,투자비율,최초 투자금액,매수 수수료,매도 수수료," +
-                "매매주기,변동성비율,이동평균단위,갭 상승 매도 넘김,하루에 한번 거래,호가단위," +
-                "조건 설명," +
-                "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,매수 후 보유 샤프지수," +
-                "밴치마크 수익,밴치마크 MDD,밴치마크 보유 CAGR,밴치마크 샤프지수," +
-                "실현 수익,실현 MDD,실현 CAGR,샤프지수,매매 횟수,승률"
+            "매매주기,변동성비율,이동평균단위,갭 상승 매도 넘김,하루에 한번 거래,호가단위," +
+            "조건 설명," +
+            "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,매수 후 보유 샤프지수," +
+            "밴치마크 수익,밴치마크 MDD,밴치마크 보유 CAGR,밴치마크 샤프지수," +
+            "실현 수익,실현 MDD,실현 CAGR,샤프지수,매매 횟수,승률"
         ReportMakerHelperService.applyHeader(sheet, header)
         var rowIdx = 1
 

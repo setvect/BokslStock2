@@ -53,4 +53,13 @@ data class DmBacktestCondition(
         stockCodes.add(holdCode)
         return stockCodes
     }
+
+
+    /**
+     * @return 모맨텀 적용할 때 가장 이전의 월
+     */
+    // 주석을 썼는데 표현이 잘 안된다 ...
+    fun maxWeightMonth(): Int {
+        return timeWeight.entries.maxOf { it.key }
+    }
 }

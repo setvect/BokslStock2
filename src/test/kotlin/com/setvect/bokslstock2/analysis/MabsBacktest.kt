@@ -187,7 +187,7 @@ class MabsBacktest {
     @Transactional
     fun 일회성_백테스팅_리포트_만듦() {
         // 거래 조건
-        val realRange = DateRange(LocalDateTime.of(2015, 1, 1, 0, 0), LocalDateTime.now())
+        val realRange = DateRange(LocalDateTime.of(2001, 1, 1, 0, 0), LocalDateTime.now())
         val mabsAnalysisCondition = MabsAnalysisCondition(
             tradeConditionList = listOf(
                 makeCondition(StockCode.KODEX_2X_122630.code),

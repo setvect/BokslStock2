@@ -297,6 +297,10 @@ class DmAnalysisService(
         condition: DmBacktestCondition,
         stockPriceIndex: Map<StockCode, Map<LocalDate, CandleDto>>
     ): List<MomentumScore> {
+        val range = backtestTradeService.fitBacktestRange(condition.stockCodes, condition.tradeCondition.range, condition.maxWeightMonth() + 1)
+        log.info("범위 조건 변경: ${condition.tradeCondition.range} -> $range")
+        condition.tradeCondition.range = range
+
         var current =
             DateUtil.fitMonth(
                 condition.tradeCondition.range.from.withDayOfMonth(1),

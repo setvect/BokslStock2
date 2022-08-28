@@ -9,7 +9,7 @@ data class TradeCondition(
     /**
      * 분석 대상 기간
      */
-    val range: DateRange,
+    var range: DateRange,
     /**
      * 총 현금을 기준으로 투자 비율. 1은 전액, 0.5은 50% 투자
      */

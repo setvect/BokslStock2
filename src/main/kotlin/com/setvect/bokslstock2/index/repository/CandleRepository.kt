@@ -3,12 +3,12 @@ package com.setvect.bokslstock2.index.repository
 import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.util.DateRange
-import java.time.LocalDateTime
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import java.time.LocalDateTime
 
 interface CandleRepository : JpaRepository<CandleEntity, Long> {
     /**
@@ -27,8 +27,8 @@ interface CandleRepository : JpaRepository<CandleEntity, Long> {
 
     @Query(
         "select c from CandleEntity c " +
-                " where c.stock = :stock and c.candleDateTime between :start and :end" +
-                " order by c.candleDateTime"
+            " where c.stock = :stock and c.candleDateTime between :start and :end" +
+            " order by c.candleDateTime"
     )
     fun findByRange(
         @Param("stock") stock: StockEntity,
@@ -42,8 +42,8 @@ interface CandleRepository : JpaRepository<CandleEntity, Long> {
      */
     @Query(
         "select c from CandleEntity c " +
-                " where c.stock.code = :stockCode and c.candleDateTime <= :base" +
-                " order by c.candleDateTime desc"
+            " where c.stock.code = :stockCode and c.candleDateTime <= :base" +
+            " order by c.candleDateTime desc"
     )
     fun findByBeforeLastCandle(
         @Param("stockCode") stockCode: String,
@@ -52,13 +52,22 @@ interface CandleRepository : JpaRepository<CandleEntity, Long> {
     ): List<CandleEntity>
 
     /**
+     * 가지고 있는 시작날짜, 마지막날짜
+     */
+    @Query(
+        "select new com.setvect.bokslstock2.util.DateRange(min(c.candleDateTime), max(c.candleDateTime)) from CandleEntity c " +
+            " where c.stock.code = :stockCode"
+    )
+    fun findByMaxMin(@Param("stockCode") stockCode: String): DateRange
+
+    /**
      * [stockList] 종목에서 [start] [end] 범위 안에 시세가 포함된 범위를 반환
      */
     @Query(
         "select new com.setvect.bokslstock2.util.DateRange(min(c.candleDateTime), max(c.candleDateTime)) " +
-                " from CandleEntity c " +
-                " where c.candleDateTime between :start and :end" +
-                " and c.stock in (:stockList) "
+            " from CandleEntity c " +
+            " where c.candleDateTime between :start and :end" +
+            " and c.stock in (:stockList) "
     )
     fun findByCandleDateTimeBetween(
         @Param("stockList") stockList: List<StockEntity>,

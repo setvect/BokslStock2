@@ -248,11 +248,11 @@ class BacktestTradeService(
     }
 
     /**
-     * [date]날짜와 가장 가까운 가격을 반환함. 최대 7일 이전까지 가격을 찾고 없으면 예외 발생
+     * [date]날짜와 가장 가까운 가격을 반환함. 최대 10일 이전까지 가격을 찾고 없으면 예외 발생
      */
     private fun getBeforeNearPrice(condClosePriceMap: Map<LocalDateTime, Double>, date: LocalDateTime, code: String): Double {
         var closePrice: Double? = null
-        for (i in 0L..7L) {
+        for (i in 0L..10L) {
             closePrice = condClosePriceMap[date.minusDays(i)]
             if (closePrice != null) {
                 break
@@ -385,6 +385,25 @@ class BacktestTradeService(
         }.toMap()
     }
 
+    /**
+     * [addMonth] 주식 시작 값에서 보정할 월, 듀얼 모멘텀 처럼 기준날짜 이전의 값을 참조할 때 조건 범위를 보정할 때 사용 ㅡㅡ;
+     * 날짜 보정. 백테스트 기간중 실제 시세정보가 있는 범위만 백테스트 하도록 기간을 변경
+     */
+    fun fitBacktestRange(stockCodes: List<StockCode>, backtestRange: DateRange, addMonth: Int = 0): DateRange {
+        var dateRange = backtestRange
+
+        stockCodes.forEach { stockCode ->
+            val range = candleRepository.findByMaxMin(stockCode.code)
+            val stockRange = DateRange(range.from.plusMonths(addMonth.toLong()), range.to)
+            // 주식 최초 날짜가 백테스트 날짜보다 이전이면 백테스트 날짜 사용, 아니면 주식 최초 날짜 사용
+            val from = if (stockRange.from.isBefore(dateRange.from)) dateRange.from else stockRange.from
+            // 주식 마지막 날짜가 백테스트 날짜보다 이후면 백테스트 날짜 사용, 아니면 주식 최초 날짜 사용
+            val to = if (stockRange.to.isAfter(dateRange.to)) dateRange.to else stockRange.to
+            dateRange = DateRange(from, to)
+        }
+
+        return dateRange
+    }
 
     /**
      * @return <종목코드, Map<날짜, 종가>>
