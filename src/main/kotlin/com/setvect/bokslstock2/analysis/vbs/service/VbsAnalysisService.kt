@@ -400,7 +400,7 @@ class VbsAnalysisService(
         val sheet = workbook.createSheet()
         val summary = getSummary(vbsAnalysisCondition, analysisResult)
         ReportMakerHelperService.textToSheet(summary, sheet)
-        log.debug(summary)
+        log.info(summary)
 
         sheet.defaultColumnWidth = 60
         return sheet

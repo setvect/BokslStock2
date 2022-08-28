@@ -22,7 +22,7 @@ enum class StockCode(val national: StockType, val code: String, val desc: String
     OS_CODE_TQQQ(StockType.USA, "TQQQ", "NASDAQ100 * 3"),
     OS_CODE_SPY(StockType.USA, "SPY", "S&P500"),
     OS_CODE_SSO(StockType.USA, "SSO", "S&P500 * 2"),
-    OS_CODE_SPXL(StockType.USA, "SPXL", "SPXL"),
+    OS_CODE_SPXL(StockType.USA, "SPXLSPXL", "S&P500 * 3"),
     OS_CODE_SHY(StockType.USA, "SHY", "단기채"),
     OS_CODE_IEF(StockType.USA, "IEF", "중기채"),
     OS_CODE_TLT(StockType.USA, "TLT", "장기채"),
