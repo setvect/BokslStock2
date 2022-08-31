@@ -28,7 +28,7 @@ class DmBacktest {
 //        val from = LocalDateTime.of(2022, 7, 1, 0, 0)
         val from = LocalDateTime.of(2000, 1, 1, 0, 0)
 //        val from = LocalDateTime.of(2022, 4, 1, 0, 0)
-        val to = LocalDateTime.of(2022, 9, 1, 0, 0)
+        val to = LocalDateTime.now()
         val realRange = DateRange(from, to)
 
         val basic = TradeCondition(
@@ -141,10 +141,10 @@ class DmBacktest {
         val date = LocalDate.of(2022, 5, 1)
         val momentumScore = dmAnalysisService.getMomentumScore(
             date, listOf(StockCode.OS_CODE_SPY, StockCode.OS_CODE_SCZ), StockCode.OS_CODE_TLT, hashMapOf(
-            1 to 0.33,
-            3 to 0.33,
-            6 to 0.34
-        )
+                1 to 0.33,
+                3 to 0.33,
+                6 to 0.34
+            )
         )
         println(momentumScore)
     }

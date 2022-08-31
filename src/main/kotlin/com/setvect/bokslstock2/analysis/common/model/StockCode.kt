@@ -1,5 +1,10 @@
 package com.setvect.bokslstock2.analysis.common.model
 
+import lombok.extern.slf4j.Slf4j
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+@Slf4j
 enum class StockCode(val national: StockType, val code: String, val desc: String) {
     KODEX_200_069500(StockType.KOR, "069500", "KODEX 200"),
     KODEX_2X_122630(StockType.KOR, "122630", "KODEX 레버리지"),
@@ -22,7 +27,7 @@ enum class StockCode(val national: StockType, val code: String, val desc: String
     OS_CODE_TQQQ(StockType.USA, "TQQQ", "NASDAQ100 * 3"),
     OS_CODE_SPY(StockType.USA, "SPY", "S&P500"),
     OS_CODE_SSO(StockType.USA, "SSO", "S&P500 * 2"),
-    OS_CODE_SPXL(StockType.USA, "SPXLSPXL", "S&P500 * 3"),
+    OS_CODE_SPXL(StockType.USA, "SPXL", "S&P500 * 3"),
     OS_CODE_SHY(StockType.USA, "SHY", "단기채"),
     OS_CODE_IEF(StockType.USA, "IEF", "중기채"),
     OS_CODE_TLT(StockType.USA, "TLT", "장기채"),
@@ -38,6 +43,8 @@ enum class StockCode(val national: StockType, val code: String, val desc: String
     ;
 
     companion object {
+        val log: Logger = LoggerFactory.getLogger(javaClass)
+
         fun findByCode(code: String): StockCode {
             return values().first { it.code == code }
         }
