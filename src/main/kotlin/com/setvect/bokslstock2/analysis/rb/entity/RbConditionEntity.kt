@@ -4,22 +4,15 @@ import com.setvect.bokslstock2.analysis.common.entity.BaseTimeEntity
 import com.setvect.bokslstock2.analysis.common.entity.ConditionEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
-import javax.persistence.Column
-import javax.persistence.Entity
+import javax.persistence.*
 import javax.persistence.EnumType.STRING
-import javax.persistence.Enumerated
-import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType.AUTO
-import javax.persistence.Id
-import javax.persistence.JoinColumn
-import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
-import javax.persistence.OrderBy
 
 /**
  * 리벨런싱 전략 조건
  */
 @Entity(name = "FA_RB_CONDITION")
+@Deprecated("삭제할 백테스트")
 class RbConditionEntity(
     /**
      * 주식 종목

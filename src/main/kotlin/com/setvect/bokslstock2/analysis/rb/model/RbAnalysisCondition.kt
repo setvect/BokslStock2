@@ -7,6 +7,7 @@ import com.setvect.bokslstock2.analysis.rb.entity.RbConditionEntity
 /**
  * 이동평균돌파 백테스트
  */
+@Deprecated("삭제할 백테스트")
 data class RbAnalysisCondition(
     /**
      * 분석 조건

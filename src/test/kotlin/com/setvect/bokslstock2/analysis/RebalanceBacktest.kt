@@ -24,7 +24,7 @@ class RebalanceBacktest {
 
     @Test
     fun 일회성_백테스팅_리포트_만듦() {
-        val from = LocalDateTime.of(2008, 1, 1, 0, 0)
+        val from = LocalDateTime.of(2007, 1, 1, 0, 0)
         val to = LocalDateTime.now()
         val realRange = DateRange(from, to)
 
@@ -32,15 +32,15 @@ class RebalanceBacktest {
             range = realRange,
             investRatio = 0.999,
             cash = 20_000_000.0,
-            feeBuy = 0.0001,
-            feeSell = 0.0001,
+            feeBuy = 0.001,
+            feeSell = 0.001,
             comment = "",
-//            benchmark = listOf(StockCode.OS_CODE_SPY)
-            benchmark = listOf(StockCode.TIGER_200_102110)
+            benchmark = listOf(StockCode.OS_CODE_SPY)
+//            benchmark = listOf(StockCode.TIGER_200_102110)
         )
 
         val timeWeights = listOf(
-            RebalanceBacktestCondition.RebalanceFacter(PeriodType.PERIOD_MONTH, 0.0),
+            RebalanceBacktestCondition.RebalanceFacter(PeriodType.PERIOD_MONTH, 0.1),
         )
 
         val conditions = timeWeights.map {
@@ -55,9 +55,14 @@ class RebalanceBacktest {
 //                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_UBT, 25),
 //                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_UGL, 25),
 
-                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_SSO, 25),
-                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_UBT, 25),
-                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_UGL, 25),
+//                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_TQQQ, 25),
+//                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_TMF, 25),
+//                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_UGL, 25),
+//                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_SHY, 25),
+
+                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_QQQ, 25),
+                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_TLT, 25),
+                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_GLD, 25),
                     RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_SHY, 25),
                 ),
                 rebalanceFacter = it,

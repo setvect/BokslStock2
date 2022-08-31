@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
+@Deprecated("삭제할 백테스트")
 interface RbTradeRepository : JpaRepository<RbTradeEntity, Long> {
 
     @Modifying
