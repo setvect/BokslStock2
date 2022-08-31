@@ -17,18 +17,18 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
 @Slf4j
-class StockWebSocketListener(private val publisher: ApplicationEventPublisher,
-                             private val slackMessageService: SlackMessageService?) : WebSocketListener() {
+class StockWebSocketListener(
+    private val publisher: ApplicationEventPublisher,
+    private val slackMessageService: SlackMessageService?) : WebSocketListener() {
 
-    val log: Logger = LoggerFactory.getLogger(javaClass)
+    private lateinit var request: String
+    private val log: Logger = LoggerFactory.getLogger(javaClass)
 
     fun setParameter(parameter: WsRequest) {
         request = JsonUtil.mapper.writeValueAsString(parameter)
-//        request = GsonUtil.GSON.toJson(parameter)
         log.info("ws request: $request")
     }
 
-    private var request: String? = null
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
         val message = String.format("Socket Closed : %s / %s", code, reason)
         log.info(message)
