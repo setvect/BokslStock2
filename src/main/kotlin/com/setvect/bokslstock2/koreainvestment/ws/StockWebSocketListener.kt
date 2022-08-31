@@ -4,6 +4,7 @@ import com.setvect.bokslstock2.koreainvestment.ws.model.WsRequest
 import com.setvect.bokslstock2.slack.SlackMessageService
 import com.setvect.bokslstock2.util.BeanUtils.getBean
 import com.setvect.bokslstock2.util.GsonUtil
+import com.setvect.bokslstock2.util.JsonUtil
 import lombok.extern.slf4j.Slf4j
 import okhttp3.Response
 import okhttp3.WebSocket
@@ -22,7 +23,9 @@ class StockWebSocketListener(private val publisher: ApplicationEventPublisher,
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
     fun setParameter(parameter: WsRequest) {
-        request = GsonUtil.GSON.toJson(parameter)
+        request = JsonUtil.mapper.writeValueAsString(parameter)
+//        request = GsonUtil.GSON.toJson(parameter)
+        log.info("ws request: $request")
     }
 
     private var request: String? = null
@@ -40,8 +43,7 @@ class StockWebSocketListener(private val publisher: ApplicationEventPublisher,
         webSocket.cancel()
     }
 
-    override fun onFailure(webSocket: WebSocket, t: Throwable,
-                           response: Response?) {
+    override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         val message = "Socket Error : " + t.message
         log.error(message, t)
         slack(message)
