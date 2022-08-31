@@ -5,7 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
-interface RbConditionRepository : JpaRepository<RbConditionEntity, Long>{
+@Deprecated("삭제할 백테스트")
+interface RbConditionRepository : JpaRepository<RbConditionEntity, Long> {
 
     @Query("select x from FA_RB_CONDITION x where x.conditionSeq in :rbConditionSeqs")
     fun listBySeq(@Param("rbConditionSeqs") rbConditionSeqs: Collection<Long>): List<RbConditionEntity>

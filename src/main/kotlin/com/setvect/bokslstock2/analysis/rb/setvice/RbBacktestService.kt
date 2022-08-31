@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional
  * 리벨런싱 돌파 전략
  */
 @Service
+@Deprecated("삭제할 백테스트")
 class RbBacktestService(
     val rbConditionRepository: RbConditionRepository,
     val rbTradeRepository: RbTradeRepository,
