@@ -59,16 +59,18 @@ class StockWebSocketListener(
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
+        // TODO 요기서 하기
         log.info(text)
     }
 
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
+        log.info(bytes.toString())
         val tradeResult = GsonUtil.GSON.fromJson(bytes.string(StandardCharsets.UTF_8), TradeResult::class.java)
         publisher.publishEvent(ChangeTrade(tradeResult))
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
-        webSocket.send(request!!)
+        webSocket.send(request)
     }
 
     private fun slack(message: String) {
