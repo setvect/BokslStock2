@@ -3,7 +3,6 @@ package com.setvect.bokslstock2.koreainvestment.ws
 import com.setvect.bokslstock2.koreainvestment.ws.model.WsRequest
 import com.setvect.bokslstock2.slack.SlackMessageService
 import com.setvect.bokslstock2.util.BeanUtils.getBean
-import com.setvect.bokslstock2.util.GsonUtil
 import com.setvect.bokslstock2.util.JsonUtil
 import lombok.extern.slf4j.Slf4j
 import okhttp3.Response
@@ -13,13 +12,13 @@ import okio.ByteString
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
-import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
 @Slf4j
 class StockWebSocketListener(
     private val publisher: ApplicationEventPublisher,
-    private val slackMessageService: SlackMessageService?) : WebSocketListener() {
+    private val slackMessageService: SlackMessageService?
+) : WebSocketListener() {
 
     private lateinit var request: String
     private val log: Logger = LoggerFactory.getLogger(javaClass)
@@ -59,14 +58,23 @@ class StockWebSocketListener(
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
+        if (text.contains(WsTransaction.QUOTATION.code)) {
+            publisher.publishEvent(ChangeQuotation(text))
+        } else if (text.contains(WsTransaction.EXECUTION.code)) {
+
+        } else {
+            log.info(text)
+            //  {"header":{"tr_id":"H0STASP0","tr_key":"005930","encrypt":"N"},"body":{"rt_cd":"1","msg_cd":"OPSP0011","msg1":"invalid appkey : NOT FOUND"}}
+        }
         // TODO 요기서 하기
-        log.info(text)
+
     }
 
+    /**
+     * 해당 메소드 호출 안함
+     */
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
         log.info(bytes.toString())
-        val tradeResult = GsonUtil.GSON.fromJson(bytes.string(StandardCharsets.UTF_8), TradeResult::class.java)
-        publisher.publishEvent(ChangeTrade(tradeResult))
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {

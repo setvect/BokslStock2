@@ -11,6 +11,7 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConfigurationProperties(prefix = "com.setvect.bokslstock")
 data class BokslStockProperties(
     val crawl: Crawl,
+    val koreainvestment: Koreainvestment,
     val slack: Slack,
 ) {
     data class Crawl(
@@ -44,6 +45,15 @@ data class BokslStockProperties(
         data class ExchangeRate(
             val url: String
         ) {
+        }
+    }
+
+    data class Koreainvestment(
+        val accessKey: String,
+        val appsecret: String,
+        val ws: Ws
+    ) {
+        data class Ws(val url: String) {
         }
     }
 
