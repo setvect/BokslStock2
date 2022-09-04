@@ -12,17 +12,14 @@ class KoreainvestmentWebSocketListen(
     private val bokslStockProperties: BokslStockProperties
 ) {
 
-    fun listen(listener: WebSocketListener?) {
+    fun listen(listener: WebSocketListener) {
         val koreainvestment = bokslStockProperties.koreainvestment
         val client = OkHttpClient()
         val request: Request = Builder()
             .url(koreainvestment.ws.url)
             .build()
 
-        client.dispatcher.executorService.shutdown()
-
-
-        client.newWebSocket(request, listener!!)
+        client.newWebSocket(request, listener)
         client.dispatcher.executorService.shutdown()
     }
 }

@@ -1,10 +1,10 @@
 package com.setvect.bokslstock2.koreainvestment.ws
 
 import com.setvect.bokslstock2.koreainvestment.ws.model.WsRequest
+import com.setvect.bokslstock2.koreainvestment.ws.model.WsResponse
 import com.setvect.bokslstock2.slack.SlackMessageService
 import com.setvect.bokslstock2.util.BeanUtils.getBean
 import com.setvect.bokslstock2.util.JsonUtil
-import lombok.extern.slf4j.Slf4j
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import java.util.concurrent.TimeUnit
 
-@Slf4j
 class StockWebSocketListener(
     private val publisher: ApplicationEventPublisher,
     private val slackMessageService: SlackMessageService?
@@ -25,7 +24,6 @@ class StockWebSocketListener(
 
     fun setParameter(parameter: WsRequest) {
         request = JsonUtil.mapper.writeValueAsString(parameter)
-        log.info("ws request: $request")
     }
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
@@ -58,16 +56,22 @@ class StockWebSocketListener(
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
-        if (text.contains(WsTransaction.QUOTATION.code)) {
-            publisher.publishEvent(ChangeQuotation(text))
-        } else if (text.contains(WsTransaction.EXECUTION.code)) {
+        log.info(text)
 
+        if (isStockData(text)) {
+            val wsResponse = WsResponse.parsing(text)
+            publisher.publishEvent(StockWebSocketEvent(wsResponse))
         } else {
             log.info(text)
             //  {"header":{"tr_id":"H0STASP0","tr_key":"005930","encrypt":"N"},"body":{"rt_cd":"1","msg_cd":"OPSP0011","msg1":"invalid appkey : NOT FOUND"}}
         }
-        // TODO 요기서 하기
 
+    }
+
+    private fun isStockData(response: String): Boolean {
+        return WsTransaction.values().any {
+            response.contains("|${it.trId}|")
+        }
     }
 
     /**

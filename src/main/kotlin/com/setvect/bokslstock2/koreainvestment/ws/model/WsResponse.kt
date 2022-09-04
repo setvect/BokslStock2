@@ -1,5 +1,6 @@
 package com.setvect.bokslstock2.koreainvestment.ws.model
 
+import com.setvect.bokslstock2.koreainvestment.ws.WsTransaction
 import org.apache.commons.lang3.StringUtils
 
 /**
@@ -9,8 +10,11 @@ import org.apache.commons.lang3.StringUtils
  * [responseData] 각 업무에 맞는 응답 데이터
  */
 data class WsResponse(val dataType: String, val trId: String, val dataCount: Int, val responseData: String) {
-    companion object {
+    fun getTransaction(): WsTransaction {
+        return WsTransaction.parsingTrId(trId)
+    }
 
+    companion object {
         /**
          * 예시값
          * [rawText] 0|H0STASP0|001|233740^152809^A^8960^8965^8970^0 ... 생략 ...

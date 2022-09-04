@@ -1,6 +1,5 @@
 package com.setvect.bokslstock2.config
 
-import lombok.extern.slf4j.Slf4j
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.web.client.RestTemplateBuilder
@@ -16,7 +15,6 @@ import java.nio.charset.Charset
 /**
  * RestTemplate
  */
-@Slf4j
 @Configuration
 class RestTemplateConfig(
     private val bokslStockProperties: BokslStockProperties
