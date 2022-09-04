@@ -51,7 +51,8 @@ data class BokslStockProperties(
     data class Koreainvestment(
         val accessKey: String,
         val appsecret: String,
-        val ws: Ws
+        val ws: Ws,
+        val vbs: Vbs
     ) {
         data class Ws(val url: String) {
         }
@@ -61,5 +62,9 @@ data class BokslStockProperties(
         val enable: Boolean,
         val token: String,
         val channelId: String,
+    )
+
+    data class Vbs(
+        val stockCode: List<String>,
     )
 }

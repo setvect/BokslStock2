@@ -19,20 +19,22 @@ class TradingWebsocket(
     fun onApplicationEvent() {
         val webSocketListener = StockWebSocketListener(publisher, slackMessageService)
         val koreainvestment = bokslStockProperties.koreainvestment
-        val parameter = WsRequest(
-            WsRequest.Header(
-                koreainvestment.accessKey,
-                koreainvestment.appsecret,
-                "P", // 고객타입, P : 개인
-                "1", // 거래타입, 1 : 등록
-                "utf-8"
-            ),
-            WsRequest.Body(
-                // TODO 고정값을 모니터링 값으로
-                WsRequest.Input(WsTransaction.QUOTATION, "005930")
-            )
-        )
-        webSocketListener.setParameter(parameter)
+
+        bokslStockProperties.koreainvestment.vbs.stockCode.forEach { stockCode ->
+            WsTransaction.values().forEach { transaction ->
+                val parameter = WsRequest(
+                    WsRequest.Header(
+                        koreainvestment.accessKey,
+                        koreainvestment.appsecret,
+                        "P", // 고객타입, P : 개인
+                        "1", // 거래타입, 1 : 등록
+                        "utf-8"
+                    ),
+                    WsRequest.Body(WsRequest.Input(transaction, stockCode))
+                )
+                webSocketListener.addParameter(parameter)
+            }
+        }
         socketListen.listen(webSocketListener)
     }
 }

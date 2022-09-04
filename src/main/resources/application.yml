@@ -54,6 +54,10 @@ com:
         appsecret: ${APPSECRET}
         ws:
           url: ws://ops.koreainvestment.com:21000
+        vbs:
+          stockCode:
+            - 069500 # KODEX 200
+            - 091170 # KODEX 은행
 
       slack:
         # 이벤트 발생시 슬랙메시지 전달 여부

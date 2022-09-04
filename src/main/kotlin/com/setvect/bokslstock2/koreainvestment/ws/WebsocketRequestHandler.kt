@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
  * 호가 이벤트
  */
 @Component
-class ChargeRequestHandler : ApplicationListener<StockWebSocketEvent> {
+class WebsocketRequestHandler : ApplicationListener<StockWebSocketEvent> {
     private val log: Logger = LoggerFactory.getLogger(javaClass)
 
     override fun onApplicationEvent(event: StockWebSocketEvent) {

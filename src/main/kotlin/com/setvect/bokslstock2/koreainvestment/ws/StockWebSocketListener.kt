@@ -19,11 +19,13 @@ class StockWebSocketListener(
     private val slackMessageService: SlackMessageService?
 ) : WebSocketListener() {
 
-    private lateinit var request: String
+    private var request = mutableListOf<String>()
     private val log: Logger = LoggerFactory.getLogger(javaClass)
 
-    fun setParameter(parameter: WsRequest) {
-        request = JsonUtil.mapper.writeValueAsString(parameter)
+    fun addParameter(parameter: WsRequest) {
+        val req = JsonUtil.mapper.writeValueAsString(parameter)
+        log.info(req)
+        request.add(req)
     }
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
@@ -62,8 +64,7 @@ class StockWebSocketListener(
             val wsResponse = WsResponse.parsing(text)
             publisher.publishEvent(StockWebSocketEvent(wsResponse))
         } else {
-            log.info(text)
-            //  {"header":{"tr_id":"H0STASP0","tr_key":"005930","encrypt":"N"},"body":{"rt_cd":"1","msg_cd":"OPSP0011","msg1":"invalid appkey : NOT FOUND"}}
+//            log.info(text)
         }
 
     }
@@ -82,7 +83,7 @@ class StockWebSocketListener(
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
-        webSocket.send(request)
+        request.forEach { webSocket.send(it) }
     }
 
     private fun slack(message: String) {
