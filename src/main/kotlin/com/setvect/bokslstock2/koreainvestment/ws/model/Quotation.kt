@@ -40,7 +40,7 @@ data class Quotation(
          * [rawText] 233740^152809^A^8960^8965^8970^0^0^0^0^0^0^0^8955^8950^8945^0^0^0^0^0^0^0^29^636^684^0^0^0^0^0^0^0^1070^14889^10942^0^0^0^0^0^0^0^0^0^0^0^8955^229477^229477^180^2^2.05^12263346^0^0^0^0^0
          */
         fun parsing(rawText: String): Quotation {
-            val dataArray = StringUtils.split(rawText, "^")
+            val dataArray = StringUtils.splitByWholeSeparatorPreserveAllTokens(rawText, "^")
 
             val askPrice = IntStream.range(0, 10)
                 .mapToObj { p: Int -> p }

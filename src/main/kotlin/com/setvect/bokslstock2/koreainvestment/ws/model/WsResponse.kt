@@ -16,7 +16,7 @@ data class WsResponse(val dataType: String, val trId: String, val dataCount: Int
          * [rawText] 0|H0STASP0|001|233740^152809^A^8960^8965^8970^0 ... 생략 ...
          */
         fun parsing(rawText: String): WsResponse {
-            val dataArray = StringUtils.split(rawText, "|")
+            val dataArray = StringUtils.splitByWholeSeparatorPreserveAllTokens(rawText, "|")
 
             return WsResponse(
                 dataArray[0], dataArray[1], dataArray[2].toInt(), dataArray[3]
