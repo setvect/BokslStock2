@@ -24,15 +24,12 @@ class WebsocketRequestHandler : ApplicationListener<StockWebSocketEvent> {
     }
 
     private fun quotation(response: WsResponse) {
-        val quotation = Quotation.parsing(response.toString())
-        log.info(quotation.toString())
+        val quotation = Quotation.parsing(response.responseData)
+        log.info("${response.trId} = $quotation")
     }
 
     private fun execution(response: WsResponse) {
-        val realtimeExecution = RealtimeExecution.parsing(response.toString())
-        log.info(realtimeExecution.toString())
-    }
-
-    private fun parsing(response: String) {
+        val realtimeExecution = RealtimeExecution.parsing(response.responseData)
+        log.info("${response.trId} = $realtimeExecution")
     }
 }

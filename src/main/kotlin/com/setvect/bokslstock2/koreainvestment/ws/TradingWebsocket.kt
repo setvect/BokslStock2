@@ -36,5 +36,24 @@ class TradingWebsocket(
             }
         }
         socketListen.listen(webSocketListener)
+
+
+// INFO  [22-09-05 09:04:18] [main] StockWebSocketListener.addParameter(StockWebSocketListener.kt:27) {"header":{"appkey":"PSlmLW134xAK4APGritDHO0R154Ol2kv5NCg","appsecret":"TfKYNfGYN/lIQo8SuYm3XWMDmm8TKMiyOz1+Vao4nSCf6zrJAa+DJbZKDoGERL2CYI4wKsnru8sYEQY/Xg+9oJn79l74h7lX1GohkUDihRTUYAPmzSOlRWQbDTd+/SeGM0m276npPWf1z9W39NGP+/TgtCtvLsauJRTufdsApKzqTq90Os0=","custtype":"P","tr_type":"1","content-type":"utf-8"},"body":{"input":{"tr_id":"H0STCNT0","tr_key":"005930"}}}
+// INFO     22-09-05 09:04:52[main] [c.s.b.k.w.StockWebSocketListener:27] -                           {"header":{"appkey":"PSlmLW134xAK4APGritDHO0R154Ol2kv5NCg","appsecret":"TfKYNfGYN/lIQo8SuYm3XWMDmm8TKMiyOz1+Vao4nSCf6zrJAa+DJbZKDoGERL2CYI4wKsnru8sYEQY/Xg+9oJn79l74h7lX1GohkUDihRTUYAPmzSOlRWQbDTd+/SeGM0m276npPWf1z9W39NGP+/TgtCtvLsauJRTufdsApKzqTq90Os0=","custtype":"P","tr_type":"1","content-type":"utf-8"},"body":{"input":{"tr_id":"H0STCNT0","tr_key":"69500.0"}}}
+
+//
+//        val parameter = WsRequest(
+//            WsRequest.Header(
+//                koreainvestment.accessKey,
+//                koreainvestment.appsecret,
+//                "P", // 고객타입, P : 개인
+//                "1", // 거래타입, 1 : 등록
+//                "utf-8"
+//            ),
+//            WsRequest.Body(WsRequest.Input(WsTransaction.QUOTATION, StockCode.SAMSUNG_005930.code))
+//        )
+//        webSocketListener.addParameter(parameter)
+//        socketListen.listen(webSocketListener)
+
     }
 }

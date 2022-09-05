@@ -14,7 +14,8 @@ enum class WsTransaction(
     /**
      * 주식현재가 실시간주식호가[실시간-004]
      */
-    QUOTATION("H0STASP0");
+    QUOTATION("H0STASP0")
+    ;
 
     companion object {
         fun parsingTrId(trId: String): WsTransaction {
