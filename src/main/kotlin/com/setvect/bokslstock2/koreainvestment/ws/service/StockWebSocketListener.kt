@@ -1,7 +1,8 @@
-package com.setvect.bokslstock2.koreainvestment.ws
+package com.setvect.bokslstock2.koreainvestment.ws.service
 
 import com.setvect.bokslstock2.koreainvestment.ws.model.WsRequest
 import com.setvect.bokslstock2.koreainvestment.ws.model.WsResponse
+import com.setvect.bokslstock2.koreainvestment.ws.model.WsTransaction
 import com.setvect.bokslstock2.slack.SlackMessageService
 import com.setvect.bokslstock2.util.BeanUtils.getBean
 import com.setvect.bokslstock2.util.JsonUtil

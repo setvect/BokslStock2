@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.koreainvestment.ws
+package com.setvect.bokslstock2.koreainvestment.ws.service
 
 import com.setvect.bokslstock2.config.BokslStockProperties
 import okhttp3.OkHttpClient

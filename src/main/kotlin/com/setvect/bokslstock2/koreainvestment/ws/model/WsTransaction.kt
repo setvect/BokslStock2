@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.koreainvestment.ws
+package com.setvect.bokslstock2.koreainvestment.ws.model
 
 import com.fasterxml.jackson.annotation.JsonValue
 

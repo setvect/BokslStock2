@@ -1,6 +1,5 @@
 package com.setvect.bokslstock2.koreainvestment.ws.model
 
-import com.setvect.bokslstock2.koreainvestment.ws.WsTransaction
 import org.apache.commons.lang3.StringUtils
 
 /**

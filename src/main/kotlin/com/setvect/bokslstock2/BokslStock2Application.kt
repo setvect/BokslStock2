@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2
 
-import com.setvect.bokslstock2.koreainvestment.ws.TradingWebsocket
+import com.setvect.bokslstock2.koreainvestment.ws.service.TradingWebsocket
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.runApplication

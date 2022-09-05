@@ -28,8 +28,21 @@ class RestTemplateConfig(
     fun crawlRestTemplate(restTemplateBuilder: RestTemplateBuilder): RestTemplate {
         return getDefaultRestTemplate(
             restTemplateBuilder,
-            bokslStockProperties.crawl.korea.config.connectionTimeoutMs,
-            bokslStockProperties.crawl.korea.config.readTimeoutMs
+            bokslStockProperties.restTemplate.connectionTimeoutMs,
+            bokslStockProperties.restTemplate.readTimeoutMs
+        )
+    }
+
+    /**
+     * @param restTemplateBuilder .
+     * @return 크롤링에 사용할 RestTemplate
+     */
+    @Bean("stockRestTemplate")
+    fun stockRestTemplate(restTemplateBuilder: RestTemplateBuilder): RestTemplate {
+        return getDefaultRestTemplate(
+            restTemplateBuilder,
+            bokslStockProperties.restTemplate.connectionTimeoutMs,
+            bokslStockProperties.restTemplate.readTimeoutMs
         )
     }
 

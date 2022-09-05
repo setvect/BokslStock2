@@ -1,8 +1,9 @@
-package com.setvect.bokslstock2.koreainvestment.ws
+package com.setvect.bokslstock2.koreainvestment.ws.service
 
 import com.setvect.bokslstock2.koreainvestment.ws.model.Quotation
 import com.setvect.bokslstock2.koreainvestment.ws.model.RealtimeExecution
 import com.setvect.bokslstock2.koreainvestment.ws.model.WsResponse
+import com.setvect.bokslstock2.koreainvestment.ws.model.WsTransaction
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationListener

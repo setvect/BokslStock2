@@ -12,6 +12,7 @@ import org.springframework.boot.context.properties.ConstructorBinding
 data class BokslStockProperties(
     val crawl: Crawl,
     val koreainvestment: Koreainvestment,
+    val restTemplate: RestTemplate,
     val slack: Slack,
 ) {
     data class Crawl(
@@ -21,7 +22,6 @@ data class BokslStockProperties(
     ) {
         data class Korea(
             val url: UrlCollection,
-            val config: Config,
             val userAgent: String,
             val savePath: String,
         ) {
@@ -31,10 +31,6 @@ data class BokslStockProperties(
                 val stockPrice: String
             )
 
-            data class Config(
-                val connectionTimeoutMs: Int,
-                val readTimeoutMs: Int
-            )
         }
 
         data class Global(
@@ -49,14 +45,23 @@ data class BokslStockProperties(
     }
 
     data class Koreainvestment(
-        val accessKey: String,
+        val appkey: String,
         val appsecret: String,
         val ws: Ws,
+        val trade: Trade,
         val vbs: Vbs
     ) {
         data class Ws(val url: String) {
         }
+
+        data class Trade(val url: String) {
+        }
     }
+
+    data class RestTemplate(
+        val connectionTimeoutMs: Int,
+        val readTimeoutMs: Int
+    )
 
     data class Slack(
         val enable: Boolean,
