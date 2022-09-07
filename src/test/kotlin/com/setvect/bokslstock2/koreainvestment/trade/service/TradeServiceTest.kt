@@ -1,5 +1,6 @@
 package com.setvect.bokslstock2.koreainvestment.trade.service
 
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,8 +17,15 @@ internal class TradeServiceTest {
     private val log: Logger = LoggerFactory.getLogger(javaClass)
 
     @Test
+    @Disabled
     fun getToken() {
         val token = tradeService.getToken()
         log.info(token.accessToken)
+    }
+
+    @Test
+    fun getHashKey() {
+        val hashkey = tradeService.getHashKey(mutableMapOf("A" to "B"))
+        log.info(hashkey)
     }
 }
