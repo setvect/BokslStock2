@@ -34,7 +34,7 @@
             <appender-ref ref="STDOUT"/>
         </root>
         <!--apache http client 상세 로그를 보고 싶으면 DEBUG로 변경-->
-        <logger name="org.apache.http" level="INFO" additivity="false">
+        <logger name="org.apache.http" level="DEBUG" additivity="false">
             <appender-ref ref="STDOUT"/>
         </logger>
         <logger name="com.setvect.bokslstock" level="INFO" additivity="false">

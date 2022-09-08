@@ -16,7 +16,7 @@ enum class WsTransaction(
     CURRENT_PRICE("FHKST01010100"),
 
     /** 일자별 가격 */
-    DAILY_PRICE("FHKST01010400"),
+    DATE_PRICE("FHKST01010400"),
 
     /** 잔고 조회 */
     BALANCE("TTTC8434R"),

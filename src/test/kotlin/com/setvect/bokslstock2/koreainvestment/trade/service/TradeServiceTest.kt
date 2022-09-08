@@ -1,6 +1,7 @@
 package com.setvect.bokslstock2.koreainvestment.trade.service
 
 import com.setvect.bokslstock2.koreainvestment.trade.model.request.CurrentPriceRequest
+import com.setvect.bokslstock2.koreainvestment.trade.model.request.DatePriceRequest
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
@@ -34,8 +35,14 @@ internal class TradeServiceTest {
 
     @Test
     fun getCurrentPrice(){
-        val currentPrice = tradeService.getCurrentPrice(CurrentPriceRequest(("069500")), AUTHORIZATION)
+        val currentPrice = tradeService.getCurrentPrice(CurrentPriceRequest("069500"), AUTHORIZATION)
         log.info(currentPrice.toString())
+    }
+
+    @Test
+    fun  getDatePrice(){
+        val datePrice = tradeService.getDatePrice(DatePriceRequest("069500", DatePriceRequest.DateType.DAY), AUTHORIZATION)
+        log.info(datePrice.toString())
     }
 
 }
