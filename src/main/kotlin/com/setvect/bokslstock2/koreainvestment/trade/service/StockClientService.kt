@@ -21,6 +21,9 @@ class StockClientService(
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
+    /**
+     * @return access token
+     */
     fun requestToken(): TokenResponse {
         val koreainvestment = bokslStockProperties.koreainvestment
         val url = koreainvestment.trade.url + "/oauth2/tokenP"
@@ -36,6 +39,9 @@ class StockClientService(
         return result.body ?: throw RuntimeException("API 결과 없음")
     }
 
+    /**
+     * @return 주문에 사용되는 post API 사용시 쓰이는 hashkey
+     */
     fun requestHashKey(body: Any): String {
         val koreainvestment = bokslStockProperties.koreainvestment
         val url = koreainvestment.trade.url + "/uapi/hashkey"
@@ -71,11 +77,14 @@ class StockClientService(
             HttpMethod.GET,
             httpEntity,
             object : ParameterizedTypeReference<CommonResponse<CurrentPriceResponse>>() {},
-            request.code
+            mapOf("code" to request.code)
         )
         return result.body ?: throw RuntimeException("API 결과 없음")
     }
 
+    /**
+     * @return 일, 주, 월 시세 최근 날짜 순으로 30개 반환
+     */
     fun requestDatePrice(request: DatePriceRequest, authorization: String): CommonResponse<List<DatePriceResponse>> {
         val url = bokslStockProperties.koreainvestment.trade.url +
                 "/uapi/domestic-stock/v1/quotations/inquire-daily-price?" +
@@ -90,16 +99,21 @@ class StockClientService(
             HttpMethod.GET,
             httpEntity,
             object : ParameterizedTypeReference<CommonResponse<List<DatePriceResponse>>>() {},
-            request.code,
-            request.dateType.value
+            mapOf(
+                "code" to request.code,
+                "dateType" to request.dateType.value
+            )
         )
         return result.body ?: throw RuntimeException("API 결과 없음")
     }
 
+    /**
+     * @return 주식, 예수금
+     */
     fun requestBalance(request: BalanceRequest, authorization: String): BalanceResponse {
         val url = bokslStockProperties.koreainvestment.trade.url +
                 "/uapi/domestic-stock/v1/trading/inquire-balance?" +
-                "CANO={CANO}&ACNT_PRDT_CD=01&AFHR_FLPR_YN=N&OFL_YN=&INQR_DVSN=01&UNPR_DVSN=01&" +
+                "CANO={cano}&ACNT_PRDT_CD=01&AFHR_FLPR_YN=N&OFL_YN=&INQR_DVSN=01&UNPR_DVSN=01&" +
                 "FUND_STTL_ICLD_YN=N&FNCG_AMT_AUTO_RDPT_YN=N&PRCS_DVSN=00&CTX_AREA_FK100=null&CTX_AREA_NK100="
 
         val headers = headerAuth(authorization, request.wsTransaction)
@@ -111,15 +125,21 @@ class StockClientService(
             HttpMethod.GET,
             httpEntity,
             BalanceResponse::class.java,
-            request.accountNo,
+            mapOf<String, String>("cano" to request.accountNo)
         )
         return result.body ?: throw RuntimeException("API 결과 없음")
     }
 
+    /**
+     * 매수 주문
+     */
     fun requestOrderBuy(request: OrderRequest, authorization: String): CommonResponse<OrderResponse> {
         return order(request, authorization, request.buy)
     }
 
+    /**
+     * 매도 주문
+     */
     fun requestOrderSell(request: OrderRequest, authorization: String): Any {
         return order(request, authorization, request.sell)
     }
@@ -164,6 +184,7 @@ class StockClientService(
         ).headers()
     }
 
+    // TODO 체결내역 작업해야됨
 
 
 }
