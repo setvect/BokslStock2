@@ -54,6 +54,7 @@ com:
         ws:
           url: ws://ops.koreainvestment.com:21000
         vbs:
+          accountNo: ${ACCOUNTNO}
           stockCode:
             - "069500" # KODEX 200
             - "091170" # KODEX 은행

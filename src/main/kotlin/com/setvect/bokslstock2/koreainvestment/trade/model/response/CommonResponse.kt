@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class CommonResponse<T>(
 
-    @JsonProperty("output") var output: T,
-    @JsonProperty("rt_cd") var rtCd: String,
-    @JsonProperty("msg_cd") var msgCd: String,
-    @JsonProperty("msg1") var msg1: String
+    @JsonProperty("output") val output: T?,
+    @JsonProperty("rt_cd") val rtCd: String,
+    @JsonProperty("msg_cd") val msgCd: String,
+    @JsonProperty("msg1") val msg1: String
 
 )

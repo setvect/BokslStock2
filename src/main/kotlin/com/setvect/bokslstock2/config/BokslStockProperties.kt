@@ -70,6 +70,7 @@ data class BokslStockProperties(
     )
 
     data class Vbs(
+        val accountNo: String,
         val stockCode: List<String>,
     )
 }
