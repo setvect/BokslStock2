@@ -11,10 +11,15 @@ class StockSchedule(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    //    @Scheduled(cron = "0 30 08 * * MON-FRI") // 월~금 매일 오전 8시 30분에 실행
-    @Scheduled(cron = "0/10 * * * * ?") // 월~금 매일 오전 8시 30분에 실행
-    fun scheduleVbs() {
-        log.info("AAAAAAAAAAAAAAAAAAAA")
-        tradingWebsocket.onApplicationEvent()
+    //    @Scheduled(cron = "0 45 08 * * MON-FRI") // 월~금 매일 08시 45분에 실행
+//    @Scheduled(cron = "0/30 * * * * ?") // 월~금 매일 오전 8시 30분에 실행
+    fun openWebSocket() {
+        tradingWebsocket.open()
+    }
+
+    //    @Scheduled(cron = "0 35 15 * * MON-FRI") // 월~금 매일 15시 35분에
+//    @Scheduled(cron = "15/30 * * * * ?") // 월~금 매일 오전 8시 30분에 실행
+    fun closeWebSocket() {
+        tradingWebsocket.close()
     }
 }

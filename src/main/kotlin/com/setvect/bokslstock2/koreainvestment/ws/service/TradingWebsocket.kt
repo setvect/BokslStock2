@@ -17,7 +17,7 @@ class TradingWebsocket(
     private val slackMessageService: SlackMessageService,
     private val bokslStockProperties: BokslStockProperties
 ) {
-    fun onApplicationEvent() {
+    fun open() {
         val webSocketListener = StockWebSocketListener(publisher, slackMessageService)
         val koreainvestment = bokslStockProperties.koreainvestment
 
@@ -36,6 +36,10 @@ class TradingWebsocket(
                 webSocketListener.addParameter(parameter)
             }
         }
-        socketListen.listen(webSocketListener)
+        socketListen.connect(webSocketListener)
+    }
+
+    fun close() {
+        socketListen.disconnect()
     }
 }

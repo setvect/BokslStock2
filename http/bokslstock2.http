@@ -1,0 +1,13 @@
+# 122630 - KODEX 레버리지
+# 233740 - KODEX 코스닥150 레버리지
+# 069500 - KODEX 200
+# 229200 - KODEX 코스닥 150
+# 091170  - KODEX 은행,
+
+### 웹소켓 열기
+POST http://127.0.0.1:8080/trade/open HTTP/1.1
+content-type: application/json
+
+### 웹소켓 닫기
+POST http://127.0.0.1:8080/trade/close HTTP/1.1
+content-type: application/json

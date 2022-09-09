@@ -54,7 +54,7 @@ class StockWebSocketListener(
         }
         log.info("restarting")
         val tradingWebsocket = getBean(TradingWebsocket::class.java)
-        tradingWebsocket.onApplicationEvent()
+        tradingWebsocket.open()
         log.info("restart completed")
     }
 
