@@ -10,7 +10,7 @@ import org.springframework.context.ApplicationListener
 import org.springframework.stereotype.Component
 
 /**
- * ȣ�� �̺�Ʈ
+ * 호가 이벤트
  */
 @Component
 class WebsocketRequestHandler : ApplicationListener<StockWebSocketEvent> {

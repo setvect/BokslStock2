@@ -77,7 +77,7 @@ class StockWebSocketListener(
     }
 
     /**
-     * ÇØ´ç ¸Þ¼Òµå È£Ãâ ¾ÈÇÔ
+     * í•´ë‹¹ ë©”ì†Œë“œ í˜¸ì¶œ ì•ˆí•¨
      */
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
         log.info(bytes.toString())

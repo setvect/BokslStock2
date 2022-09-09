@@ -1,18 +1,17 @@
 package com.setvect.bokslstock2
 
-import com.setvect.bokslstock2.koreainvestment.ws.service.TradingWebsocket
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.runApplication
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing
+import org.springframework.scheduling.annotation.EnableScheduling
 
 @SpringBootApplication
 @EnableJpaAuditing
 @ConfigurationPropertiesScan
+@EnableScheduling
 class BokslStock2Application
 
 fun main(args: Array<String>) {
-    val context = runApplication<BokslStock2Application>(*args)
-    val tradingWebsocket: TradingWebsocket = context.getBean(TradingWebsocket::class.java)
-    tradingWebsocket.onApplicationEvent()
+    runApplication<BokslStock2Application>(*args)
 }
