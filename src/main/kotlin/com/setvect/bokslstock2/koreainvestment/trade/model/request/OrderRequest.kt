@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
+import com.setvect.bokslstock2.koreainvestment.ws.model.StockTransaction
 import com.setvect.bokslstock2.koreainvestment.ws.model.WsTransaction
 
 /**
@@ -31,9 +32,9 @@ data class OrderRequest(
     @JsonProperty("ACNT_PRDT_CD") val acntprdtcd: String = "01"
 ) {
     @JsonIgnore
-    val buy: WsTransaction = WsTransaction.BUY_ORDER
+    val buy: StockTransaction = StockTransaction.BUY_ORDER
 
     @JsonIgnore
-    val sell: WsTransaction = WsTransaction.SELL_ORDER
+    val sell: StockTransaction = StockTransaction.SELL_ORDER
 
 }

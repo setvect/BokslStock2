@@ -1,11 +1,11 @@
 package com.setvect.bokslstock2.koreainvestment.trade.model.request
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.setvect.bokslstock2.koreainvestment.ws.model.WsTransaction
+import com.setvect.bokslstock2.koreainvestment.ws.model.StockTransaction
 
 data class CurrentPriceRequest(
     val code: String,
 ) {
     @JsonIgnore
-    val wsTransaction: WsTransaction = WsTransaction.CURRENT_PRICE
+    val wsTransaction: StockTransaction = StockTransaction.CURRENT_PRICE
 }

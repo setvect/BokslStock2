@@ -26,17 +26,20 @@ class KoreainvestmentWebSocketListen(
         if (isOpen()) {
             log.info("이미 실행된 웹소켓")
         } else {
+            // 아래 구문 실행하면 StockWebSocketListener.onOpen() 호출됨
             webSocket = client.newWebSocket(request, listener)
         }
 
-        // 안써도 될 것 겉음
-        //  client.dispatcher.executorService.shutdown()
+        client.dispatcher.executorService.shutdown()
     }
 
     fun disconnect() {
         if (isOpen()) {
+//            webSocket!!.send("AAAAAAAAAAAAAAAAAAAa")
+//            webSocket!!.cancel()
             val close = webSocket!!.close(1000, null)
-            log.info("웹소켓 닫음. 결과: $close")
+//            webSocket = null
+//            log.info("웹소켓 닫음. 결과: $close")
         } else {
             log.info("오픈되어 있지 않음")
         }

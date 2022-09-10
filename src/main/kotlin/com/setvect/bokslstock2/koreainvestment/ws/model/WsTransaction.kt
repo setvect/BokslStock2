@@ -11,23 +11,6 @@ enum class WsTransaction(
 
     /** 주식현재가 실시간주식호가[실시간-004]*/
     QUOTATION("H0STASP0"),
-
-    /** 주식 현제가 */
-    CURRENT_PRICE("FHKST01010100"),
-
-    /** 일자별 가격 */
-    DATE_PRICE("FHKST01010400"),
-
-    /** 잔고 조회 */
-    BALANCE("TTTC8434R"),
-
-    /** 매수주문 */
-    BUY_ORDER("TTTC0802U"),
-
-    /** 매도주문 */
-    SELL_ORDER("TTTC0801U"),
-
-
     ;
 
     companion object {

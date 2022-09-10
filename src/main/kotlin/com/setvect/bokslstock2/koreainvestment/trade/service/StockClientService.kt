@@ -4,7 +4,7 @@ import com.setvect.bokslstock2.config.BokslStockProperties
 import com.setvect.bokslstock2.koreainvestment.trade.model.BaseHeader
 import com.setvect.bokslstock2.koreainvestment.trade.model.request.*
 import com.setvect.bokslstock2.koreainvestment.trade.model.response.*
-import com.setvect.bokslstock2.koreainvestment.ws.model.WsTransaction
+import com.setvect.bokslstock2.koreainvestment.ws.model.StockTransaction
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
@@ -147,7 +147,7 @@ class StockClientService(
     private fun order(
         request: OrderRequest,
         authorization: String,
-        order: WsTransaction
+        order: StockTransaction
     ): CommonResponse<OrderResponse> {
         val url = bokslStockProperties.koreainvestment.trade.url + "/uapi/domestic-stock/v1/trading/order-cash"
 
@@ -165,21 +165,21 @@ class StockClientService(
         return result.body ?: throw RuntimeException("API 결과 없음")
     }
 
-    private fun headerAuth(authorization: String, wsTransaction: WsTransaction): HttpHeaders {
+    private fun headerAuth(authorization: String, stockTransaction: StockTransaction): HttpHeaders {
         return BaseHeader(
             appkey = bokslStockProperties.koreainvestment.appkey,
             appsecret = bokslStockProperties.koreainvestment.appsecret,
             authorization = authorization,
-            trId = wsTransaction.trId
+            trId = stockTransaction.trId
         ).headers()
     }
 
-    private fun headerAuthHash(authorization: String, wsTransaction: WsTransaction, hashKey: String): HttpHeaders {
+    private fun headerAuthHash(authorization: String, stockTransaction: StockTransaction, hashKey: String): HttpHeaders {
         return BaseHeader(
             appkey = bokslStockProperties.koreainvestment.appkey,
             appsecret = bokslStockProperties.koreainvestment.appsecret,
             authorization = authorization,
-            trId = wsTransaction.trId,
+            trId = stockTransaction.trId,
             hashKey = hashKey
         ).headers()
     }

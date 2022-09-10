@@ -1,6 +1,7 @@
 package com.setvect.bokslstock2.koreainvestment.trade.model.request
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.setvect.bokslstock2.koreainvestment.ws.model.StockTransaction
 import com.setvect.bokslstock2.koreainvestment.ws.model.WsTransaction
 
 /**
@@ -11,7 +12,7 @@ data class DatePriceRequest(
     val dateType: DateType,
 ) {
     @JsonIgnore
-    val wsTransaction: WsTransaction = WsTransaction.DATE_PRICE
+    val wsTransaction: StockTransaction = StockTransaction.DATE_PRICE
 
     enum class DateType(val value: String) {
         DAY("D"), WEEK("W"), MONTH("M");

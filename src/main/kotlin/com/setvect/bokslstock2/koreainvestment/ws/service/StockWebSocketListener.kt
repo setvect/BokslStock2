@@ -25,14 +25,7 @@ class StockWebSocketListener(
 
     fun addParameter(parameter: WsRequest) {
         val req = JsonUtil.mapper.writeValueAsString(parameter)
-        log.info(req)
         request.add(req)
-    }
-
-    override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-        val message = String.format("Socket Closed : %s / %s", code, reason)
-        log.info(message)
-        slack(message)
     }
 
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
@@ -43,19 +36,24 @@ class StockWebSocketListener(
         webSocket.cancel()
     }
 
+    override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+        val message = String.format("Socket Closed : %s / %s", code, reason)
+        log.info(message)
+        slack(message)
+    }
+
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         val message = "Socket Error : " + t.message
         log.error(message, t)
-        slack(message)
-        try {
-            TimeUnit.SECONDS.sleep(5)
-        } catch (e: InterruptedException) {
-            log.error(e.message)
-        }
-        log.info("restarting")
-        val tradingWebsocket = getBean(TradingWebsocket::class.java)
-        tradingWebsocket.open()
-        log.info("restart completed")
+//        slack(message)
+//        try {
+//            TimeUnit.SECONDS.sleep(5)
+//        } catch (e: InterruptedException) {
+//            log.error(e.message)
+//        }
+//        log.info("웹소켓 다시 시작 중")
+//        val tradingWebsocket = getBean(TradingWebsocket::class.java)
+//        tradingWebsocket.open()
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
@@ -70,12 +68,6 @@ class StockWebSocketListener(
 
     }
 
-    private fun isStockData(response: String): Boolean {
-        return WsTransaction.values().any {
-            response.contains("|${it.trId}|")
-        }
-    }
-
     /**
      * 해당 메소드 호출 안함
      */
@@ -83,8 +75,12 @@ class StockWebSocketListener(
         log.info(bytes.toString())
     }
 
+    // KoreainvestmentWebSocketListen.connect()의해 실행됨
     override fun onOpen(webSocket: WebSocket, response: Response) {
-        request.forEach { webSocket.send(it) }
+        request.forEach {
+            log.info(it)
+            webSocket.send(it)
+        }
     }
 
     private fun slack(message: String) {
@@ -92,6 +88,12 @@ class StockWebSocketListener(
             return
         }
         slackMessageService.sendMessage(message)
+    }
+
+    private fun isStockData(response: String): Boolean {
+        return WsTransaction.values().any {
+            response.contains("|${it.trId}|")
+        }
     }
 
     companion object {
