@@ -3,11 +3,13 @@ package com.setvect.bokslstock2.koreainvestment.ws.service
 import com.setvect.bokslstock2.koreainvestment.ws.model.WsResponse
 import com.setvect.bokslstock2.koreainvestment.ws.model.WsTransaction
 import com.setvect.bokslstock2.slack.SlackMessageService
+import com.setvect.bokslstock2.util.BeanUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import java.io.IOException
 import java.net.URI
 import java.nio.ByteBuffer
+import java.util.concurrent.TimeUnit
 import javax.websocket.*
 
 @ClientEndpoint
@@ -32,13 +34,13 @@ class WebsocketClientEndpoint(
 
     @OnOpen
     fun onOpen(userSession: Session?) {
-        println("onOpen websocket")
+        println("웹소켓 열림")
         this.userSession = userSession
     }
 
     @OnClose
     fun onClose(userSession: Session, reason: CloseReason) {
-        println("onClose websocket. reason: $reason")
+        println("웹소켓 닫임. 이유: $reason")
         this.userSession = null
     }
 
@@ -50,9 +52,7 @@ class WebsocketClientEndpoint(
             publisher.publishEvent(StockWebSocketEvent(wsResponse))
         } else {
             publisher.publishEvent(message)
-            log.info(message)
         }
-
     }
 
     @OnMessage
@@ -63,24 +63,22 @@ class WebsocketClientEndpoint(
 
     @OnError
     fun onError(session: Session, t: Throwable) {
-        val message = "Socket Error : " + t.message
+        val message = "웹소켓 에러 : " + t.message
         log.error(message, t)
         slack(message)
 
-        // TODO 실패 했을때 다시 웹소켓 연결
-//        try {
-//            TimeUnit.SECONDS.sleep(5)
-//        } catch (e: InterruptedException) {
-//            log.error(e.message)
-//        }
-//        log.info("웹소켓 다시 시작 중")
-//        val tradingWebsocket = getBean(TradingWebsocket::class.java)
-//        tradingWebsocket.open()
-
+        // 실패 했을때 다시 웹소켓 연결
+        try {
+            TimeUnit.SECONDS.sleep(5)
+        } catch (e: InterruptedException) {
+            log.error(e.message)
+        }
+        log.info("웹소켓 다시 시작 중")
+        val tradingWebsocket = BeanUtils.getBean(TradingWebsocket::class.java)
+        tradingWebsocket.open()
     }
 
     fun sendMessage(message: String) {
-        log.info("send message: $message")
         userSession!!.asyncRemote.sendText(message)
     }
 
@@ -101,5 +99,4 @@ class WebsocketClientEndpoint(
         }
         slackMessageService.sendMessage(message)
     }
-
 }

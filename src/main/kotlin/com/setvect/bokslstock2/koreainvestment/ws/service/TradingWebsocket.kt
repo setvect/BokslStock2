@@ -26,9 +26,7 @@ class TradingWebsocket(
 
         websocketClientEndpoint?.close()
 
-        websocketClientEndpoint = WebsocketClientEndpoint(koreainvestment.ws.url, {
-            log.info(it)
-        }, slackMessageService)
+        websocketClientEndpoint = WebsocketClientEndpoint(koreainvestment.ws.url, publisher, slackMessageService)
 
         bokslStockProperties.koreainvestment.vbs.stockCode.forEach { stockCode ->
             WsTransaction.values().forEach { transaction ->
