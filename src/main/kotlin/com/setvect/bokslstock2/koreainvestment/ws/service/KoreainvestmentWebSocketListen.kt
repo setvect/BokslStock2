@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
 @Component
+@Deprecated("삭제대상")
 class KoreainvestmentWebSocketListen(
     private val bokslStockProperties: BokslStockProperties
 ) {

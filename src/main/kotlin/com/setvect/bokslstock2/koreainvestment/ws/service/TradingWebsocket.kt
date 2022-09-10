@@ -4,6 +4,8 @@ import com.setvect.bokslstock2.config.BokslStockProperties
 import com.setvect.bokslstock2.koreainvestment.ws.model.WsRequest
 import com.setvect.bokslstock2.koreainvestment.ws.model.WsTransaction
 import com.setvect.bokslstock2.slack.SlackMessageService
+import com.setvect.bokslstock2.util.JsonUtil
+import org.apache.juli.logging.LogFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 
@@ -12,14 +14,21 @@ import org.springframework.stereotype.Component
  */
 @Component
 class TradingWebsocket(
-    private val socketListen: KoreainvestmentWebSocketListen,
     private val publisher: ApplicationEventPublisher,
     private val slackMessageService: SlackMessageService,
     private val bokslStockProperties: BokslStockProperties
 ) {
+    private var websocketClientEndpoint: WebsocketClientEndpoint? = null
+    private val log = LogFactory.getLog(javaClass)
+
     fun open() {
-        val webSocketListener = StockWebSocketListener(publisher, slackMessageService)
         val koreainvestment = bokslStockProperties.koreainvestment
+
+        websocketClientEndpoint?.close()
+
+        websocketClientEndpoint = WebsocketClientEndpoint(koreainvestment.ws.url, {
+            log.info(it)
+        }, slackMessageService)
 
         bokslStockProperties.koreainvestment.vbs.stockCode.forEach { stockCode ->
             WsTransaction.values().forEach { transaction ->
@@ -33,13 +42,14 @@ class TradingWebsocket(
                     ),
                     WsRequest.Body(WsRequest.Input(transaction, stockCode))
                 )
-                webSocketListener.addParameter(parameter)
+                val message = JsonUtil.mapper.writeValueAsString(parameter)
+                websocketClientEndpoint!!.sendMessage(message)
             }
         }
-        socketListen.connect(webSocketListener)
     }
 
     fun close() {
-        socketListen.disconnect()
+        websocketClientEndpoint?.close()
+        websocketClientEndpoint = null
     }
 }

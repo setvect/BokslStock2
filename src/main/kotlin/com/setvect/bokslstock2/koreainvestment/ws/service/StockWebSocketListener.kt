@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import java.util.concurrent.TimeUnit
 
+@Deprecated("삭제 대상")
 class StockWebSocketListener(
     private val publisher: ApplicationEventPublisher,
     private val slackMessageService: SlackMessageService?
