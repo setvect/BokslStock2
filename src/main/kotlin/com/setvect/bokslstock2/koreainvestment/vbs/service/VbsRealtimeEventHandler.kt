@@ -4,7 +4,8 @@ import com.setvect.bokslstock2.koreainvestment.ws.model.WsTransaction
 import com.setvect.bokslstock2.koreainvestment.ws.service.StockWebSocketEvent
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.context.ApplicationListener
+import org.springframework.boot.context.event.ApplicationStartedEvent
+import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 
 /**
@@ -12,16 +13,23 @@ import org.springframework.stereotype.Component
  */
 @Component
 class VbsRealtimeEventHandler(
-    private val vbsService: VbsService
-) : ApplicationListener<StockWebSocketEvent> {
+    val vbsService: VbsService
+) {
     private val log: Logger = LoggerFactory.getLogger(javaClass)
 
-    override fun onApplicationEvent(event: StockWebSocketEvent) {
+    @EventListener
+    fun onApplicationEvent(event: ApplicationStartedEvent) {
+        log.info("복슬매매2 실행")
+        // TODO 테스트 실행시 아래 로직 실행 안되게 하기
+//        vbsService.start()
+    }
+
+    @EventListener
+    fun onApplicationEvent(event: StockWebSocketEvent) {
         val response = event.response
         when (response.getTransaction()) {
             WsTransaction.EXECUTION -> vbsService.execution(response)
             WsTransaction.QUOTATION -> vbsService.quotation(response)
         }
     }
-
 }

@@ -16,7 +16,7 @@ import javax.websocket.*
 class WebsocketClientEndpoint(
     endpointUri: String,
     private val publisher: ApplicationEventPublisher,
-    private val slackMessageService: SlackMessageService?
+    private val slackMessageService: SlackMessageService
 
 ) {
     private var userSession: Session? = null
@@ -94,9 +94,6 @@ class WebsocketClientEndpoint(
     }
 
     private fun slack(message: String) {
-        if (slackMessageService == null) {
-            return
-        }
         slackMessageService.sendMessage(message)
     }
 }

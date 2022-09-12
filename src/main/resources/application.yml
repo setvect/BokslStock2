@@ -55,9 +55,14 @@ com:
           url: ws://ops.koreainvestment.com:21000
         vbs:
           accountNo: ${ACCOUNTNO}
-          stockCode:
-            - "069500" # KODEX 200
-            - "091170" # KODEX 은행
+          stock:
+            - code: "069500" # KODEX 200
+              openSell: false
+              k: 0.5
+            - code: "091170" # KODEX 은행
+              openSell: true
+              k: 0.5
+
       restTemplate:
         connectionTimeoutMs: 1000
         readTimeoutMs: 1000

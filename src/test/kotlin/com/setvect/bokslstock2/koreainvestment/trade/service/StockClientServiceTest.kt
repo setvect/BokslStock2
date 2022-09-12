@@ -52,14 +52,14 @@ internal class StockClientServiceTest {
 
     @Test
     fun requestQuote() {
-        val datePrice = stockClientService.requestQuote(QuoteRequest(StockCode.KODEX_200_069500.code), AUTHORIZATION)
-        log.info(datePrice.toString())
+        val quote = stockClientService.requestQuote(QuoteRequest(StockCode.KODEX_200_069500.code), AUTHORIZATION)
+        log.info(quote.toString())
     }
 
     @Test
     fun requestBalance() {
-        val datePrice = stockClientService.requestBalance(BalanceRequest(bokslStockProperties.koreainvestment.vbs.accountNo), AUTHORIZATION)
-        log.info(datePrice.toString())
+        val balance = stockClientService.requestBalance(BalanceRequest(bokslStockProperties.koreainvestment.vbs.accountNo), AUTHORIZATION)
+        log.info(balance.toString())
     }
 
     @Test

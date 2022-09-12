@@ -29,21 +29,19 @@ class TradingWebsocket(
 
         websocketClientEndpoint = WebsocketClientEndpoint(koreainvestment.ws.url, publisher, slackMessageService)
 
-        bokslStockProperties.koreainvestment.vbs.stockCode.forEach { stockCode ->
-            WsTransaction.values().forEach { transaction ->
-                val parameter = WsRequest(
-                    WsRequest.Header(
-                        koreainvestment.appkey,
-                        koreainvestment.appsecret,
-                        "P", // 고객타입, P : 개인
-                        "1", // 거래타입, 1 : 등록
-                        "utf-8"
-                    ),
-                    WsRequest.Body(WsRequest.Input(transaction, stockCode))
-                )
-                val message = JsonUtil.mapper.writeValueAsString(parameter)
-                websocketClientEndpoint!!.sendMessage(message)
-            }
+        bokslStockProperties.koreainvestment.vbs.stock.forEach { stock ->
+            val parameter = WsRequest(
+                WsRequest.Header(
+                    koreainvestment.appkey,
+                    koreainvestment.appsecret,
+                    "P", // 고객타입, P : 개인
+                    "1", // 거래타입, 1 : 등록
+                    "utf-8"
+                ),
+                WsRequest.Body(WsRequest.Input(WsTransaction.EXECUTION, stock.code))
+            )
+            val message = JsonUtil.mapper.writeValueAsString(parameter)
+            websocketClientEndpoint!!.sendMessage(message)
         }
     }
 
