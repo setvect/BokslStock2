@@ -15,6 +15,9 @@ enum class StockTransaction(
     /** 잔고 조회 */
     BALANCE("TTTC8434R"),
 
+    /** 호가 */
+    QUOTE("FHKST01010200"),
+
     /** 매수주문 */
     BUY_ORDER("TTTC0802U"),
 

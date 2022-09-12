@@ -25,26 +25,26 @@ object DateUtil {
      * @param dateStr yyyy-MM-dd 형태
      * @return LocalDAte
      */
-    fun getLocalDate(dateStr: String?): LocalDate {
+    fun getLocalDate(dateStr: String): LocalDate {
         return getLocalDate(dateStr, yyyy_MM_dd)
     }
 
-    fun getLocalDate(dateStr: String?, pattern: String?): LocalDate {
+    fun getLocalDate(dateStr: String, pattern: String): LocalDate {
         val formatter = DateTimeFormatter.ofPattern(pattern)
         return LocalDate.parse(dateStr, formatter)
     }
 
-    fun getLocalDateTime(dateStr: String?): LocalDateTime {
+    fun getLocalDateTime(dateStr: String): LocalDateTime {
         val formatter = DateTimeFormatter.ofPattern(yyyy_MM_ddTHH_mm_ss)
         return LocalDateTime.parse(dateStr, formatter)
     }
 
-    fun getLocalTime(timeStr: String?): LocalTime {
+    fun getLocalTime(timeStr: String): LocalTime {
         val formatter = DateTimeFormatter.ofPattern(HH_mm_ss)
         return LocalTime.parse(timeStr, formatter)
     }
 
-    fun getLocalTime(timeStr: String?, pattern: String?): LocalTime {
+    fun getLocalTime(timeStr: String, pattern: String): LocalTime {
         val formatter = DateTimeFormatter.ofPattern(pattern)
         return LocalTime.parse(timeStr, formatter)
     }
@@ -74,6 +74,10 @@ object DateUtil {
 
     fun convert(timeInMillis: Long): LocalDateTime {
         return LocalDateTime.ofInstant(Instant.ofEpochMilli(timeInMillis), TimeZone.getDefault().toZoneId())
+    }
+
+    fun currentDateTime(format: String): String {
+        return format(LocalDateTime.now(), format)
     }
 
     /**

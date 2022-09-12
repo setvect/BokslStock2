@@ -2,10 +2,7 @@ package com.setvect.bokslstock2.koreainvestment.trade.service
 
 import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.config.BokslStockProperties
-import com.setvect.bokslstock2.koreainvestment.trade.model.request.BalanceRequest
-import com.setvect.bokslstock2.koreainvestment.trade.model.request.CurrentPriceRequest
-import com.setvect.bokslstock2.koreainvestment.trade.model.request.DatePriceRequest
-import com.setvect.bokslstock2.koreainvestment.trade.model.request.OrderRequest
+import com.setvect.bokslstock2.koreainvestment.trade.model.request.*
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
@@ -15,7 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 
 private const val AUTHORIZATION =
-    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2tlbiIsImF1ZCI6IjA4YjU0NjJkLWNkZjktNDYwYy1hZjBmLTI1YTllNDVjODMxNyIsImlzcyI6InVub2d3IiwiZXhwIjoxNjYyODAwNTAwLCJpYXQiOjE2NjI3MTQxMDAsImp0aSI6IlBTbG1MVzEzNHhBSzRBUEdyaXRESE8wUjE1NE9sMmt2NU5DZyJ9.ivfq6EJHAJHVITg8LBBlrLND0SMZgOXITbUECalNbMGfHgi3k3nhqg4WmHEbARnl_i0XXYs0O2_Ig5iBI-ljFg"
+    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2tlbiIsImF1ZCI6Ijg3YmZmN2Q2LTdjNGItNGVmZS05NTNmLTQyN2QyNTRmMmIyMiIsImlzcyI6InVub2d3IiwiZXhwIjoxNjYzMDM5MzgzLCJpYXQiOjE2NjI5NTI5ODMsImp0aSI6IlBTbG1MVzEzNHhBSzRBUEdyaXRESE8wUjE1NE9sMmt2NU5DZyJ9.2OIAd2biciqYJOScM2kb82svND2aLpTHJFrsv-fjeMt2WrcHLy1wRyXBiXbiNt2Y4QyX6JOr5BblCOq00Wp2LA"
 
 @SpringBootTest
 @ActiveProfiles("local")
@@ -50,6 +47,12 @@ internal class StockClientServiceTest {
     @Test
     fun requestDatePrice() {
         val datePrice = stockClientService.requestDatePrice(DatePriceRequest(StockCode.KODEX_200_069500.code, DatePriceRequest.DateType.DAY), AUTHORIZATION)
+        log.info(datePrice.toString())
+    }
+
+    @Test
+    fun requestQuote() {
+        val datePrice = stockClientService.requestQuote(QuoteRequest(StockCode.KODEX_200_069500.code), AUTHORIZATION)
         log.info(datePrice.toString())
     }
 

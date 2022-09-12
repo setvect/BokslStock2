@@ -22,6 +22,7 @@ class TradingWebsocket(
     private val log = LogFactory.getLog(javaClass)
 
     fun open() {
+        log.info("웹소켓 시작")
         val koreainvestment = bokslStockProperties.koreainvestment
 
         websocketClientEndpoint?.close()
@@ -47,6 +48,7 @@ class TradingWebsocket(
     }
 
     fun close() {
+        log.info("웹소켓 종료")
         websocketClientEndpoint?.close()
         websocketClientEndpoint = null
     }
