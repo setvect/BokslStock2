@@ -251,4 +251,30 @@ object ApplicationUtil {
         report.append(String.format("샤프지수\t %,.2f", buyHoldSharpeRatio)).append("\n")
         return report.toString()
     }
+
+    /**
+     * 한 종목을 매수 할때 사용하는 금액 계산. 각종 변수값을 바탕으로 계산한다.
+     *
+     * 여담: 이거 공식 만드느라 X나 힘들었다. 분명 더 간단한 방법은 있을거다.
+     *
+     * [currentBuyStockCount] 현재 매수중인 종목 수
+     * [cash] 현재 보유 현금
+     * [stockBuyTotalCount] 매매 대상 종목 수
+     * [investRatio] 전체 현금 대비 투자 비율. 1: 모든 현금을 투자, 0.5 현금의 50%만 매수에 사용
+     *
+     * @return 매수에 사용될 금액 반환
+     */
+    fun getBuyCash(
+        currentBuyStockCount: Int,
+        cash: Double,
+        stockBuyTotalCount: Int,
+        investRatio: Double
+    ): Double {
+        // 매수에 사용할 현금
+        // 현재현금 * 직전 매수 종목 수 / 매매 대상 종목수 * 사용비율 * 매매 대상 종목수  / 사용비율 / (매매 대상 종목수 / 사용비율 - 직전 매수 종목 수) + 현재현금
+        val startCash =
+            cash * currentBuyStockCount / stockBuyTotalCount * investRatio * stockBuyTotalCount / investRatio / (stockBuyTotalCount / investRatio - currentBuyStockCount) + cash
+        // 매수에 사용할 현금 = 시작현금 역산 * 사용비율 * (1/매매종목수)
+        return startCash * investRatio * (1 / stockBuyTotalCount.toDouble())
+    }
 }

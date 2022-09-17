@@ -40,13 +40,13 @@ data class BalanceResponse(
         /**매입금액*/
         @JsonProperty("pchs_amt") val pchsAmt: String,
         /**현재가*/
-        @JsonProperty("prpr") val prpr: String,
+        @JsonProperty("prpr") val prpr: Int,
         /**평가금액*/
-        @JsonProperty("evlu_amt") val evluAmt: String,
+        @JsonProperty("evlu_amt") val evluAmt: Long,
         /**평가손익금액*/
-        @JsonProperty("evlu_pfls_amt") val evluPflsAmt: String,
+        @JsonProperty("evlu_pfls_amt") val evluPflsAmt: Long,
         /**평가손익율*/
-        @JsonProperty("evlu_pfls_rt") val evluPflsRt: String,
+        @JsonProperty("evlu_pfls_rt") val evluPflsRt: Double,
         /**평가수익율*/
         @JsonProperty("evlu_erng_rt") val evluErngRt: String,
         /**대출일자*/
@@ -75,7 +75,7 @@ data class BalanceResponse(
     data class Deposit(
 
         /**예수금총금액*/
-        @JsonProperty("dnca_tot_amt") val dncaTotAmt: String,
+        @JsonProperty("dnca_tot_amt") val dncaTotAmt: Long,
         /**익일정산금액*/
         @JsonProperty("nxdy_excc_amt") val nxdyExccAmt: String,
         /**가수도정산금액*/

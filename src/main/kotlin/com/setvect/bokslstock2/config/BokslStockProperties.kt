@@ -78,6 +78,7 @@ data class BokslStockProperties(
     ) {
         data class VbsStock(
             val code: String,
+            val name: String,
             val openSell: Boolean,
             val k: Double
         )

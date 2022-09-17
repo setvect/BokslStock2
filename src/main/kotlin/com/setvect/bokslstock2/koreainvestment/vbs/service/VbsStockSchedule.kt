@@ -12,8 +12,14 @@ class VbsStockSchedule(
 
     // TODO 수능날 처럼 장 시작 시간이 조정되는 경우가 있음. 이런 상황 대비 해야됨
     @Scheduled(cron = "0 45 08 * * MON-FRI") // 월~금 매일 08시 45분에 실행
-    fun checkBalance() {
+    fun vbsStart() {
         log.info("start")
         vbsService.start()
+    }
+
+    @Scheduled(cron = "10 30 15 * * MON-FRI") // 월~금 매일 08시 45분에 실행
+    fun vbsReport() {
+        log.info("report")
+        vbsService.report()
     }
 }

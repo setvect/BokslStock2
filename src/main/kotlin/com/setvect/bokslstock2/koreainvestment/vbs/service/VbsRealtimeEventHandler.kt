@@ -29,7 +29,9 @@ class VbsRealtimeEventHandler(
         val response = event.response
         when (response.getTransaction()) {
             WsTransaction.EXECUTION -> vbsService.execution(response)
-            WsTransaction.QUOTATION -> vbsService.quotation(response)
+            else -> {
+                // nothing
+            }
         }
     }
 }

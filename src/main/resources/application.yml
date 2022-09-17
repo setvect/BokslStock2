@@ -58,10 +58,12 @@ com:
           # 총 현금을 기준으로 투자 비율. 1은 전액, 0.5은 50% 투자
           investRatio: 0.99
           stock:
-            - code: "069500" # KODEX 200
+            - code: "069500"
+              name: "KODEX 200"
               openSell: false
               k: 0.5
-            - code: "091170" # KODEX 은행
+            - code: "091170"
+              name: "KODEX 은행"
               openSell: true
               k: 0.5
 

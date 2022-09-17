@@ -46,7 +46,7 @@ class BacktestTradeService(
             if (tradeItem.tradeType == TradeType.BUY) {
                 // 매수 처리
                 val buyCash =
-                    ReportMakerHelperService.getBuyCash(
+                    ApplicationUtil.getBuyCash(
                         buyStock.size,
                         cash,
                         bundleCount,
