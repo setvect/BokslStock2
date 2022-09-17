@@ -1,6 +1,7 @@
 package com.setvect.bokslstock2.koreainvestment.ws.service
 
 import org.slf4j.LoggerFactory
+import org.springframework.boot.context.event.ApplicationStartedEvent
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 
@@ -19,7 +20,7 @@ class WebsocketStockEventHandler(
      * @see WebsocketStockSchedule
      */
     @EventListener
-    fun onApplicationEvent(event: StockWebSocketEvent) {
+    fun onApplicationEvent(event: ApplicationStartedEvent) {
         if (!TradeTimeHelper.isTimeToTrade()) {
             log.info("매매 가능 시간이 아닙니다.")
             return

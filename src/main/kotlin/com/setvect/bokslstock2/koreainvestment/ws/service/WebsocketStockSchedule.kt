@@ -22,7 +22,7 @@ class WebsocketStockSchedule(
     /**
      * 실시간 체결 가격 종료
      */
-    @Scheduled(cron = "15/35 * * * * ?")
+    @Scheduled(cron = "0 35 15 * * MON-FRI")
     fun closeWebSocket() {
         tradingWebsocket.close()
         log.info("실시간 채결 가격 모니터링 종료")

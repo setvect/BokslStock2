@@ -50,8 +50,6 @@ class WebsocketClientEndpoint(
         if (isStockData(message)) {
             val wsResponse = WsResponse.parsing(message)
             publisher.publishEvent(StockWebSocketEvent(wsResponse))
-        } else {
-            publisher.publishEvent(StockWebSocketEvent(WsResponse("aaa", "aaa", 100, "aaa")))
         }
     }
 
