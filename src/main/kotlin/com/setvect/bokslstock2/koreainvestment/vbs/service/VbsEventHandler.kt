@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
  * 호가, 매수 채결가 이벤트
  */
 @Component
-class VbsRealtimeEventHandler(
+class VbsEventHandler(
     val vbsService: VbsService
 ) {
     private val log: Logger = LoggerFactory.getLogger(javaClass)
@@ -21,7 +21,7 @@ class VbsRealtimeEventHandler(
     fun onApplicationEvent(event: ApplicationStartedEvent) {
         log.info("복슬매매2 실행")
         // TODO 테스트 실행시 아래 로직 실행 안되게 하기
-//        vbsService.start()
+        vbsService.start()
     }
 
     @EventListener

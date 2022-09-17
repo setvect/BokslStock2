@@ -1,6 +1,7 @@
 package com.setvect.bokslstock2.koreainvestment.ws.service
 
 import org.slf4j.LoggerFactory
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
@@ -9,14 +10,21 @@ class WebsocketStockSchedule(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    //    @Scheduled(cron = "0 45 08 * * MON-FRI") // 월~금 매일 08시 45분에 실행
-//    @Scheduled(cron = "0/30 * * * * ?")
+    /**
+     * 실시간 채결 가격 모니터링
+     */
+    @Scheduled(cron = "0 45 08 * * MON-FRI") // 월~금 매일 08시 45분에 실행
     fun openWebSocket() {
         tradingWebsocket.open()
+        log.info("실시간 채결 가격 모니터링 시작")
     }
 
-    //    @Scheduled(cron = "15/35 * * * * ?") // 월~금 매일 오전 8시 30분에 실행
+    /**
+     * 실시간 체결 가격 종료
+     */
+    @Scheduled(cron = "15/35 * * * * ?")
     fun closeWebSocket() {
         tradingWebsocket.close()
+        log.info("실시간 채결 가격 모니터링 종료")
     }
 }

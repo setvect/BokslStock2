@@ -5,7 +5,7 @@ import com.setvect.bokslstock2.koreainvestment.ws.model.WsRequest
 import com.setvect.bokslstock2.koreainvestment.ws.model.WsTransaction
 import com.setvect.bokslstock2.slack.SlackMessageService
 import com.setvect.bokslstock2.util.JsonUtil
-import org.apache.juli.logging.LogFactory
+import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 
@@ -19,7 +19,7 @@ class TradingWebsocket(
     private val bokslStockProperties: BokslStockProperties
 ) {
     private var websocketClientEndpoint: WebsocketClientEndpoint? = null
-    private val log = LogFactory.getLog(javaClass)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun open() {
         log.info("웹소켓 시작")

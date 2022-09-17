@@ -9,16 +9,14 @@ import com.setvect.bokslstock2.koreainvestment.trade.service.StockClientService
 import com.setvect.bokslstock2.koreainvestment.trade.service.TokenService
 import com.setvect.bokslstock2.koreainvestment.ws.model.RealtimeExecution
 import com.setvect.bokslstock2.koreainvestment.ws.model.WsResponse
+import com.setvect.bokslstock2.koreainvestment.ws.service.TradeTimeHelper
 import com.setvect.bokslstock2.slack.SlackMessageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
-import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.LocalTime
-import java.time.temporal.ChronoField
 import java.util.concurrent.TimeUnit
 
 
@@ -48,27 +46,6 @@ class VbsService(
     /**목표가 <종목코드, 매수가격>*/
     private var targetPrice = mapOf<String, Int>()
 
-    companion object {
-        // 매매 시작
-        private val START_TIME = LocalTime.of(8, 41, 0).get(ChronoField.MILLI_OF_DAY)
-
-        // 시초가 매도
-        private val SELL_OPEN_TIME = LocalTime.of(8, 59, 55).get(ChronoField.MILLI_OF_DAY)
-
-        // 장 시작
-        private val OPEN_TIME = LocalTime.of(9, 0, 0).get(ChronoField.MILLI_OF_DAY)
-
-        // 9시 5분 매도 시간
-        private val SELL_5_TIME = LocalTime.of(9, 5, 0).get(ChronoField.MILLI_OF_DAY)
-
-        // 매수
-        private val BUY_TIME = LocalTime.of(9, 5, 10).get(ChronoField.MILLI_OF_DAY)
-
-        // 장 종료(동시호가 제외)
-        private val CLOSE_TIME = LocalTime.of(13, 20, 0).get(ChronoField.MILLI_OF_DAY)
-    }
-
-
     @Async
     fun start() {
         // TODO 동기화 문제가 있을 수 있음
@@ -82,7 +59,7 @@ class VbsService(
         checkDay()
 
         try {
-            if (!checkTradeDay()) {
+            if (!TradeTimeHelper.isTimeToTrade()) {
                 return
             }
             checkTrade()
@@ -118,10 +95,7 @@ class VbsService(
         var sell5Flag = false
         targetPrice = mapOf()
         while (true) {
-            val now = LocalTime.now().get(ChronoField.MILLI_OF_DAY)
-
-            // 시초가 매도
-            val sellOpenTime = now in (SELL_OPEN_TIME + 1) until OPEN_TIME
+            val sellOpenTime = TradeTimeHelper.isOpenPriceSellTime()
             val vbsStocks = bokslStockProperties.koreainvestment.vbs.stock
             if (sellOpenTime && !sellOpenFlag) {
                 val openSellStockList = vbsStocks.filter { it.openSell }
@@ -129,15 +103,14 @@ class VbsService(
                 sellOpenFlag = true
             }
 
-            // 장 시작 5분후 매도
-            val sell5Time = now in (SELL_5_TIME + 1) until SELL_5_TIME
+            val sell5Time = TradeTimeHelper.isOpen5MinPriceSellTime()
             if (sell5Time && !sell5Flag) {
                 val openSellStockList = vbsStocks.filter { !it.openSell }
                 sellOrder(openSellStockList)
                 sell5Flag = true
             }
 
-            if (isBuyTimeRange(now)) {
+            if (TradeTimeHelper.isBuyTimeRange()) {
                 val targetPriceMessage = StringBuilder()
                 targetPrice = vbsStocks.associate { stock ->
                     val stockClientService = stockClientService.requestDatePrice(DatePriceRequest(stock.code, DatePriceRequest.DateType.DAY), tokenService.getAccessToken())
@@ -173,8 +146,7 @@ class VbsService(
      * 실시간 채결 이벤트
      */
     fun execution(wsResponse: WsResponse) {
-        val now = LocalTime.now().get(ChronoField.MILLI_OF_DAY)
-        if (!isBuyTimeRange(now) || targetPrice.isEmpty()) {
+        if (!TradeTimeHelper.isBuyTimeRange() || targetPrice.isEmpty()) {
             return
         }
 
@@ -219,29 +191,6 @@ class VbsService(
             // 주문 접수 후 딜레이
             TimeUnit.SECONDS.sleep(3)
         }
-    }
-
-    /**
-     * @return 매수 가능 시간
-     */
-    private fun isBuyTimeRange(now: Int) = now in (BUY_TIME + 1) until CLOSE_TIME
-
-    /**
-     * @return 매매 가능
-     */
-    private fun checkTradeDay(): Boolean {
-        // TODO 주말이 아닌 휴장일 판단하는 로직 들어가야 됨
-        val now = LocalTime.now().get(ChronoField.MILLI_OF_DAY)
-        val dayOfWeek = LocalDate.now().dayOfWeek
-        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
-            log.info("휴장일입니다.")
-            return false
-        }
-        if (now < START_TIME || CLOSE_TIME < now) {
-            log.info("매매 시간이 아닙니다.")
-            return false
-        }
-        return true
     }
 
     /**
