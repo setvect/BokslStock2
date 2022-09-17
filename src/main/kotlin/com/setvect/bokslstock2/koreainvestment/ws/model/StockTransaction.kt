@@ -18,6 +18,9 @@ enum class StockTransaction(
     /** 호가 */
     QUOTE("FHKST01010200"),
 
+    /** 취소가능 주문 조회 */
+    CANCELABLE("TTTC8036R"),
+
     /** 매수주문 */
     BUY_ORDER("TTTC0802U"),
 

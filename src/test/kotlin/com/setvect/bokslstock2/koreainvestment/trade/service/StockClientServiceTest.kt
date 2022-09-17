@@ -12,7 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 
 private const val AUTHORIZATION =
-    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2tlbiIsImF1ZCI6Ijg3YmZmN2Q2LTdjNGItNGVmZS05NTNmLTQyN2QyNTRmMmIyMiIsImlzcyI6InVub2d3IiwiZXhwIjoxNjYzMDM5MzgzLCJpYXQiOjE2NjI5NTI5ODMsImp0aSI6IlBTbG1MVzEzNHhBSzRBUEdyaXRESE8wUjE1NE9sMmt2NU5DZyJ9.2OIAd2biciqYJOScM2kb82svND2aLpTHJFrsv-fjeMt2WrcHLy1wRyXBiXbiNt2Y4QyX6JOr5BblCOq00Wp2LA"
+    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2tlbiIsImF1ZCI6IjI4NWVjMjkzLTVlNTgtNDA3NC1iZGY2LWM1ZmI3NWRhZjQ3NCIsImlzcyI6InVub2d3IiwiZXhwIjoxNjYzNDY4MzAwLCJpYXQiOjE2NjMzODE5MDAsImp0aSI6IlBTbG1MVzEzNHhBSzRBUEdyaXRESE8wUjE1NE9sMmt2NU5DZyJ9._9p9Gx188-SSVaT6wBjGEunuBZSY-1iTm6NJBld5kzd56zpR8RgQ3EFPGeVA2FGXl-k1sP6ak-j4vG39ARCPEw"
 
 @SpringBootTest
 @ActiveProfiles("local")
@@ -76,5 +76,11 @@ internal class StockClientServiceTest {
         val request = OrderRequest(koreainvestment.vbs.accountNo, StockCode.KODEX_200_069500.code, 39_000, 1)
         val datePrice = stockClientService.requestOrderSell(request, AUTHORIZATION)
         log.info(datePrice.toString())
+    }
+
+    @Test
+    fun requestCancelableList() {
+        val balance = stockClientService.requestCancelableList(CancelableRequest(bokslStockProperties.koreainvestment.vbs.accountNo), AUTHORIZATION)
+        log.info(balance.toString())
     }
 }

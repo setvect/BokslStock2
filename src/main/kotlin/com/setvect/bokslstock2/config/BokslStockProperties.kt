@@ -70,7 +70,10 @@ data class BokslStockProperties(
     )
 
     data class Vbs(
+        /** 계좌 번호 */
         val accountNo: String,
+        /** 총 현금을 기준으로 투자 비율. 1은 전액, 0.5은 50% 투자*/
+        val investRatio: Double,
         val stock: List<VbsStock>,
     ) {
         data class VbsStock(

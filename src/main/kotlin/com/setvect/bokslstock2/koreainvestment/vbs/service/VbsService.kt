@@ -5,11 +5,12 @@ import com.setvect.bokslstock2.koreainvestment.trade.model.request.*
 import com.setvect.bokslstock2.koreainvestment.trade.model.response.BalanceResponse
 import com.setvect.bokslstock2.koreainvestment.trade.model.response.TokenResponse
 import com.setvect.bokslstock2.koreainvestment.trade.service.StockClientService
-import com.setvect.bokslstock2.koreainvestment.ws.model.Quotation
+import com.setvect.bokslstock2.koreainvestment.ws.model.RealtimeExecution
 import com.setvect.bokslstock2.koreainvestment.ws.model.WsResponse
 import com.setvect.bokslstock2.slack.SlackMessageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateUtil
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
@@ -36,7 +37,10 @@ class VbsService(
     private val log: Logger = LoggerFactory.getLogger(javaClass)
     private var token: TokenResponse = TokenResponse("", DateUtil.currentDateTime(DateUtil.yyyy_MM_dd_HH_mm_ss), "", 0L)
     private var currentDate: LocalDate = LocalDate.now().minusDays(1)
+
     private var requestBalance: BalanceResponse? = null
+
+
     private var run = false
 
     /**목표가 <종목코드, 매수가격>*/
@@ -65,9 +69,28 @@ class VbsService(
     /**
      * 체결
      */
-    fun execution(response: WsResponse) {
-        val quotation = Quotation.parsing(response.responseData)
-        log.info("${response.trId} = $quotation")
+    fun execution(wsResponse: WsResponse) {
+        val now = LocalTime.now().get(ChronoField.MILLI_OF_DAY)
+        if (!isBuyTimeRange(now) || targetPrice.isEmpty()) {
+            return
+        }
+
+        val realtimeExecution = RealtimeExecution.parsing(wsResponse.responseData)
+        log.info("${wsResponse.trId} = $realtimeExecution")
+
+        val code = realtimeExecution.code
+        val price = targetPrice[code] ?: return
+
+
+        var holdingsMap = getHoldingStock()
+
+        if (price <= realtimeExecution.stckPrpr) {
+            holdingsMap.size
+
+            stockClientService.requestOrderBuy(OrderRequest(bokslStockProperties.koreainvestment.vbs.accountNo, code, price, 100), token.accessToken)
+            // 주문 접수 후 딜레이
+            TimeUnit.SECONDS.sleep(3)
+        }
     }
 
     /**
@@ -87,6 +110,7 @@ class VbsService(
             log.info("매매 시작")
             run = true
         }
+        checkDay()
 
         try {
             if (!checkTradeDay()) {
@@ -113,7 +137,7 @@ class VbsService(
             val vbsStocks = bokslStockProperties.koreainvestment.vbs.stock
             if (sellOpenTime && !sellOpenFlag) {
                 val openSellStockList = vbsStocks.filter { it.openSell }
-                sellOpen(openSellStockList)
+                sellOrder(openSellStockList)
                 sellOpenFlag = true
             }
 
@@ -121,11 +145,11 @@ class VbsService(
             val sell5Time = now in (SELL_5_TIME + 1) until SELL_5_TIME
             if (sell5Time && !sell5Flag) {
                 val openSellStockList = vbsStocks.filter { !it.openSell }
-                sellOpen(openSellStockList)
+                sellOrder(openSellStockList)
                 sell5Flag = true
             }
 
-            if (now in (BUY_TIME + 1) until CLOSE_TIME) {
+            if (isBuyTimeRange(now)) {
                 targetPrice = vbsStocks.associate { stock ->
                     val stockClientService = stockClientService.requestDatePrice(DatePriceRequest(stock.code, DatePriceRequest.DateType.DAY), token.accessToken)
                     val openPrice = stockClientService.output!![0].stckOprc
@@ -137,13 +161,22 @@ class VbsService(
                     log.info("[목표가] ${stock.code}: $openPrice + ($beforeDayHigh - $beforeDayLow) * ${stock.k} = $targetPrice")
                     stock.code to targetPrice
                 }
+                // TODO 목표가 슬랙보내기
+
+                // 목표가 계산이후 종료
                 return;
             }
+
 
             // 목표가 계산
             TimeUnit.SECONDS.sleep(1)
         }
     }
+
+    /**
+     * @return 매수 가능 시간
+     */
+    private fun isBuyTimeRange(now: Int) = now in (BUY_TIME + 1) until CLOSE_TIME
 
     /**
      * @return 매매 가능
@@ -166,9 +199,8 @@ class VbsService(
     /**
      * [openSellStockList] 매도 종목
      */
-    private fun sellOpen(openSellStockList: List<BokslStockProperties.Vbs.VbsStock>) {
-        // <종목코드, 잔고정보>
-        val holdingsMap = requestBalance!!.holdings.associateBy { it.code }
+    private fun sellOrder(openSellStockList: List<BokslStockProperties.Vbs.VbsStock>) {
+        var holdingsMap = getHoldingStock()
 
         openSellStockList.forEach {
             val stock = holdingsMap[it.code] ?: return@forEach
@@ -196,6 +228,14 @@ class VbsService(
     }
 
     /**
+     * 주식 잔고
+     * @return <종목코드, 잔고정보>
+     */
+    private fun getHoldingStock(): Map<String, BalanceResponse.Holdings> {
+        return requestBalance!!.holdings.associateBy { it.code }
+    }
+
+    /**
      * 날짜가 변경될 경우 최초 로드
      */
     private fun checkDay() {
@@ -210,5 +250,6 @@ class VbsService(
 
     private fun loadToken() {
         token = stockClientService.requestToken()
+        log.info("load token: ${StringUtils.substring(token.accessToken, 10)}...")
     }
 }

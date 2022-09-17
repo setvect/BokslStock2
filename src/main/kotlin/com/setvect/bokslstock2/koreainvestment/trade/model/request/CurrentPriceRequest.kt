@@ -7,5 +7,5 @@ data class CurrentPriceRequest(
     val code: String,
 ) {
     @JsonIgnore
-    val wsTransaction: StockTransaction = StockTransaction.CURRENT_PRICE
+    val stockTransaction: StockTransaction = StockTransaction.CURRENT_PRICE
 }

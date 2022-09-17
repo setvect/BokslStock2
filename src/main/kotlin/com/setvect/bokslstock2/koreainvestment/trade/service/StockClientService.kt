@@ -63,7 +63,7 @@ class StockClientService(
         val url = bokslStockProperties.koreainvestment.trade.url +
             "/uapi/domestic-stock/v1/quotations/inquire-price?fid_cond_mrkt_div_code=J&fid_input_iscd={code}"
 
-        val headers = headerAuth(authorization, request.wsTransaction)
+        val headers = headerAuth(authorization, request.stockTransaction)
 
         val httpEntity = HttpEntity<Void>(headers)
 
@@ -85,7 +85,7 @@ class StockClientService(
             "/uapi/domestic-stock/v1/quotations/inquire-daily-price?" +
             "fid_cond_mrkt_div_code=J&fid_input_iscd={code}&fid_period_div_code={dateType}&fid_org_adj_prc=0"
 
-        val headers = headerAuth(authorization, request.wsTransaction)
+        val headers = headerAuth(authorization, request.stockTransaction)
 
         val httpEntity = HttpEntity<Void>(headers)
 
@@ -109,7 +109,7 @@ class StockClientService(
         val url = bokslStockProperties.koreainvestment.trade.url +
             "/uapi/domestic-stock/v1/quotations/inquire-asking-price-exp-ccn?fid_cond_mrkt_div_code=J&fid_input_iscd={code}"
 
-        val headers = headerAuth(authorization, request.wsTransaction)
+        val headers = headerAuth(authorization, request.stockTransaction)
 
         val httpEntity = HttpEntity<Void>(headers)
 
@@ -132,7 +132,7 @@ class StockClientService(
             "CANO={cano}&ACNT_PRDT_CD=01&AFHR_FLPR_YN=N&OFL_YN=&INQR_DVSN=01&UNPR_DVSN=01&" +
             "FUND_STTL_ICLD_YN=N&FNCG_AMT_AUTO_RDPT_YN=N&PRCS_DVSN=00&CTX_AREA_FK100=null&CTX_AREA_NK100="
 
-        val headers = headerAuth(authorization, request.wsTransaction)
+        val headers = headerAuth(authorization, request.stockTransaction)
 
         val httpEntity = HttpEntity<Void>(headers)
 
@@ -145,6 +145,30 @@ class StockClientService(
         )
         return result.body ?: throw RuntimeException("API 결과 없음")
     }
+
+
+    /**
+     * @return 주식정정 취소 가능 주문 조회
+     */
+    fun requestCancelableList(request: CancelableRequest, authorization: String): CommonResponse<List<CancelableResponse>> {
+        val url = bokslStockProperties.koreainvestment.trade.url +
+            "/uapi/domestic-stock/v1/trading/inquire-psbl-rvsecncl?" +
+            "CANO={cano}&ACNT_PRDT_CD=01&CTX_AREA_FK100=&CTX_AREA_NK100=&INQR_DVSN_1=1&INQR_DVSN_2=0"
+
+        val headers = headerAuth(authorization, request.stockTransaction)
+
+        val httpEntity = HttpEntity<Void>(headers)
+
+        val result = stockRestTemplate.exchange(
+            url,
+            HttpMethod.GET,
+            httpEntity,
+            object : ParameterizedTypeReference<CommonResponse<List<CancelableResponse>>>() {},
+            mapOf<String, String>("cano" to request.accountNo)
+        )
+        return result.body ?: throw RuntimeException("API 결과 없음")
+    }
+
 
     /**
      * 매수 주문
