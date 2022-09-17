@@ -5,6 +5,7 @@ build/
 !**/src/test/**/build/
 crawl/
 src/test/resources/application.yml
+gradle.properties
 
 ### STS ###
 .apt_generated
