@@ -1,6 +1,7 @@
 package com.setvect.bokslstock2.etc
 
 import com.setvect.bokslstock2.util.DateUtil
+import org.apache.commons.codec.digest.DigestUtils
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -10,11 +11,14 @@ import java.time.ZoneId
 import java.time.temporal.ChronoField
 
 class EtcTest {
+
     @Test
     fun test() {
         val l = LocalDate.of(1994, 1, 1)
         val unix = l.atStartOfDay(ZoneId.systemDefault()).toInstant().epochSecond
         println(unix)
+        println(DigestUtils.md5Hex("AAAA"))
+        println(DigestUtils.md5Hex("BBBB"))
     }
 
     @Test

@@ -37,6 +37,14 @@ object TradeTimeHelper {
     }
 
     /**
+     * @return 오전 동시호가
+     */
+    fun isMorningSimultaneity(): Boolean {
+        val now = LocalTime.now().get(ChronoField.MILLI_OF_DAY)
+        return now in (START_TIME + 1) until OPEN_TIME
+    }
+
+    /**
      * @return 장 시작 시간 5분 매도 시간 범위이면 true
      */
     fun isOpen5MinPriceSellTime(): Boolean {

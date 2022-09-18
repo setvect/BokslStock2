@@ -38,7 +38,7 @@ data class BalanceResponse(
         /**매입평균가격*/
         @JsonProperty("pchs_avg_pric") val pchsAvgPric: Double,
         /**매입금액*/
-        @JsonProperty("pchs_amt") val pchsAmt: String,
+        @JsonProperty("pchs_amt") val pchsAmt: Long,
         /**현재가*/
         @JsonProperty("prpr") val prpr: Int,
         /**평가금액*/
