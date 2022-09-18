@@ -25,6 +25,9 @@ spring:
       settings:
         web-allow-others: true
 
+server:
+  port: 8083
+
 logging.level:
   org.hibernate.SQL: error
 #  org.hibernate.type: trace

@@ -3,8 +3,10 @@
 
     <property name="LOG_PATH" value="./logs/"/>
     <property name="LOG_FILE_MAX_HISTORY" value="20"/>
-    <property name="LOG_PATH_NAME" value="${LOG_PATH}/bokslstock.log"/>
-    <property name="LOG_PATTERN" value="%-5level %d{yy-MM-dd HH:mm:ss}[%thread] [%logger{20}:%line] - %msg%n"/>
+    <property name="LOG_PATH_NAME" value="${LOG_PATH}/BokslStock2.log"/>
+    <property name="LOG_PATTERN"
+              value="%-5level [%d{yy-MM-dd HH:mm:ss}] [%thread] %class{0}.%method\\(%file:%line\\) %msg%n"/>
+    <!--    <property name="LOG_PATTERN" value="%msg%n"/>-->
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
@@ -32,7 +34,7 @@
             <appender-ref ref="STDOUT"/>
         </root>
         <!--apache http client 상세 로그를 보고 싶으면 DEBUG로 변경-->
-        <logger name="org.apache.http" level="INFO" additivity="false">
+        <logger name="org.apache.http" level="DEBUG" additivity="false">
             <appender-ref ref="STDOUT"/>
         </logger>
         <logger name="com.setvect.bokslstock" level="INFO" additivity="false">
@@ -40,10 +42,8 @@
             <appender-ref ref="STDOUT"/>
         </logger>
     </springProfile>
-    <springProfile name="!local">
-        <root level="INFO">
-            <appender-ref ref="FILE"/>
-            <appender-ref ref="STDOUT"/>
-        </root>
-    </springProfile>
+    <root level="INFO">
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="STDOUT"/>
+    </root>
 </configuration>
