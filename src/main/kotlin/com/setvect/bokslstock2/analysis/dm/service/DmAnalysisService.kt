@@ -4,6 +4,7 @@ import com.setvect.bokslstock2.analysis.common.model.*
 import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.analysis.dm.model.DmBacktestCondition
+import com.setvect.bokslstock2.common.model.TradeType
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType

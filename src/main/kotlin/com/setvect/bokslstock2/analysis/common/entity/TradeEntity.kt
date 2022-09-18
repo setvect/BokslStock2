@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2.analysis.common.entity
 
-import com.setvect.bokslstock2.analysis.common.model.TradeType
+import com.setvect.bokslstock2.common.model.TradeType
 import java.time.LocalDateTime
 
 interface TradeEntity {

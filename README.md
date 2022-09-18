@@ -11,10 +11,10 @@
 ### IDE 환경에서 실행
 
 1. 프로그램 실행 시 업비트에서 받은 `엑세스키`, `보안키값`을 환경변수에 설정
-   - Intellij 경우 `Run/Debug Configurations` ->  `Environment variables`
-       ```
-       APPKEY=앱키;APPSECRET=앱시크릿키;ACCOUNTNO=계좌번호
-       ```
+    - Intellij 경우 `Run/Debug Configurations` ->  `Environment variables`
+        ```
+        APPKEY=앱키;APPSECRET=앱시크릿키;ACCOUNTNO=계좌번호
+        ```
 1. Active Profiles: `local`
 1. `BokslStock2Application` 실행
 
@@ -44,8 +44,8 @@ gradlew makeInstallFile
    $ rdate -s time.bora.net
    ```
 1. `BokslStock2.yml` 설정 변경
-   - appkey, appsecret, accountNo 값 등록
-   - 알고리즘 상수값 변경
+    - appkey, appsecret, accountNo 값 등록
+    - 알고리즘 상수값 변경
 
 1. `BokslStock2.sh` 실행권한 부여
     ```shell
@@ -55,16 +55,22 @@ gradlew makeInstallFile
     ```shell
     $ ./BokslStock2.sh
     ```
+
 ## 매매알고리즘
+
+[한국투자증권 Open API](https://apiportal.koreainvestment.com/intro)를 사용하여 자동매매를 수행함
+
 ### 변동성돌파전략
+
 `변동성 돌파` 전략을 사용하여 매매
 
 - 메인소스: [VbsService.kt](src/main/kotlin/com/setvect/bokslstock2/koreainvestment/vbs/service/VbsService.kt)
 - 매수 조건
-  - 목표가 < 오늘 주가
-  - 목표가 산출 방법: 목표가 = 오늘 시가 + (어제 고가 - 어제 저가) * k
+    - 목표가 < 오늘 주가
+    - 목표가 산출 방법: 목표가 = 오늘 시가 + (어제 고가 - 어제 저가) * k
 - 매도 조건
-  - 매수 다음날 시가 매도
+    - 매수 다음날 시가 매도
+
 ## 수집
 
 - 한국 및 미국주식 크롤링

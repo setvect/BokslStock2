@@ -1,11 +1,11 @@
 package com.setvect.bokslstock2.analysis.rb.setvice
 
-import com.setvect.bokslstock2.analysis.common.model.TradeType.BUY
-import com.setvect.bokslstock2.analysis.common.model.TradeType.SELL
 import com.setvect.bokslstock2.analysis.rb.entity.RbConditionEntity
 import com.setvect.bokslstock2.analysis.rb.entity.RbTradeEntity
 import com.setvect.bokslstock2.analysis.rb.repository.RbConditionRepository
 import com.setvect.bokslstock2.analysis.rb.repository.RbTradeRepository
+import com.setvect.bokslstock2.common.model.TradeType.BUY
+import com.setvect.bokslstock2.common.model.TradeType.SELL
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import org.slf4j.Logger

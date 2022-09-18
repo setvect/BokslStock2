@@ -1,6 +1,7 @@
 package com.setvect.bokslstock2.analysis.common.service
 
 import com.setvect.bokslstock2.analysis.common.model.*
+import com.setvect.bokslstock2.common.model.TradeType
 import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository

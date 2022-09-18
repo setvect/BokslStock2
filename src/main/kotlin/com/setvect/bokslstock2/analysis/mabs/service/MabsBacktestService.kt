@@ -1,11 +1,11 @@
 package com.setvect.bokslstock2.analysis.mabs.service
 
-import com.setvect.bokslstock2.analysis.common.model.TradeType.BUY
-import com.setvect.bokslstock2.analysis.common.model.TradeType.SELL
 import com.setvect.bokslstock2.analysis.mabs.entity.MabsConditionEntity
 import com.setvect.bokslstock2.analysis.mabs.entity.MabsTradeEntity
 import com.setvect.bokslstock2.analysis.mabs.repository.MabsConditionRepository
 import com.setvect.bokslstock2.analysis.mabs.repository.MabsTradeRepository
+import com.setvect.bokslstock2.common.model.TradeType.BUY
+import com.setvect.bokslstock2.common.model.TradeType.SELL
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil

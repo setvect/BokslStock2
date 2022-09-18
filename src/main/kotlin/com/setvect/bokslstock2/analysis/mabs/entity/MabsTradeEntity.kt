@@ -1,20 +1,12 @@
 package com.setvect.bokslstock2.analysis.mabs.entity
 
-import com.setvect.bokslstock2.analysis.common.model.TradeType
 import com.setvect.bokslstock2.analysis.common.entity.TradeEntity
+import com.setvect.bokslstock2.common.model.TradeType
 import java.time.LocalDateTime
-import javax.persistence.Column
-import javax.persistence.Entity
+import javax.persistence.*
 import javax.persistence.EnumType.STRING
-import javax.persistence.Enumerated
 import javax.persistence.FetchType.LAZY
-import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType.AUTO
-import javax.persistence.Id
-import javax.persistence.Index
-import javax.persistence.JoinColumn
-import javax.persistence.ManyToOne
-import javax.persistence.Table
 
 /**
  * 이평선 돌파 백테스트 매매 건별 정보

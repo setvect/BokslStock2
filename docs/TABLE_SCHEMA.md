@@ -1,8 +1,31 @@
-# 1. 복슬스톡 테이블 설계서
+# 1. BokslStock2 테이블 설계서
 
-## 1.1. 수집
+## 1.1. 매매
 
-### 1.1.1. CA_STOCK: 주식 종목
+### 1.1.1. 거래내역
+
+| Column Name | Attribute Name | Key | Type     | Len | Not Null | Description         |
+| ----------- | -------------- | --- | -------- | --- | -------- | ------------------- |
+| TRADE_SEQ   | 일련번호       | PK  | INTEGER  |     | Y        |                     |
+| ACCOUNT     | 거래계좌       |     | VARCHAR  | 20  | Y        |                     |
+| CODE        | 종목코드       |     | VARCHAR  | 20  | Y        | 005930, 069500, ... |
+| TRADE_TYPE  | 매수/매도      |     | VARCHAR  | 20  | Y        | BUY, SELL           |
+| QTY         | 수량           |     | NUMBER   |     | Y        |                     |
+| UNIT_PRICE  | 단가           |     | NUMBER   |     | Y        |                     |
+| REG_DATE    | 거래 시간      |     | DATETIME |     | Y        |                     |
+
+### 1.1.2. 자산 기록
+| Column Name       | Attribute Name              | Key | Type     | Len | Not Null | Description                        |
+| ----------------- | --------------------------- | --- | -------- | --- | -------- | ---------------------------------- |
+| ASSET_HISTORY_SEQ | 일련번호                    | PK  | INTEGER  |     | Y        |                                    |
+| ACCOUNT           | 거래계좌                    |     | VARCHAR  | 20  | Y        |                                    |
+| CURRENCY          | 자산 종류(예수금, 종목코드) |     | VARCHAR  | 20  | Y        | CASH, 005930, 069500, ...          |
+| YIELD             | 수익률                      |     | NUMBER   |     | Y        | 소수로 표현, 1->100%, -0.02 -> -2% |
+| REG_DATE          | 자산 조회 시간              |     | DATETIME |     | Y        |                                    |
+
+## 1.2. 수집
+
+### 1.2.1. CA_STOCK: 주식 종목
 
 | Column Name | Attribute Name | Key | Type     | Len | Not Null | Description         |
 | ----------- | -------------- | --- | -------- | --- | -------- | ------------------- |
@@ -12,7 +35,7 @@
 | REG_DATE    | 등록일         |     | DATETIME |     | Y        |                     |
 | EDIT_DATE   | 마지막 수정일  |     | DATETIME |     | Y        |                     |
 
-### 1.1.2. CB_CANDLE: 시세 정보
+### 1.2.2. CB_CANDLE: 시세 정보
 
 | Column Name      | Attribute Name | Key | Type     | Len | Not Null | Description                                             |
 | ---------------- | -------------- | --- | -------- | --- | -------- | ------------------------------------------------------- |
@@ -25,9 +48,9 @@
 | LOW_PRICE        | 저가           |     | DOUBLE   |     | Y        |                                                         |
 | CLOSE_PRICE      | 종가           |     | DOUBLE   |     | Y        |                                                         |
 
-## 1.2. 백테스트
+## 1.3. 백테스트
 
-### 1.2.3. FA_RB_CONDITION: 리벨러싱 전략 조건
+### 1.3.1. FA_RB_CONDITION: 리벨러싱 전략 조건
 
 | Column Name   | Attribute Name   | Key | Type     | Len | Not Null | Description                           |
 | ------------- | ---------------- | --- | -------- | --- | -------- | ------------------------------------- |
@@ -38,7 +61,7 @@
 | REG_DATE      | 등록일           |     | DATETIME |     | Y        |                                       |
 | EDIT_DATE     | 마지막 수정일    |     | DATETIME |     | Y        |                                       |
 
-### 1.2.4. FB_RB_TRADE: 리벨러싱 전략 조건
+### 1.3.2. FB_RB_TRADE: 리벨러싱 전략 조건
 
 | Column Name   | Attribute Name     | Key | Type     | Len | Not Null | Description     |
 | ------------- | ------------------ | --- | -------- | --- | -------- | --------------- |
@@ -52,7 +75,7 @@
 - Index
     - TRADE_DATE
 
-### 1.2.3. GA_VBS_CONDITION: 변동성돌파 전략 조건
+### 1.3.3. GA_VBS_CONDITION: 변동성돌파 전략 조건
 
 | Column Name        | Attribute Name       | Key | Type     | Len | Not Null | Description                           |
 | ------------------ | -------------------- | --- | -------- | --- | -------- | ------------------------------------- |
@@ -68,7 +91,7 @@
 | REG_DATE           | 등록일               |     | DATETIME |     | Y        |                                       |
 | EDIT_DATE          | 마지막 수정일        |     | DATETIME |     | Y        |                                       |
 
-### 1.2.4. GB_VBS_TRADE: 변동성돌파 전략 조건
+### 1.3.4. GB_VBS_TRADE: 변동성돌파 전략 조건
 
 | Column Name   | Attribute Name        | Key | Type     | Len | Not Null | Description      |
 | ------------- | --------------------- | --- | -------- | --- | -------- | ---------------- |
@@ -83,7 +106,7 @@
 - Index
     - TRADE_DATE
 
-### 1.2.5. HA_MABS_CONDITION: 이평선 돌파 백테스트 조건
+### 1.3.5. HA_MABS_CONDITION: 이평선 돌파 백테스트 조건
 
 | Column Name   | Attribute Name     | Key | Type     | Len | Not Null | Description                           |
 | ------------- | ------------------ | --- | -------- | --- | -------- | ------------------------------------- |
@@ -98,7 +121,7 @@
 | REG_DATE      | 등록일             |     | DATETIME |     | Y        |                                       |
 | EDIT_DATE     | 마지막 수정일      |     | DATETIME |     | Y        |                                       |
 
-### 1.2.6. HB_MABS_TRADE: 이평선 돌파 백테스트 매매 건별 정보
+### 1.3.6. HB_MABS_TRADE: 이평선 돌파 백테스트 매매 건별 정보
 
 | Column Name   | Attribute Name     | Key | Type     | Len | Not Null | Description       |
 | ------------- | ------------------ | --- | -------- | --- | -------- | ----------------- |

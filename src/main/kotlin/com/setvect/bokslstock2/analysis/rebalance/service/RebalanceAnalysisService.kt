@@ -3,9 +3,9 @@ package com.setvect.bokslstock2.analysis.rebalance.service
 import com.setvect.bokslstock2.analysis.common.model.PreTrade
 import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.analysis.common.model.Trade
-import com.setvect.bokslstock2.analysis.common.model.TradeType
 import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
 import com.setvect.bokslstock2.analysis.rebalance.model.RebalanceBacktestCondition
+import com.setvect.bokslstock2.common.model.TradeType
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.StockRepository
