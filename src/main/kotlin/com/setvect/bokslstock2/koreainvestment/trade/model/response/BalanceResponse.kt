@@ -78,8 +78,11 @@ data class BalanceResponse(
         @JsonProperty("dnca_tot_amt") val dncaTotAmt: Long,
         /**익일정산금액*/
         @JsonProperty("nxdy_excc_amt") val nxdyExccAmt: String,
-        /**가수도정산금액*/
-        @JsonProperty("prvs_rcdl_excc_amt") val prvsRcdlExccAmt: String,
+        /**
+         * 가수도정산금액
+         * ※ 주문에 사용할 금액
+         */
+        @JsonProperty("prvs_rcdl_excc_amt") val prvsRcdlExccAmt: Long,
         /**CMA평가금액*/
         @JsonProperty("cma_evlu_amt") val cmaEvluAmt: String,
         /**전일매수금액*/
@@ -91,7 +94,7 @@ data class BalanceResponse(
         /**전일매도금액*/
         @JsonProperty("bfdy_sll_amt") val bfdySllAmt: String,
         /**금일매도금액*/
-        @JsonProperty("thdt_sll_amt") val thdtSllAmt: String,
+        @JsonProperty("thdt_sll_amt") val thdtSllAmt: Long,
         /**D+2자동상환금액*/
         @JsonProperty("d2_auto_rdpt_amt") val d2AutoRdptAmt: String,
         /**전일제비용금액*/
@@ -103,9 +106,9 @@ data class BalanceResponse(
         /**유가평가금액*/
         @JsonProperty("scts_evlu_amt") val sctsEvluAmt: String,
         /**총평가금액*/
-        @JsonProperty("tot_evlu_amt") val totEvluAmt: String,
+        @JsonProperty("tot_evlu_amt") val totEvluAmt: Long,
         /**순자산금액*/
-        @JsonProperty("nass_amt") val nassAmt: String,
+        @JsonProperty("nass_amt") val nassAmt: Long,
         /**융자금자동상환여부*/
         @JsonProperty("fncg_gld_auto_rdpt_yn") val fncgGldAutoRdptYn: String,
         /**매입금액합계금액*/
@@ -117,7 +120,7 @@ data class BalanceResponse(
         /**총대주매각대금*/
         @JsonProperty("tot_stln_slng_chgs") val totStlnSlngChgs: String,
         /**전일총자산평가금액*/
-        @JsonProperty("bfdy_tot_asst_evlu_amt") val bfdyTotAsstEvluAmt: String,
+        @JsonProperty("bfdy_tot_asst_evlu_amt") val bfdyTotAsstEvluAmt: Long,
         /**자산증감액*/
         @JsonProperty("asst_icdc_amt") val asstIcdcAmt: String,
         /**자산증감수익율*/

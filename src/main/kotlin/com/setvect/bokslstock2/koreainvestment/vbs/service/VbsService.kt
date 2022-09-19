@@ -17,6 +17,7 @@ import com.setvect.bokslstock2.koreainvestment.ws.model.WsResponse
 import com.setvect.bokslstock2.koreainvestment.ws.service.TradeTimeHelper
 import com.setvect.bokslstock2.slack.SlackMessageService
 import com.setvect.bokslstock2.util.ApplicationUtil
+import com.setvect.bokslstock2.util.NumberUtil
 import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -54,7 +55,10 @@ class VbsService(
     private var run = false
 
     /**목표가 <종목코드, 매수가격>*/
-    private var targetPrice = mapOf<String, Int>()
+    private var targetPriceMap = mapOf<String, Int>()
+
+    /**직전 채결가격. 가격 변화를 로그로 찍기 위한 목적 <종목코드, 매수가격>*/
+    private var beforePriceMap = mutableMapOf<String, Int>()
 
     @Async
     fun start() {
@@ -98,7 +102,7 @@ class VbsService(
                 "  ㆍ평가금액: ${String.format("%,d", stock.evluAmt)}\n"
         }.joinToString("\n")
 
-        val deposit = balanceResponse!!.deposit[0].dncaTotAmt
+        val deposit = balanceResponse!!.deposit[0].prvsRcdlExccAmt
         total += deposit
         val message = "<장 종료 리포트>\n- 전체금액: ${String.format("%,d", total)}\n- 예수금: ${String.format("%,d", deposit)}\n$stockInfo"
         log.info(message)
@@ -122,7 +126,7 @@ class VbsService(
         val assetHistory = AssetHistoryEntity(
             account = DigestUtils.md5Hex(bokslStockProperties.koreainvestment.vbs.accountNo),
             assetCode = AssetHistoryEntity.DEPOSIT,
-            investment = balanceResponse!!.deposit[0].dncaTotAmt.toDouble(),
+            investment = balanceResponse!!.deposit[0].prvsRcdlExccAmt.toDouble(),
             yield = 0.0,
             regDate = regDate
         )
@@ -132,7 +136,7 @@ class VbsService(
     private fun checkTrade() {
         var sellOpenFlag = false
         var sell5Flag = false
-        targetPrice = mapOf()
+        targetPriceMap = mapOf()
         while (true) {
             val sellOpenTime = TradeTimeHelper.isOpenPriceSellTime()
             val vbsStocks = bokslStockProperties.koreainvestment.vbs.stock
@@ -151,7 +155,7 @@ class VbsService(
 
             if (TradeTimeHelper.isBuyTimeRange()) {
                 val targetPriceMessage = StringBuilder()
-                targetPrice = vbsStocks.associate { stock ->
+                targetPriceMap = vbsStocks.associate { stock ->
                     val stockClientService = stockClientService.requestDatePrice(DatePriceRequest(stock.code, DatePriceRequest.DateType.DAY), tokenService.getAccessToken())
                     val openPrice = stockClientService.output!![0].stckOprc
                     val beforeDayHigh = stockClientService.output[1].stckHgpr
@@ -163,12 +167,13 @@ class VbsService(
 
                     targetPriceMessage.append(
                         "${stock.name}(${stock.code})\n" +
-                            "  - 시초가: ${stockClientService.output[0].stckOprc}\n" +
-                            "  - 목표가: $targetPrice\n"
+                            "  - 시초가: ${String.format("%,d", stockClientService.output[0].stckOprc)}\n" +
+                            "  - 목표가: ${String.format("%,d", targetPrice)}\n"
                     )
 
                     stock.code to targetPrice
                 }
+                log.info(targetPriceMessage.toString())
                 slackMessageService.sendMessage(targetPriceMessage.toString())
 
                 // 목표가 계산이후 종료
@@ -185,7 +190,7 @@ class VbsService(
      * 실시간 채결 이벤트
      */
     fun execution(wsResponse: WsResponse) {
-        if (!TradeTimeHelper.isBuyTimeRange() || targetPrice.isEmpty()) {
+        if (!TradeTimeHelper.isBuyTimeRange() || targetPriceMap.isEmpty()) {
             return
         }
 
@@ -199,10 +204,16 @@ class VbsService(
             return
         }
 
-        log.info("${wsResponse.trId} = $realtimeExecution")
+        log.debug("${wsResponse.trId} = $realtimeExecution")
 
         val code = realtimeExecution.code
-        val targetPrice = targetPrice[code] ?: return
+        val targetPrice = targetPriceMap[code] ?: return
+
+        val beforePrice = beforePriceMap.getOrDefault(code, 0)
+        if (beforePrice != realtimeExecution.stckPrpr) {
+            log.info("${vbsStock.name}(${vbsStock.code}): ${NumberUtil.comma(beforePrice)} -> ${NumberUtil.comma(realtimeExecution.stckPrpr)} (${NumberUtil.percent1(realtimeExecution.prdyCtrt)})")
+            beforePriceMap[code] = realtimeExecution.stckPrpr
+        }
 
         if (targetPrice <= realtimeExecution.stckPrpr) {
             buyOrder(vbsStock, targetPrice)
@@ -215,14 +226,14 @@ class VbsService(
      * 매수 주문
      */
     private fun buyOrder(vbsStock: BokslStockProperties.Vbs.VbsStock, targetPrice: Int) {
-        val deposit = balanceResponse!!.deposit[0].dncaTotAmt
+        val deposit = balanceResponse!!.deposit[0].prvsRcdlExccAmt
         val vbsConfig = bokslStockProperties.koreainvestment.vbs
         val buyCash = ApplicationUtil.getBuyCash(buyCode.size, deposit.toDouble(), vbsConfig.stock.size, vbsConfig.investRatio).toLong()
 
         val ordqty = (buyCash / targetPrice).toInt()
 
         val message = "[매수 주문] ${vbsStock.name}(${vbsStock.code}), " +
-            "주문가: ${String.format("%,d", this.targetPrice)}, " +
+            "주문가: ${String.format("%,d", this.targetPriceMap)}, " +
             "수량: ${String.format("%,d", ordqty)}"
 
         log.info(message)
@@ -344,6 +355,18 @@ class VbsService(
         val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
         val cancelableStock = stockClientService.requestCancelableList(CancelableRequest(accountNo), tokenService.getAccessToken())
         initBuyCode(cancelableStock)
+        log.info("예수금(D+2): ${String.format("%,d", balanceResponse!!.deposit[0].prvsRcdlExccAmt)}")
+
+        balanceResponse!!.holdings.forEach {
+            log.info(
+                "보유종목: (${it.code}), " +
+                    "수량 ${String.format("%,d", it.hldgQty)}, " +
+                    "수익률 ${String.format("%,.2f%%", it.evluPflsRt)}, " +
+                    "매입금액 ${String.format("%,d", it.pchsAmt)}, " +
+                    "평가금액 ${String.format("%,d", it.evluAmt)}"
+            )
+        }
+
         currentDate = LocalDate.now()
     }
 
@@ -358,7 +381,9 @@ class VbsService(
     private fun initBuyCode(cancelableStock: CommonResponse<List<CancelableResponse>>) {
         buyCode.clear()
         val holdingStock = getHoldingStock()
-        buyCode.addAll(holdingStock.keys)
+        // 잔고가 1이상인 경우만 보유 주식으로 인정
+        val hasStock = holdingStock.entries.filter { it.value.hldgQty >= 1 }.map { it.key }
+        buyCode.addAll(hasStock)
         cancelableStock.output!!.forEach {
             buyCode.add(it.code)
         }

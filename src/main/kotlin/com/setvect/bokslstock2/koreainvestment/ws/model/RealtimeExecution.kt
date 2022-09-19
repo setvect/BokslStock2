@@ -11,16 +11,16 @@ import java.time.LocalTime
 data class RealtimeExecution(
     val code: String, // 유가증권 단축 종목코드
     val stckCntgHour: LocalTime, // 주식 체결 시간
-    val stckPrpr: Long, // 주식 현재가
+    val stckPrpr: Int, // 주식 현재가
     val prdyVrssSign: String, // 전일 대비 부호
-    val prdyVrss: Long, // 전일 대비
+    val prdyVrss: Int, // 전일 대비
     val prdyCtrt: Double, // 전일 대비율
     val wghnAvrgStckPrc: Double, // 가중 평균 주식 가격
-    val stckOprc: Long, // 주식 시가
-    val stckHgpr: Long, // 주식 최고가
-    val stckLwpr: Long, // 주식 최저가
-    val askp1: Long, // 매도호가1
-    val bidp1: Long, // 매수호가1
+    val stckOprc: Int, // 주식 시가
+    val stckHgpr: Int, // 주식 최고가
+    val stckLwpr: Int, // 주식 최저가
+    val askp1: Int, // 매도호가1
+    val bidp1: Int, // 매수호가1
     val cntgVol: Long, // 체결 거래량
     val acmlVol: Long, // 누적 거래량
     val acmlTrPbmn: Long, // 누적 거래 대금
@@ -68,16 +68,16 @@ data class RealtimeExecution(
             return RealtimeExecution(
                 code = dataArray[0],
                 stckCntgHour = DateUtil.getLocalTime(dataArray[1], DateUtil.HHmmss),
-                stckPrpr = dataArray[2].toLong(),
+                stckPrpr = dataArray[2].toInt(),
                 prdyVrssSign = dataArray[3],
-                prdyVrss = dataArray[4].toLong(),
+                prdyVrss = dataArray[4].toInt(),
                 prdyCtrt = dataArray[5].toDouble(),
                 wghnAvrgStckPrc = dataArray[6].toDouble(),
-                stckOprc = dataArray[7].toLong(),
-                stckHgpr = dataArray[8].toLong(),
-                stckLwpr = dataArray[9].toLong(),
-                askp1 = dataArray[10].toLong(),
-                bidp1 = dataArray[11].toLong(),
+                stckOprc = dataArray[7].toInt(),
+                stckHgpr = dataArray[8].toInt(),
+                stckLwpr = dataArray[9].toInt(),
+                askp1 = dataArray[10].toInt(),
+                bidp1 = dataArray[11].toInt(),
                 cntgVol = dataArray[12].toLong(),
                 acmlVol = dataArray[13].toLong(),
                 acmlTrPbmn = dataArray[14].toLong(),
