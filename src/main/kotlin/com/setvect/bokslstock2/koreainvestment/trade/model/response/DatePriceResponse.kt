@@ -24,7 +24,7 @@ data class DatePriceResponse(
     /**전일 대비 부호*/
     @JsonProperty("prdy_vrss_sign") val prdyVrssSign: String,
     /**전일 대비율*/
-    @JsonProperty("prdy_ctrt") val prdyCtrt: Long,
+    @JsonProperty("prdy_ctrt") val prdyCtrt: String,
     /**HTS 외국인 소진율*/
     @JsonProperty("hts_frgn_ehrt") val htsFrgnEhrt: String,
     /**외국인 순매수 수량*/

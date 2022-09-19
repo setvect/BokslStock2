@@ -46,7 +46,7 @@ class WebsocketClientEndpoint(
 
     @OnMessage
     fun onMessage(message: String) {
-        log.info("onMessage: $message")
+        log.debug("onMessage: $message")
         if (isStockData(message)) {
             val wsResponse = WsResponse.parsing(message)
             publisher.publishEvent(StockWebSocketEvent(wsResponse))
@@ -82,6 +82,7 @@ class WebsocketClientEndpoint(
 
     @Throws(IOException::class)
     fun close() {
+        log.info("웹소켓 닫음")
         userSession!!.close()
     }
 

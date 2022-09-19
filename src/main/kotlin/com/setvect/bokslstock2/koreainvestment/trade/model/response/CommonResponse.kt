@@ -8,5 +8,8 @@ data class CommonResponse<T>(
     @JsonProperty("rt_cd") val rtCd: String,
     @JsonProperty("msg_cd") val msgCd: String,
     @JsonProperty("msg1") val msg1: String
-
-)
+) {
+    fun isError(): Boolean {
+        return this.rtCd != "0"
+    }
+}

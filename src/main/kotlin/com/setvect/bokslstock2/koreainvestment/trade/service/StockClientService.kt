@@ -180,7 +180,7 @@ class StockClientService(
     /**
      * 매도 주문
      */
-    fun requestOrderSell(request: OrderRequest, authorization: String): Any {
+    fun requestOrderSell(request: OrderRequest, authorization: String): CommonResponse<OrderResponse> {
         return order(request, authorization, request.sell)
     }
 

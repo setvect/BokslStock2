@@ -237,7 +237,7 @@ class VbsService(
         )
         tradeRepository.save(tradeEntity)
 
-        stockClientService.requestOrderBuy(
+        val requestOrderBuy = stockClientService.requestOrderBuy(
             OrderRequest(
                 cano = vbsConfig.accountNo,
                 code = vbsStock.code,
@@ -246,7 +246,14 @@ class VbsService(
             ),
             tokenService.getAccessToken()
         )
-        buyCode.add(vbsStock.code)
+        if (requestOrderBuy.isError()) {
+            log.info("주문요청 에러: $requestOrderBuy")
+            slackMessageService.sendMessage("주문요청 에러: $requestOrderBuy")
+
+        } else {
+            buyCode.add(vbsStock.code)
+            log.info("주문요청 응답: $requestOrderBuy")
+        }
         slackMessageService.sendMessage(message)
     }
 
@@ -281,7 +288,7 @@ class VbsService(
                 regDate = LocalDateTime.now()
             )
             tradeRepository.save(tradeEntity)
-            stockClientService.requestOrderSell(
+            val requestOrderSell = stockClientService.requestOrderSell(
                 OrderRequest(
                     cano = accountNo,
                     code = it.code,
@@ -290,7 +297,14 @@ class VbsService(
                 ),
                 tokenService.getAccessToken()
             )
-            buyCode.remove(it.code)
+            if (requestOrderSell.isError()) {
+                log.info("주문요청 에러: $requestOrderSell")
+                slackMessageService.sendMessage("주문요청 에러: $requestOrderSell")
+
+            } else {
+                buyCode.remove(it.code)
+                log.info("주문요청 응답: $requestOrderSell")
+            }
             slackMessageService.sendMessage(message)
         }
     }
@@ -326,16 +340,16 @@ class VbsService(
         if (currentDate == LocalDate.now()) {
             return
         }
-        val accountNo = loadBalance()
+        loadBalance()
+        val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
         val cancelableStock = stockClientService.requestCancelableList(CancelableRequest(accountNo), tokenService.getAccessToken())
         initBuyCode(cancelableStock)
         currentDate = LocalDate.now()
     }
 
-    private fun loadBalance(): String {
+    private fun loadBalance() {
         val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
         balanceResponse = stockClientService.requestBalance(BalanceRequest(accountNo), tokenService.getAccessToken())
-        return accountNo
     }
 
     /**

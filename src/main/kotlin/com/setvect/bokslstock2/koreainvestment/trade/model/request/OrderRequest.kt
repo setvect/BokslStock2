@@ -25,8 +25,8 @@ data class OrderRequest(
     @JsonProperty("ORD_QTY")
     val ordqty: Int,
 
-    /**주문 구분: 지정가(01)*/
-    @JsonProperty("ORD_DVSN") val orddvsn: String = "01",
+    /**주문 구분: 지정가(00)*/
+    @JsonProperty("ORD_DVSN") val orddvsn: String = "00",
     /**계좌상품코드: 계좌상품코드(01)*/
     @JsonProperty("ACNT_PRDT_CD") val acntprdtcd: String = "01"
 ) {
