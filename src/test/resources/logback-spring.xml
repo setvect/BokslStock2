@@ -37,7 +37,7 @@
         <logger name="org.apache.http" level="DEBUG" additivity="false">
             <appender-ref ref="STDOUT"/>
         </logger>
-        <logger name="com.setvect.bokslstock" level="INFO" additivity="false">
+        <logger name="com.setvect.bokslstock2" level="INFO" additivity="false">
             <appender-ref ref="FILE"/>
             <appender-ref ref="STDOUT"/>
         </logger>
