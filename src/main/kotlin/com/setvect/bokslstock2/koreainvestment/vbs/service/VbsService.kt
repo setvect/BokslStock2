@@ -100,7 +100,8 @@ class VbsService(
                 "  ㆍ수량: ${comma(stock.hldgQty)}\n" +
                 "  ㆍ수익률: ${percent(stock.evluPflsRt)}\n" +
                 "  ㆍ매입금액: ${comma(stock.pchsAmt)}\n" +
-                "  ㆍ평가금액: ${comma(stock.evluAmt)}\n"
+                "  ㆍ평가금액: ${comma(stock.evluAmt)}\n" +
+                "  ㆍ평가손익: ${comma(stock.evluPflsAmt)}\n"
         }.joinToString("\n")
 
         val deposit = balanceResponse!!.deposit[0].prvsRcdlExccAmt

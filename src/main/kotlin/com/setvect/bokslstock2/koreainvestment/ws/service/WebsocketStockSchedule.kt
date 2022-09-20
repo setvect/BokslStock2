@@ -13,8 +13,8 @@ class WebsocketStockSchedule(
     /**
      * 실시간 채결 가격 모니터링
      */
-//    @Scheduled(cron = "0 59 08 * * MON-FRI") // 월~금 매일 08시 59분에 실행
-    @Scheduled(cron = "0 0/5 09-16 * * MON-FRI") // 웹소켓이 이유 없이 닫히는 경우가 있음. 그래서 5분마다 실행
+    @Scheduled(cron = "0 59 08 * * MON-FRI") // 월~금 매일 08시 59분에 실행
+//    @Scheduled(cron = "0 0/5 09-16 * * MON-FRI") // 웹소켓이 이유 없이 닫히는 경우가 있음. 그래서 5분마다 실행
     fun openWebSocket() {
         tradingWebsocket.open()
         log.info("실시간 채결 가격 모니터링 시작")

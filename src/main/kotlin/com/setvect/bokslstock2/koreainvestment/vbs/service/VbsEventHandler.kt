@@ -24,7 +24,7 @@ class VbsEventHandler(
             log.info("매매 가능 시간이 아닙니다.")
             return
         }
-        
+
         log.info("복슬매매2 실행")
         // TODO 테스트 실행시 아래 로직 실행 안되게 하기
         vbsService.start()

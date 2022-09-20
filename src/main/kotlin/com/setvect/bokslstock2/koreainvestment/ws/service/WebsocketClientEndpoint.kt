@@ -11,6 +11,7 @@ import java.net.URI
 import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
 import javax.websocket.*
+import javax.websocket.CloseReason.CloseCodes
 
 @ClientEndpoint
 class WebsocketClientEndpoint(
@@ -40,7 +41,13 @@ class WebsocketClientEndpoint(
 
     @OnClose
     fun onClose(userSession: Session, reason: CloseReason) {
-        log.warn("웹소켓 닫임. 이유: $reason", RuntimeException("웹소켓 닫임"))
+        if (reason.closeCode == CloseCodes.NORMAL_CLOSURE) {
+            log.info("웹소켓 닫임. 이유: $reason, userSession: $userSession", RuntimeException("웹소켓 닫임"))
+        } else {
+            log.warn("웹소켓 닫임. 이유: $reason, userSession: $userSession", RuntimeException("웹소켓 닫임"))
+            // 비정상적인 close인 경우 웹소켓 다시 오픈
+            reopen()
+        }
         this.userSession = null
     }
 
@@ -61,19 +68,8 @@ class WebsocketClientEndpoint(
 
     @OnError
     fun onError(session: Session, t: Throwable) {
-        val message = "웹소켓 에러 : " + t.message
-        log.error(message, t)
-        slack(message)
-
-        // 실패 했을때 다시 웹소켓 연결
-        try {
-            TimeUnit.SECONDS.sleep(5)
-        } catch (e: InterruptedException) {
-            log.error(e.message)
-        }
-        log.info("웹소켓 다시 시작 중")
-        val tradingWebsocket = BeanUtils.getBean(TradingWebsocket::class.java)
-        tradingWebsocket.open()
+        log.error("웹소켓 에러 : " + t.message, t)
+        reopen()
     }
 
     fun sendMessage(message: String) {
@@ -92,7 +88,18 @@ class WebsocketClientEndpoint(
         }
     }
 
-    private fun slack(message: String) {
-        slackMessageService.sendMessage(message)
+    private fun reopen() {
+        // 실패 했을때 다시 웹소켓 연결
+        try {
+            TimeUnit.SECONDS.sleep(5)
+        } catch (e: InterruptedException) {
+            log.error(e.message)
+        }
+        log.info("웹소켓 다시 시작 중")
+        val tradingWebsocket = BeanUtils.getBean(TradingWebsocket::class.java)
+        tradingWebsocket.open()
+        log.info("웹소켓 다시 오픈")
+        slackMessageService.sendMessage("웹소켓 다시 오픈")
+
     }
 }
