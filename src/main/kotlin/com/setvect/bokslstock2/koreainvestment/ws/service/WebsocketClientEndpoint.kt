@@ -42,7 +42,7 @@ class WebsocketClientEndpoint(
     @OnClose
     fun onClose(userSession: Session, reason: CloseReason) {
         if (reason.closeCode == CloseCodes.NORMAL_CLOSURE) {
-            log.info("웹소켓 닫임. 이유: $reason, userSession: $userSession", RuntimeException("웹소켓 닫임"))
+            log.info("웹소켓 닫임. 이유: $reason, userSession: $userSession")
         } else {
             log.warn("웹소켓 닫임. 이유: $reason, userSession: $userSession", RuntimeException("웹소켓 닫임"))
             // 비정상적인 close인 경우 웹소켓 다시 오픈

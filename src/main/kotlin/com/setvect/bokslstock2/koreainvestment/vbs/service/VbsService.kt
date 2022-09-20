@@ -71,6 +71,7 @@ class VbsService(
             log.info("매매 시작")
             run = true
         }
+
         checkDay()
 
         try {
@@ -373,9 +374,11 @@ class VbsService(
         val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
         val cancelableStock = stockClientService.requestCancelableList(CancelableRequest(accountNo), tokenService.getAccessToken())
         initBuyCode(cancelableStock)
-        log.info("예수금(D+2): ${comma(balanceResponse!!.deposit[0].prvsRcdlExccAmt)}")
+        val message = StringBuilder()
 
-        balanceResponse!!.holdings.forEach {
+        message.append("예수금(D+2): ${comma(balanceResponse!!.deposit[0].prvsRcdlExccAmt)}\n")
+
+        val balanceMessage = balanceResponse!!.holdings.map {
             log.info(
                 "보유종목: (${it.code}), " +
                     "수량 ${comma(it.hldgQty)}, " +
@@ -383,7 +386,11 @@ class VbsService(
                     "매입금액 ${comma(it.pchsAmt)}, " +
                     "평가금액 ${comma(it.evluAmt)}"
             )
-        }
+        }.joinToString("\n")
+        message.append(balanceMessage)
+
+        log.info(message.toString())
+        slackMessageService.sendMessage(message.toString())
 
         currentDate = LocalDate.now()
     }
