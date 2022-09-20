@@ -17,7 +17,8 @@ import com.setvect.bokslstock2.koreainvestment.ws.model.WsResponse
 import com.setvect.bokslstock2.koreainvestment.ws.service.TradeTimeHelper
 import com.setvect.bokslstock2.slack.SlackMessageService
 import com.setvect.bokslstock2.util.ApplicationUtil
-import com.setvect.bokslstock2.util.NumberUtil
+import com.setvect.bokslstock2.util.NumberUtil.comma
+import com.setvect.bokslstock2.util.NumberUtil.percent
 import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -96,15 +97,15 @@ class VbsService(
         val stockInfo = balanceResponse!!.holdings.map { stock ->
             total += stock.evluAmt
             return@map "- ${stock.prdtName}(${stock.code})\n" +
-                "  ㆍ수량: ${String.format("%,d", stock.hldgQty)}\n" +
-                "  ㆍ수익률: ${String.format("%,.2f%%", stock.evluPflsRt)}\n" +
-                "  ㆍ매입금액: ${String.format("%,d", stock.pchsAmt)}\n" +
-                "  ㆍ평가금액: ${String.format("%,d", stock.evluAmt)}\n"
+                "  ㆍ수량: ${comma(stock.hldgQty)}\n" +
+                "  ㆍ수익률: ${percent(stock.evluPflsRt)}\n" +
+                "  ㆍ매입금액: ${comma(stock.pchsAmt)}\n" +
+                "  ㆍ평가금액: ${comma(stock.evluAmt)}\n"
         }.joinToString("\n")
 
         val deposit = balanceResponse!!.deposit[0].prvsRcdlExccAmt
         total += deposit
-        val message = "<장 종료 리포트>\n- 전체금액: ${String.format("%,d", total)}\n- 예수금: ${String.format("%,d", deposit)}\n$stockInfo"
+        val message = "<장 종료 리포트>\n- 전체금액: ${comma(total)}\n- 예수금: ${comma(deposit)}\n$stockInfo"
         log.info(message)
         slackMessageService.sendMessage(message)
 
@@ -167,8 +168,8 @@ class VbsService(
 
                     targetPriceMessage.append(
                         "${stock.name}(${stock.code})\n" +
-                            "  - 시초가: ${String.format("%,d", stockClientService.output[0].stckOprc)}\n" +
-                            "  - 목표가: ${String.format("%,d", targetPrice)}\n"
+                            "  - 시초가: ${comma(stockClientService.output[0].stckOprc)}\n" +
+                            "  - 목표가: ${comma(targetPrice)}\n"
                     )
 
                     stock.code to targetPrice
@@ -195,30 +196,41 @@ class VbsService(
         }
 
         val realtimeExecution = RealtimeExecution.parsing(wsResponse.responseData)
-        if (buyCode.contains(realtimeExecution.code)) {
-            return
-        }
         val vbsStock = bokslStockProperties.koreainvestment.vbs.stock.stream().filter { it.code == realtimeExecution.code }.findAny().orElse(null)
         if (vbsStock == null) {
             log.warn("매수 대상종목이 아닌데 실시간 체결 이벤트 수신. 종목 코드: ${realtimeExecution.code}")
             return
         }
 
+        logChangePrice(realtimeExecution, vbsStock)
+
+        if (buyCode.contains(realtimeExecution.code)) {
+            return
+        }
+
         log.debug("${wsResponse.trId} = $realtimeExecution")
 
-        val code = realtimeExecution.code
-        val targetPrice = targetPriceMap[code] ?: return
+        val targetPrice = targetPriceMap[vbsStock.code] ?: return
 
-        val beforePrice = beforePriceMap.getOrDefault(code, 0)
-        if (beforePrice != realtimeExecution.stckPrpr) {
-            log.info("${vbsStock.name}(${vbsStock.code}): ${NumberUtil.comma(beforePrice)} -> ${NumberUtil.comma(realtimeExecution.stckPrpr)} (${NumberUtil.percent1(realtimeExecution.prdyCtrt)})")
-            beforePriceMap[code] = realtimeExecution.stckPrpr
-        }
 
         if (targetPrice <= realtimeExecution.stckPrpr) {
             buyOrder(vbsStock, targetPrice)
             // 주문 접수 후 딜레이
             TimeUnit.SECONDS.sleep(3)
+        }
+    }
+
+    /**
+     * 가격이 변화면 로그 기록
+     */
+    private fun logChangePrice(
+        realtimeExecution: RealtimeExecution,
+        vbsStock: BokslStockProperties.Vbs.VbsStock
+    ) {
+        val beforePrice = beforePriceMap.getOrDefault(vbsStock.code, 0)
+        if (beforePrice != realtimeExecution.stckPrpr) {
+            log.info("${vbsStock.name}(${vbsStock.code}): ${comma(beforePrice)} -> ${comma(realtimeExecution.stckPrpr)} (${percent(realtimeExecution.prdyCtrt)})")
+            beforePriceMap[vbsStock.code] = realtimeExecution.stckPrpr
         }
     }
 
@@ -233,20 +245,10 @@ class VbsService(
         val ordqty = (buyCash / targetPrice).toInt()
 
         val message = "[매수 주문] ${vbsStock.name}(${vbsStock.code}), " +
-            "주문가: ${String.format("%,d", this.targetPriceMap)}, " +
-            "수량: ${String.format("%,d", ordqty)}"
+            "주문가: ${comma(targetPrice)}, " +
+            "수량: ${comma(ordqty)}"
 
         log.info(message)
-        val tradeEntity = TradeEntity(
-            account = DigestUtils.md5Hex(vbsConfig.accountNo),
-            code = vbsStock.code,
-            tradeType = TradeType.BUY,
-            qty = ordqty,
-            unitPrice = targetPrice.toDouble(),
-            yield = 0.0,
-            regDate = LocalDateTime.now()
-        )
-        tradeRepository.save(tradeEntity)
 
         val requestOrderBuy = stockClientService.requestOrderBuy(
             OrderRequest(
@@ -257,13 +259,24 @@ class VbsService(
             ),
             tokenService.getAccessToken()
         )
+
         if (requestOrderBuy.isError()) {
             log.info("주문요청 에러: $requestOrderBuy")
             slackMessageService.sendMessage("주문요청 에러: $requestOrderBuy")
-
         } else {
             buyCode.add(vbsStock.code)
             log.info("주문요청 응답: $requestOrderBuy")
+
+            val tradeEntity = TradeEntity(
+                account = DigestUtils.md5Hex(vbsConfig.accountNo),
+                code = vbsStock.code,
+                tradeType = TradeType.BUY,
+                qty = ordqty,
+                unitPrice = targetPrice.toDouble(),
+                yield = 0.0,
+                regDate = LocalDateTime.now()
+            )
+            tradeRepository.save(tradeEntity)
         }
         slackMessageService.sendMessage(message)
     }
@@ -286,23 +299,13 @@ class VbsService(
             val sellPrice = expectedPrice - SELL_DIFF
 
             val message = "[매도 주문] ${stock.prdtName}(${stock.code}), " +
-                "주문가: ${String.format("%,d", sellPrice)}, " +
-                "매수평단가: ${String.format("%,d", stock.pchsAvgPric.toInt())}, " +
-                "수량: ${String.format("%,d", stock.hldgQty)}, " +
-                "수익률(추정): ${String.format("%,.2f%%", ApplicationUtil.getYield(stock.pchsAvgPric.toInt(), sellPrice) * 100)}"
+                "주문가: ${comma(sellPrice)}, " +
+                "매수평단가: ${comma(stock.pchsAvgPric.toInt())}, " +
+                "수량: ${comma(stock.hldgQty)}, " +
+                "수익률(추정): ${percent(ApplicationUtil.getYield(stock.pchsAvgPric.toInt(), sellPrice) * 100)}"
             log.info(message)
             val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
 
-            val tradeEntity = TradeEntity(
-                account = DigestUtils.md5Hex(accountNo),
-                code = it.code,
-                tradeType = TradeType.SELL,
-                qty = stock.hldgQty,
-                unitPrice = sellPrice.toDouble(),
-                yield = stock.pchsAvgPric,
-                regDate = LocalDateTime.now()
-            )
-            tradeRepository.save(tradeEntity)
             val requestOrderSell = stockClientService.requestOrderSell(
                 OrderRequest(
                     cano = accountNo,
@@ -315,10 +318,20 @@ class VbsService(
             if (requestOrderSell.isError()) {
                 log.info("주문요청 에러: $requestOrderSell")
                 slackMessageService.sendMessage("주문요청 에러: $requestOrderSell")
-
             } else {
                 buyCode.remove(it.code)
                 log.info("주문요청 응답: $requestOrderSell")
+
+                val tradeEntity = TradeEntity(
+                    account = DigestUtils.md5Hex(accountNo),
+                    code = it.code,
+                    tradeType = TradeType.SELL,
+                    qty = stock.hldgQty,
+                    unitPrice = sellPrice.toDouble(),
+                    yield = stock.pchsAvgPric,
+                    regDate = LocalDateTime.now()
+                )
+                tradeRepository.save(tradeEntity)
             }
             slackMessageService.sendMessage(message)
         }
@@ -359,15 +372,15 @@ class VbsService(
         val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
         val cancelableStock = stockClientService.requestCancelableList(CancelableRequest(accountNo), tokenService.getAccessToken())
         initBuyCode(cancelableStock)
-        log.info("예수금(D+2): ${String.format("%,d", balanceResponse!!.deposit[0].prvsRcdlExccAmt)}")
+        log.info("예수금(D+2): ${comma(balanceResponse!!.deposit[0].prvsRcdlExccAmt)}")
 
         balanceResponse!!.holdings.forEach {
             log.info(
                 "보유종목: (${it.code}), " +
-                    "수량 ${String.format("%,d", it.hldgQty)}, " +
-                    "수익률 ${String.format("%,.2f%%", it.evluPflsRt)}, " +
-                    "매입금액 ${String.format("%,d", it.pchsAmt)}, " +
-                    "평가금액 ${String.format("%,d", it.evluAmt)}"
+                    "수량 ${comma(it.hldgQty)}, " +
+                    "수익률 ${percent(it.evluPflsRt)}, " +
+                    "매입금액 ${comma(it.pchsAmt)}, " +
+                    "평가금액 ${comma(it.evluAmt)}"
             )
         }
 

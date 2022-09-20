@@ -34,13 +34,13 @@ class WebsocketClientEndpoint(
 
     @OnOpen
     fun onOpen(userSession: Session?) {
-        println("웹소켓 열림")
+        log.info("웹소켓 열림")
         this.userSession = userSession
     }
 
     @OnClose
     fun onClose(userSession: Session, reason: CloseReason) {
-        println("웹소켓 닫임. 이유: $reason")
+        log.warn("웹소켓 닫임. 이유: $reason", RuntimeException("웹소켓 닫임"))
         this.userSession = null
     }
 
