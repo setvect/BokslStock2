@@ -2,7 +2,6 @@ package com.setvect.bokslstock2.koreainvestment.ws.service
 
 import com.setvect.bokslstock2.koreainvestment.ws.model.WsResponse
 import com.setvect.bokslstock2.koreainvestment.ws.model.WsTransaction
-import com.setvect.bokslstock2.slack.SlackMessageService
 import com.setvect.bokslstock2.util.BeanUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
@@ -17,8 +16,6 @@ import javax.websocket.CloseReason.CloseCodes
 class WebsocketClientEndpoint(
     endpointUri: String,
     private val publisher: ApplicationEventPublisher,
-    private val slackMessageService: SlackMessageService
-
 ) {
     private var userSession: Session? = null
     private val log = LoggerFactory.getLogger(javaClass)
@@ -99,7 +96,5 @@ class WebsocketClientEndpoint(
         val tradingWebsocket = BeanUtils.getBean(TradingWebsocket::class.java)
         tradingWebsocket.open()
         log.info("웹소켓 다시 오픈")
-        slackMessageService.sendMessage("웹소켓 다시 오픈")
-
     }
 }

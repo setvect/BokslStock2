@@ -27,7 +27,7 @@ class TradingWebsocket(
 
         websocketClientEndpoint?.close()
 
-        websocketClientEndpoint = WebsocketClientEndpoint(koreainvestment.ws.url, publisher, slackMessageService)
+        websocketClientEndpoint = WebsocketClientEndpoint(koreainvestment.ws.url, publisher)
 
         bokslStockProperties.koreainvestment.vbs.stock.forEach { stock ->
             val parameter = WsRequest(
@@ -43,6 +43,7 @@ class TradingWebsocket(
             val message = JsonUtil.mapper.writeValueAsString(parameter)
             websocketClientEndpoint!!.sendMessage(message)
         }
+        slackMessageService.sendMessage("웹소켓 오픈")
     }
 
     fun close() {
