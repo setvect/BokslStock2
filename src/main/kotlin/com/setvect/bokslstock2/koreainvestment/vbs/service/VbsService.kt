@@ -277,6 +277,10 @@ class VbsService(
 
         openSellStockList.forEach {
             val stock = holdingsMap[it.code] ?: return@forEach
+            if (stock.hldgQty == 0) {
+                return@forEach
+            }
+
             val expectedPrice = getClosingPrice(it.code)
 
             val sellPrice = expectedPrice - SELL_DIFF

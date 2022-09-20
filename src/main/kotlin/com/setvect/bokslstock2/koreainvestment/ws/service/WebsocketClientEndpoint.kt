@@ -77,13 +77,13 @@ class WebsocketClientEndpoint(
     }
 
     fun sendMessage(message: String) {
-        userSession!!.asyncRemote.sendText(message)
+        userSession?.asyncRemote?.sendText(message)
     }
 
     @Throws(IOException::class)
     fun close() {
-        log.info("웹소켓 닫음")
-        userSession!!.close()
+        log.info("웹소켓 닫음. userSession: $userSession")
+        userSession?.close()
     }
 
     private fun isStockData(response: String): Boolean {
