@@ -15,7 +15,7 @@ data class BaseHeader(
         headers.set("appkey", appkey)
         headers.set("appsecret", appsecret)
         if (authorization != null) {
-            headers.set("authorization", "Bearer ${authorization}")
+            headers.set("authorization", "Bearer $authorization")
         }
         if (trId != null) {
             headers.set("tr_id", trId)

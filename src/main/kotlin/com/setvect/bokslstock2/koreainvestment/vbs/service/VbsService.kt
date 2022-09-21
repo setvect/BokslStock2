@@ -1,5 +1,6 @@
 package com.setvect.bokslstock2.koreainvestment.vbs.service
 
+import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.common.model.TradeType
 import com.setvect.bokslstock2.config.BokslStockProperties
 import com.setvect.bokslstock2.koreainvestment.trade.entity.AssetHistoryEntity
@@ -76,6 +77,11 @@ class VbsService(
 
         try {
             if (!TradeTimeHelper.isTimeToTrade()) {
+                return
+            }
+            if (!isTradingDay()) {
+                log.info("휴장일입니다.")
+                slackMessageService.sendMessage("휴장일입니다.")
                 return
             }
             checkTrade()
@@ -218,6 +224,20 @@ class VbsService(
             // 주문 접수 후 딜레이
             TimeUnit.SECONDS.sleep(2)
         }
+    }
+
+    /**
+     * 오는 날짜 시세 여부 존재를 기준으로 장이 열리는지 판단함
+     * @return 개장일이면 true
+     */
+    private fun isTradingDay(): Boolean {
+        val requestDatePrice = stockClientService.requestDatePrice(
+            DatePriceRequest(StockCode.KODEX_200_069500.code, DatePriceRequest.DateType.DAY), tokenService.getAccessToken()
+        )
+        if (requestDatePrice.output == null || requestDatePrice.output.isEmpty()) {
+            return false
+        }
+        return requestDatePrice.output[0].date() == LocalDate.now()
     }
 
     /**

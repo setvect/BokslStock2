@@ -64,7 +64,6 @@ object TradeTimeHelper {
      * @return 매매 가능 시간이면 true
      */
     fun isTimeToTrade(): Boolean {
-        // TODO 주말이 아닌 휴장일 판단하는 로직 들어가야 됨
         val now = LocalTime.now().get(ChronoField.MILLI_OF_DAY)
         if (isHoliday()) {
             return false
