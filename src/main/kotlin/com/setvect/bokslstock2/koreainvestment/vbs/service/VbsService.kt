@@ -183,9 +183,7 @@ class VbsService(
                 return
             }
 
-
-            // 목표가 계산
-            TimeUnit.SECONDS.sleep(1)
+            TimeUnit.SECONDS.sleep(3)
         }
     }
 
@@ -218,7 +216,7 @@ class VbsService(
         if (targetPrice <= realtimeExecution.stckPrpr) {
             buyOrder(vbsStock, targetPrice)
             // 주문 접수 후 딜레이
-            TimeUnit.SECONDS.sleep(3)
+            TimeUnit.SECONDS.sleep(2)
         }
     }
 
@@ -334,6 +332,7 @@ class VbsService(
                     regDate = LocalDateTime.now()
                 )
                 tradeRepository.save(tradeEntity)
+                loadBalance()
             }
             slackMessageService.sendMessage(message)
         }
@@ -378,15 +377,13 @@ class VbsService(
 
         message.append("예수금(D+2): ${comma(balanceResponse!!.deposit[0].prvsRcdlExccAmt)}\n")
 
-        val balanceMessage = balanceResponse!!.holdings.map {
-            log.info(
-                "보유종목: (${it.code}), " +
-                    "수량 ${comma(it.hldgQty)}, " +
-                    "수익률 ${percent(it.evluPflsRt)}, " +
-                    "매입금액 ${comma(it.pchsAmt)}, " +
-                    "평가금액 ${comma(it.evluAmt)}"
-            )
-        }.joinToString("\n")
+        val balanceMessage = balanceResponse!!.holdings.joinToString("\n") {
+            "보유종목: (${it.code}), " +
+                "수량 ${comma(it.hldgQty)}, " +
+                "수익률 ${percent(it.evluPflsRt)}, " +
+                "매입금액 ${comma(it.pchsAmt)}, " +
+                "평가금액 ${comma(it.evluAmt)}"
+        }
         message.append(balanceMessage)
 
         log.info(message.toString())

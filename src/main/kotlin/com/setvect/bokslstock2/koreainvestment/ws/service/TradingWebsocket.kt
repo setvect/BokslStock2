@@ -22,7 +22,7 @@ class TradingWebsocket(
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun open() {
-        log.info("웹소켓 시작")
+        log.info("웹소켓 시작중")
         val koreainvestment = bokslStockProperties.koreainvestment
 
         websocketClientEndpoint?.close()
@@ -43,6 +43,7 @@ class TradingWebsocket(
             val message = JsonUtil.mapper.writeValueAsString(parameter)
             websocketClientEndpoint!!.sendMessage(message)
         }
+        log.info("웹소켓 시작 완료")
         slackMessageService.sendMessage("웹소켓 오픈")
     }
 
@@ -50,5 +51,6 @@ class TradingWebsocket(
         log.info("웹소켓 종료")
         websocketClientEndpoint?.close()
         websocketClientEndpoint = null
+        slackMessageService.sendMessage("웹소켓 닫기")
     }
 }
