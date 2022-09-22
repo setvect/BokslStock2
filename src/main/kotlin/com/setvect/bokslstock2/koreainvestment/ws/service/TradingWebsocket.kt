@@ -48,7 +48,7 @@ class TradingWebsocket(
     }
 
     fun close() {
-        log.info("웹소켓 종료")
+        log.info("웹소켓 종료 $websocketClientEndpoint")
         websocketClientEndpoint?.close()
         websocketClientEndpoint = null
         slackMessageService.sendMessage("웹소켓 닫기")
