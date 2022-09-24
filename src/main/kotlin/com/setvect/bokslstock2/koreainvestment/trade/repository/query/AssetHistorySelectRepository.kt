@@ -5,6 +5,7 @@ import com.querydsl.core.types.Projections
 import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.jpa.impl.JPAQueryFactory
+import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.koreainvestment.trade.entity.QAssetHistoryEntity.assetHistoryEntity
 import com.setvect.bokslstock2.koreainvestment.trade.model.dto.AssetHistoryDto
 import com.setvect.bokslstock2.koreainvestment.trade.model.dto.AssetPeriodHistoryDto
@@ -46,6 +47,10 @@ class AssetHistorySelectRepository(
             .offset(pageable.offset)
             .limit(pageable.pageSize.toLong())
             .fetch()
+
+        result.toList().forEach {
+            it.name = StockCode.findByCodeOrNull(it.assetCode!!)?.desc
+        }
 
         val count = queryFactory
             .select(assetHistoryEntity.count())

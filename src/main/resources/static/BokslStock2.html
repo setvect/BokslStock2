@@ -37,7 +37,6 @@
     </div>
     <div class="row">
         <div class="col-sm">
-
             <table id="historyList" class="table table-striped table-bordered table-sm" cellspacing="0" width="100%">
                 <thead>
                 </thead>
@@ -73,6 +72,7 @@
                 {data: "no", title: "No."},
                 {data: "account", title: "계좌"},
                 {data: "code", title: "종목"},
+                {data: "name", title: "이름"},
                 {data: "tradeType", title: "매매"},
                 {data: "unitPrice", title: "거래 단가", className: "text-right"},
                 {data: "qty", title: "수량", className: "text-right"},
@@ -81,15 +81,15 @@
             ],
             columnDefs: [
                 {
-                    targets: [4],
+                    targets: [5],
                     render: $.fn.dataTable.render.number(',', '.', 0, '', '원')
                 },
                 {
-                    targets: [5],
+                    targets: [6],
                     render: $.fn.dataTable.render.number(',')
                 },
                 {
-                    targets: [6],
+                    targets: [7],
                     render: function (data, type, row) {
                         return Math.round(data * 10000) / 100 + '%';
                     }
@@ -106,17 +106,18 @@
                 {data: "no", title: "No."},
                 {data: "account", title: "계좌"},
                 {data: "assetCode", title: "자산코드"},
+                {data: "name", title: "이름"},
                 {data: "investment", title: "평가금액", className: "text-right"},
                 {data: "yield", title: "수익률", className: "text-right"},
                 {data: "regDate", title: "거래 시간"}
             ],
             columnDefs: [
                 {
-                    targets: [3],
+                    targets: [4],
                     render: $.fn.dataTable.render.number(',', '.', 0, '', '원')
                 },
                 {
-                    targets: [4],
+                    targets: [5],
                     render: function (data, type, row) {
                         return Math.round(data * 10000) / 100 + '%';
                     }
@@ -176,8 +177,6 @@
                 if (config.ajax.searchParam) {
                     param[config.ajax.searchParam] = data.search.value;
                 }
-                console.log(callback)
-
                 $.get(url, param, function (res) {
                     res.content.forEach((a, idx) => {
                         const start = res.totalElements - res.pageable.offset - res.numberOfElements;

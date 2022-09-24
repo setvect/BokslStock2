@@ -46,6 +46,10 @@ enum class StockCode(val national: StockType, val code: String, val desc: String
         fun findByCode(code: String): StockCode {
             return values().first { it.code == code }
         }
+
+        fun findByCodeOrNull(code: String): StockCode? {
+            return values().firstOrNull { it.code == code }
+        }
     }
 
     enum class StockType {

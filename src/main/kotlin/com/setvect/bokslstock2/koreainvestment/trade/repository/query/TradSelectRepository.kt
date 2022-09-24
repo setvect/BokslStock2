@@ -3,6 +3,7 @@ package com.setvect.bokslstock2.koreainvestment.trade.repository.query
 import com.querydsl.core.types.Projections
 import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.jpa.impl.JPAQueryFactory
+import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.koreainvestment.trade.entity.QTradeEntity.tradeEntity
 import com.setvect.bokslstock2.koreainvestment.trade.model.dto.TradeDto
 import com.setvect.bokslstock2.koreainvestment.trade.model.web.TradeSearchForm
@@ -44,6 +45,9 @@ class TradSelectRepository(
             .limit(pageable.pageSize.toLong())
             .fetch()
 
+        result.toList().forEach {
+            it.name = StockCode.findByCodeOrNull(it.code!!)?.desc
+        }
 
         val count = queryFactory
             .select(tradeEntity.count())

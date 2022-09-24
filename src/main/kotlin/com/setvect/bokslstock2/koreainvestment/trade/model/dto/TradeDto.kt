@@ -11,6 +11,8 @@ data class TradeDto(
     var tradeSeq: Long = 0,
     var account: String? = null,
     var code: String? = null,
+    /**종목 이름*/
+    var name: String? = null,
     var tradeType: TradeType? = null,
     var qty: Int = 0,
     var unitPrice: Double? = null,

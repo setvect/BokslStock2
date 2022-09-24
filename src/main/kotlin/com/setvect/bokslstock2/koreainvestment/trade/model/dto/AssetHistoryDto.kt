@@ -10,6 +10,8 @@ data class AssetHistoryDto(
     var assetHistorySeq: Long = 0,
     var account: String? = null,
     var assetCode: String? = null,
+    /**종목 이름*/
+    var name: String? = null,
     var investment: Double = 0.0,
     var yield: Double = 0.0,
     var memo: String? = null,
