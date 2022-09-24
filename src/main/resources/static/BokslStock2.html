@@ -74,8 +74,8 @@
                 {data: "no", title: "No."},
                 {data: "code", title: "종목"},
                 {data: "tradeType", title: "매매"},
-                {data: "amount", title: "거래 금액", className: "text-right"},
                 {data: "unitPrice", title: "거래 단가", className: "text-right"},
+                {data: "qty", title: "수량", className: "text-right"},
                 {data: "yield", title: "매도 수익률", className: "text-right"},
                 {data: "regDate", title: "거래 시간"}
             ],
@@ -173,15 +173,14 @@
                 console.log(callback)
 
                 $.get(url, param, function (res) {
-
-                    res.result.content.forEach((a, idx) => {
-                        const start = res.result.totalElements - res.result.pageable.offset - res.result.numberOfElements;
-                        a["no"] = start + (res.result.content.length - idx);
+                    res.content.forEach((a, idx) => {
+                        const start = res.totalElements - res.pageable.offset - res.numberOfElements;
+                        a["no"] = start + (res.content.length - idx);
                     });
                     callback({
-                        recordsTotal: res.result.totalElements,
-                        recordsFiltered: res.result.totalElements,
-                        data: res.result.content
+                        recordsTotal: res.totalElements,
+                        recordsFiltered: res.totalElements,
+                        data: res.content
                     });
                 });
             },

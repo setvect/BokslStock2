@@ -318,11 +318,12 @@ class VbsService(
 
             val sellPrice = bidPrice - SELL_DIFF
 
+            val yieldValue = ApplicationUtil.getYield(stock.pchsAvgPric.toInt(), bidPrice)
             val message = "[매도 주문] ${stock.prdtName}(${stock.code}), " +
                 "주문가: ${comma(sellPrice)}, " +
                 "매수평단가: ${comma(stock.pchsAvgPric.toInt())}, " +
                 "수량: ${comma(stock.hldgQty)}, " +
-                "수익률(추정): ${percent(ApplicationUtil.getYield(stock.pchsAvgPric.toInt(), bidPrice) * 100)}"
+                "수익률(추정): ${percent(yieldValue * 100)}"
             log.info(message)
             val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
 
@@ -349,7 +350,7 @@ class VbsService(
                     qty = stock.hldgQty,
                     // TODO 채결 기준이 아니라 주문 기준이라 가격이 정확하지 않음
                     unitPrice = bidPrice.toDouble(),
-                    yield = stock.pchsAvgPric,
+                    yield = yieldValue,
                     regDate = LocalDateTime.now()
                 )
                 tradeRepository.save(tradeEntity)
