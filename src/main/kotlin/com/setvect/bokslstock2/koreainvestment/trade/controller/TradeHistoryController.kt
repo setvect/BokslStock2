@@ -6,7 +6,8 @@ import com.setvect.bokslstock2.koreainvestment.trade.model.dto.TradeDto
 import com.setvect.bokslstock2.koreainvestment.trade.model.web.AssetHistorySearchForm
 import com.setvect.bokslstock2.koreainvestment.trade.model.web.AssetPeriodHistorySearchForm
 import com.setvect.bokslstock2.koreainvestment.trade.model.web.TradeSearchForm
-import com.setvect.bokslstock2.koreainvestment.trade.repository.HistoryRepository
+import com.setvect.bokslstock2.koreainvestment.trade.repository.query.AssetHistorySelectRepository
+import com.setvect.bokslstock2.koreainvestment.trade.repository.query.TradSelectRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.web.bind.annotation.GetMapping
@@ -14,14 +15,15 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class TradeHistoryController(
-    val historyRepository: HistoryRepository
+    val tradSelectRepository: TradSelectRepository,
+    val assetHistorySelectRepository: AssetHistorySelectRepository,
 ) {
     /**
      * @return 거래내역
      */
     @GetMapping("/trade/page")
     fun pageTradeList(searchForm: TradeSearchForm, pageable: Pageable): Page<TradeDto> {
-        return historyRepository.pageTrade(searchForm, pageable)
+        return tradSelectRepository.pageTrade(searchForm, pageable)
     }
 
     /**
@@ -29,7 +31,7 @@ class TradeHistoryController(
      */
     @GetMapping("/assetHistory/page")
     fun pageAssetHistory(searchForm: AssetHistorySearchForm, pageable: Pageable): Page<AssetHistoryDto> {
-        return historyRepository.pageAssetHistory(searchForm, pageable)
+        return assetHistorySelectRepository.pageAssetHistory(searchForm, pageable)
     }
 
     /**
@@ -37,7 +39,7 @@ class TradeHistoryController(
      */
     @GetMapping("/assetPeriodHistory/page")
     fun pageAssetHistory(searchForm: AssetPeriodHistorySearchForm, pageable: Pageable): Page<AssetPeriodHistoryDto> {
-        return historyRepository.pageAssetPeriodHistory(searchForm, pageable)
+        return assetHistorySelectRepository.pageAssetPeriodHistory(searchForm, pageable)
     }
 
 }

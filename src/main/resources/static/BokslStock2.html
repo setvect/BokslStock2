@@ -52,7 +52,6 @@
         applyMenu();
         initDatatables();
         $("._tab a").on("click", (e) => {
-            console.log("########### click111")
             window.location.hash = e.target.hash;
             applyMenu();
             $('#historyList').DataTable().destroy();
@@ -72,6 +71,7 @@
             },
             columns: [
                 {data: "no", title: "No."},
+                {data: "account", title: "계좌"},
                 {data: "code", title: "종목"},
                 {data: "tradeType", title: "매매"},
                 {data: "unitPrice", title: "거래 단가", className: "text-right"},
@@ -81,11 +81,15 @@
             ],
             columnDefs: [
                 {
-                    targets: [3, 4],
+                    targets: [4],
                     render: $.fn.dataTable.render.number(',', '.', 0, '', '원')
                 },
                 {
                     targets: [5],
+                    render: $.fn.dataTable.render.number(',')
+                },
+                {
+                    targets: [6],
                     render: function (data, type, row) {
                         return Math.round(data * 10000) / 100 + '%';
                     }
@@ -96,22 +100,23 @@
         "assetHistory": {
             ajax: {
                 url: url = "/assetHistory/page",
-                searchParam: "currency"
+                searchParam: "assetCode"
             },
             columns: [
                 {data: "no", title: "No."},
-                {data: "currency", title: "코인"},
-                {data: "price", title: "환산 금액", className: "text-right"},
+                {data: "account", title: "계좌"},
+                {data: "assetCode", title: "자산코드"},
+                {data: "investment", title: "평가금액", className: "text-right"},
                 {data: "yield", title: "수익률", className: "text-right"},
                 {data: "regDate", title: "거래 시간"}
             ],
             columnDefs: [
                 {
-                    targets: [2],
+                    targets: [3],
                     render: $.fn.dataTable.render.number(',', '.', 0, '', '원')
                 },
                 {
-                    targets: [3],
+                    targets: [4],
                     render: function (data, type, row) {
                         return Math.round(data * 10000) / 100 + '%';
                     }
@@ -125,19 +130,20 @@
             },
             columns: [
                 {data: "no", title: "No."},
-                {data: "price", title: "합계 금액", className: "text-right"},
+                {data: "account", title: "계좌"},
+                {data: "investment", title: "매수 금액", className: "text-right"},
                 {data: "evlPrice", title: "평가 금액", className: "text-right"},
                 {data: "yield", title: "수익률", className: "text-right"},
-                {data: "coinCount", title: "코인 유형 수", className: "text-right"},
+                {data: "stockCount", title: "자산종목 수", className: "text-right"},
                 {data: "regDate", title: "거래 시간"}
             ],
             columnDefs: [
                 {
-                    targets: [1, 2],
+                    targets: [2, 3],
                     render: $.fn.dataTable.render.number(',', '.', 0, '', '원')
                 },
                 {
-                    targets: [3],
+                    targets: [4],
                     render: function (data, type, row) {
                         return Math.round(data * 10000) / 100 + '%';
                     }

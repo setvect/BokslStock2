@@ -11,5 +11,5 @@ data class AssetHistorySearchForm(
     /**
      * 종목코드
      */
-    var code: String? = null,
+    var assetCode: String? = null,
 ) : DefaultSearchFrom(from, to, account)
