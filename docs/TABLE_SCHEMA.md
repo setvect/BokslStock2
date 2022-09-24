@@ -4,27 +4,29 @@
 
 ### 1.1.1. BA_TRADE: 거래내역
 
-| Column Name | Attribute Name | Key | Type     | Len | Not Null | Description                                                      |
-| ----------- | -------------- | --- | -------- | --- | -------- | ---------------------------------------------------------------- |
-| TRADE_SEQ   | 일련번호       | PK  | BIGINT   |     | Y        |                                                                  |
-| ACCOUNT     | 거래계좌       |     | VARCHAR  | 50  | Y        | MD5로 변환해서 저장                                              |
-| CODE        | 종목코드       |     | VARCHAR  | 20  | Y        | 005930, 069500, ...                                              |
-| TRADE_TYPE  | 매수/매도      |     | VARCHAR  | 20  | Y        | BUY, SELL                                                        |
-| QTY         | 수량           |     | INTEGER  |     | Y        |                                                                  |
-| UNIT_PRICE  | 단가           |     | NUMBER   |     | Y        |                                                                  |
-| YIELD       | 수익률         |     | NUMBER   |     | Y        | 매도시 수익률, 매수일 경우 0, 소수로 표현, 1->100%, -0.02 -> -2% |
-| REG_DATE    | 거래 시간      |     | DATETIME |     | Y        |                                                                  |
+| Column Name | Attribute Name | Key | Type     | Len  | Not Null | Description                                                      |
+| ----------- | -------------- | --- | -------- | ---- | -------- | ---------------------------------------------------------------- |
+| TRADE_SEQ   | 일련번호       | PK  | BIGINT   |      | Y        |                                                                  |
+| ACCOUNT     | 거래계좌       |     | VARCHAR  | 50   | Y        | MD5로 변환해서 저장                                              |
+| CODE        | 종목코드       |     | VARCHAR  | 20   | Y        | 005930, 069500, ...                                              |
+| TRADE_TYPE  | 매수/매도      |     | VARCHAR  | 20   | Y        | BUY, SELL                                                        |
+| QTY         | 수량           |     | INTEGER  |      | Y        |                                                                  |
+| UNIT_PRICE  | 단가           |     | NUMBER   |      | Y        |                                                                  |
+| YIELD       | 수익률         |     | NUMBER   |      | Y        | 매도시 수익률, 매수일 경우 0, 소수로 표현, 1->100%, -0.02 -> -2% |
+| MEMO        | 메모           |     | VARCHAR  | 1000 | N        |                                                                  |
+| REG_DATE    | 거래 시간      |     | DATETIME |      | Y        |                                                                  |
 
 ### 1.1.2. BB_ASSET_HISTORY:  자산 기록
 
-| Column Name       | Attribute Name              | Key | Type     | Len | Not Null | Description                                             |
-|-------------------| --------------------------- | --- | -------- | --- | -------- | ------------------------------------------------------- |
-| ASSET_HISTORY_SEQ | 일련번호                    | PK  | BIGINT   |     | Y        |                                                         |
-| ACCOUNT           | 거래계좌                    |     | VARCHAR  | 20  | Y        | MD5로 변환해서 저장                                     |
-| ASSET_CODE        | 자산 종류(예수금, 종목코드) |     | VARCHAR  | 20  | Y        | DEPOSIT, 005930, 069500, ...                            |
-| INVESTMENT        | 투자금                      |     | NUMBER   |     | Y        |                                                         |
-| YIELD             | 수익률                      |     | NUMBER   |     | Y        | 소수로 표현, 1->100%, -0.02 -> -2%                      |
-| REG_DATE          | 자산 조회 시간              |     | DATETIME |     | Y        | 한 계좌의 여러 자산을 조회 할 경우 동일한 시간을 보장함 |
+| Column Name       | Attribute Name              | Key | Type     | Len  | Not Null | Description                                             |
+| ----------------- | --------------------------- | --- | -------- | ---- | -------- | ------------------------------------------------------- |
+| ASSET_HISTORY_SEQ | 일련번호                    | PK  | BIGINT   |      | Y        |                                                         |
+| ACCOUNT           | 거래계좌                    |     | VARCHAR  | 20   | Y        | MD5로 변환해서 저장                                     |
+| ASSET_CODE        | 자산 종류(예수금, 종목코드) |     | VARCHAR  | 20   | Y        | DEPOSIT, 005930, 069500, ...                            |
+| INVESTMENT        | 투자금                      |     | NUMBER   |      | Y        |                                                         |
+| YIELD             | 수익률                      |     | NUMBER   |      | Y        | 소수로 표현, 1->100%, -0.02 -> -2%                      |
+| MEMO              | 메모                        |     | VARCHAR  | 1000 | N        |                                                         |
+| REG_DATE          | 자산 조회 시간              |     | DATETIME |      | Y        | 한 계좌의 여러 자산을 조회 할 경우 동일한 시간을 보장함 |
 
 ## 1.2. 수집
 
@@ -76,7 +78,7 @@
 | TRADE_DATE    | 거래시간           |     | DATETIME |     | Y        |                 |
 
 - Index
-    - TRADE_DATE
+  - TRADE_DATE
 
 ### 1.3.3. GA_VBS_CONDITION: 변동성돌파 전략 조건
 
@@ -107,7 +109,7 @@
 | TRADE_DATE    | 거래시간              |     | DATETIME |     | Y        |                  |
 
 - Index
-    - TRADE_DATE
+  - TRADE_DATE
 
 ### 1.3.5. HA_MABS_CONDITION: 이평선 돌파 백테스트 조건
 
@@ -140,4 +142,4 @@
 | TRADE_DATE    | 거래시간           |     | DATETIME |     | Y        |                   |
 
 - Index
-    - TRADE_DATE
+  - TRADE_DATE

@@ -12,6 +12,7 @@ plugins {
     kotlin("jvm") version "1.6.10"
     kotlin("plugin.spring") version "1.6.10"
     kotlin("plugin.jpa") version "1.6.10"
+    kotlin("kapt") version "1.3.61"
 }
 
 group = "com.setvect.bokslstock2"
@@ -24,6 +25,8 @@ configurations {
     }
 }
 
+apply(plugin = "kotlin-kapt")
+
 repositories {
     mavenCentral()
 }
@@ -31,6 +34,8 @@ repositories {
 extra["snippetsDir"] = file("build/generated-snippets")
 
 dependencies {
+    val querydslVersion = "5.0.0"
+
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -45,6 +50,10 @@ dependencies {
     implementation("org.apache.commons:commons-csv:1.9.0")
     implementation("org.jsoup:jsoup:1.15.3")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("org.modelmapper:modelmapper:2.4.0")
+    implementation("com.querydsl:querydsl-jpa:$querydslVersion")
+    kapt("com.querydsl:querydsl-apt:$querydslVersion:jpa")
+    kapt("org.springframework.boot:spring-boot-configuration-processor")
 
     compileOnly("org.projectlombok:lombok")
     runtimeOnly("com.h2database:h2")
@@ -56,6 +65,16 @@ dependencies {
     testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
     testImplementation("org.projectlombok:lombok")
     testAnnotationProcessor("org.projectlombok:lombok")
+}
+
+
+//kotlin.sourceSets.main {
+//    println("buildDir: $buildDir")
+//    setBuildDir("$buildDir/generated/source/kapt/main")
+//}
+
+sourceSets["main"].withConvention(org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet::class) {
+    kotlin.srcDir("$buildDir/generated/source/kapt/main")
 }
 
 tasks.withType<KotlinCompile> {

@@ -19,11 +19,14 @@ spring:
         use_sql_comments: false
   mvc:
     static-path-pattern: /static/**
-  h2:
-    console:
+  devtools:
+    livereload:
       enabled: true
-      settings:
-        web-allow-others: true
+    h2:
+      console:
+        enabled: true
+        settings:
+          web-allow-others: true
 
 server:
   port: 8083
