@@ -67,14 +67,9 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok")
 }
 
-
-//kotlin.sourceSets.main {
-//    println("buildDir: $buildDir")
-//    setBuildDir("$buildDir/generated/source/kapt/main")
-//}
-
-sourceSets["main"].withConvention(org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet::class) {
-    kotlin.srcDir("$buildDir/generated/source/kapt/main")
+kotlin.sourceSets.main {
+    println("buildDir: $buildDir")
+    setBuildDir("$buildDir/generated/source/kapt/main")
 }
 
 tasks.withType<KotlinCompile> {

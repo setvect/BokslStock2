@@ -1,8 +1,8 @@
 package com.setvect.bokslstock2.koreainvestment.trade.repository
 
+import com.querydsl.core.types.Projections
 import com.querydsl.jpa.impl.JPAQueryFactory
 import com.setvect.bokslstock2.koreainvestment.trade.entity.QTradeEntity.tradeEntity
-import com.setvect.bokslstock2.koreainvestment.trade.model.QTradeDto
 import com.setvect.bokslstock2.koreainvestment.trade.model.TradeDto
 import com.setvect.bokslstock2.koreainvestment.trade.model.web.TradeSearchForm
 import org.springframework.data.domain.Page
@@ -17,7 +17,8 @@ class HistoryRepository(
     fun list(searchForm: TradeSearchForm, pageable: Pageable): Page<TradeDto> {
         val result = queryFactory.from(tradeEntity)
             .select(
-                QTradeDto(
+                Projections.fields(
+                    TradeDto::class.java,
                     tradeEntity.tradeSeq,
                     tradeEntity.account,
                     tradeEntity.code,
