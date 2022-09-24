@@ -314,15 +314,15 @@ class VbsService(
                 return@forEach
             }
 
-            val expectedPrice = getClosingPrice(it.code)
+            val bidPrice = getBidPrice(it.code)
 
-            val sellPrice = expectedPrice - SELL_DIFF
+            val sellPrice = bidPrice - SELL_DIFF
 
             val message = "[매도 주문] ${stock.prdtName}(${stock.code}), " +
                 "주문가: ${comma(sellPrice)}, " +
                 "매수평단가: ${comma(stock.pchsAvgPric.toInt())}, " +
                 "수량: ${comma(stock.hldgQty)}, " +
-                "수익률(추정): ${percent(ApplicationUtil.getYield(stock.pchsAvgPric.toInt(), sellPrice) * 100)}"
+                "수익률(추정): ${percent(ApplicationUtil.getYield(stock.pchsAvgPric.toInt(), bidPrice) * 100)}"
             log.info(message)
             val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
 
@@ -347,7 +347,8 @@ class VbsService(
                     code = it.code,
                     tradeType = TradeType.SELL,
                     qty = stock.hldgQty,
-                    unitPrice = sellPrice.toDouble(),
+                    // TODO 채결 기준이 아니라 주문 기준이라 가격이 정확하지 않음
+                    unitPrice = bidPrice.toDouble(),
                     yield = stock.pchsAvgPric,
                     regDate = LocalDateTime.now()
                 )
@@ -364,11 +365,12 @@ class VbsService(
      * - 그외: 마지막 채결 가격
      * @return 메수 호가
      */
-    private fun getClosingPrice(code: String): Int {
+    private fun getBidPrice(code: String): Int {
         return if (TradeTimeHelper.isMorningSimultaneity()) {
             val quoteResponse = stockClientService.requestQuote(QuoteRequest(code), tokenService.getAccessToken())
             quoteResponse.output2!!.expectedPrice
         } else {
+            // TODO 호가창 기준으로 조회
             val requestCurrentPrice = stockClientService.requestCurrentPrice(CurrentPriceRequest(code), tokenService.getAccessToken())
             requestCurrentPrice.output!!.stckPrpr
         }
