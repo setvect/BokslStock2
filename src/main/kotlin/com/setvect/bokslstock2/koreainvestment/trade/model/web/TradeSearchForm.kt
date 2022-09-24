@@ -11,5 +11,5 @@ data class TradeSearchForm(
     /**
      * 종목코드
      */
-    var market: String? = null,
+    var code: String? = null,
 ) : DefaultSearchFrom(from, to, account)

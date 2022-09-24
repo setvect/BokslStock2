@@ -31,6 +31,17 @@
             <appender-ref ref="FILE"/>
             <appender-ref ref="STDOUT"/>
         </root>
+        <!--
+            아래처럼 설정해도 로그에 쿼리가 출력 안되는 황당한 경우가 있다. 이럴땐 포기하고 application.yml 설정을 바꿔라
+            spring.jpa.properties.hibernate.show_sql = true
+            물론 쿼리문이 콘솔에 출력되는 단점은 있지만 그래도 없는것 보다는 낫다. ㅡㅡ;
+        -->
+        <logger name="org.hibernate.SQL" level="trace"/>
+        <!-- 로그에 SQL 출력방법 찾았다. 그러나 필요없는 로그들이 너무많이 출력된다. -->
+        <!--        <logger name="org.hibernate.hql.internal.ast.QueryTranslatorImpl" level="DEBUG"/>-->
+
+        <!--        <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>-->
+
         <!--apache http client 상세 로그를 보고 싶으면 DEBUG로 변경-->
         <logger name="org.apache.http" level="DEBUG" additivity="false">
             <appender-ref ref="STDOUT"/>
