@@ -68,11 +68,11 @@
         "trade": {
             ajax: {
                 url: url = "/trade/page",
-                searchParam: "market"
+                searchParam: "code"
             },
             columns: [
                 {data: "no", title: "No."},
-                {data: "market", title: "코인"},
+                {data: "code", title: "종목"},
                 {data: "tradeType", title: "매매"},
                 {data: "amount", title: "거래 금액", className: "text-right"},
                 {data: "unitPrice", title: "거래 단가", className: "text-right"},
@@ -170,7 +170,10 @@
                 if (config.ajax.searchParam) {
                     param[config.ajax.searchParam] = data.search.value;
                 }
+                console.log(callback)
+
                 $.get(url, param, function (res) {
+
                     res.result.content.forEach((a, idx) => {
                         const start = res.result.totalElements - res.result.pageable.offset - res.result.numberOfElements;
                         a["no"] = start + (res.result.content.length - idx);

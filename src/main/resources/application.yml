@@ -17,16 +17,13 @@ spring:
         show_sql: false
         format_sql: true
         use_sql_comments: false
+  h2:
+    console:
+      enabled: true
+      settings:
+        web-allow-others: true
   mvc:
     static-path-pattern: /static/**
-  devtools:
-    livereload:
-      enabled: true
-    h2:
-      console:
-        enabled: true
-        settings:
-          web-allow-others: true
 
 server:
   port: 8083
