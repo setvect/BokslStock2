@@ -40,7 +40,7 @@ class TradSelectRepository(
                 containsAccount(searchForm.account),
                 range(searchForm.from, searchForm.to)
             )
-            .orderBy(tradeEntity.tradeSeq.desc())
+            .orderBy(tradeEntity.regDate.desc())
             .offset(pageable.offset)
             .limit(pageable.pageSize.toLong())
             .fetch()

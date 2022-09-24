@@ -15,9 +15,17 @@ data class TradeDto(
     var name: String? = null,
     var tradeType: TradeType? = null,
     var qty: Int = 0,
-    var unitPrice: Double? = null,
+    var unitPrice: Double = 0.0,
 
     var yield: Double = 0.0,
     var memo: String? = null,
     var regDate: LocalDateTime? = null,
-)
+) {
+    fun getProfitLoss(): Long {
+        return if (tradeType == TradeType.SELL) {
+            return (unitPrice * qty * `yield`).toLong()
+        } else {
+            0L
+        }
+    }
+}

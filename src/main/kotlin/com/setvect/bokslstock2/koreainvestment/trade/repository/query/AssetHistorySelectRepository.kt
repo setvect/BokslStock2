@@ -43,7 +43,7 @@ class AssetHistorySelectRepository(
                 containsAccount(searchForm.account),
                 range(searchForm.from, searchForm.to),
             )
-            .orderBy(assetHistoryEntity.assetHistorySeq.desc())
+            .orderBy(assetHistoryEntity.regDate.desc())
             .offset(pageable.offset)
             .limit(pageable.pageSize.toLong())
             .fetch()
