@@ -1,5 +1,7 @@
 package com.setvect.bokslstock2.koreainvestment.trade.repository
 
+import com.setvect.bokslstock2.koreainvestment.trade.model.web.AssetHistorySearchForm
+import com.setvect.bokslstock2.koreainvestment.trade.model.web.AssetPeriodHistorySearchForm
 import com.setvect.bokslstock2.koreainvestment.trade.model.web.TradeSearchForm
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
@@ -14,21 +16,32 @@ internal class HistoryRepositoryTest {
     @Autowired
     private lateinit var historyRepository: HistoryRepository
 
-    @Autowired
-    private lateinit var tradeRepository: TradeRepository
-
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Test
-    fun test() {
-        val list = historyRepository.list(TradeSearchForm(), PageRequest.of(0, 2))
-
-        log.info(list.toString())
-
-        list.forEach {
+    fun pageTrade() {
+        val page = historyRepository.pageTrade(TradeSearchForm(), PageRequest.of(0, 2))
+        log.info("##################################### ${page.totalElements}")
+        page.forEach {
             println(it)
         }
+    }
 
+    @Test
+    fun pageAssetHistory() {
+        val page = historyRepository.pageAssetHistory(AssetHistorySearchForm(), PageRequest.of(0, 2))
+        log.info("##################################### ${page.totalElements}")
+        page.forEach {
+            println(it)
+        }
+    }
 
+    @Test
+    fun pageAssetPeriodHistory() {
+        val page = historyRepository.pageAssetPeriodHistory(AssetPeriodHistorySearchForm(), PageRequest.of(0, 3))
+        log.info("##################################### ${page.totalElements}")
+        page.forEach {
+            println(it)
+        }
     }
 }
