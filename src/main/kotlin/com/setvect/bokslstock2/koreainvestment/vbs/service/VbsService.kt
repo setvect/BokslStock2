@@ -175,7 +175,7 @@ class VbsService(
                     log.info("[목표가] ${stock.code}: $openPrice + ($beforeDayHigh - $beforeDayLow) * ${stock.k} = $targetPrice")
 
                     targetPriceMessage.append(
-                        "${stock.name}(${stock.code})\n" +
+                        "${stock.getName()}(${stock.code})\n" +
                             "  - 시초가: ${comma(stockClientService.output[0].stckOprc)}\n" +
                             "  - 목표가: ${comma(targetPrice)}\n"
                     )
@@ -249,7 +249,7 @@ class VbsService(
     ) {
         val beforePrice = beforePriceMap.getOrDefault(vbsStock.code, 0)
         if (beforePrice != realtimeExecution.stckPrpr) {
-            log.info("${vbsStock.name}(${vbsStock.code}): ${comma(beforePrice)} -> ${comma(realtimeExecution.stckPrpr)} (${percent(realtimeExecution.prdyCtrt)})")
+            log.info("${vbsStock.getName()}(${vbsStock.code}): ${comma(beforePrice)} -> ${comma(realtimeExecution.stckPrpr)} (${percent(realtimeExecution.prdyCtrt)})")
             beforePriceMap[vbsStock.code] = realtimeExecution.stckPrpr
         }
     }
@@ -264,7 +264,7 @@ class VbsService(
 
         val ordqty = (buyCash / targetPrice).toInt()
 
-        val message = "[매수 주문] ${vbsStock.name}(${vbsStock.code}), " +
+        val message = "[매수 주문] ${vbsStock.getName()}(${vbsStock.code}), " +
             "주문가: ${comma(targetPrice)}, " +
             "수량: ${comma(ordqty)}"
 

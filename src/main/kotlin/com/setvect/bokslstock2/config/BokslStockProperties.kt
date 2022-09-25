@@ -1,5 +1,6 @@
 package com.setvect.bokslstock2.config
 
+import com.setvect.bokslstock2.analysis.common.model.StockCode
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.ConstructorBinding
 
@@ -78,9 +79,12 @@ data class BokslStockProperties(
     ) {
         data class VbsStock(
             val code: String,
-            val name: String,
             val openSell: Boolean,
             val k: Double
-        )
+        ) {
+            fun getName(): String? {
+                return StockCode.findByCodeOrNull(code)?.name
+            }
+        }
     }
 }

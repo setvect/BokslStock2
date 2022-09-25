@@ -62,11 +62,9 @@ com:
           investRatio: 0.5
           stock:
             - code: "069500"
-              name: "KODEX 200"
               openSell: false
               k: 0.2
             - code: "091170"
-              name: "KODEX 은행"
               openSell: false
               k: 0.2
 
