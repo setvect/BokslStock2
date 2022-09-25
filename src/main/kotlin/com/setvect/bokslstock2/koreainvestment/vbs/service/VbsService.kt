@@ -175,7 +175,7 @@ class VbsService(
                     log.info("[목표가] ${stock.code}: $openPrice + ($beforeDayHigh - $beforeDayLow) * ${stock.k} = $targetPrice")
 
                     targetPriceMessage.append(
-                        "${stock.name}(${stock.code})\n" +
+                        "${stock.getName()}(${stock.code})\n" +
                             "  - 시초가: ${comma(stockClientService.output[0].stckOprc)}\n" +
                             "  - 목표가: ${comma(targetPrice)}\n"
                     )
@@ -249,7 +249,7 @@ class VbsService(
     ) {
         val beforePrice = beforePriceMap.getOrDefault(vbsStock.code, 0)
         if (beforePrice != realtimeExecution.stckPrpr) {
-            log.info("${vbsStock.name}(${vbsStock.code}): ${comma(beforePrice)} -> ${comma(realtimeExecution.stckPrpr)} (${percent(realtimeExecution.prdyCtrt)})")
+            log.info("${vbsStock.getName()}(${vbsStock.code}): ${comma(beforePrice)} -> ${comma(realtimeExecution.stckPrpr)} (${percent(realtimeExecution.prdyCtrt)})")
             beforePriceMap[vbsStock.code] = realtimeExecution.stckPrpr
         }
     }
@@ -264,7 +264,7 @@ class VbsService(
 
         val ordqty = (buyCash / targetPrice).toInt()
 
-        val message = "[매수 주문] ${vbsStock.name}(${vbsStock.code}), " +
+        val message = "[매수 주문] ${vbsStock.getName()}(${vbsStock.code}), " +
             "주문가: ${comma(targetPrice)}, " +
             "수량: ${comma(ordqty)}"
 
@@ -318,11 +318,12 @@ class VbsService(
 
             val sellPrice = bidPrice - SELL_DIFF
 
+            val yieldValue = ApplicationUtil.getYield(stock.pchsAvgPric.toInt(), bidPrice)
             val message = "[매도 주문] ${stock.prdtName}(${stock.code}), " +
                 "주문가: ${comma(sellPrice)}, " +
                 "매수평단가: ${comma(stock.pchsAvgPric.toInt())}, " +
                 "수량: ${comma(stock.hldgQty)}, " +
-                "수익률(추정): ${percent(ApplicationUtil.getYield(stock.pchsAvgPric.toInt(), bidPrice) * 100)}"
+                "수익률(추정): ${percent(yieldValue * 100)}"
             log.info(message)
             val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
 
@@ -349,7 +350,7 @@ class VbsService(
                     qty = stock.hldgQty,
                     // TODO 채결 기준이 아니라 주문 기준이라 가격이 정확하지 않음
                     unitPrice = bidPrice.toDouble(),
-                    yield = stock.pchsAvgPric,
+                    yield = yieldValue,
                     regDate = LocalDateTime.now()
                 )
                 tradeRepository.save(tradeEntity)

@@ -51,6 +51,12 @@ class TradeEntity(
     val yield: Double,
 
     /**
+     * 메모
+     */
+    @Column(name = "MEMO", length = 1000, nullable = true)
+    val memo: String? = null,
+
+    /**
      * 거래 시간
      */
     @Column(name = "REG_DATE", nullable = false)

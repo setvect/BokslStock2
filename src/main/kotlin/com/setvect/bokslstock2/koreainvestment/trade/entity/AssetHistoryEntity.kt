@@ -42,6 +42,12 @@ class AssetHistoryEntity(
     val yield: Double,
 
     /**
+     * 메모
+     */
+    @Column(name = "MEMO", length = 1000, nullable = true)
+    val memo: String? = null,
+
+    /**
      * 자산 조회 시간
      * 한 계좌의 여러 자산을 조회 할 경우 동일한 시간을 보장함
      */

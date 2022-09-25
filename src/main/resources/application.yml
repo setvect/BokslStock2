@@ -17,13 +17,13 @@ spring:
         show_sql: false
         format_sql: true
         use_sql_comments: false
-  mvc:
-    static-path-pattern: /static/**
   h2:
     console:
       enabled: true
       settings:
         web-allow-others: true
+  mvc:
+    static-path-pattern: /static/**
 
 server:
   port: 8083
@@ -62,11 +62,9 @@ com:
           investRatio: 0.5
           stock:
             - code: "069500"
-              name: "KODEX 200"
               openSell: false
               k: 0.2
             - code: "091170"
-              name: "KODEX 은행"
               openSell: false
               k: 0.2
 

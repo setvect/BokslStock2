@@ -1,0 +1,11 @@
+package com.setvect.bokslstock2.koreainvestment.trade.model.web
+
+import java.time.LocalDateTime
+
+data class AssetPeriodHistorySearchForm(
+    override val from: LocalDateTime? = null,
+
+    override val to: LocalDateTime? = null,
+
+    override val account: String? = null,
+) : DefaultSearchFrom(from, to, account)
