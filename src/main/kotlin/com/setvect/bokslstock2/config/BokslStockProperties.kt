@@ -83,7 +83,7 @@ data class BokslStockProperties(
             val k: Double
         ) {
             fun getName(): String? {
-                return StockCode.findByCodeOrNull(code)?.name
+                return StockCode.findByCodeOrNull(code)?.desc
             }
         }
     }

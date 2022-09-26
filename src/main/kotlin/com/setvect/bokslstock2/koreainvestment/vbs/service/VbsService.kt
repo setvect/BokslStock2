@@ -249,7 +249,7 @@ class VbsService(
     ) {
         val beforePrice = beforePriceMap.getOrDefault(vbsStock.code, 0)
         if (beforePrice != realtimeExecution.stckPrpr) {
-            log.info("${vbsStock.getName()}(${vbsStock.code}): ${comma(beforePrice)} -> ${comma(realtimeExecution.stckPrpr)} (${percent(realtimeExecution.prdyCtrt)})")
+            log.info("${vbsStock.getName()}(${vbsStock.code}): ${comma(beforePrice)} -> ${comma(realtimeExecution.stckPrpr)} (${percent(realtimeExecution.prdyCtrt)}) (매수 목표가: ${targetPriceMap[vbsStock.code]})")
             beforePriceMap[vbsStock.code] = realtimeExecution.stckPrpr
         }
     }
@@ -401,7 +401,7 @@ class VbsService(
         message.append("예수금(D+2): ${comma(balanceResponse!!.deposit[0].prvsRcdlExccAmt)}\n")
 
         val balanceMessage = balanceResponse!!.holdings.joinToString("\n") {
-            "보유종목: (${it.code}), " +
+            "보유종목: ${StockCode.findByCodeOrNull(it.code)?.desc}(${it.code}), " +
                 "수량 ${comma(it.hldgQty)}, " +
                 "수익률 ${percent(it.evluPflsRt)}, " +
                 "매입금액 ${comma(it.pchsAmt)}, " +

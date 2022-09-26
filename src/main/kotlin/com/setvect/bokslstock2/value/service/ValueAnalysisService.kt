@@ -37,8 +37,8 @@ class ValueAnalysisService(
             val sheet = workbook.createSheet()
 
             val header = "이름,종목코드,링크,마켓,시총,현재가,업종," +
-                    "현재-PER,현재-PBR,현재-배당수익률," +
-                    "순위-PER,순위-PBR,순위-배당수익률,순위합계"
+                "현재-PER,현재-PBR,현재-배당수익률," +
+                "순위-PER,순위-PBR,순위-배당수익률,순위합계"
             ReportMakerHelperService.applyHeader(sheet, header)
             var rowIdx = 1
 
@@ -97,19 +97,19 @@ class ValueAnalysisService(
                 createCell.cellStyle = percentStyle
 
                 createCell = row.createCell(cellIdx++)
-                createCell.setCellValue(it.second.per!!.toDouble())
+                createCell.setCellValue(it.second.per.toDouble())
                 createCell.cellStyle = commaStyle
 
                 createCell = row.createCell(cellIdx++)
-                createCell.setCellValue(it.second.pbr!!.toDouble())
+                createCell.setCellValue(it.second.pbr.toDouble())
                 createCell.cellStyle = commaStyle
 
                 createCell = row.createCell(cellIdx++)
-                createCell.setCellValue(it.second.dvr!!.toDouble())
+                createCell.setCellValue(it.second.dvr.toDouble())
                 createCell.cellStyle = commaStyle
 
                 createCell = row.createCell(cellIdx++)
-                createCell.setCellValue(it.second.total()!!.toDouble())
+                createCell.setCellValue(it.second.total().toDouble())
                 createCell.cellStyle = commaStyle
             }
             sheet.createFreezePane(0, 1)
