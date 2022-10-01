@@ -249,7 +249,7 @@ class VbsService(
     ) {
         val beforePrice = beforePriceMap.getOrDefault(vbsStock.code, 0)
         if (beforePrice != realtimeExecution.stckPrpr) {
-            log.info("${vbsStock.getName()}(${vbsStock.code}): ${comma(beforePrice)} -> ${comma(realtimeExecution.stckPrpr)} (${percent(realtimeExecution.prdyCtrt)}) (매수 목표가: ${targetPriceMap[vbsStock.code]})")
+            log.info("${vbsStock.getName()}(${vbsStock.code}): ${comma(beforePrice)} -> ${comma(realtimeExecution.stckPrpr)} (${percent(realtimeExecution.prdyCtrt)}) (매수 목표가: ${comma(targetPriceMap[vbsStock.code] ?: 0)})")
             beforePriceMap[vbsStock.code] = realtimeExecution.stckPrpr
         }
     }

@@ -107,6 +107,7 @@ gradlew makeInstallFile
 ### 6.3. 듀얼모멘텀
 
 - 메인 소스:[DmAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/analysis/dm/service/DmAnalysisService.kt)
+- 실행 소스:[DmBacktest.kt](src/test/kotlin/com/setvect/bokslstock2/analysis/DmBacktest.kt)
 - 절대 모멘텀과 상대 모멘텀 결합
 - 매매 전략 전략
     - 직전월 종가 기준 n월 평균 종가보다 높은순으로 정렬
@@ -140,6 +141,7 @@ gradlew makeInstallFile
 ### 6.5. 리벨런싱
 
 - 메인 소스: [RebalanceAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/analysis/rebalance/service/RebalanceAnalysisService.kt)
+- 실행 소스:[RebalanceBacktest.kt](src/test/kotlin/com/setvect/bokslstock2/analysis/RebalanceBacktest.kt)
 - 리밸런싱 매매 분석
 - 일정주기마다 리벨런싱 적용
 - 사용가능한 매매전략
@@ -175,6 +177,7 @@ gradlew makeInstallFile
 ### 7.1. 가치평가 전략
 
 - 메인 소스: [ValueAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/value/service/ValueAnalysisService.kt)
+- 실행 소스:[ValueStrategyTest.kt](src/test/kotlin/com/setvect/bokslstock2/analysis/ValueStrategyTest.kt)
 - 매수조건
     - 필터
         - 시총 순위 70% ~ 90% 사이 기업
