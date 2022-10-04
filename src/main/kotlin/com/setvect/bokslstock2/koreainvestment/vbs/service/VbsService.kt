@@ -221,8 +221,6 @@ class VbsService(
 
         if (targetPrice <= realtimeExecution.stckPrpr) {
             buyOrder(vbsStock, targetPrice)
-            // 주문 접수 후 딜레이
-            TimeUnit.SECONDS.sleep(2)
         }
     }
 
@@ -297,6 +295,9 @@ class VbsService(
                 regDate = LocalDateTime.now()
             )
             tradeRepository.save(tradeEntity)
+            // 주문 접수 후 딜레이
+            TimeUnit.SECONDS.sleep(2)
+            loadBalance()
         }
         slackMessageService.sendMessage(message)
     }
