@@ -281,6 +281,7 @@ class VbsService(
         if (requestOrderBuy.isError()) {
             log.info("주문요청 에러: $requestOrderBuy")
             slackMessageService.sendMessage("주문요청 에러: $requestOrderBuy")
+            TimeUnit.SECONDS.sleep(2)
         } else {
             buyCode.add(vbsStock.code)
             log.info("주문요청 응답: $requestOrderBuy")
@@ -295,7 +296,6 @@ class VbsService(
                 regDate = LocalDateTime.now()
             )
             tradeRepository.save(tradeEntity)
-            // 주문 접수 후 딜레이
             TimeUnit.SECONDS.sleep(2)
             loadBalance()
         }
