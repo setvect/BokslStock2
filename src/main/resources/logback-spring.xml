@@ -50,6 +50,7 @@
             <appender-ref ref="FILE"/>
             <appender-ref ref="STDOUT"/>
         </logger>
+        <logger name="com.zaxxer.hikari.pool.HikariPool" level="off"/>
     </springProfile>
     <springProfile name="!local">
         <root level="INFO">
