@@ -231,11 +231,11 @@ class VbsService(
 
         if (targetPriceExceeded) {
             val errorWait = Optional.ofNullable(errorOccursTime[vbsStock.code])
-                .map { LocalDateTime.now().minusMinutes(DIFF_MINUTES).isAfter(it) }
+                .map { LocalDateTime.now().isBefore(it.plusMinutes(DIFF_MINUTES)) }
                 .orElse(false)
 
             if (errorWait) {
-                log.warn("매수 주문 에러 후 ${errorOccursTime[vbsStock.code]?.plusMonths(DIFF_MINUTES)}동안 재 주문 할 수 없음. 해당종목 종목: ${vbsStock.getName()}")
+                log.warn("매수 주문 에러 후 ${errorOccursTime[vbsStock.code]?.plusMinutes(DIFF_MINUTES)}동안 재 주문 할 수 없음. 해당종목 종목: ${vbsStock.getName()}")
             } else {
                 buyOrder(vbsStock, targetPrice)
             }
