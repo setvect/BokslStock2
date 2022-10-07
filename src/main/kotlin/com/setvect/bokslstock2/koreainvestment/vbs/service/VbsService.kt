@@ -27,6 +27,7 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 
@@ -36,6 +37,10 @@ private const val SELL_DIFF = 15
 /** ETF 호가 단위(원)*/
 private const val QUOTE_UNIT = 5
 
+/**
+ * 매수 주문 에러 발생 이후 해당 시간동안 재주문 하지 않음
+ */
+private const val DIFF_MINUTES = 2L
 
 @Service
 class VbsService(
@@ -61,6 +66,9 @@ class VbsService(
 
     /**직전 채결가격. 가격 변화를 로그로 찍기 위한 목적 <종목코드, 매수가격>*/
     private var beforePriceMap = mutableMapOf<String, Int>()
+
+    /** 주문 에러가 발생한 시간*/
+    private val errorOccursTime = mutableMapOf<String, LocalDateTime>()
 
     @Async
     fun start() {
@@ -219,8 +227,18 @@ class VbsService(
         val targetPrice = targetPriceMap[vbsStock.code] ?: return
 
 
-        if (targetPrice <= realtimeExecution.stckPrpr) {
-            buyOrder(vbsStock, targetPrice)
+        val targetPriceExceeded = targetPrice <= realtimeExecution.stckPrpr
+
+        if (targetPriceExceeded) {
+            val errorWait = Optional.ofNullable(errorOccursTime[vbsStock.code])
+                .map { LocalDateTime.now().minusMinutes(DIFF_MINUTES).isAfter(it) }
+                .orElse(false)
+
+            if (errorWait) {
+                log.warn("매수 주문 에러 후 ${errorOccursTime[vbsStock.code]?.plusMonths(DIFF_MINUTES)}동안 재 주문 할 수 없음. 해당종목 종목: ${vbsStock.getName()}")
+            } else {
+                buyOrder(vbsStock, targetPrice)
+            }
         }
     }
 
@@ -280,7 +298,8 @@ class VbsService(
 
         if (requestOrderBuy.isError()) {
             log.info("주문요청 에러: $requestOrderBuy")
-            slackMessageService.sendMessage("주문요청 에러: $requestOrderBuy")
+            slackMessageService.sendMessage("@channel 주문요청 에러: $requestOrderBuy")
+            errorOccursTime[vbsStock.code] = LocalDateTime.now()
             TimeUnit.SECONDS.sleep(2)
         } else {
             buyCode.add(vbsStock.code)
@@ -339,7 +358,7 @@ class VbsService(
             )
             if (requestOrderSell.isError()) {
                 log.info("주문요청 에러: $requestOrderSell")
-                slackMessageService.sendMessage("주문요청 에러: $requestOrderSell")
+                slackMessageService.sendMessage("@channel 주문요청 에러: $requestOrderSell")
             } else {
                 buyCode.remove(it.code)
                 log.info("주문요청 응답: $requestOrderSell")
