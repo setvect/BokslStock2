@@ -274,6 +274,8 @@ class VbsService(
      * 매수 주문
      */
     private fun buyOrder(vbsStock: BokslStockProperties.Vbs.VbsStock, targetPrice: Int) {
+        loadBalance()
+
         val deposit = balanceResponse!!.deposit[0].prvsRcdlExccAmt
         val vbsConfig = bokslStockProperties.koreainvestment.vbs
         val buyCash = ApplicationUtil.getBuyCash(buyCode.size, deposit.toDouble(), vbsConfig.stock.size, vbsConfig.investRatio).toLong()
@@ -316,7 +318,6 @@ class VbsService(
             )
             tradeRepository.save(tradeEntity)
             TimeUnit.SECONDS.sleep(2)
-            loadBalance()
         }
         slackMessageService.sendMessage(message)
     }
@@ -374,7 +375,6 @@ class VbsService(
                     regDate = LocalDateTime.now()
                 )
                 tradeRepository.save(tradeEntity)
-                loadBalance()
             }
             slackMessageService.sendMessage(message)
         }
