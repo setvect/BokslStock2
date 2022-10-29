@@ -82,7 +82,7 @@ gradlew makeInstallFile
 - 메인 소스: [CrawlService.kt](src/main/kotlin/com/setvect/bokslstock2/index/service/CrawlStockPriceService.kt)
 - 실행 소스: [CrawlStockPriceTest.kt](src/test/kotlin/com/setvect/bokslstock2/crawl/CrawlStockPriceTest.kt)
 
-### 5.2. 재무 정보
+### 5.2. 가치 평가 정보
 
 - 메인 소스: [CrawlerCompanyValueService.kt](src/main/kotlin/com/setvect/bokslstock2/value/service/CrawlerCompanyValueService.kt)
 - 실행 소스: [CrawlCompanyValueTest.kt](src/test/kotlin/com/setvect/bokslstock2/crawl/CrawlCompanyValueTest.kt)
