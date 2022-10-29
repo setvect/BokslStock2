@@ -25,6 +25,9 @@ class CrawlerCompanyValueService(
     private val log = LoggerFactory.getLogger(javaClass)
     private val gson = GsonBuilder().setPrettyPrinting().create()
 
+    /**
+     * 상세 정보 크롤링
+     */
     fun crawlDetailList() {
         val listFile = valueCommonService.getSummaryListFile()
         val listJson = FileUtils.readFileToString(listFile, "utf-8")
@@ -136,11 +139,17 @@ class CrawlerCompanyValueService(
         )
     }
 
+    /**
+     * 종목 크롤링
+     */
     fun crawlSummaryList() {
         val crawCompanyList = crawlList()
         saveSummaryList(crawCompanyList)
     }
 
+    /**
+     * 종목 목록
+     */
     private fun crawlList(): List<CompanySummary> {
         val companyList = mutableListOf<CompanySummary>()
 
@@ -187,6 +196,9 @@ class CrawlerCompanyValueService(
         log.info("상세 정보 저장. 건수: ${detailList.size}, 경로: ${listFile.absoluteFile}")
     }
 
+    /**
+     * 종목 저장
+     */
     private fun saveSummaryList(crawCompanyList: List<CompanySummary>) {
         val companyListJson = gson.toJson(crawCompanyList)
 

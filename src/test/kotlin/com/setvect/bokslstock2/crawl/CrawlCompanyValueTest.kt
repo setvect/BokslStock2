@@ -13,13 +13,20 @@ class CrawlCompanyValueTest {
     @Autowired
     private lateinit var crawlCompanyValueService: CrawlerCompanyValueService
 
+    /**
+     * 종목 크롤링
+     */
     @Test
     @Disabled
-    fun crawlCompanyListTest(){
+    fun crawlCompanyListTest() {
         crawlCompanyValueService.crawlSummaryList()
     }
+
+    /**
+     * 상세 정보 크롤링
+     */
     @Test
-    fun crawlDetailListTest(){
+    fun crawlDetailListTest() {
         crawlCompanyValueService.crawlDetailList()
     }
 }

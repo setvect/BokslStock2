@@ -73,12 +73,19 @@ gradlew makeInstallFile
 
 ## 5. 수집
 
-- 한국 및 미국주식 크롤링
+### 5.1. 시세 크롤링
+
+- 한국 및 미국주식
     - 한국주식: https://finance.naver.com
     - 미국주식: https://query1.finance.yahoo.com
     - 원달러환율: https://spot.wooribank.com/pot/Dream?withyou=FXXRT0014
 - 메인 소스: [CrawlService.kt](src/main/kotlin/com/setvect/bokslstock2/index/service/CrawlStockPriceService.kt)
 - 실행 소스: [CrawlStockPriceTest.kt](src/test/kotlin/com/setvect/bokslstock2/crawl/CrawlStockPriceTest.kt)
+
+### 5.2. 재무 정보
+
+- 메인 소스: [CrawlerCompanyValueService.kt](src/main/kotlin/com/setvect/bokslstock2/value/service/CrawlerCompanyValueService.kt)
+- 실행 소스: [CrawlCompanyValueTest.kt](src/test/kotlin/com/setvect/bokslstock2/crawl/CrawlCompanyValueTest.kt)
 
 ## 6. 백테스트 전략
 
