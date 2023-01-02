@@ -243,17 +243,12 @@ class VbsService(
     }
 
     /**
-     * 오는 날짜 시세 여부 존재를 기준으로 장이 열리는지 판단함
+     * 호가 존재 여부를 기준으로 개장 여부를 판단
      * @return 개장일이면 true
      */
     private fun isTradingDay(): Boolean {
-        val requestDatePrice = stockClientService.requestDatePrice(
-            DatePriceRequest(StockCode.KODEX_200_069500.code, DatePriceRequest.DateType.DAY), tokenService.getAccessToken()
-        )
-        if (requestDatePrice.output == null || requestDatePrice.output.isEmpty()) {
-            return false
-        }
-        return requestDatePrice.output[0].date() == LocalDate.now()
+        val requestQuote = stockClientService.requestQuote(QuoteRequest(StockCode.KODEX_200_069500.code), tokenService.getAccessToken())
+        return requestQuote.output1 != null && requestQuote.output1.askp1 != "0"
     }
 
     /**
@@ -381,7 +376,7 @@ class VbsService(
     }
 
     /**
-     * 현재 시간대에 따라 얻오는 방식이 다름
+     * 현재 시간대에 따라 얻어오는 방식이 다름
      * - 오전 통시호가: 체곌 예상
      * - 그외: 마지막 채결 가격
      * @return 메수 호가
