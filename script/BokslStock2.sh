@@ -80,9 +80,22 @@ status() {
   fi
 }
 
+startNotRunning() {
+  if isrunning; then
+    echoGreen "BokslStock2 Application is running"
+  else
+    echoRed "BokslStock2 Application is not running. start"
+    start
+  fi
+}
+
 case "$1" in
 start)
     start
+;;
+
+startNotRunning)
+  startNotRunning
 ;;
 
 console)
@@ -110,7 +123,7 @@ restart)
 ;;
 
 *)
-    echo "Usage: $0 {status|start|console|stop|restart}"
+    echo "Usage: $0 {status|start|startNotRunning|console|stop|restart}"
     exit 1
 
 esac
