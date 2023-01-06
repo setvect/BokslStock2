@@ -52,3 +52,9 @@ dependencies {
   > Allow auto-make to start even if developed application 체크
 
 참고로 `spring-boot-devtools` 추가할 필요도 없다. 
+
+## crontab 설정
+```shell
+40 8 * * 1-5 /home/setvect/stock-restart.sh >> /home/setvect/restart.log 2>&1
+* 9-15 * * * cd /home/setvect/BokslStock2/bin && ./BokslStock2.sh startNotRunning >> startNotRunning.log
+```

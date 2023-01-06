@@ -82,9 +82,9 @@ status() {
 
 startNotRunning() {
   if isrunning; then
-    echoGreen "BokslStock2 Application is running"
+    echoGreen "[$(date +"%F %T")] BokslStock2 Application is running"
   else
-    echoRed "BokslStock2 Application is not running. start"
+    echoRed "[$(date +"%F %T")] BokslStock2 Application is not running. start"
     start
   fi
 }
