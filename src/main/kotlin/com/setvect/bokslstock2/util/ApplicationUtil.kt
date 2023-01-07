@@ -207,6 +207,10 @@ object ApplicationUtil {
                 date.withDayOfMonth(1),
                 periodType.getDeviceMonth()
             )
+
+            else -> {
+                throw RuntimeException("$periodType 잘못 사용했다.")
+            }
         }
     }
 
@@ -230,6 +234,10 @@ object ApplicationUtil {
                 date.withDayOfMonth(1),
                 periodType.getDeviceMonth()
             ).plusMonths(periodType.getDeviceMonth().toLong()).minusDays(1)
+
+            else -> {
+                throw RuntimeException("$periodType 잘못 사용했다.")
+            }
         }
     }
 

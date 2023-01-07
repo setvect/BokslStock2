@@ -2,6 +2,7 @@ package com.setvect.bokslstock2.index.repository
 
 import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
+import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.util.DateRange
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
@@ -23,6 +24,13 @@ interface CandleRepository : JpaRepository<CandleEntity, Long> {
     @Modifying
     @Query("delete from CandleEntity c where c.stock = :stock")
     fun deleteByStock(@Param("stock") stock: StockEntity): Int
+
+    /**
+     * 해당 종목의 시세 데이터를 삭제
+     */
+    @Modifying
+    @Query("delete from CandleEntity c where c.stock = :stock and c.periodType = :periodType")
+    fun deleteByStockPeriodType(@Param("stock") stock: StockEntity, @Param("periodType") periodType: PeriodType): Int
 
 
     @Query(
