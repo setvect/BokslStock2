@@ -9,7 +9,6 @@ import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
@@ -22,20 +21,24 @@ class MovingAverageService(
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
     /**
-     * [stockCode] 종목에 대한 [group]단위로 [avgCountList]만큼 이동 평균 계산
+     * [stockCode] 종목에 대한 [selectPeriod] 시계을 조회해 [groupPeriod]단위로 [avgCountList]만큼 이동 평균 계산
      * @return 날짜:해당 날의 이동평균
      */
     @Transactional
     fun getMovingAverage(
-        stockCode: StockCode, group: PeriodType, avgCountList: List<Int>, dateRange: DateRange = DateRange.maxRange
+        stockCode: StockCode,
+        selectPeriod: PeriodType,
+        groupPeriod: PeriodType,
+        avgCountList: List<Int>,
+        dateRange: DateRange = DateRange.maxRange
     ): List<CandleDto> {
         val stockOptional = stockRepository.findByCode(stockCode.code)
         val stock = stockOptional.orElseThrow { RuntimeException("$stockCode 종목 정보가 없습니다.") }
 
-        val candleList = candleRepository.findByRange(stock, group, dateRange.from, dateRange.to)
+        val candleList = candleRepository.findByRange(stock.code, groupPeriod, dateRange.from, dateRange.to)
         val candleGroupMap = candleList
             .groupByTo(TreeMap()) {
-                return@groupByTo ApplicationUtil.fitStartDateTime(group, it.candleDateTime)
+                return@groupByTo ApplicationUtil.fitStartDateTime(groupPeriod, it.candleDateTime)
             }
 
         val candleGroupList = candleGroupMap.entries.map { Pair(it.key, it.value) }
@@ -58,7 +61,7 @@ class MovingAverageService(
                 highPrice = candleGroup.second.maxOf { p -> p.highPrice },
                 lowPrice = candleGroup.second.minOf { p -> p.lowPrice },
                 closePrice = candleGroup.second.last().closePrice,
-                periodType = group
+                periodType = groupPeriod
             )
             groupingCandleList.add(candle)
         }

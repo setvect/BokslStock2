@@ -6,6 +6,7 @@ import com.setvect.bokslstock2.analysis.rb.repository.RbConditionRepository
 import com.setvect.bokslstock2.analysis.rb.repository.RbTradeRepository
 import com.setvect.bokslstock2.common.model.TradeType.BUY
 import com.setvect.bokslstock2.common.model.TradeType.SELL
+import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import org.slf4j.Logger
@@ -50,7 +51,7 @@ class RbBacktestService(
     @Transactional
     fun runTest(condition: RbConditionEntity) {
         val movingAverageCandle = movingAverageService.getMovingAverage(
-            condition.stock.convertStockCode(), condition.periodType, listOf()
+            condition.stock.convertStockCode(), PeriodType.PERIOD_DAY, condition.periodType, listOf()
         )
 
         var lastBuyInfo: RbTradeEntity? = null

@@ -8,6 +8,7 @@ import com.setvect.bokslstock2.analysis.rb.repository.RbConditionRepository
 import com.setvect.bokslstock2.analysis.rb.repository.RbTradeRepository
 import com.setvect.bokslstock2.analysis.rb.setvice.RbAnalysisService
 import com.setvect.bokslstock2.analysis.rb.setvice.RbBacktestService
+import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_MONTH
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
@@ -151,7 +152,8 @@ class RbBacktest {
 //            .filter { it.stock.code == "091170" }
             .map {
                 val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
-                val priceRange = candleRepository.findByCandleDateTimeBetween(listOf(it.stock), range.from, range.to)
+                val priceRange =
+                    candleRepository.findByCandleDateTimeBetween(listOf(it.stock.code), PERIOD_DAY, range.from, range.to)
 
                 val vbsAnalysisCondition = RbAnalysisCondition(
                     tradeConditionList = listOf(it),

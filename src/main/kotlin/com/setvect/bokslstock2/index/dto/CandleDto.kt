@@ -3,6 +3,7 @@ package com.setvect.bokslstock2.index.dto
 import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.model.PeriodType
+import com.setvect.bokslstock2.util.ApplicationUtil
 import java.time.LocalDateTime
 
 /**
@@ -32,7 +33,14 @@ data class CandleDto(
      * @return 수익률(현재 종가 / 직전 종가)
      */
     fun getYield(): Double {
-        return closePrice / beforeClosePrice
+        return ApplicationUtil.getYield(beforeClosePrice, closePrice)
     }
 
+    /**
+     *
+     * @return 수익률(현재 시가 / 직전 종가)
+     */
+    fun getOpenYield(): Double {
+        return ApplicationUtil.getYield(beforeClosePrice, openPrice)
+    }
 }

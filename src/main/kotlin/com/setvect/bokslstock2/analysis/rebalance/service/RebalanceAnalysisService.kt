@@ -298,6 +298,7 @@ class RebalanceAnalysisService(
         val stockPriceIndex = stockCodes.associateWith { code ->
             movingAverageService.getMovingAverage(
                 code,
+                PeriodType.PERIOD_DAY,
                 periodType,
                 Collections.emptyList(),
             )

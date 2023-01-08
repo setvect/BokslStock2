@@ -423,6 +423,7 @@ class DmAnalysisService(
         val stockPriceIndex = stockCodes.associateWith { stockCode ->
             movingAverageService.getMovingAverage(
                 stockCode,
+                PeriodType.PERIOD_DAY,
                 PeriodType.PERIOD_MONTH,
                 Collections.emptyList(),
             )

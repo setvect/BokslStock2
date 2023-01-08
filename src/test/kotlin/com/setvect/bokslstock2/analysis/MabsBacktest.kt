@@ -123,7 +123,8 @@ class MabsBacktest {
                 val realRangeList =
                     conditionList.map {
                         candleRepository.findByCandleDateTimeBetween(
-                            listOf(it.stock),
+                            listOf(it.stock.code),
+                            PERIOD_DAY,
                             range.from,
                             range.to
                         )
@@ -418,7 +419,12 @@ class MabsBacktest {
         var i = 0
         val mabsConditionList = conditionList.map {
             val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
-            val priceRange = candleRepository.findByCandleDateTimeBetween(listOf(it.stock), range.from, range.to)
+            val priceRange = candleRepository.findByCandleDateTimeBetween(
+                listOf(it.stock.code),
+                PERIOD_DAY,
+                range.from,
+                range.to
+            )
 
             val mabsAnalysisCondition = MabsAnalysisCondition(
                 tradeConditionList = listOf(it),

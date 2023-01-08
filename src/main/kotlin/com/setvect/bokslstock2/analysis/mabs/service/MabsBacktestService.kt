@@ -7,6 +7,7 @@ import com.setvect.bokslstock2.analysis.mabs.repository.MabsTradeRepository
 import com.setvect.bokslstock2.common.model.TradeType.BUY
 import com.setvect.bokslstock2.common.model.TradeType.SELL
 import com.setvect.bokslstock2.index.dto.CandleDto
+import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import org.slf4j.Logger
@@ -51,7 +52,10 @@ class MabsBacktestService(
     @Transactional
     fun runTest(condition: MabsConditionEntity) {
         val movingAverageCandle = movingAverageService.getMovingAverage(
-            condition.stock.convertStockCode(), condition.periodType, listOf(condition.shortPeriod, condition.longPeriod)
+            condition.stock.convertStockCode(),
+            PeriodType.PERIOD_DAY,
+            condition.periodType,
+            listOf(condition.shortPeriod, condition.longPeriod)
         )
 
         var lastStatus = SELL

@@ -18,34 +18,18 @@ interface CandleRepository : JpaRepository<CandleEntity, Long> {
     @Query("select c from CandleEntity c where c.stock = :stock")
     fun list(@Param("stock") stock: StockEntity, pageable: Pageable): List<CandleEntity>
 
-    /**
-     * 해당 종목의 시세 데이터를 삭제
-     */
-    @Modifying
-    @Query("delete from CandleEntity c where c.stock = :stock")
-    fun deleteByStock(@Param("stock") stock: StockEntity): Int
-
-    /**
-     * 해당 종목의 시세 데이터를 삭제
-     */
-    @Modifying
-    @Query("delete from CandleEntity c where c.stock = :stock and c.periodType = :periodType")
-    fun deleteByStockPeriodType(@Param("stock") stock: StockEntity, @Param("periodType") periodType: PeriodType): Int
-
-
     @Query(
         "select c from CandleEntity c " +
-                " where c.stock = :stock and c.candleDateTime between :start and :end" +
+                " where c.stock.code = :stockCode and c.candleDateTime between :start and :end" +
                 " and c.periodType = :periodType" +
                 " order by c.candleDateTime"
     )
     fun findByRange(
-        @Param("stock") stock: StockEntity,
+        @Param("stockCode") stockCode: String,
         @Param("periodType") periodType: PeriodType,
         @Param("start") start: LocalDateTime,
         @Param("end") end: LocalDateTime
     ): List<CandleEntity>
-
 
     /**
      * [base] 기준으로 이전 캔들 중 가장 마지막 캔들
@@ -78,11 +62,28 @@ interface CandleRepository : JpaRepository<CandleEntity, Long> {
         "select new com.setvect.bokslstock2.util.DateRange(min(c.candleDateTime), max(c.candleDateTime)) " +
                 " from CandleEntity c " +
                 " where c.candleDateTime between :start and :end" +
-                " and c.stock in (:stockList) "
+                " and c.periodType = :periodType" +
+                " and c.stock.code in (:stockCodeList) "
     )
     fun findByCandleDateTimeBetween(
-        @Param("stockList") stockList: List<StockEntity>,
+        @Param("stockCodeList") stockList: List<String>,
+        @Param("periodType") periodType: PeriodType,
         @Param("start") start: LocalDateTime,
         @Param("end") end: LocalDateTime
     ): DateRange
+
+
+    /**
+     * 해당 종목의 시세 데이터를 삭제
+     */
+    @Modifying
+    @Query("delete from CandleEntity c where c.stock = :stock")
+    fun deleteByStock(@Param("stock") stock: StockEntity): Int
+
+    /**
+     * 해당 종목의 시세 데이터를 삭제
+     */
+    @Modifying
+    @Query("delete from CandleEntity c where c.stock = :stock and c.periodType = :periodType")
+    fun deleteByStockPeriodType(@Param("stock") stock: StockEntity, @Param("periodType") periodType: PeriodType): Int
 }

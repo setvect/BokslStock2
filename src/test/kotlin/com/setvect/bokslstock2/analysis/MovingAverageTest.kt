@@ -3,8 +3,7 @@ package com.setvect.bokslstock2.analysis
 import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService.ExcelStyle
-import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_MONTH
-import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_WEEK
+import com.setvect.bokslstock2.index.model.PeriodType.*
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.junit.jupiter.api.Test
@@ -23,7 +22,7 @@ class MovingAverageTest {
     @Test
     fun 이동평균계산() {
         val movingAverage =
-            movingAverageService.getMovingAverage(StockCode.KODEX_KOSDAQ_2X_233740, PERIOD_WEEK, listOf(1))
+            movingAverageService.getMovingAverage(StockCode.KODEX_KOSDAQ_2X_233740, PERIOD_DAY, PERIOD_WEEK, listOf(1))
 
         movingAverage.forEach {
             val avgInfo = it.average.entries
@@ -39,7 +38,7 @@ class MovingAverageTest {
         val periodType = PERIOD_MONTH
         val stockCode = StockCode.KODEX_KOSDAQ_2X_233740
         val movingAverage =
-            movingAverageService.getMovingAverage(stockCode, periodType, listOf(1))
+            movingAverageService.getMovingAverage(stockCode, PERIOD_DAY, periodType, listOf(1))
 
         val workbook = XSSFWorkbook()
         val sheet = workbook.createSheet()!!

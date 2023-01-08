@@ -124,7 +124,8 @@ class VbsBacktest {
         val conditionList = vbsConditionRepository.listBySeq(listOf(4986346L))
 
         val stocks = conditionList.map { it.stock }.distinct().toList()
-        val realRange = candleRepository.findByCandleDateTimeBetween(stocks, range.from, range.to)
+        val realRange =
+            candleRepository.findByCandleDateTimeBetween(stocks.map { it.code }, PERIOD_DAY, range.from, range.to)
 
         val vbsAnalysisCondition = VbsAnalysisCondition(
             tradeConditionList = conditionList,
@@ -165,7 +166,8 @@ class VbsBacktest {
                 val realRangeList =
                     conditionList.map {
                         candleRepository.findByCandleDateTimeBetween(
-                            listOf(it.stock),
+                            listOf(it.stock.code),
+                            PERIOD_DAY,
                             range.from,
                             range.to
                         )
@@ -281,7 +283,13 @@ class VbsBacktest {
         val vbsConditionList = conditionList
             .map {
                 val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
-                val priceRange = candleRepository.findByCandleDateTimeBetween(listOf(it.stock), range.from, range.to)
+                val priceRange =
+                    candleRepository.findByCandleDateTimeBetween(
+                        listOf(it.stock.code),
+                        PERIOD_DAY,
+                        range.from,
+                        range.to
+                    )
 
                 val vbsAnalysisCondition = VbsAnalysisCondition(
                     tradeConditionList = listOf(it),

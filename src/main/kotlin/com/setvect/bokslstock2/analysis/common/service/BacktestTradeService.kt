@@ -364,7 +364,7 @@ class BacktestTradeService(
     fun getConditionOfCandle(range: DateRange, stockCodes: List<String>): Map<String, List<CandleEntity>> {
         return stockCodes.associateWith { stockCode ->
             candleRepository.findByRange(
-                stockRepository.findByCode(stockCode).get(),
+                stockCode,
                 PeriodType.PERIOD_DAY,
                 range.from,
                 range.to

@@ -224,7 +224,7 @@ object ApplicationUtil {
      * [periodType] = WEEK, [date] = 2022-08-11(목), return: 2022-08-12(금)
      * [periodType] = MONTH, [date] = 2022-08-12, return: 2022-08-31
      */
-    fun fitEndDate(periodType: PeriodType, date: LocalDate): LocalDate {
+    private fun fitEndDate(periodType: PeriodType, date: LocalDate): LocalDate {
         return when (periodType) {
             PeriodType.PERIOD_DAY -> date
             PeriodType.PERIOD_WEEK -> DateUtil.convertDateOfMonday(date)
