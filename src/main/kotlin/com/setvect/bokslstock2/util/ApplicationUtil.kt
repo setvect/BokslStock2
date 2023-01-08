@@ -190,7 +190,6 @@ object ApplicationUtil {
         return responseText
     }
 
-
     /**
      * [periodType]범위를 맞춘다. [date]포함된 범위의 시작 날짜. 글로 쓸라고 하니 엄청 어렵네. ㅡㅡ;
      * 예)
@@ -198,25 +197,31 @@ object ApplicationUtil {
      * [periodType] = MONTH, [date] = 2022-08-12, return: 2022-08-01
      */
     fun fitStartDate(periodType: PeriodType, date: LocalDate): LocalDate {
+        return fitStartDateTime(periodType, date.atTime(0, 0)).toLocalDate()
+    }
+
+    /**
+     * [periodType]범위를 맞춘다. [dateTime]포함된 범위의 시작 날짜. 글로 쓸라고 하니 엄청 어렵네. ㅡㅡ;
+     * 예)
+     * [periodType] = WEEK, [dateTime] = 2022-08-12(금), return: 2022-08-08(월)
+     * [periodType] = MONTH, [dateTime] = 2022-08-12, return: 2022-08-01
+     */
+    fun fitStartDateTime(periodType: PeriodType, dateTime: LocalDateTime): LocalDateTime {
         return when (periodType) {
-            PeriodType.PERIOD_DAY -> date
-            PeriodType.PERIOD_WEEK -> DateUtil.convertDateOfMonday(date)
-            PeriodType.PERIOD_MONTH -> date.withDayOfMonth(1)
+            PeriodType.PERIOD_MINUTE_5 -> dateTime.withMinute(dateTime.minute - dateTime.minute % 5)
+                .withSecond(0).withNano(0)
+
+            PeriodType.PERIOD_DAY -> dateTime.withHour(0).withMinute(0).withSecond(0).withNano(0)
+            PeriodType.PERIOD_WEEK -> DateUtil.convertDateOfMonday(dateTime)
+            PeriodType.PERIOD_MONTH -> dateTime.withDayOfMonth(1)
             PeriodType.PERIOD_QUARTER, PeriodType.PERIOD_HALF, PeriodType.PERIOD_YEAR
             -> DateUtil.fitMonth(
-                date.withDayOfMonth(1),
+                dateTime.withDayOfMonth(1),
                 periodType.getDeviceMonth()
-            )
-
-            else -> {
-                throw RuntimeException("$periodType 잘못 사용했다.")
-            }
+            ).atTime(0, 0)
         }
     }
 
-    fun fitStartDateTime(periodType: PeriodType, dateTime: LocalDateTime): LocalDateTime {
-        return fitStartDate(periodType, dateTime.toLocalDate()).atTime(dateTime.toLocalTime())
-    }
 
     /**
      * [periodType]범위를 맞춘다. [date]포함된 범위의 종료 날짜. 글로 쓸라고 하니 엄청 어렵네. ㅡㅡ;

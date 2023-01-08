@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 @SpringBootTest
 @ActiveProfiles("local")
@@ -27,7 +29,7 @@ class CancelAnalysisTest {
     @Test
     @DisplayName("갭 상승일 때 매도 타이밍 테스트 ")
     fun test1() {
-        val targetRange = DateRange("2015-01-01T00:00:00", "2023-01-01T00:00:00")
+        val targetRange = DateRange("2022-01-01T00:00:00", "2023-01-01T00:00:00")
 
         val stockCode = StockCode.KODEX_BANK_091170
         val range = candleRepository.findByCandleDateTimeBetween(
@@ -60,4 +62,59 @@ class CancelAnalysisTest {
         }
         log.info("갭 상승: $gapRiseOpenCount, 갭 상승 유지: $gapRiseKeepCount")
     }
+
+    @Test
+    @DisplayName("갭 상승일 때 매도 타이밍 테스트")
+    fun test2() {
+        val targetRange = DateRange("2015-01-01T00:00:00", "2023-01-01T00:00:00")
+
+        val stockCode = StockCode.KODEX_BANK_091170
+        val range = candleRepository.findByCandleDateTimeBetween(
+            listOf(stockCode.code),
+            PeriodType.PERIOD_MINUTE_5,
+            targetRange.from,
+            targetRange.to
+        )
+        log.info("대상기간 변경: $targetRange -> $range")
+
+        val candleDtoList = movingAverageService.getMovingAverage(
+            stockCode,
+            PeriodType.PERIOD_MINUTE_5,
+            PeriodType.PERIOD_MINUTE_5,
+            listOf(1),
+            range
+        )
+
+        log.info("사이즈: ${candleDtoList.size}")
+
+        var current: LocalDate = candleDtoList[0].candleDateTimeStart.toLocalDate()
+        var dayCount = 0
+        var gapRiseOpenCount = 0
+        var gapRiseKeepCount = 0
+
+        candleDtoList.forEach {
+            if (current == it.candleDateTimeStart.toLocalDate()) {
+                return@forEach
+            }
+
+            current = it.candleDateTimeStart.toLocalDate()
+            dayCount++
+
+            if (it.getOpenYield() > 0) {
+                gapRiseOpenCount++
+                if (it.closePrice - it.openPrice > 0) {
+                    gapRiseKeepCount++
+                }
+            }
+        }
+        log.info("[$stockCode] 총 날짜: $dayCount, 갭 상승: $gapRiseOpenCount, 수익 건수: $gapRiseKeepCount")
+    }
 }
+
+
+// 갭 상승 시 - [KODEX_KOSDAQ_2X_233740] 총 날짜: 1244, 갭 상승: 661, 수익 건수: 328
+// 갭 하락 시 - [KODEX_KOSDAQ_2X_233740] 총 날짜: 1244, 갭 하락: 583, 수익 건수: 285
+
+// 갭 상승 시 - [KODEX_BANK_091170] 총 날짜: 1244, 갭 상승: 607, 수익 건수: 272
+// 갭 하락 시 - [KODEX_BANK_091170] 총 날짜: 1244, 갭 하락: 637, 수익 건수: 226
+
