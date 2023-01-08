@@ -197,7 +197,8 @@ class DmAnalysisService(
 
             // 듀얼 모멘텀 매수 대상 종목이 없으면, hold 종목 매수 또는 현금 보유
             if (momentTargetRate.isEmpty()) {
-                val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stockCode.code != condition.holdCode!!.code
+                val changeBuyStock =
+                    beforeBuyTrade != null && beforeBuyTrade.stockCode.code != condition.holdCode!!.code
                 val existHoldCode = condition.holdCode != null
 
                 if (changeBuyStock) {
@@ -218,7 +219,7 @@ class DmAnalysisService(
                 } else if (existHoldCode) {
                     log.info(
                         "매수 유지: $momentumScore.date, ${condition.holdCode!!.desc}" +
-                            "(${condition.holdCode})"
+                                "(${condition.holdCode})"
                     )
                 }
             } else {
@@ -260,6 +261,7 @@ class DmAnalysisService(
                     candleRepository.findByBeforeLastCandle(
                         beforeBuyTrade.stockCode.code,
                         date.atTime(0, 0),
+                        PeriodType.PERIOD_DAY,
                         PageRequest.of(0, 1)
                     )
                 val candleEntity = candleEntityList[0]
@@ -287,7 +289,10 @@ class DmAnalysisService(
     /**
      * @return 해당 날짜에 모든 종목에 대한 가격이 존재하면 true
      */
-    private fun isExistStockIndex(stockPriceIndex: Map<StockCode, Map<LocalDate, CandleDto>>, date: LocalDate): Boolean {
+    private fun isExistStockIndex(
+        stockPriceIndex: Map<StockCode, Map<LocalDate, CandleDto>>,
+        date: LocalDate
+    ): Boolean {
         return stockPriceIndex.entries.all { it.value[date] != null }
     }
 
@@ -298,7 +303,11 @@ class DmAnalysisService(
         condition: DmBacktestCondition,
         stockPriceIndex: Map<StockCode, Map<LocalDate, CandleDto>>
     ): List<MomentumScore> {
-        val range = backtestTradeService.fitBacktestRange(condition.stockCodes, condition.tradeCondition.range, condition.maxWeightMonth() + 1)
+        val range = backtestTradeService.fitBacktestRange(
+            condition.stockCodes,
+            condition.tradeCondition.range,
+            condition.maxWeightMonth() + 1
+        )
 //        log.info("범위 조건 변경: ${condition.tradeCondition.range} -> $range")
 //        condition.tradeCondition.range = range
 
@@ -367,7 +376,7 @@ class DmAnalysisService(
 
             log.info(
                 "\t현재 날짜: ${current}: ${stockEntry.key}: ${currentCandle.candleDateTimeStart}~${currentCandle.candleDateTimeEnd} - " +
-                    "O: ${currentCandle.openPrice}, H: ${currentCandle.highPrice}, L: ${currentCandle.lowPrice}, C:${currentCandle.closePrice}, ${currentCandle.periodType}"
+                        "O: ${currentCandle.openPrice}, H: ${currentCandle.highPrice}, L: ${currentCandle.lowPrice}, C:${currentCandle.closePrice}, ${currentCandle.periodType}"
             )
 
             val momentFormula = StringBuilder()
@@ -379,7 +388,7 @@ class DmAnalysisService(
                 log.info("\t\t비교 날짜: [${delta}] ${stockEntry.key} - ${deltaCandle.candleDateTimeStart} - C: ${deltaCandle.closePrice}")
                 log.info(
                     "\t\t$delta -   ${stockEntry.key}: ${deltaCandle.candleDateTimeStart}~${deltaCandle.candleDateTimeEnd} - " +
-                        "직전종가: ${deltaCandle.beforeClosePrice}, O: ${deltaCandle.openPrice}, H: ${deltaCandle.highPrice}, L: ${deltaCandle.lowPrice}, C:${deltaCandle.closePrice}, ${deltaCandle.periodType}, 수익률(현재 종가 / 직전 종가) : ${deltaCandle.getYield()}"
+                            "직전종가: ${deltaCandle.beforeClosePrice}, O: ${deltaCandle.openPrice}, H: ${deltaCandle.highPrice}, L: ${deltaCandle.lowPrice}, C:${deltaCandle.closePrice}, ${deltaCandle.periodType}, 수익률(현재 종가 / 직전 종가) : ${deltaCandle.getYield()}"
                 )
 
                 val score = deltaCandle.closePrice * weight
@@ -616,10 +625,10 @@ class DmAnalysisService(
         val sheet = workbook.createSheet()
 
         val header = "분석기간,거래종목,홀드종목,가중치기간 및 비율,투자비율,최초 투자금액,매수 수수료,매도 수수료," +
-            "조건 설명," +
-            "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,매수 후 샤프지수," +
-            "밴치마크 보유 수익,밴치마크 보유 MDD,밴치마크 보유 CAGR,밴치마크 샤프지수," +
-            "실현 수익,실현 MDD,실현 CAGR,샤프지수,매매 횟수,승률"
+                "조건 설명," +
+                "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,매수 후 샤프지수," +
+                "밴치마크 보유 수익,밴치마크 보유 MDD,밴치마크 보유 CAGR,밴치마크 샤프지수," +
+                "실현 수익,실현 MDD,실현 CAGR,샤프지수,매매 횟수,승률"
         ReportMakerHelperService.applyHeader(sheet, header)
         var rowIdx = 1
 

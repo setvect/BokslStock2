@@ -203,8 +203,8 @@ class VbsBacktest {
         val vbsAnalysisCondition = listOf(
             VbsAnalysisCondition(
                 tradeConditionList = listOf(
-                    makeCondition(StockCode.KODEX_KOSDAQ_2X_233740),
-                    makeCondition(StockCode.KODEX_BANK_091170),
+                    backtestVbs(StockCode.KODEX_KOSDAQ_2X_233740),
+                    backtestVbs(StockCode.KODEX_BANK_091170),
                 ),
                 basic = TradeCondition(
                     range = range,
@@ -250,7 +250,7 @@ class VbsBacktest {
         log.info("끝.")
     }
 
-    private fun makeCondition(stockCode: StockCode): VbsConditionEntity {
+    private fun backtestVbs(stockCode: StockCode): VbsConditionEntity {
         val stock = stockRepository.findByCode(stockCode.code).get()
         val condition = VbsConditionEntity(
             stock = stock,

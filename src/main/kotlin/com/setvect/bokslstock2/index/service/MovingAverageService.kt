@@ -3,11 +3,13 @@ package com.setvect.bokslstock2.index.service
 import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType
+import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
@@ -15,6 +17,7 @@ import java.util.*
 @Service
 class MovingAverageService(
     private val stockRepository: StockRepository,
+    private val candleRepository: CandleRepository
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -29,9 +32,8 @@ class MovingAverageService(
         val stockOptional = stockRepository.findByCode(stockCode.code)
         val stock = stockOptional.orElseThrow { RuntimeException("$stockCode 종목 정보가 없습니다.") }
 
-        val candleList = stock.candleList
+        val candleList = candleRepository.findByRange(stock, group, dateRange.from, dateRange.to)
         val candleGroupMap = candleList
-            .filter { dateRange.isBetween(it.candleDateTime) }
             .groupByTo(TreeMap()) {
                 return@groupByTo ApplicationUtil.fitStartDateTime(group, it.candleDateTime)
             }

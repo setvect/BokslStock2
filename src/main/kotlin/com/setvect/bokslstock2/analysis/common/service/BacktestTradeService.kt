@@ -3,6 +3,7 @@ package com.setvect.bokslstock2.analysis.common.service
 import com.setvect.bokslstock2.analysis.common.model.*
 import com.setvect.bokslstock2.common.model.TradeType
 import com.setvect.bokslstock2.index.entity.CandleEntity
+import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.util.ApplicationUtil
@@ -251,7 +252,11 @@ class BacktestTradeService(
     /**
      * [date]날짜와 가장 가까운 가격을 반환함. 최대 10일 이전까지 가격을 찾고 없으면 예외 발생
      */
-    private fun getBeforeNearPrice(condClosePriceMap: Map<LocalDateTime, Double>, date: LocalDateTime, code: String): Double {
+    private fun getBeforeNearPrice(
+        condClosePriceMap: Map<LocalDateTime, Double>,
+        date: LocalDateTime,
+        code: String
+    ): Double {
         var closePrice: Double? = null
         for (i in 0L..10L) {
             closePrice = condClosePriceMap[date.minusDays(i)]
@@ -360,6 +365,7 @@ class BacktestTradeService(
         return stockCodes.associateWith { stockCode ->
             candleRepository.findByRange(
                 stockRepository.findByCode(stockCode).get(),
+                PeriodType.PERIOD_DAY,
                 range.from,
                 range.to
             )
@@ -394,7 +400,7 @@ class BacktestTradeService(
         var dateRange = backtestRange
 
         stockCodes.forEach { stockCode ->
-            val range = candleRepository.findByMaxMin(stockCode.code)
+            val range = candleRepository.findByMaxMin(stockCode.code, PeriodType.PERIOD_DAY)
             val stockRange = DateRange(range.from.plusMonths(addMonth.toLong()), range.to)
             // 주식 최초 날짜가 백테스트 날짜보다 이전이면 백테스트 날짜 사용, 아니면 주식 최초 날짜 사용
             val from = if (stockRange.from.isBefore(dateRange.from)) dateRange.from else stockRange.from

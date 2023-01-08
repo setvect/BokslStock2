@@ -42,5 +42,6 @@ from (select CA.CODE,
       where 1 = 1
 --         and CA.CODE = '091170'
         and PERIOD_TYPE = 'PERIOD_MINUTE_5'
+        and CB.CANDLE_DATE_TIME > '2022-01-01'
         and FORMATDATETIME(CB.CANDLE_DATE_TIME, 'HH:mm') = '09:05') AA
 group by CODE;
