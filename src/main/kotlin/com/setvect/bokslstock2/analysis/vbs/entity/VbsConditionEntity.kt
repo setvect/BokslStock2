@@ -16,6 +16,7 @@ import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.OrderBy
+import javax.persistence.Transient
 
 /**
  * 변동성돌파 전략 조건
@@ -77,6 +78,12 @@ class VbsConditionEntity(
      */
     @Column(name = "COMMENT", length = 100)
     val comment: String?,
+
+    /**
+     * 갭 상승 시 5분 마다 시세 체크, 직전 5분봉 하락 반전 시 매도
+     */
+    @Transient
+    val stayGapRise: Boolean
 ) : ConditionEntity, BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = AUTO)

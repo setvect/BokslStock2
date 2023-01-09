@@ -58,3 +58,8 @@ dependencies {
 40 8 * * 1-5 /home/setvect/stock-restart.sh >> /home/setvect/restart.log 2>&1
 * 9-15 * * * cd /home/setvect/BokslStock2/bin && ./BokslStock2.sh startNotRunning >> startNotRunning.log
 ```
+
+## 잊어 먹지 말기
+- 네이버 증시차트는 수정주가다
+  - https://finance.naver.com/item/fchart.naver?code=091170
+  - 

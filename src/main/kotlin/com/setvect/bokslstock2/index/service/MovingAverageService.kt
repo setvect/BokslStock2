@@ -35,7 +35,7 @@ class MovingAverageService(
         val stockOptional = stockRepository.findByCode(stockCode.code)
         val stock = stockOptional.orElseThrow { RuntimeException("$stockCode 종목 정보가 없습니다.") }
 
-        val candleList = candleRepository.findByRange(stock.code, groupPeriod, dateRange.from, dateRange.to)
+        val candleList = candleRepository.findByRange(stock.code, selectPeriod, dateRange.from, dateRange.to)
         val candleGroupMap = candleList
             .groupByTo(TreeMap()) {
                 return@groupByTo ApplicationUtil.fitStartDateTime(groupPeriod, it.candleDateTime)

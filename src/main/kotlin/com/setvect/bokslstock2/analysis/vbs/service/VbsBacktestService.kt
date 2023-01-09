@@ -8,8 +8,10 @@ import com.setvect.bokslstock2.common.model.TradeType.BUY
 import com.setvect.bokslstock2.common.model.TradeType.SELL
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType
+import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
+import com.setvect.bokslstock2.util.DateRange
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -23,6 +25,7 @@ class VbsBacktestService(
     val vbsConditionRepository: VbsConditionRepository,
     val vbsTradeRepository: VbsTradeRepository,
     val movingAverageService: MovingAverageService,
+    val candleRepository: CandleRepository
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -50,9 +53,13 @@ class VbsBacktestService(
     }
 
     @Transactional
-    fun runTest(condition: VbsConditionEntity) {
+    fun runTest(condition: VbsConditionEntity, range: DateRange = DateRange.maxRange ) {
         val movingAverageCandle = movingAverageService.getMovingAverage(
-            condition.stock.convertStockCode(), PeriodType.PERIOD_DAY, condition.periodType, listOf(condition.maPeriod)
+            condition.stock.convertStockCode(),
+            PeriodType.PERIOD_MINUTE_5,
+            condition.periodType,
+            listOf(condition.maPeriod),
+            range
         )
 
         var lastBuyInfo: VbsTradeEntity? = null
@@ -67,14 +74,33 @@ class VbsBacktestService(
                 if (condition.gapRisenSkip && beforeCandle.highPrice < currentCandle.openPrice) {
                     continue
                 }
+                log.info("현제 날짜: ${currentCandle.candleDateTimeStart}")
 
                 // 매도
+                var sellPrice = currentCandle.openPrice
+                if (condition.stayGapRise && currentCandle.getOpenYield() > 0) {
+                    val cancelMinute5List = candleRepository.findByRange(
+                        condition.stock.code,
+                        PeriodType.PERIOD_MINUTE_5,
+                        currentCandle.candleDateTimeStart,
+                        currentCandle.candleDateTimeEnd.withHour(23).withMinute(59)
+                    )
+                    cancelMinute5List.forEach {
+                        sellPrice = it.closePrice
+                        // 분봉 종가가 시초가 대비 하락일 경우 여기서 끝냄
+                        if (it.closePrice - it.openPrice < 0) {
+                            return@forEach
+                        }
+                    }
+                }
+
+
                 val sellInfo = VbsTradeEntity(
                     vbsConditionEntity = condition,
                     tradeType = SELL,
                     maPrice = currentCandle.average[condition.maPeriod] ?: 0.0,
-                    yield = ApplicationUtil.getYield(lastBuyInfo.unitPrice, currentCandle.openPrice),
-                    unitPrice = currentCandle.openPrice,
+                    yield = ApplicationUtil.getYield(lastBuyInfo.unitPrice, sellPrice),
+                    unitPrice = sellPrice,
                     tradeDate = currentCandle.candleDateTimeStart
                 )
                 vbsTradeRepository.save(sellInfo)

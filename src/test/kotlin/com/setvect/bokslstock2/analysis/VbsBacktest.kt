@@ -109,7 +109,8 @@ class VbsBacktest {
                         unitAskPrice = 0.01,
                         gapRisenSkip = it.first,
                         onlyOneDayTrade = it.second,
-                        comment = null
+                        comment = null,
+                        stayGapRise = true
                     )
                     vbsBacktestService.saveCondition(condition)
                 }
@@ -201,12 +202,12 @@ class VbsBacktest {
     @Transactional
     fun 일회성_백테스팅_리포트_만듦() {
         // 거래 조건
-        val range = DateRange(LocalDateTime.of(2021, 8, 31, 0, 0), LocalDateTime.now())
+        val range = DateRange(LocalDateTime.of(2021, 8, 30, 0, 0), LocalDateTime.now())
         val vbsAnalysisCondition = listOf(
             VbsAnalysisCondition(
                 tradeConditionList = listOf(
-                    backtestVbs(StockCode.KODEX_KOSDAQ_2X_233740),
-                    backtestVbs(StockCode.KODEX_BANK_091170),
+                    backtestVbs(StockCode.KODEX_KOSDAQ_2X_233740, range),
+                    backtestVbs(StockCode.KODEX_BANK_091170, range),
                 ),
                 basic = TradeCondition(
                     range = range,
@@ -252,7 +253,7 @@ class VbsBacktest {
         log.info("끝.")
     }
 
-    private fun backtestVbs(stockCode: StockCode): VbsConditionEntity {
+    private fun backtestVbs(stockCode: StockCode, range: DateRange): VbsConditionEntity {
         val stock = stockRepository.findByCode(stockCode.code).get()
         val condition = VbsConditionEntity(
             stock = stock,
@@ -262,10 +263,11 @@ class VbsBacktest {
             unitAskPrice = 5.0,
             gapRisenSkip = false,
             onlyOneDayTrade = false,
-            comment = null
+            comment = null,
+            stayGapRise = true
         )
         vbsBacktestService.saveCondition(condition)
-        vbsBacktestService.runTest(condition)
+        vbsBacktestService.runTest(condition, range)
 
         val tradeList = vbsTradeRepository.findByCondition(condition)
         condition.tradeList = tradeList

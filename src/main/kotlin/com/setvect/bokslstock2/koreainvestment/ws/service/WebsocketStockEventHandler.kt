@@ -25,6 +25,7 @@ class WebsocketStockEventHandler(
             log.info("매매 가능 시간이 아닙니다.")
             return
         }
+        // TODO 테스트 실행시 아래 로직 실행 안되게 하기
         tradingWebsocket.open()
     }
 }
