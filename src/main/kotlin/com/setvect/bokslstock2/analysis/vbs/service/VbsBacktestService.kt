@@ -53,7 +53,7 @@ class VbsBacktestService(
     }
 
     @Transactional
-    fun runTest(condition: VbsConditionEntity, range: DateRange = DateRange.maxRange ) {
+    fun runTest(condition: VbsConditionEntity, range: DateRange = DateRange.maxRange) {
         val movingAverageCandle = movingAverageService.getMovingAverage(
             condition.stock.convertStockCode(),
             PeriodType.PERIOD_MINUTE_5,
@@ -78,6 +78,7 @@ class VbsBacktestService(
 
                 // 매도
                 var sellPrice = currentCandle.openPrice
+//                if (condition.stayGapRise) {
                 if (condition.stayGapRise && currentCandle.getOpenYield() > 0) {
                     val cancelMinute5List = candleRepository.findByRange(
                         condition.stock.code,
@@ -85,15 +86,16 @@ class VbsBacktestService(
                         currentCandle.candleDateTimeStart,
                         currentCandle.candleDateTimeEnd.withHour(23).withMinute(59)
                     )
-                    cancelMinute5List.forEach {
-                        sellPrice = it.closePrice
-                        // 분봉 종가가 시초가 대비 하락일 경우 여기서 끝냄
-                        if (it.closePrice - it.openPrice < 0) {
-                            return@forEach
+                    run {
+                        cancelMinute5List.forEach {
+                            sellPrice = it.closePrice
+                            // 분봉 종가가 시초가 대비 하락일 경우 여기서 끝냄
+                            if (it.closePrice - it.openPrice < 0) {
+                                return@run
+                            }
                         }
                     }
                 }
-
 
                 val sellInfo = VbsTradeEntity(
                     vbsConditionEntity = condition,
@@ -101,7 +103,8 @@ class VbsBacktestService(
                     maPrice = currentCandle.average[condition.maPeriod] ?: 0.0,
                     yield = ApplicationUtil.getYield(lastBuyInfo.unitPrice, sellPrice),
                     unitPrice = sellPrice,
-                    tradeDate = currentCandle.candleDateTimeStart
+                    // 당일 거래 판단을 위해 시, 분 정보를 제거함
+                    tradeDate = currentCandle.candleDateTimeStart.withHour(0).withMinute(0)
                 )
                 vbsTradeRepository.save(sellInfo)
                 lastBuyInfo = null
@@ -126,7 +129,8 @@ class VbsBacktestService(
                     maPrice = maPrice,
                     yield = 0.0,
                     unitPrice = targetPrice,
-                    tradeDate = currentCandle.candleDateTimeStart
+                    // 당일 거래 판단을 위해 시, 분 정보를 제거함
+                    tradeDate = currentCandle.candleDateTimeStart.withHour(0).withMinute(0)
                 )
                 vbsTradeRepository.save(lastBuyInfo)
             }

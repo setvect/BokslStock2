@@ -76,7 +76,7 @@ class BacktestTradeService(
                 // 매도 처리
                 // 투자수익금 = 매수금액 * 수익률 - 수수료
                 val buyTrade = buyStock[tradeItem.stockCode.code]
-                    ?: throw RuntimeException("${tradeItem.stockCode.code} 매수 내역이 없습니다.")
+                    ?: throw RuntimeException("${tradeItem.stockCode.code} - ${tradeItem.tradeDate} 매수 내역이 없습니다.")
                 buyStock.remove(tradeItem.stockCode.code)
                 val sellPrice = buyTrade.getBuyAmount() * (1 + tradeItem.yield)
                 val sellFee = sellPrice * condition.feeSell
