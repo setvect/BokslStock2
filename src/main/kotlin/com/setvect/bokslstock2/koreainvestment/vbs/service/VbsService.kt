@@ -67,7 +67,7 @@ class VbsService(
     /**직전 채결가격. 가격 변화를 로그로 찍기 위한 목적 <종목코드, 매수가격>*/
     private var beforePriceMap = mutableMapOf<String, Int>()
 
-    /** 주문 에러가 발생한 시간*/
+    /** 주문 에러가 발생한 시간 <종목코드, 에러 발생 시간>*/
     private val errorOccursTime = mutableMapOf<String, LocalDateTime>()
 
     @Async
@@ -92,7 +92,7 @@ class VbsService(
                 slackMessageService.sendMessage("휴장일입니다.")
                 return
             }
-            checkTrade()
+            settingTargetPrice()
         } finally {
             run = false
         }
@@ -150,12 +150,18 @@ class VbsService(
         assetHistoryRepository.save(assetHistory)
     }
 
-    private fun checkTrade() {
+    /**
+     * 전날 매수 종목 매도
+     */
+    // TODO 목표가 계산
+    private fun settingTargetPrice() {
         var sellOpenFlag = false
         var sell5Flag = false
         targetPriceMap = mapOf()
         while (true) {
             val sellOpenTime = TradeTimeHelper.isOpenPriceSellTime()
+
+            // TODO 아래코드 제거
             val vbsStocks = bokslStockProperties.koreainvestment.vbs.stock
             if (sellOpenTime && !sellOpenFlag) {
                 val openSellStockList = vbsStocks.filter { it.openSell }
@@ -217,6 +223,8 @@ class VbsService(
         }
 
         logChangePrice(realtimeExecution, vbsStock)
+
+        // TODO 메도 check
 
         if (buyCode.contains(realtimeExecution.code)) {
             return

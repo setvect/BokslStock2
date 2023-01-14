@@ -79,7 +79,7 @@ data class BokslStockProperties(
     ) {
         data class VbsStock(
             val code: String,
-            val openSell: Boolean,
+            val openSell: Boolean, // TODO 해당 속성 없애기. 갭상승 유지로 판단
             val k: Double
         ) {
             fun getName(): String? {

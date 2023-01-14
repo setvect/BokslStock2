@@ -10,9 +10,11 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
+import java.time.LocalDate
+import java.time.LocalTime
 
 private const val AUTHORIZATION =
-    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2tlbiIsImF1ZCI6IjQ3Y2JlYmRmLTViOGEtNGRjNi05ZDU2LWI5MDExYWUwODNjOSIsImlzcyI6InVub2d3IiwiZXhwIjoxNjYzNTU5MzY5LCJpYXQiOjE2NjM0NzI5NjksImp0aSI6IlBTbG1MVzEzNHhBSzRBUEdyaXRESE8wUjE1NE9sMmt2NU5DZyJ9.6rKJQrup85eVN-hK9pOwlTySRVxZExSrkou07TLTJWm85eEs0-VF5EnPwcf9VkOO6H26K7Whn0eBPBBYJ6MS0w"
+    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2tlbiIsImF1ZCI6IjM0Nzk2YTc3LTVhMjEtNGI3ZC1iMWZjLWJlMjI2MjI5MDczNSIsImlzcyI6InVub2d3IiwiZXhwIjoxNjczNzI5OTYwLCJpYXQiOjE2NzM2NDM1NjAsImp0aSI6IlBTbG1MVzEzNHhBSzRBUEdyaXRESE8wUjE1NE9sMmt2NU5DZyJ9.IIwxuJf2ABkrpQFc6LnPqNOgC_ecBb8zkz27TusKlV98NLgnHpajNboM_hFiHVFQ1p1lcWE7ZUFGMShhXsflkw"
 
 @SpringBootTest
 @ActiveProfiles("local")
@@ -40,13 +42,30 @@ internal class StockClientServiceTest {
 
     @Test
     fun requestCurrentPrice() {
-        val currentPrice = stockClientService.requestCurrentPrice(CurrentPriceRequest(StockCode.KODEX_200_069500.code), AUTHORIZATION)
+        val currentPrice =
+            stockClientService.requestCurrentPrice(CurrentPriceRequest(StockCode.KODEX_200_069500.code), AUTHORIZATION)
         log.info(currentPrice.toString())
     }
 
     @Test
     fun requestDatePrice() {
-        val datePrice = stockClientService.requestDatePrice(DatePriceRequest(StockCode.KODEX_200_069500.code, DatePriceRequest.DateType.DAY), AUTHORIZATION)
+        val datePrice = stockClientService.requestDatePrice(
+            DatePriceRequest(
+                StockCode.KODEX_200_069500.code,
+                DatePriceRequest.DateType.DAY
+            ), AUTHORIZATION
+        )
+        log.info(datePrice.toString())
+    }
+
+    @Test
+    fun requestMinutePrice() {
+        val datePrice = stockClientService.requestMinutePrice(
+            MinutePriceRequest(
+                StockCode.KODEX_200_069500.code,
+                LocalTime.of(10, 10, 0)
+            ), AUTHORIZATION
+        )
         log.info(datePrice.toString())
     }
 
@@ -58,7 +77,10 @@ internal class StockClientServiceTest {
 
     @Test
     fun requestBalance() {
-        val balance = stockClientService.requestBalance(BalanceRequest(bokslStockProperties.koreainvestment.vbs.accountNo), AUTHORIZATION)
+        val balance = stockClientService.requestBalance(
+            BalanceRequest(bokslStockProperties.koreainvestment.vbs.accountNo),
+            AUTHORIZATION
+        )
         log.info(balance.toString())
     }
 
@@ -80,7 +102,10 @@ internal class StockClientServiceTest {
 
     @Test
     fun requestCancelableList() {
-        val balance = stockClientService.requestCancelableList(CancelableRequest(bokslStockProperties.koreainvestment.vbs.accountNo), AUTHORIZATION)
+        val balance = stockClientService.requestCancelableList(
+            CancelableRequest(bokslStockProperties.koreainvestment.vbs.accountNo),
+            AUTHORIZATION
+        )
         log.info(balance.toString())
     }
 }
