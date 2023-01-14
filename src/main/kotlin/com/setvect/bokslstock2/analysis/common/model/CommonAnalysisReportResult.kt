@@ -1,8 +1,8 @@
 package com.setvect.bokslstock2.analysis.common.model
 
 import com.setvect.bokslstock2.util.ApplicationUtil
-import java.time.LocalDateTime
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
+import java.time.LocalDateTime
 import kotlin.math.sqrt
 import kotlin.streams.toList
 
@@ -69,7 +69,10 @@ data class CommonAnalysisReportResult(
             YieldRateItem(
                 baseDate = it.key,
                 buyHoldYield = ApplicationUtil.getYield(it.value.first().buyHoldRate, it.value.last().buyHoldRate),
-                benchmarkYield = ApplicationUtil.getYield(it.value.first().benchmarkRate, it.value.last().benchmarkRate),
+                benchmarkYield = ApplicationUtil.getYield(
+                    it.value.first().benchmarkRate,
+                    it.value.last().benchmarkRate
+                ),
                 backtestYield = ApplicationUtil.getYield(it.value.first().backtestRate, it.value.last().backtestRate),
             )
         }

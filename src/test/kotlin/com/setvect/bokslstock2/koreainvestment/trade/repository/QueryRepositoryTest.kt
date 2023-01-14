@@ -45,7 +45,8 @@ internal class QueryRepositoryTest {
 
     @Test
     fun pageAssetPeriodHistory() {
-        val page = assetHistorySelectRepository.pageAssetPeriodHistory(AssetPeriodHistorySearchForm(), PageRequest.of(0, 3))
+        val page =
+            assetHistorySelectRepository.pageAssetPeriodHistory(AssetPeriodHistorySearchForm(), PageRequest.of(0, 3))
         log.info("##################################### ${page.totalElements}")
         page.forEach {
             println(it)

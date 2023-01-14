@@ -1,10 +1,10 @@
 package com.setvect.bokslstock2.poi
 
-import java.io.FileOutputStream
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.junit.jupiter.api.Test
+import java.io.FileOutputStream
 
-class ExcelTest{
+class ExcelTest {
     @Test
     fun makeExcel() {
         val workBook = XSSFWorkbook()

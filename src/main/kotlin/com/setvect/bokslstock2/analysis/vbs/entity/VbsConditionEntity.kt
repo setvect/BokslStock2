@@ -5,18 +5,9 @@ import com.setvect.bokslstock2.analysis.common.entity.ConditionEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 import org.hibernate.annotations.Type
-import javax.persistence.Column
-import javax.persistence.Entity
+import javax.persistence.*
 import javax.persistence.EnumType.STRING
-import javax.persistence.Enumerated
-import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType.AUTO
-import javax.persistence.Id
-import javax.persistence.JoinColumn
-import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
-import javax.persistence.OrderBy
-import javax.persistence.Transient
 
 /**
  * 변동성돌파 전략 조건

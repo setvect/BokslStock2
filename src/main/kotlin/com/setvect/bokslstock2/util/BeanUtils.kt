@@ -32,5 +32,5 @@ object BeanUtils {
      */
     private val applicationContext: ApplicationContext
         private get() = ApplicationContextProvider.applicationContext
-                ?: throw NullPointerException("ApplicationContext not initialized.")
+            ?: throw NullPointerException("ApplicationContext not initialized.")
 }

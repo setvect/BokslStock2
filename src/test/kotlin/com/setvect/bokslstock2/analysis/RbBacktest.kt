@@ -153,7 +153,12 @@ class RbBacktest {
             .map {
                 val range = DateRange(LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now())
                 val priceRange =
-                    candleRepository.findByCandleDateTimeBetween(listOf(it.stock.code), PERIOD_DAY, range.from, range.to)
+                    candleRepository.findByCandleDateTimeBetween(
+                        listOf(it.stock.code),
+                        PERIOD_DAY,
+                        range.from,
+                        range.to
+                    )
 
                 val vbsAnalysisCondition = RbAnalysisCondition(
                     tradeConditionList = listOf(it),

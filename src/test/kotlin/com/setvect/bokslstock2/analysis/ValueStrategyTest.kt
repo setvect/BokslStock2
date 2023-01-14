@@ -13,7 +13,7 @@ class ValueStrategyTest {
     private lateinit var valueAnalysisService: ValueAnalysisService
 
     @Test
-    fun runTest(){
+    fun runTest() {
         valueAnalysisService.analysis()
     }
 

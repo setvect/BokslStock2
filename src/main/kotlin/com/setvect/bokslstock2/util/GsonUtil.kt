@@ -25,34 +25,42 @@ object GsonUtil {
             val name = f.name.replace("(\\d+)".toRegex(), "_$1")
             separateCamelCase(name, "_").lowercase()
         }
-        gsonBuilder.registerTypeAdapter(LocalDateTime::class.java, JsonDeserializer { json: JsonElement?, _: Type?, _: JsonDeserializationContext? ->
-            var dateTimeString = getString(json!!)
-            // 날짜 표현 문자열 일관성 맞추기
-            if (dateTimeString.length == "2021-05-15T11:26:30+09:00".length) {
-                dateTimeString = dateTimeString.substring(0, 19)
-            }
-            DateUtil.getLocalDateTime(dateTimeString, DateUtil.yyyy_MM_ddTHH_mm_ss)
-        } as JsonDeserializer<LocalDateTime>)
+        gsonBuilder.registerTypeAdapter(
+            LocalDateTime::class.java,
+            JsonDeserializer { json: JsonElement?, _: Type?, _: JsonDeserializationContext? ->
+                var dateTimeString = getString(json!!)
+                // 날짜 표현 문자열 일관성 맞추기
+                if (dateTimeString.length == "2021-05-15T11:26:30+09:00".length) {
+                    dateTimeString = dateTimeString.substring(0, 19)
+                }
+                DateUtil.getLocalDateTime(dateTimeString, DateUtil.yyyy_MM_ddTHH_mm_ss)
+            } as JsonDeserializer<LocalDateTime>)
 
-        gsonBuilder.registerTypeAdapter(LocalDate::class.java, JsonDeserializer { json: JsonElement?, _: Type?, _: JsonDeserializationContext? ->
-            val dateString = getString(json!!)
-            if (dateString.length == 10) {
-                return@JsonDeserializer DateUtil.getLocalDate(dateString, DateUtil.yyyy_MM_dd)
-            }
-            DateUtil.getLocalDate(dateString, DateUtil.yyyyMMdd)
-        } as JsonDeserializer<LocalDate>)
+        gsonBuilder.registerTypeAdapter(
+            LocalDate::class.java,
+            JsonDeserializer { json: JsonElement?, _: Type?, _: JsonDeserializationContext? ->
+                val dateString = getString(json!!)
+                if (dateString.length == 10) {
+                    return@JsonDeserializer DateUtil.getLocalDate(dateString, DateUtil.yyyy_MM_dd)
+                }
+                DateUtil.getLocalDate(dateString, DateUtil.yyyyMMdd)
+            } as JsonDeserializer<LocalDate>)
 
-        gsonBuilder.registerTypeAdapter(LocalTime::class.java, JsonDeserializer { json: JsonElement?, _: Type?, _: JsonDeserializationContext? ->
-            val timeStr = getString(json!!)
-            if (timeStr.length == "12:00:00".length) {
-                return@JsonDeserializer DateUtil.getLocalTime(timeStr, DateUtil.HH_mm_ss)
-            }
-            DateUtil.getLocalTime(timeStr, DateUtil.HHmmss)
-        } as JsonDeserializer<LocalTime>)
+        gsonBuilder.registerTypeAdapter(
+            LocalTime::class.java,
+            JsonDeserializer { json: JsonElement?, _: Type?, _: JsonDeserializationContext? ->
+                val timeStr = getString(json!!)
+                if (timeStr.length == "12:00:00".length) {
+                    return@JsonDeserializer DateUtil.getLocalTime(timeStr, DateUtil.HH_mm_ss)
+                }
+                DateUtil.getLocalTime(timeStr, DateUtil.HHmmss)
+            } as JsonDeserializer<LocalTime>)
 
-        gsonBuilder.registerTypeAdapter(LocalDateTime::class.java, JsonSerializer { localDateTime: LocalDateTime?, _: Type?, _: JsonSerializationContext? ->
-            JsonPrimitive(DateUtil.format(localDateTime!!, DateUtil.yyyy_MM_ddTHH_mm_ss))
-        })
+        gsonBuilder.registerTypeAdapter(
+            LocalDateTime::class.java,
+            JsonSerializer { localDateTime: LocalDateTime?, _: Type?, _: JsonSerializationContext? ->
+                JsonPrimitive(DateUtil.format(localDateTime!!, DateUtil.yyyy_MM_ddTHH_mm_ss))
+            })
 
         GSON = gsonBuilder.create()
     }

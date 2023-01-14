@@ -112,11 +112,11 @@ class VbsService(
         val stockInfo = balanceResponse!!.holdings.map { stock ->
             total += stock.evluAmt
             return@map "- ${stock.prdtName}(${stock.code})\n" +
-                "  ㆍ수량: ${comma(stock.hldgQty)}\n" +
-                "  ㆍ수익률: ${percent(stock.evluPflsRt)}\n" +
-                "  ㆍ매입금액: ${comma(stock.pchsAmt)}\n" +
-                "  ㆍ평가금액: ${comma(stock.evluAmt)}\n" +
-                "  ㆍ평가손익: ${comma(stock.evluPflsAmt)}\n"
+                    "  ㆍ수량: ${comma(stock.hldgQty)}\n" +
+                    "  ㆍ수익률: ${percent(stock.evluPflsRt)}\n" +
+                    "  ㆍ매입금액: ${comma(stock.pchsAmt)}\n" +
+                    "  ㆍ평가금액: ${comma(stock.evluAmt)}\n" +
+                    "  ㆍ평가손익: ${comma(stock.evluPflsAmt)}\n"
         }.joinToString("\n")
 
         val deposit = balanceResponse!!.deposit[0].prvsRcdlExccAmt
@@ -179,7 +179,10 @@ class VbsService(
             if (TradeTimeHelper.isBuyTimeRange()) {
                 val targetPriceMessage = StringBuilder()
                 targetPriceMap = vbsStocks.associate { stock ->
-                    val stockClientService = stockClientService.requestDatePrice(DatePriceRequest(stock.code, DatePriceRequest.DateType.DAY), tokenService.getAccessToken())
+                    val stockClientService = stockClientService.requestDatePrice(
+                        DatePriceRequest(stock.code, DatePriceRequest.DateType.DAY),
+                        tokenService.getAccessToken()
+                    )
                     val openPrice = stockClientService.output!![0].stckOprc
                     val beforeDayHigh = stockClientService.output[1].stckHgpr
                     val beforeDayLow = stockClientService.output[1].stckLwpr
@@ -190,8 +193,8 @@ class VbsService(
 
                     targetPriceMessage.append(
                         "${stock.getName()}(${stock.code})\n" +
-                            "  - 시초가: ${comma(stockClientService.output[0].stckOprc)}\n" +
-                            "  - 목표가: ${comma(targetPrice)}\n"
+                                "  - 시초가: ${comma(stockClientService.output[0].stckOprc)}\n" +
+                                "  - 목표가: ${comma(targetPrice)}\n"
                     )
 
                     stock.code to targetPrice
@@ -216,7 +219,9 @@ class VbsService(
         }
 
         val realtimeExecution = RealtimeExecution.parsing(wsResponse.responseData)
-        val vbsStock = bokslStockProperties.koreainvestment.vbs.stock.stream().filter { it.code == realtimeExecution.code }.findAny().orElse(null)
+        val vbsStock =
+            bokslStockProperties.koreainvestment.vbs.stock.stream().filter { it.code == realtimeExecution.code }
+                .findAny().orElse(null)
         if (vbsStock == null) {
             log.warn("매수 대상종목이 아닌데 실시간 체결 이벤트 수신. 종목 코드: ${realtimeExecution.code}")
             return
@@ -255,7 +260,10 @@ class VbsService(
      * @return 개장일이면 true
      */
     private fun isTradingDay(): Boolean {
-        val requestQuote = stockClientService.requestQuote(QuoteRequest(StockCode.KODEX_200_069500.code), tokenService.getAccessToken())
+        val requestQuote = stockClientService.requestQuote(
+            QuoteRequest(StockCode.KODEX_200_069500.code),
+            tokenService.getAccessToken()
+        )
         return requestQuote.output1 != null && requestQuote.output1.askp1 != "0"
     }
 
@@ -268,7 +276,13 @@ class VbsService(
     ) {
         val beforePrice = beforePriceMap.getOrDefault(vbsStock.code, 0)
         if (beforePrice != realtimeExecution.stckPrpr) {
-            log.info("${vbsStock.getName()}(${vbsStock.code}): ${comma(beforePrice)} -> ${comma(realtimeExecution.stckPrpr)} (${percent(realtimeExecution.prdyCtrt)}) (매수 목표가: ${comma(targetPriceMap[vbsStock.code] ?: 0)})")
+            log.info(
+                "${vbsStock.getName()}(${vbsStock.code}): ${comma(beforePrice)} -> ${comma(realtimeExecution.stckPrpr)} (${
+                    percent(
+                        realtimeExecution.prdyCtrt
+                    )
+                }) (매수 목표가: ${comma(targetPriceMap[vbsStock.code] ?: 0)})"
+            )
             beforePriceMap[vbsStock.code] = realtimeExecution.stckPrpr
         }
     }
@@ -281,13 +295,15 @@ class VbsService(
 
         val deposit = balanceResponse!!.deposit[0].prvsRcdlExccAmt
         val vbsConfig = bokslStockProperties.koreainvestment.vbs
-        val buyCash = ApplicationUtil.getBuyCash(buyCode.size, deposit.toDouble(), vbsConfig.stock.size, vbsConfig.investRatio).toLong()
+        val buyCash =
+            ApplicationUtil.getBuyCash(buyCode.size, deposit.toDouble(), vbsConfig.stock.size, vbsConfig.investRatio)
+                .toLong()
 
         val ordqty = (buyCash / targetPrice).toInt()
 
         val message = "[매수 주문] ${vbsStock.getName()}(${vbsStock.code}), " +
-            "주문가: ${comma(targetPrice)}, " +
-            "수량: ${comma(ordqty)}"
+                "주문가: ${comma(targetPrice)}, " +
+                "수량: ${comma(ordqty)}"
 
         log.info(message)
 
@@ -344,10 +360,10 @@ class VbsService(
 
             val yieldValue = ApplicationUtil.getYield(stock.pchsAvgPric.toInt(), bidPrice)
             val message = "[매도 주문] ${stock.prdtName}(${stock.code}), " +
-                "주문가: ${comma(sellPrice)}, " +
-                "매수평단가: ${comma(stock.pchsAvgPric.toInt())}, " +
-                "수량: ${comma(stock.hldgQty)}, " +
-                "수익률(추정): ${percent(yieldValue * 100)}"
+                    "주문가: ${comma(sellPrice)}, " +
+                    "매수평단가: ${comma(stock.pchsAvgPric.toInt())}, " +
+                    "수량: ${comma(stock.hldgQty)}, " +
+                    "수익률(추정): ${percent(yieldValue * 100)}"
             log.info(message)
             val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
 
@@ -395,7 +411,8 @@ class VbsService(
             quoteResponse.output2!!.expectedPrice
         } else {
             // TODO 호가창 기준으로 조회
-            val requestCurrentPrice = stockClientService.requestCurrentPrice(CurrentPriceRequest(code), tokenService.getAccessToken())
+            val requestCurrentPrice =
+                stockClientService.requestCurrentPrice(CurrentPriceRequest(code), tokenService.getAccessToken())
             requestCurrentPrice.output!!.stckPrpr
         }
     }
@@ -417,7 +434,8 @@ class VbsService(
         }
         loadBalance()
         val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
-        val cancelableStock = stockClientService.requestCancelableList(CancelableRequest(accountNo), tokenService.getAccessToken())
+        val cancelableStock =
+            stockClientService.requestCancelableList(CancelableRequest(accountNo), tokenService.getAccessToken())
         initBuyCode(cancelableStock)
         val message = StringBuilder()
 
@@ -425,10 +443,10 @@ class VbsService(
 
         val balanceMessage = balanceResponse!!.holdings.joinToString("\n") {
             "보유종목: ${StockCode.findByCodeOrNull(it.code)?.desc}(${it.code}), " +
-                "수량 ${comma(it.hldgQty)}, " +
-                "수익률 ${percent(it.evluPflsRt)}, " +
-                "매입금액 ${comma(it.pchsAmt)}, " +
-                "평가금액 ${comma(it.evluAmt)}"
+                    "수량 ${comma(it.hldgQty)}, " +
+                    "수익률 ${percent(it.evluPflsRt)}, " +
+                    "매입금액 ${comma(it.pchsAmt)}, " +
+                    "평가금액 ${comma(it.evluAmt)}"
         }
         message.append(balanceMessage)
 

@@ -42,6 +42,6 @@ data class CompanyDetail(
         val dvr: Double?,
         // 배당성향
         val dvrPayout: Double?,
-        )
+    )
 
 }

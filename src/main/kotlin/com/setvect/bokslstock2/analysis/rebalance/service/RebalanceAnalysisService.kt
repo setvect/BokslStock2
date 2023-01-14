@@ -40,7 +40,10 @@ class RebalanceAnalysisService(
 
         val conditionResults = conditionList.map { backtestCondition ->
             checkValidate(backtestCondition)
-            val range = backtestTradeService.fitBacktestRange(backtestCondition.stockCodes.map { it.stockCode }, backtestCondition.tradeCondition.range)
+            val range = backtestTradeService.fitBacktestRange(
+                backtestCondition.stockCodes.map { it.stockCode },
+                backtestCondition.tradeCondition.range
+            )
             log.info("범위 조건 변경: ${backtestCondition.tradeCondition.range} -> $range")
             backtestCondition.tradeCondition.range = range
 
@@ -121,18 +124,18 @@ class RebalanceAnalysisService(
         rebalanceTradeHistory.forEach { trade ->
             log.info(
                 "날짜: ${trade.date}, " +
-                    "종가 평가가격: ${trade.getEvalPriceClose()}, " +
-                    "편차: ${String.format("%,.4f", trade.deviation())}, " +
-                    "리벨런싱: ${trade.rebalance}"
+                        "종가 평가가격: ${trade.getEvalPriceClose()}, " +
+                        "편차: ${String.format("%,.4f", trade.deviation())}, " +
+                        "리벨런싱: ${trade.rebalance}"
             )
             trade.buyStocks.forEach { stock ->
                 log.info(
                     "\t종목:${stock.candle.stockCode}, " +
-                        "수량: ${stock.qty}, " +
-                        "종가: ${stock.candle.closePrice}, " +
-                        "평가금액: ${stock.getEvalPriceClose()}, " +
-                        "설정비중: ${stock.weight}%, " +
-                        "현재비중: ${String.format("%,.3f%%", stock.realWeight(trade.getEvalPriceCloseWithoutCash()))}",
+                            "수량: ${stock.qty}, " +
+                            "종가: ${stock.candle.closePrice}, " +
+                            "평가금액: ${stock.getEvalPriceClose()}, " +
+                            "설정비중: ${stock.weight}%, " +
+                            "현재비중: ${String.format("%,.3f%%", stock.realWeight(trade.getEvalPriceCloseWithoutCash()))}",
                 )
             }
         }

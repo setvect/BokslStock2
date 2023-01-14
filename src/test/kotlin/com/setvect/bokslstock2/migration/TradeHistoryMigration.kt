@@ -49,7 +49,7 @@ class TradeHistoryMigration {
                 val qty = row.getCell(2).numericCellValue.toInt()
                 val buyUnitPrice = row.getCell(3).numericCellValue
                 val memo = row.getCell(15).stringCellValue
-    
+
                 log.info("rowCount: $rowCount")
                 log.info(
                     """

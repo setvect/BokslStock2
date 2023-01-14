@@ -11,8 +11,8 @@ import javax.persistence.GenerationType.SEQUENCE
 @Entity
 @Table(
     name = "CA_STOCK", uniqueConstraints = [
-    UniqueConstraint(name = "UC_STOCK_ENTITY_CODE", columnNames = ["CODE"])
-]
+        UniqueConstraint(name = "UC_STOCK_ENTITY_CODE", columnNames = ["CODE"])
+    ]
 )
 class StockEntity(
     /**

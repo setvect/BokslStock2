@@ -123,8 +123,8 @@ object ReportMakerHelperService {
     ): XSSFSheet {
         val sheet = workbook.createSheet()
         val header = "날짜,Buy&Hold 평가금,밴치마크 평가금,백테스트 평가금" +
-            ",Buy&Hold 일일 수익률,밴치마크 일일 수익률,백테스트 일일 수익률" +
-            ",Buy&Hold Maxdrawdown,밴치마크 Maxdrawdown,백테스트 Maxdrawdown"
+                ",Buy&Hold 일일 수익률,밴치마크 일일 수익률,백테스트 일일 수익률" +
+                ",Buy&Hold Maxdrawdown,밴치마크 Maxdrawdown,백테스트 Maxdrawdown"
         applyHeader(sheet, header)
         var rowIdx = 1
 

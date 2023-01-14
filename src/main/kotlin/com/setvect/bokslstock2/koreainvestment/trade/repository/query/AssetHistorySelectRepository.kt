@@ -65,7 +65,10 @@ class AssetHistorySelectRepository(
         return PageImpl(result, pageable, count!!)
     }
 
-    fun pageAssetPeriodHistory(searchForm: AssetPeriodHistorySearchForm, pageable: Pageable): Page<AssetPeriodHistoryDto> {
+    fun pageAssetPeriodHistory(
+        searchForm: AssetPeriodHistorySearchForm,
+        pageable: Pageable
+    ): Page<AssetPeriodHistoryDto> {
         val result = queryFactory
             .from(assetHistoryEntity)
             .select(

@@ -26,7 +26,11 @@ object RebalanceReportHelper {
         val append =
             "_${stockCodes.joinToString { it.stockCode.code }}_${rebalanceFacter.periodType},${rebalanceFacter.threshold}"
 
-        val reportFileSubPrefix = ReportMakerHelperService.getReportFileSuffix(backtestCondition.tradeCondition, backtestCondition.listStock(), append)
+        val reportFileSubPrefix = ReportMakerHelperService.getReportFileSuffix(
+            backtestCondition.tradeCondition,
+            backtestCondition.listStock(),
+            append
+        )
         val reportFile = File(
             "./backtest-result/rebalance-trade-report",
             "rebalance_trade_${reportFileSubPrefix}"
@@ -140,10 +144,10 @@ object RebalanceReportHelper {
         val sheet = workbook.createSheet()
 
         val header = "분석기간,거래종목,리벨런싱주기,리벨런싱입계치,종복별비율,투자비율,최초 투자금액,매수 수수료,매도 수수료," +
-            "조건 설명," +
-            "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,매수 후 샤프지수," +
-            "밴치마크 보유 수익,밴치마크 보유 MDD,밴치마크 보유 CAGR,밴치마크 샤프지수," +
-            "실현 수익,실현 MDD,실현 CAGR,샤프지수,매매 횟수,승률"
+                "조건 설명," +
+                "매수 후 보유 수익,매수 후 보유 MDD,매수 후 보유 CAGR,매수 후 샤프지수," +
+                "밴치마크 보유 수익,밴치마크 보유 MDD,밴치마크 보유 CAGR,밴치마크 샤프지수," +
+                "실현 수익,실현 MDD,실현 CAGR,샤프지수,매매 횟수,승률"
         ReportMakerHelperService.applyHeader(sheet, header)
         var rowIdx = 1
 
