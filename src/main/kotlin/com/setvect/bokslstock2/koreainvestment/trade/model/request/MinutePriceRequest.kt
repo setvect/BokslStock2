@@ -14,5 +14,5 @@ data class MinutePriceRequest(
     val time: LocalTime
 ) {
     @JsonIgnore
-    val stockTransaction: StockTransaction = StockTransaction.DATE_PRICE
+    val stockTransaction: StockTransaction = StockTransaction.MINUTE_PRICE
 }

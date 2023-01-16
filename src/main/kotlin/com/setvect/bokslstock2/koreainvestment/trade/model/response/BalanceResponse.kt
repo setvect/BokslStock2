@@ -24,13 +24,13 @@ data class BalanceResponse(
         /**매매구분명*/
         @JsonProperty("trad_dvsn_name") val tradDvsnName: String,
         /**전일매수수량*/
-        @JsonProperty("bfdy_buy_qty") val bfdyBuyQty: String,
+        @JsonProperty("bfdy_buy_qty") val bfdyBuyQty: Int,
         /**전일매도수량*/
-        @JsonProperty("bfdy_sll_qty") val bfdySllQty: String,
+        @JsonProperty("bfdy_sll_qty") val bfdySllQty: Int,
         /**금일매수수량*/
-        @JsonProperty("thdt_buyqty") val thdtBuyqty: String,
+        @JsonProperty("thdt_buyqty") val thdtBuyqty: Int,
         /**금일매도수량*/
-        @JsonProperty("thdt_sll_qty") val thdtSllQty: String,
+        @JsonProperty("thdt_sll_qty") val thdtSllQty: Int,
         /**보유수량*/
         @JsonProperty("hldg_qty") val hldgQty: Int,
         /**주문가능수량*/

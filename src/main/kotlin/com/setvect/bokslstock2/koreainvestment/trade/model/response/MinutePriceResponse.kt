@@ -1,11 +1,13 @@
 package com.setvect.bokslstock2.koreainvestment.trade.model.response
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.setvect.bokslstock2.util.DateUtil
+import java.time.LocalDateTime
 
 data class MinutePriceResponse(
 
-    @JsonProperty("output1") val output1: StockPrice?,
-    @JsonProperty("output2") val output2: List<MinutePrice>?,
+    @JsonProperty("output1") val output1: StockPrice,
+    @JsonProperty("output2") val output2: List<MinutePrice>,
     @JsonProperty("rt_cd") val rtCd: String,
     @JsonProperty("msg_cd") val msgCd: String,
     @JsonProperty("msg1") val msg1: String
@@ -28,7 +30,7 @@ data class MinutePriceResponse(
         /**HTS 한글 종목명*/
         @JsonProperty("hts_kor_isnm") val htsKorIsnm: String,
         /**주식 현재가*/
-        @JsonProperty("stck_prpr") val stckPrpr: String,
+        @JsonProperty("stck_prpr") val stckPrpr: Int,
     )
 
     /**
@@ -40,16 +42,23 @@ data class MinutePriceResponse(
         /**주식 체결 시간*/
         @JsonProperty("stck_cntg_hour") val stckCntgHour: String,
         /**누적 거래 대금*/
-        @JsonProperty("acml_tr_pbmn") val acmlTrPbmn: String,
+        @JsonProperty("acml_tr_pbmn") val acmlTrPbmn: Long,
         /**주식 현재가*/
-        @JsonProperty("stck_prpr") val stckPrpr: String,
+        @JsonProperty("stck_prpr") val stckPrpr: Int,
         /**주식 시가2*/
-        @JsonProperty("stck_oprc") val stckOprc: String,
+        @JsonProperty("stck_oprc") val stckOprc: Int,
         /**주식 최고가*/
-        @JsonProperty("stck_hgpr") val stckHgpr: String,
+        @JsonProperty("stck_hgpr") val stckHgpr: Int,
         /**주식 최저가*/
-        @JsonProperty("stck_lwpr") val stckLwpr: String,
+        @JsonProperty("stck_lwpr") val stckLwpr: Int,
         /**체결 거래량*/
-        @JsonProperty("cntg_vol") val cntgVol: String,
-    )
+        @JsonProperty("cntg_vol") val cntgVol: Int
+    ) {
+        /**
+         * @return 기준 시간
+         */
+        fun baseTime(): LocalDateTime {
+            return DateUtil.getLocalDateTime(stckBsopDate + stckCntgHour, "yyyyMMddHHmmss")
+        }
+    }
 }

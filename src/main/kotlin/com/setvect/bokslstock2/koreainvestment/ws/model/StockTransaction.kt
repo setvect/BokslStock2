@@ -12,6 +12,9 @@ enum class StockTransaction(
     /** 일자별 가격 */
     DATE_PRICE("FHKST01010400"),
 
+    /** 분봉 가격 */
+    MINUTE_PRICE("FHKST03010200"),
+
     /** 잔고 조회 */
     BALANCE("TTTC8434R"),
 
