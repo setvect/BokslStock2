@@ -2,10 +2,7 @@ package com.setvect.bokslstock2.koreainvestment.trade.service
 
 import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.config.BokslStockProperties
-import com.setvect.bokslstock2.index.dto.CandleDto
-import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.koreainvestment.trade.model.request.*
-import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.JsonUtil
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -18,7 +15,7 @@ import java.time.LocalTime
 import java.util.*
 
 private const val AUTHORIZATION =
-    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2tlbiIsImF1ZCI6IjYyNDNhNzM0LWVlYmItNGFhZC05ODBiLThkYzEyYzhhZjNkYyIsImlzcyI6InVub2d3IiwiZXhwIjoxNjczOTEwMjMxLCJpYXQiOjE2NzM4MjM4MzEsImp0aSI6IlBTbG1MVzEzNHhBSzRBUEdyaXRESE8wUjE1NE9sMmt2NU5DZyJ9.WOuJtu6fljCkPMW7E-aLVgWdFD1b3wHELyJwgZwkJhHGeBulbCaiVjzPxRXkN_CSJ16NOeIFsr_Flpml4roOvQ"
+    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2tlbiIsImF1ZCI6ImYxNjQ2MDc2LTRlNzQtNDA5MC05MDgwLWJjZDc2ZWZiNTZmNiIsImlzcyI6InVub2d3IiwiZXhwIjoxNjczOTk5MTAwLCJpYXQiOjE2NzM5MTI3MDAsImp0aSI6IlBTbG1MVzEzNHhBSzRBUEdyaXRESE8wUjE1NE9sMmt2NU5DZyJ9.WLmHzayDcvCEoWWibwzysaGy8yXR_KsDglr2hGL0vf3fuffaYI6h3dHNNvzdQ85JnSRx522XCMF-Dqzopue-NA"
 
 @SpringBootTest
 @ActiveProfiles("local")
@@ -69,42 +66,10 @@ internal class StockClientServiceTest {
         val minutePrice = stockClientService.requestMinutePrice(
             MinutePriceRequest(
                 stockCode.code,
-                LocalTime.of(9, 11, 0)
+                LocalTime.of(9, 29, 0)
             ), AUTHORIZATION
         )
-//        val json = JsonUtil.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(minutePrice)
-//        log.info(json)
-
-        // 과거 데이터를 먼저 처리 하기 위해 reversed() 적용
-        val candleGroupMap = minutePrice.output2.reversed().groupByTo(TreeMap()) {
-            return@groupByTo ApplicationUtil.fitStartDateTime(PeriodType.PERIOD_MINUTE_5, it.baseTime())
-        }
-
-        val candleGroupList = candleGroupMap.entries.map { Pair(it.key, it.value) }
-
-        val groupingCandleList = mutableListOf<CandleDto>()
-        for (i in candleGroupList.indices) {
-            val beforeCandle = if (i == 0) {
-                candleGroupList[i]
-            } else {
-                candleGroupList[i - 1]
-            }
-            val candleGroup = candleGroupList[i]
-            val candle = CandleDto(
-                stockCode = stockCode,
-                candleDateTimeStart = candleGroup.second.first().baseTime(),
-                candleDateTimeEnd = candleGroup.second.last().baseTime(),
-                beforeCandleDateTimeEnd = beforeCandle.second.last().baseTime(),
-                beforeClosePrice = beforeCandle.second.last().stckPrpr.toDouble(),
-                openPrice = candleGroup.second.first().stckOprc.toDouble(),
-                highPrice = candleGroup.second.maxOf { p -> p.stckHgpr.toDouble() },
-                lowPrice = candleGroup.second.minOf { p -> p.stckLwpr.toDouble() },
-                closePrice = candleGroup.second.last().stckPrpr.toDouble(),
-                periodType = PeriodType.PERIOD_MINUTE_5
-            )
-            groupingCandleList.add(candle)
-        }
-
+        val groupingCandleList = PriceGroupService.groupByMinute5(minutePrice, stockCode)
         val json = JsonUtil.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(groupingCandleList)
         log.info(json)
     }
