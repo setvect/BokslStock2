@@ -69,8 +69,8 @@ com:
               k: 0.2
 
       restTemplate:
-        connectionTimeoutMs: 1000
-        readTimeoutMs: 1000
+        connectionTimeoutMs: 5000
+        readTimeoutMs: 5000
 
       slack:
         # 이벤트 발생시 슬랙메시지 전달 여부
