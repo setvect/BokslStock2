@@ -17,6 +17,13 @@ class VbsStockSchedule(
         vbsService.start()
     }
 
+    // 월~금 매일 09:00 ~ 14:00 까지 5분 마다 실행. 15:20 이후 장 종료 판단으로 프로그래밍 적으로 해결함
+    @Scheduled(cron = "0 0/5 09-16 * * MON-FRI")
+    fun vbsSellCheck() {
+        log.info("매도 체크")
+        vbsService.sellCheck()
+    }
+
     /**
      * 장 종료 이후 현재 잔고상황 리포트
      */

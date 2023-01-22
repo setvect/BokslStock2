@@ -11,6 +11,7 @@ import com.setvect.bokslstock2.koreainvestment.trade.model.response.CancelableRe
 import com.setvect.bokslstock2.koreainvestment.trade.model.response.CommonResponse
 import com.setvect.bokslstock2.koreainvestment.trade.repository.AssetHistoryRepository
 import com.setvect.bokslstock2.koreainvestment.trade.repository.TradeRepository
+import com.setvect.bokslstock2.koreainvestment.trade.service.PriceGroupService
 import com.setvect.bokslstock2.koreainvestment.trade.service.StockClientService
 import com.setvect.bokslstock2.koreainvestment.trade.service.TokenService
 import com.setvect.bokslstock2.koreainvestment.ws.model.RealtimeExecution
@@ -27,6 +28,7 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -42,6 +44,12 @@ private const val QUOTE_UNIT = 5
  */
 private const val DIFF_MINUTES = 2L
 
+/**
+ * 5분마다 직전 5분봉 시가, 종가를 판단해 매도 또는 유지 여부를 결정함.
+ * 해당 상수 값 변경 금지. 변경하면 매매전략이 전체적으로 변경됨
+ */
+private const val CHECK_SELL_MINUTE = 5
+
 @Service
 class VbsService(
     private val stockClientService: StockClientService,
@@ -54,6 +62,9 @@ class VbsService(
     private val log: Logger = LoggerFactory.getLogger(javaClass)
 
     private var currentDate: LocalDate = LocalDate.now().minusDays(1)
+
+    /** true이면 currentDate가 가르키는 날 휴장*/
+    private var todayClosed = false
     private var balanceResponse: BalanceResponse? = null
 
     /** 매수 또는 매수 대기중인 종목 */
@@ -80,6 +91,7 @@ class VbsService(
             log.info("매매 시작")
             run = true
         }
+        todayClosed = true
 
         checkDay()
 
@@ -90,6 +102,7 @@ class VbsService(
             if (!isTradingDay()) {
                 log.info("휴장일입니다.")
                 slackMessageService.sendMessage("휴장일입니다.")
+                todayClosed = true
                 return
             }
             settingTargetPrice()
@@ -211,7 +224,7 @@ class VbsService(
     }
 
     /**
-     * 실시간 채결 이벤트
+     * 실시간 채결 이벤트 수신
      */
     fun execution(wsResponse: WsResponse) {
         if (!TradeTimeHelper.isBuyTimeRange() || targetPriceMap.isEmpty()) {
@@ -229,7 +242,22 @@ class VbsService(
 
         logChangePrice(realtimeExecution, vbsStock)
 
-        // TODO 메도 check
+        val min5Count = realtimeExecution.stckCntgHour.minute / CHECK_SELL_MINUTE
+        // TODO 오늘 영업일에 매수한 종목이 아닌지 체크, if문에 && 조건으로 넣기
+        if (gapRiseSellCheckMap[realtimeExecution.code] != min5Count) {
+            gapRiseSellCheckMap[realtimeExecution.code] = min5Count
+            val minutePrice = stockClientService.requestMinutePrice(
+                MinutePriceRequest(
+                    realtimeExecution.code,
+                    realtimeExecution.stckCntgHour
+                ), tokenService.getAccessToken()
+            )
+            val groupingCandleList =
+                PriceGroupService.groupByMinute5(minutePrice, StockCode.findByCode(realtimeExecution.code))
+
+            groupingCandleList[0].candleDateTimeStart.
+        }
+
 
         if (buyCode.contains(realtimeExecution.code)) {
             return
@@ -345,6 +373,7 @@ class VbsService(
      * 매도 주문
      * [openSellStockList] 매도 종목
      */
+    // TODO 순수하게(잔고 비교해가면서 매도 하지 않도록) 매도만 하도록 구현 변경
     private fun sellOrder(openSellStockList: List<BokslStockProperties.Vbs.VbsStock>) {
         val holdingsMap = getHoldingStock()
 
@@ -475,4 +504,53 @@ class VbsService(
         }
     }
 
+    /** 5분마다 실행되는 메도 체크 */
+    fun sellCheck() {
+        if (todayClosed) {
+            log.info("휴장")
+            return
+        }
+
+        if (!TradeTimeHelper.isGapSellTimeRange()) {
+            log.info("매도 가능시간 아님")
+        }
+
+        val holdingStock = getHoldingStock()
+
+        bokslStockProperties.koreainvestment.vbs.stock.forEach {
+            val stock = holdingStock[it.code] ?: return@forEach
+            if (stock.hldgQty == 0) {
+                log.info("${it.code}] 보유 수량 없음")
+                return@forEach
+            }
+
+            // 오늘 매수한 종목으 다시 매도하지 않음
+            if (stock.thdtBuyqty != 0) {
+                log.info("${it.code}] 오늘 매수한 종목")
+                return@forEach
+            }
+            
+            // TODO 목표가 초과 여부 조건 넣어야 됨 
+
+            val minutePrice = stockClientService.requestMinutePrice(
+                MinutePriceRequest(
+                    it.code,
+                    LocalTime.now()
+                ), tokenService.getAccessToken()
+            )
+            val groupingCandleList = PriceGroupService.groupByMinute5(minutePrice, StockCode.findByCode(it.code))
+            // 09:05, 09:10, 09:15, ... 이런식으로 호출 되니깐 1번째 인덱스를 접근해야지 직전 5분봉을 얻을 수 있음
+            val beforeCandle = groupingCandleList[1]
+            log.info("${it.code}] 직전 5분봉: $beforeCandle")
+
+            val belowOpeningPrice = beforeCandle.openPrice >= beforeCandle.closePrice
+            log.info("[${it.code}] $beforeCandle.openPrice >= $beforeCandle.closePrice = $belowOpeningPrice")
+            if (belowOpeningPrice) {
+                log.info("${it.code} 매도")
+                // TODO 매도 호출 
+            } else {
+                log.info("${it.code} 매수상태 유지")
+            }
+        }
+    }
 }

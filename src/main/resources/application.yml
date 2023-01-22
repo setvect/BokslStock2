@@ -62,10 +62,10 @@ com:
           investRatio: 0.5
           stock:
             - code: "069500"
-              openSell: false
+              gapRiseKeep: false
               k: 0.2
             - code: "091170"
-              openSell: false
+              gapRiseKeep: false
               k: 0.2
 
       restTemplate:

@@ -11,6 +11,7 @@ import java.time.LocalDateTime
  */
 data class CandleDto(
     val stockCode: StockCode,
+    /** 캔들 시작 시간을 의미함 */
     val candleDateTimeStart: LocalDateTime,
     val candleDateTimeEnd: LocalDateTime,
     val periodType: PeriodType,

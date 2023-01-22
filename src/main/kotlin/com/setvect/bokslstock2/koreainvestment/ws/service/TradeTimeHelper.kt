@@ -61,6 +61,14 @@ object TradeTimeHelper {
     }
 
     /**
+     * @return 갭 상승 종목 매도 가능 시간
+     */
+    fun isGapSellTimeRange(): Boolean {
+        val now = LocalTime.now().get(ChronoField.MILLI_OF_DAY)
+        return now in (BUY_TIME) until CLOSE_TIME
+    }
+
+    /**
      * @return 매매 가능 시간이면 true
      */
     fun isTimeToTrade(): Boolean {

@@ -79,7 +79,11 @@ data class BokslStockProperties(
     ) {
         data class VbsStock(
             val code: String,
-            val openSell: Boolean, // TODO 해당 속성 없애기. 갭상승 유지로 판단
+            /**
+             * false: 동시호가에 매도 되도록 예상 채결가 보다 낮게 매도
+             * true: 5분마다 직전 5분봉을 체크해 시가 >= 종가 이면 매도, 아니면 유지
+             */
+            val gapRiseKeep: Boolean, 
             val k: Double
         ) {
             fun getName(): String? {
