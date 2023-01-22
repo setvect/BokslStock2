@@ -44,12 +44,6 @@ private const val QUOTE_UNIT = 5
  */
 private const val DIFF_MINUTES = 2L
 
-/**
- * 5분마다 직전 5분봉 시가, 종가를 판단해 매도 또는 유지 여부를 결정함.
- * 해당 상수 값 변경 금지. 변경하면 매매전략이 전체적으로 변경됨
- */
-private const val CHECK_SELL_MINUTE = 5
-
 @Service
 class VbsService(
     private val stockClientService: StockClientService,
@@ -74,6 +68,13 @@ class VbsService(
 
     /**목표가 <종목코드, 매수가격>*/
     private var targetPriceMap = mapOf<String, Int>()
+
+    /**
+     * 목표가 돌파 여부 <종목코드, 돌파 여부>
+     * 여기서 말하는 '돌파'는 이상(more)다
+     * 하루단위로 측정함
+     */
+    private var overTargetPriceCheck = mutableMapOf<String, Boolean>()
 
     /**직전 채결가격. 가격 변화를 로그로 찍기 위한 목적 <종목코드, 매수가격>*/
     private var beforePriceMap = mutableMapOf<String, Int>()
@@ -240,33 +241,19 @@ class VbsService(
             return
         }
 
-        logChangePrice(realtimeExecution, vbsStock)
-
-        val min5Count = realtimeExecution.stckCntgHour.minute / CHECK_SELL_MINUTE
-        // TODO 오늘 영업일에 매수한 종목이 아닌지 체크, if문에 && 조건으로 넣기
-        if (gapRiseSellCheckMap[realtimeExecution.code] != min5Count) {
-            gapRiseSellCheckMap[realtimeExecution.code] = min5Count
-            val minutePrice = stockClientService.requestMinutePrice(
-                MinutePriceRequest(
-                    realtimeExecution.code,
-                    realtimeExecution.stckCntgHour
-                ), tokenService.getAccessToken()
-            )
-            val groupingCandleList =
-                PriceGroupService.groupByMinute5(minutePrice, StockCode.findByCode(realtimeExecution.code))
-
-            groupingCandleList[0].candleDateTimeStart.
+        val targetPrice = targetPriceMap[vbsStock.code] ?: return
+        log.debug("[${vbsStock.code}] 목표가: $targetPrice, 최고가: ${realtimeExecution.stckHgpr}")
+        // 오늘 최고가가 목표가를 돌파 여부 체크
+        if (targetPrice <= realtimeExecution.stckHgpr) {
+            overTargetPriceCheck[vbsStock.code] = true
         }
 
-
+        logChangePrice(realtimeExecution, vbsStock)
         if (buyCode.contains(realtimeExecution.code)) {
             return
         }
 
         log.debug("${wsResponse.trId} = $realtimeExecution")
-
-        val targetPrice = targetPriceMap[vbsStock.code] ?: return
-
 
         val targetPriceExceeded = targetPrice <= realtimeExecution.stckPrpr
 
@@ -373,60 +360,64 @@ class VbsService(
      * 매도 주문
      * [openSellStockList] 매도 종목
      */
-    // TODO 순수하게(잔고 비교해가면서 매도 하지 않도록) 매도만 하도록 구현 변경
     private fun sellOrder(openSellStockList: List<BokslStockProperties.Vbs.VbsStock>) {
         val holdingsMap = getHoldingStock()
 
         openSellStockList.forEach {
             val stock = holdingsMap[it.code] ?: return@forEach
-            if (stock.hldgQty == 0) {
-                return@forEach
-            }
-
-            val bidPrice = getBidPrice(it.code)
-
-            val sellPrice = bidPrice - SELL_DIFF
-
-            val yieldValue = ApplicationUtil.getYield(stock.pchsAvgPric.toInt(), bidPrice)
-            val message = "[매도 주문] ${stock.prdtName}(${stock.code}), " +
-                    "주문가: ${comma(sellPrice)}, " +
-                    "매수평단가: ${comma(stock.pchsAvgPric.toInt())}, " +
-                    "수량: ${comma(stock.hldgQty)}, " +
-                    "수익률(추정): ${percent(yieldValue * 100)}"
-            log.info(message)
-            val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
-
-            val requestOrderSell = stockClientService.requestOrderSell(
-                OrderRequest(
-                    cano = accountNo,
-                    code = it.code,
-                    ordunpr = sellPrice,
-                    ordqty = stock.hldgQty
-                ),
-                tokenService.getAccessToken()
-            )
-            if (requestOrderSell.isError()) {
-                log.info("주문요청 에러: $requestOrderSell")
-                slackMessageService.sendMessage("@channel 주문요청 에러: $requestOrderSell")
-            } else {
-                buyCode.remove(it.code)
-                log.info("주문요청 응답: $requestOrderSell")
-
-                val tradeEntity = TradeEntity(
-                    account = DigestUtils.md5Hex(accountNo),
-                    code = it.code,
-                    tradeType = TradeType.SELL,
-                    qty = stock.hldgQty,
-                    // TODO 채결 기준이 아니라 주문 기준이라 가격이 정확하지 않음
-                    unitPrice = bidPrice.toDouble(),
-                    yield = yieldValue,
-                    regDate = LocalDateTime.now()
-                )
-                tradeRepository.save(tradeEntity)
-            }
-            slackMessageService.sendMessage(message)
+            sellOrder(stock)
         }
     }
+
+    private fun sellOrder(stock: BalanceResponse.Holdings) {
+        if (stock.hldgQty == 0) {
+            log.warn("보유수량이 없는 종목을 매도 요청했음. $stock")
+            return
+        }
+        val bidPrice = getBidPrice(stock.code)
+        val sellPrice = bidPrice - SELL_DIFF
+
+        val yieldValue = ApplicationUtil.getYield(stock.pchsAvgPric.toInt(), bidPrice)
+        val message = "[매도 주문] ${stock.prdtName}(${stock.code}), " +
+                "주문가: ${comma(sellPrice)}, " +
+                "매수평단가: ${comma(stock.pchsAvgPric.toInt())}, " +
+                "수량: ${comma(stock.hldgQty)}, " +
+                "수익률(추정): ${percent(yieldValue * 100)}"
+        log.info(message)
+
+        val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
+
+        val requestOrderSell = stockClientService.requestOrderSell(
+            OrderRequest(
+                cano = accountNo,
+                code = stock.code,
+                ordunpr = sellPrice,
+                ordqty = stock.hldgQty
+            ),
+            tokenService.getAccessToken()
+        )
+        if (requestOrderSell.isError()) {
+            log.error("주문요청 에러: $requestOrderSell")
+            slackMessageService.sendMessage("@channel 주문요청 에러: $requestOrderSell")
+        } else {
+            buyCode.remove(stock.code)
+            log.info("주문요청 응답: $requestOrderSell")
+
+            val tradeEntity = TradeEntity(
+                account = DigestUtils.md5Hex(accountNo),
+                code = stock.code,
+                tradeType = TradeType.SELL,
+                qty = stock.hldgQty,
+                // TODO 채결 기준이 아니라 주문 기준이라 가격이 정확하지 않음
+                unitPrice = bidPrice.toDouble(),
+                yield = yieldValue,
+                regDate = LocalDateTime.now()
+            )
+            tradeRepository.save(tradeEntity)
+        }
+        slackMessageService.sendMessage(message)
+    }
+
 
     /**
      * 현재 시간대에 따라 얻어오는 방식이 다름
@@ -482,6 +473,9 @@ class VbsService(
         log.info(message.toString())
         slackMessageService.sendMessage(message.toString())
 
+        overTargetPriceCheck = bokslStockProperties.koreainvestment.vbs.stock
+            .associate { it.code to false } as MutableMap<String, Boolean>
+
         currentDate = LocalDate.now()
     }
 
@@ -529,8 +523,13 @@ class VbsService(
                 log.info("${it.code}] 오늘 매수한 종목")
                 return@forEach
             }
-            
-            // TODO 목표가 초과 여부 조건 넣어야 됨 
+
+            // 오늘 최고가가 목표를 이상이면 매도 하지 않음
+            log.info("종목별 오늘 최고가: $targetPriceMap")
+            if (overTargetPriceCheck[stock.code] == true) {
+                log.info("${it.code}] 목표가를 넘겼음. 매도 하지 않음")
+                return@forEach
+            }
 
             val minutePrice = stockClientService.requestMinutePrice(
                 MinutePriceRequest(
@@ -547,10 +546,11 @@ class VbsService(
             log.info("[${it.code}] $beforeCandle.openPrice >= $beforeCandle.closePrice = $belowOpeningPrice")
             if (belowOpeningPrice) {
                 log.info("${it.code} 매도")
-                // TODO 매도 호출 
+                sellOrder(stock)
             } else {
                 log.info("${it.code} 매수상태 유지")
             }
         }
     }
+
 }
