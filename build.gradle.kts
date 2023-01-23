@@ -16,7 +16,7 @@ plugins {
 }
 
 group = "com.setvect.bokslstock2"
-version = "0.0.1"
+version = "0.0.2"
 java.sourceCompatibility = JavaVersion.VERSION_11
 
 configurations {
@@ -102,7 +102,7 @@ tasks.register("makeInstallFile") {
         delete("$buildDir/dist")
 
         copy {
-            from("$buildDir/libs/BokslStock2-0.0.1.jar")
+            from("$buildDir/libs/BokslStock2-0.0.2.jar")
             into("$buildDir/dist/lib")
         }
         copy {
@@ -145,7 +145,7 @@ tasks.register("deployRemote") {
             sftp.connect()
 
             val uploadFiles = listOf(
-                Pair(File("$buildDir", "/dist/lib/BokslStock2-0.0.1.jar"), project.properties["remoteDir"].toString() + "/lib"),
+                Pair(File("$buildDir", "/dist/lib/BokslStock2-0.0.2.jar"), project.properties["remoteDir"].toString() + "/lib"),
 //                Pair(File("$buildDir", "/dist/bin/BokslStock2.sh"), project.properties["remoteDir"].toString() + "/bin"),
             )
 

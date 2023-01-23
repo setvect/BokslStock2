@@ -33,7 +33,7 @@ gradlew makeInstallFile
 
 - conf/BokslStock2.yml: 설정 파일
 - conf/logback-spring.xml: logback 설정
-- lib/BokslStock2-0.0.1.jar: 복슬스톡2 프로그램
+- lib/BokslStock2-0.0.2.jar: 복슬스톡2 프로그램
 - bin/BokslStock2.sh: Linux 실행 스크립트
 - bin/BokslStock2.bat: Windows에서 실행 스크립트
 
