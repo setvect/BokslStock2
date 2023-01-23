@@ -381,13 +381,19 @@ class BacktestTradeService(
         val sellList = tradeItemHistory.filter { it.preTrade.tradeType == TradeType.SELL }.toList()
         val groupBy = sellList.groupBy { it.preTrade.stockCode.code }
 
+        // <종목코드, 수수료합>
+        val feeMap = tradeItemHistory.groupBy { it.preTrade.stockCode.code }.entries.associate { entity ->
+            entity.key to entity.value.sumOf { it.feePrice }
+        }
+
         return groupBy.entries.associate { entity ->
             val totalInvest = entity.value.sumOf { it.gains }
             val gainCount = entity.value.count { it.gains > 0 }
             entity.key to CommonAnalysisReportResult.WinningRate(
                 gainCount,
                 entity.value.size - gainCount,
-                totalInvest
+                totalInvest,
+                feeMap[entity.key]!!
             )
         }.toMap()
     }

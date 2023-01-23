@@ -293,7 +293,8 @@ object ReportMakerHelperService {
                 log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${condition.conditionSeq}")
                 break
             }
-            report.append(String.format("${i}. 실현 수익\t %,f", winningRate.invest)).append("\n")
+            report.append(String.format("${i}. 실현 수익(수수료제외)\t %,.0f", winningRate.invest)).append("\n")
+            report.append(String.format("${i}. 수수료\t %,.0f", winningRate.fee)).append("\n")
             report.append(String.format("${i}. 매매회수\t %d", winningRate.getTradeCount())).append("\n")
             report.append(String.format("${i}. 승률\t %,.2f%%", winningRate.getWinRate() * 100)).append("\n")
         }
@@ -303,7 +304,7 @@ object ReportMakerHelperService {
         report.append("----------- 백테스트 조건 -----------\n")
         report.append(String.format("분석기간\t %s", range)).append("\n")
         report.append(String.format("투자비율\t %,.2f%%", tradeCondition.investRatio * 100)).append("\n")
-        report.append(String.format("최초 투자금액\t %,f", tradeCondition.cash)).append("\n")
+        report.append(String.format("최초 투자금액\t %,.0f", tradeCondition.cash)).append("\n")
         report.append(String.format("매수 수수료\t %,.2f%%", tradeCondition.feeBuy * 100)).append("\n")
         report.append(String.format("매도 수수료\t %,.2f%%", tradeCondition.feeSell * 100)).append("\n")
         report.append(specialInfo)

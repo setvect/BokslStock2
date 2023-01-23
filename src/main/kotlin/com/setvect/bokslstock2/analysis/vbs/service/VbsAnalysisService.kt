@@ -386,6 +386,7 @@ class VbsAnalysisService(
             report.append(String.format("${i}. 변동성 비율\t %,.2f", tradeCondition.kRate)).append("\n")
             report.append(String.format("${i}. 이동평균 단위\t %d", tradeCondition.maPeriod)).append("\n")
             report.append(String.format("${i}. 갭 상승 시 매도 넘김\t %s", tradeCondition.gapRisenSkip)).append("\n")
+            report.append(String.format("${i}. 5분 마다 시세 체크\t %s", tradeCondition.stayGapRise)).append("\n")
             report.append(String.format("${i}. 하루에 한번 거래\t %s", tradeCondition.onlyOneDayTrade)).append("\n")
             report.append(String.format("${i}. 호가단위\t %s", tradeCondition.unitAskPrice)).append("\n")
             report.append(String.format("${i}. 조건 설명\t %s", tradeCondition.comment)).append("\n")

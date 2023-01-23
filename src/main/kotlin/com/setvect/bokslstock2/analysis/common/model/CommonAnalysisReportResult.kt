@@ -45,6 +45,7 @@ data class CommonAnalysisReportResult(
             gainCount = winningRateTarget.values.sumOf { it.gainCount },
             lossCount = winningRateTarget.values.sumOf { it.lossCount },
             invest = winningRateTarget.values.sumOf { it.invest },
+            fee = winningRateTarget.values.sumOf { it.fee },
         )
     }
 
@@ -155,19 +156,25 @@ data class CommonAnalysisReportResult(
      */
     data class WinningRate(
         /**
-         * 수익 카운트
+         * 플러스 수익을 기록한 횟수
+         * 수수료를 제외하고 계산함
          */
         val gainCount: Int,
 
         /**
-         * 이익 카운트
+         * 손실 카운트
          */
         val lossCount: Int,
 
         /**
-         * 수익 합계
+         * 수익 합계(수수료 제외)
          */
         val invest: Double,
+
+        /**
+         * 매수, 매도 수수료
+         */
+        val fee: Double
 
         ) {
         /**
