@@ -13,8 +13,8 @@ object TradeTimeHelper {
     /** 매매 시작*/
     private val START_TIME = LocalTime.of(8, 41, 0).get(ChronoField.MILLI_OF_DAY)
 
-    /** 시초가 매도*/
-    private val SELL_OPEN_TIME = LocalTime.of(8, 59, 55).get(ChronoField.MILLI_OF_DAY)
+    /** 동시호가 매도 판단 시작 시간*/
+    private val SELL_OPEN_TIME = LocalTime.of(8, 59, 57).get(ChronoField.MILLI_OF_DAY)
 
     /** 장 시작*/
     private val OPEN_TIME = LocalTime.of(9, 0, 0).get(ChronoField.MILLI_OF_DAY)
@@ -29,7 +29,7 @@ object TradeTimeHelper {
     private val CLOSE_TIME = LocalTime.of(15, 20, 0).get(ChronoField.MILLI_OF_DAY)
 
     /**
-     * @return 시초가 매도 시간 범위 이면 true
+     * @return 동시호가 매도 시간 범위 이면 true
      */
     fun isOpenPriceSellTime(): Boolean {
         val now = LocalTime.now().get(ChronoField.MILLI_OF_DAY)

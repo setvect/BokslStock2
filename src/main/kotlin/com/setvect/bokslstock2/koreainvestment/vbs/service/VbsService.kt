@@ -106,7 +106,8 @@ class VbsService(
                 todayClosed = true
                 return
             }
-            settingTargetPrice()
+            sellSimultaneousPrice()
+            targetPriceMap = getTargetPrice()
         } finally {
             run = false
         }
@@ -165,70 +166,79 @@ class VbsService(
     }
 
     /**
-     * 전날 매수 종목 매도
+     * 장 시작 동시호가
      */
-    // TODO 목표가 계산
-    private fun settingTargetPrice() {
-        var sellOpenFlag = false
-        var sell5Flag = false
-        targetPriceMap = mapOf()
+    private fun sellSimultaneousPrice() {
         while (true) {
             val sellOpenTime = TradeTimeHelper.isOpenPriceSellTime()
 
-            // 장시작 동시호과 매도
+            // 장시작 동시호가 매도
             val vbsStocks = bokslStockProperties.koreainvestment.vbs.stock
-            if (sellOpenTime && !sellOpenFlag) {
-                val openSellStockList = vbsStocks.filter { !it.gapRiseKeep }
-                sellOrder(openSellStockList)
-
-                vbsStocks.filter { it.gapRiseKeep }
-                    .filter {
-                        // 예상체결가가 전일 종가보다 낮으면 매도
-                        val bidPrice = getBidPrice(it.code)
-                        val dayPriceCandle = stockClientService.requestDatePrice(
-                            DatePriceRequest(it.code, DatePriceRequest.DateType.DAY),
-                            tokenService.getAccessToken()
-                        )
-                        // 전일 종가 구함
-                        val previousClosePrice = dayPriceCandle.output!![1].stckClpr
-                        return previousClosePrice >= bidPrice
-                    }
-
-
-                sellOpenFlag = true
+            if (!sellOpenTime) {
+                TimeUnit.MILLISECONDS.sleep(200)
+                continue
             }
 
-            if (TradeTimeHelper.isBuyTimeRange()) {
-                val targetPriceMessage = StringBuilder()
-                targetPriceMap = vbsStocks.associate { stock ->
+            val openSellStockList = vbsStocks.filter { !it.gapRiseKeep }
+            log.info("gapRiseKepp == false인 종목 매도: $openSellStockList")
+            sellOrder(openSellStockList)
+
+            val gapDropSellStockList = vbsStocks.filter { it.gapRiseKeep }
+                .filter {
+                    // 예상체결가가 전일 종가보다 낮으면 매도
+                    val bidPrice = getBidPrice(it.code)
                     val dayPriceCandle = stockClientService.requestDatePrice(
-                        DatePriceRequest(stock.code, DatePriceRequest.DateType.DAY),
+                        DatePriceRequest(it.code, DatePriceRequest.DateType.DAY),
                         tokenService.getAccessToken()
                     )
-                    val openPrice = dayPriceCandle.output!![0].stckOprc
-                    val beforeDayHigh = dayPriceCandle.output[1].stckHgpr
-                    val beforeDayLow = dayPriceCandle.output[1].stckLwpr
-                    val tempPrice = openPrice + (beforeDayHigh - beforeDayLow) * stock.k
-                    val targetPrice = (tempPrice - tempPrice % QUOTE_UNIT).toInt()
-
-                    log.info("[목표가] ${stock.code}: $openPrice + ($beforeDayHigh - $beforeDayLow) * ${stock.k} = $targetPrice")
-
-                    targetPriceMessage.append(
-                        "${stock.getName()}(${stock.code})\n" +
-                                "  - 시초가: ${comma(dayPriceCandle.output[0].stckOprc)}\n" +
-                                "  - 목표가: ${comma(targetPrice)}\n"
-                    )
-
-                    stock.code to targetPrice
+                    // 전일 종가 구함
+                    val previousClosePrice = dayPriceCandle.output!![1].stckClpr
+                    return@filter bidPrice <= previousClosePrice
                 }
-                log.info(targetPriceMessage.toString())
-                slackMessageService.sendMessage(targetPriceMessage.toString())
+            log.info("gapRiseKepp == true이고 예상 체결가가 전일 종가 이하면 매도 : $gapDropSellStockList")
+            sellOrder(gapDropSellStockList)
+            return
+        }
+    }
 
-                // 목표가 계산이후 종료
-                return
+    /**
+     * 목표가 계산
+     */
+    private fun getTargetPrice(): Map<String, Int> {
+        val vbsStocks = bokslStockProperties.koreainvestment.vbs.stock
+
+        while (true) {
+            if (!TradeTimeHelper.isBuyTimeRange()) {
+                log.info("목표가 계산 기간 아님")
+                TimeUnit.SECONDS.sleep(3)
+                continue
             }
 
-            TimeUnit.SECONDS.sleep(3)
+            val targetPriceMessage = StringBuilder()
+            val targetPrice = vbsStocks.associate { stock ->
+                val dayPriceCandle = stockClientService.requestDatePrice(
+                    DatePriceRequest(stock.code, DatePriceRequest.DateType.DAY),
+                    tokenService.getAccessToken()
+                )
+                val openPrice = dayPriceCandle.output!![0].stckOprc
+                val beforeDayHigh = dayPriceCandle.output[1].stckHgpr
+                val beforeDayLow = dayPriceCandle.output[1].stckLwpr
+                val tempPrice = openPrice + (beforeDayHigh - beforeDayLow) * stock.k
+                val targetPrice = (tempPrice - tempPrice % QUOTE_UNIT).toInt()
+
+                log.info("[목표가] ${stock.code}: $openPrice + ($beforeDayHigh - $beforeDayLow) * ${stock.k} = $targetPrice")
+
+                targetPriceMessage.append(
+                    "${stock.getName()}(${stock.code})\n" +
+                            "  - 시초가: ${comma(dayPriceCandle.output[0].stckOprc)}\n" +
+                            "  - 목표가: ${comma(targetPrice)}\n"
+                )
+
+                stock.code to targetPrice
+            }
+            log.info(targetPriceMessage.toString())
+            slackMessageService.sendMessage(targetPriceMessage.toString())
+            return targetPrice
         }
     }
 
@@ -506,7 +516,7 @@ class VbsService(
         }
     }
 
-    /** 5분마다 실행되는 메도 체크 */
+    /** 5분마다 실행되는 매도 체크 */
     fun sellCheck() {
         if (todayClosed) {
             log.info("휴장")

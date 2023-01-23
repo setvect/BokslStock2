@@ -79,6 +79,10 @@ class StockClientService(
     }
 
     /**
+     * TODO 아래 코멘트 맞는지 검증
+     * 장 시작 동시호가 시간에 호출 하면 오늘 날짜도 포함해서 반환.
+     * 그러니깐 0번째는 오늘, 1번째는 전일 가격이다.
+     * 만약 휴장일에 호출하면 0번째는 마지막 영업일이다.
      * @return 일, 주, 월 시세 최근 날짜 순으로 30개 반환
      */
     fun requestDatePrice(request: DatePriceRequest, authorization: String): CommonResponse<List<DatePriceResponse>> {
