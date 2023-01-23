@@ -30,7 +30,7 @@ class CancelAnalysisTest {
     fun test1() {
         val targetRange = DateRange("2022-01-01T00:00:00", "2023-01-01T00:00:00")
 
-        val stockCode = StockCode.KODEX_BANK_091170
+        val stockCode = StockCode.KODEX_KOSDAQ_2X_233740
         val range = candleRepository.findByCandleDateTimeBetween(
             listOf(stockCode.code),
             PeriodType.PERIOD_MINUTE_5,
@@ -50,16 +50,17 @@ class CancelAnalysisTest {
         log.info("크기: ${candleDtoList.size}")
 
         var gapRiseOpenCount = 0
-        var gapRiseKeepCount = 0
+        var stayGapRiseCount = 0
+        // TODO 어떤 목적으로 만들었는지 모르겠다. ㅡㅡ;
         candleDtoList.forEach {
             if (it.getOpenYield() > 0) {
                 gapRiseOpenCount++
                 if (it.getYield() > 0) {
-                    gapRiseKeepCount++
+                    stayGapRiseCount++
                 }
             }
         }
-        log.info("갭 상승: $gapRiseOpenCount, 갭 상승 유지: $gapRiseKeepCount")
+        log.info("갭 상승: $gapRiseOpenCount, 갭 상승 유지: $stayGapRiseCount")
     }
 
     @Test

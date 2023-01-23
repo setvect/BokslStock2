@@ -69,6 +69,8 @@ class VbsBacktestService(
             // -1 영업일
             val beforeCandle = movingAverageCandle[idx - 1]
             var sell = false
+            val targetPrice = getTargetPrice(beforeCandle, currentCandle, condition)
+
             if (lastBuyInfo != null) {
                 // 갭 상승 시 매도 통과 조건이면, 전일 고가 보다 오늘 시초가가 높은 경우 오늘 매도 하지 않음
                 if (condition.gapRisenSkip && beforeCandle.highPrice < currentCandle.openPrice) {
@@ -78,7 +80,7 @@ class VbsBacktestService(
 
                 // 매도
                 var sellPrice = currentCandle.openPrice
-//                if (condition.stayGapRise) {
+                //  시가 기존 전일 종가보다 높으면 그 다음 턴까지 유지함
                 if (condition.stayGapRise && currentCandle.getOpenYield() > 0) {
                     val cancelMinute5List = candleRepository.findByRange(
                         condition.stock.code,
@@ -86,14 +88,22 @@ class VbsBacktestService(
                         currentCandle.candleDateTimeStart,
                         currentCandle.candleDateTimeEnd.withHour(23).withMinute(59)
                     )
-                    run {
-                        cancelMinute5List.forEach {
-                            sellPrice = it.closePrice
-                            // 분봉 종가가 시초가 대비 하락일 경우 여기서 끝냄
-                            if (it.closePrice - it.openPrice < 0) {
-                                return@run
-                            }
+                    var keepBuy = false
+                    for (it in cancelMinute5List) {
+                        sellPrice = it.closePrice
+                        if (targetPrice <= it.highPrice) {
+                            log.info("[매수 유지] 목표가: $targetPrice, 날짜: ${it.candleDateTime}, 고가: ${it.highPrice}")
+                            keepBuy = true
+                            break
                         }
+                        // 분봉 종가가 시초가 대비 하락일 경우 여기서 끝냄
+                        if (it.closePrice - it.openPrice < 0) {
+                            log.info("[하락 매도] 매도가: $sellPrice, 오늘시가:${currentCandle.openPrice}, 차이: ${sellPrice - currentCandle.openPrice}, 날짜: ${it.candleDateTime}")
+                            break
+                        }
+                    }
+                    if (keepBuy) {
+                        continue
                     }
                 }
 
@@ -116,7 +126,6 @@ class VbsBacktestService(
                 continue
             }
 
-            val targetPrice = getTargetPrice(beforeCandle, currentCandle, condition)
             val maPrice = currentCandle.average[condition.maPeriod] ?: 0.0
 
             // 매수 판단

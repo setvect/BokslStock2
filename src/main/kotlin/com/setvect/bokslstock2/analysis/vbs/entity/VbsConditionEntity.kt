@@ -51,9 +51,11 @@ class VbsConditionEntity(
     /**
      * false: 매수 상태에서 다음날 시가 매도
      * true: 매수 상태에서 오늘 시가가 전일 종가보다 높으면 매도하지 않고 다음날로 넘김
+     * TODO 의미 없는 조건 같다. 삭제 필요
      */
     @Column(name = "GAP_RISEN_SKIP", nullable = false, length = 1)
     @Type(type = "yes_no")
+    @Deprecated("의미 없는 조건 같다. 삭제 필요")
     val gapRisenSkip: Boolean,
 
     /**

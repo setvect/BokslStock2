@@ -204,12 +204,14 @@ class VbsBacktest {
         // 거래 조건
 //        val range = DateRange(LocalDateTime.of(2021, 8, 31, 0, 0), LocalDateTime.now())
 //        val range = DateRange(LocalDateTime.of(2021, 9, 20, 0, 0), LocalDateTime.of(2021, 10, 1, 0, 0))
-        val range = DateRange(LocalDateTime.of(2018, 1, 1, 0, 0), LocalDateTime.now())
+//        val range = DateRange(LocalDateTime.of(2018, 1, 1, 0, 0), LocalDateTime.now())
+        val range = DateRange(LocalDateTime.of(2018, 1, 1, 0, 0), LocalDateTime.of(2023, 1, 6, 0, 0))
+//        val range = DateRange(LocalDateTime.of(2022, 8, 24, 0, 0), LocalDateTime.of(2022, 8, 31, 0, 0))
         val vbsAnalysisCondition = listOf(
             VbsAnalysisCondition(
                 tradeConditionList = listOf(
                     backtestVbs(StockCode.KODEX_KOSDAQ_2X_233740, range),
-                    backtestVbs(StockCode.KODEX_BANK_091170, range),
+//                    backtestVbs(StockCode.KODEX_BANK_091170, range),
                 ),
                 basic = TradeCondition(
                     range = range,

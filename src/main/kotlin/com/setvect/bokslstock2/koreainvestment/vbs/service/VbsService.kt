@@ -179,11 +179,11 @@ class VbsService(
                 continue
             }
 
-            val openSellStockList = vbsStocks.filter { !it.gapRiseKeep }
+            val openSellStockList = vbsStocks.filter { !it.stayGapRise }
             log.info("gapRiseKepp == false인 종목 매도: $openSellStockList")
             sellOrder(openSellStockList)
 
-            val gapDropSellStockList = vbsStocks.filter { it.gapRiseKeep }
+            val gapDropSellStockList = vbsStocks.filter { it.stayGapRise }
                 .filter {
                     // 예상체결가가 전일 종가보다 낮으면 매도
                     val bidPrice = getBidPrice(it.code)
@@ -195,7 +195,7 @@ class VbsService(
                     val previousClosePrice = dayPriceCandle.output!![1].stckClpr
                     return@filter bidPrice <= previousClosePrice
                 }
-            log.info("gapRiseKepp == true이고 예상 체결가가 전일 종가 이하면 매도 : $gapDropSellStockList")
+            log.info("stayGapRise == true이고 예상 체결가가 전일 종가 이하면 매도 : $gapDropSellStockList")
             sellOrder(gapDropSellStockList)
             return
         }
