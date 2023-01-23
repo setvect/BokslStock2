@@ -175,31 +175,39 @@ class VbsService(
         while (true) {
             val sellOpenTime = TradeTimeHelper.isOpenPriceSellTime()
 
-            // TODO 아래코드 제거
+            // 장시작 동시호과 매도
             val vbsStocks = bokslStockProperties.koreainvestment.vbs.stock
             if (sellOpenTime && !sellOpenFlag) {
-                val openSellStockList = vbsStocks.filter { it.openSell }
+                val openSellStockList = vbsStocks.filter { !it.gapRiseKeep }
                 sellOrder(openSellStockList)
-                sellOpenFlag = true
-            }
 
-            val sell5Time = TradeTimeHelper.isOpen5MinPriceSellTime()
-            if (sell5Time && !sell5Flag) {
-                val openSellStockList = vbsStocks.filter { !it.openSell }
-                sellOrder(openSellStockList)
-                sell5Flag = true
+                vbsStocks.filter { it.gapRiseKeep }
+                    .filter {
+                        // 예상체결가가 전일 종가보다 낮으면 매도
+                        val bidPrice = getBidPrice(it.code)
+                        val dayPriceCandle = stockClientService.requestDatePrice(
+                            DatePriceRequest(it.code, DatePriceRequest.DateType.DAY),
+                            tokenService.getAccessToken()
+                        )
+                        // 전일 종가 구함
+                        val previousClosePrice = dayPriceCandle.output!![1].stckClpr
+                        return previousClosePrice >= bidPrice
+                    }
+
+
+                sellOpenFlag = true
             }
 
             if (TradeTimeHelper.isBuyTimeRange()) {
                 val targetPriceMessage = StringBuilder()
                 targetPriceMap = vbsStocks.associate { stock ->
-                    val stockClientService = stockClientService.requestDatePrice(
+                    val dayPriceCandle = stockClientService.requestDatePrice(
                         DatePriceRequest(stock.code, DatePriceRequest.DateType.DAY),
                         tokenService.getAccessToken()
                     )
-                    val openPrice = stockClientService.output!![0].stckOprc
-                    val beforeDayHigh = stockClientService.output[1].stckHgpr
-                    val beforeDayLow = stockClientService.output[1].stckLwpr
+                    val openPrice = dayPriceCandle.output!![0].stckOprc
+                    val beforeDayHigh = dayPriceCandle.output[1].stckHgpr
+                    val beforeDayLow = dayPriceCandle.output[1].stckLwpr
                     val tempPrice = openPrice + (beforeDayHigh - beforeDayLow) * stock.k
                     val targetPrice = (tempPrice - tempPrice % QUOTE_UNIT).toInt()
 
@@ -207,7 +215,7 @@ class VbsService(
 
                     targetPriceMessage.append(
                         "${stock.getName()}(${stock.code})\n" +
-                                "  - 시초가: ${comma(stockClientService.output[0].stckOprc)}\n" +
+                                "  - 시초가: ${comma(dayPriceCandle.output[0].stckOprc)}\n" +
                                 "  - 목표가: ${comma(targetPrice)}\n"
                     )
 
