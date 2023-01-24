@@ -11,11 +11,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
+import java.time.LocalDate
 import java.time.LocalTime
 import java.util.*
 
 private const val AUTHORIZATION =
-    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2tlbiIsImF1ZCI6ImYxNjQ2MDc2LTRlNzQtNDA5MC05MDgwLWJjZDc2ZWZiNTZmNiIsImlzcyI6InVub2d3IiwiZXhwIjoxNjczOTk5MTAwLCJpYXQiOjE2NzM5MTI3MDAsImp0aSI6IlBTbG1MVzEzNHhBSzRBUEdyaXRESE8wUjE1NE9sMmt2NU5DZyJ9.WLmHzayDcvCEoWWibwzysaGy8yXR_KsDglr2hGL0vf3fuffaYI6h3dHNNvzdQ85JnSRx522XCMF-Dqzopue-NA"
+    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2tlbiIsImF1ZCI6ImFlZTJhZTA4LWU5YmQtNDZiZS1hNmYwLWZlNjA4MGFlZjhkYyIsImlzcyI6InVub2d3IiwiZXhwIjoxNjc0NjA2NjQ5LCJpYXQiOjE2NzQ1MjAyNDksImp0aSI6IlBTbG1MVzEzNHhBSzRBUEdyaXRESE8wUjE1NE9sMmt2NU5DZyJ9.Q4Dums66BIRI-Fm1ITCx-fQ_r5FvmuRolwXE8BbvC3wcjDbRjP3wI4RI1ToyhWl1_WRNQihqCiEIBv7a3e878w"
 
 @SpringBootTest
 @ActiveProfiles("local")
@@ -112,5 +113,18 @@ internal class StockClientServiceTest {
             AUTHORIZATION
         )
         log.info(balance.toString())
+    }
+
+    @Test
+    fun requestHoliday() {
+        val result = stockClientService.requestHoliday(
+            HolidayRequest(LocalDate.now()),
+            AUTHORIZATION
+        )
+        log.info(result.toString())
+
+        result.output!!.forEach {
+            log.info("${it.date()} : ${it.isBusinessDay()}, ${it.isHoliday()}")
+        }
     }
 }

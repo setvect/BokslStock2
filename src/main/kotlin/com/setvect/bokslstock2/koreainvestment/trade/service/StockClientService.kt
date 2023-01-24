@@ -154,6 +154,27 @@ class StockClientService(
     }
 
     /**
+     * @return 휴장일 조회
+     */
+    fun requestHoliday(request: HolidayRequest, authorization: String): CommonResponse<List<HolidayResponse>>  {
+        val url = bokslStockProperties.koreainvestment.trade.url +
+                "/uapi/domestic-stock/v1/quotations/chk-holiday?BASS_DT={date}&CTX_AREA_NK=&CTX_AREA_FK="
+
+        val headers = headerAuth(authorization, request.stockTransaction)
+
+        val httpEntity = HttpEntity<Void>(headers)
+
+        val result = stockRestTemplate.exchange(
+            url,
+            HttpMethod.GET,
+            httpEntity,
+            object : ParameterizedTypeReference<CommonResponse<List<HolidayResponse>>>() {},
+            mapOf("date" to DateUtil.format(request.baseDate, "yyyyMMdd"))
+        )
+        return result.body ?: throw RuntimeException("API 결과 없음")
+    }
+
+    /**
      * @return 주식, 예수금
      */
     fun requestBalance(request: BalanceRequest, authorization: String): BalanceResponse {

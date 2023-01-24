@@ -27,7 +27,7 @@ gradlew clean
 gradlew makeInstallFile
 ```
 
-`build/dest`에 실행 파일 만들어짐
+`build/generated/source/kapt/main/dist`에 실행 파일 만들어짐
 
 ### 2.2. 빌드 파일 설명
 

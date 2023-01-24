@@ -21,6 +21,9 @@ enum class StockTransaction(
     /** 호가 */
     QUOTE("FHKST01010200"),
 
+    /** 휴장일 조회 */
+    HOLIDAY("CTCA0903R"),
+
     /** 취소가능 주문 조회 */
     CANCELABLE("TTTC8036R"),
 

@@ -289,15 +289,14 @@ class VbsService(
     }
 
     /**
-     * 호가 존재 여부를 기준으로 개장 여부를 판단
-     * @return 개장일이면 true
+     * @return true: 영업일, false: 휴장일
      */
     private fun isTradingDay(): Boolean {
-        val requestQuote = stockClientService.requestQuote(
-            QuoteRequest(StockCode.KODEX_200_069500.code),
+        val requestHoliday = stockClientService.requestHoliday(
+            HolidayRequest(LocalDate.now()),
             tokenService.getAccessToken()
         )
-        return requestQuote.output1 != null && requestQuote.output1.askp1 != "0"
+        return requestHoliday.output!![0].isBusinessDay()
     }
 
     /**
