@@ -82,7 +82,7 @@ class VbsService(
     /** 주문 에러가 발생한 시간 <종목코드, 에러 발생 시간>*/
     private val errorOccursTime = mutableMapOf<String, LocalDateTime>()
 
-    @Async
+    @Async(value = "applicationTaskExecutor")
     fun start() {
         // TODO 동기화 문제가 있을 수 있음
         if (run) {
