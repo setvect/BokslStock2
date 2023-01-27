@@ -2,6 +2,9 @@ package com.setvect.bokslstock2.koreainvestment.trade.model.response
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
+/**
+ * 주식정정 취소 가능 주문
+ */
 data class CancelableResponse(
     /**주문채번지점번호*/
     @JsonProperty("ORD_GNO_BRNO") val ordGnoBrno: String,

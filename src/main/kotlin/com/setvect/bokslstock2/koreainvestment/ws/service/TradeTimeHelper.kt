@@ -19,11 +19,8 @@ object TradeTimeHelper {
     /** 장 시작*/
     private val OPEN_TIME = LocalTime.of(9, 0, 0).get(ChronoField.MILLI_OF_DAY)
 
-    /** 9시 5분 매도 시간*/
-    private val SELL_5_TIME = LocalTime.of(9, 5, 0).get(ChronoField.MILLI_OF_DAY)
-
-    /** 매수*/
-    private val BUY_TIME = LocalTime.of(9, 5, 10).get(ChronoField.MILLI_OF_DAY)
+    /** 매수 시작 시간*/
+    private val BUY_TIME = LocalTime.of(9, 1, 0).get(ChronoField.MILLI_OF_DAY)
 
     /** 장 종료(동시호가 제외)*/
     private val CLOSE_TIME = LocalTime.of(15, 20, 0).get(ChronoField.MILLI_OF_DAY)
@@ -42,14 +39,6 @@ object TradeTimeHelper {
     fun isMorningSimultaneity(): Boolean {
         val now = LocalTime.now().get(ChronoField.MILLI_OF_DAY)
         return now in (START_TIME + 1) until OPEN_TIME
-    }
-
-    /**
-     * @return 장 시작 시간 5분 매도 시간 범위이면 true
-     */
-    fun isOpen5MinPriceSellTime(): Boolean {
-        val now = LocalTime.now().get(ChronoField.MILLI_OF_DAY)
-        return now in (SELL_5_TIME + 1) until BUY_TIME
     }
 
     /**
@@ -80,6 +69,14 @@ object TradeTimeHelper {
             return false
         }
         return true
+    }
+
+    /**
+     * 장 오픈 이후 시간
+     */
+    fun isAfterOpen(): Boolean {
+        val now = LocalTime.now().get(ChronoField.MILLI_OF_DAY)
+        return now > OPEN_TIME
     }
 
     private fun isHoliday(): Boolean {

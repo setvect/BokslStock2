@@ -7,8 +7,6 @@ import com.setvect.bokslstock2.koreainvestment.trade.entity.AssetHistoryEntity
 import com.setvect.bokslstock2.koreainvestment.trade.entity.TradeEntity
 import com.setvect.bokslstock2.koreainvestment.trade.model.request.*
 import com.setvect.bokslstock2.koreainvestment.trade.model.response.BalanceResponse
-import com.setvect.bokslstock2.koreainvestment.trade.model.response.CancelableResponse
-import com.setvect.bokslstock2.koreainvestment.trade.model.response.CommonResponse
 import com.setvect.bokslstock2.koreainvestment.trade.repository.AssetHistoryRepository
 import com.setvect.bokslstock2.koreainvestment.trade.repository.TradeRepository
 import com.setvect.bokslstock2.koreainvestment.trade.service.PriceGroupService
@@ -92,7 +90,7 @@ class VbsService(
             log.info("매매 시작")
             run = true
         }
-        todayClosed = true
+        todayClosed = false
 
         checkDay()
 
@@ -170,11 +168,14 @@ class VbsService(
      */
     private fun sellSimultaneousPrice() {
         while (true) {
-            val sellOpenTime = TradeTimeHelper.isOpenPriceSellTime()
+            // 장 시작 이후면 동시호과 매도하지 않음
+            if (TradeTimeHelper.isAfterOpen()) {
+                return
+            }
 
             // 장시작 동시호가 매도
             val vbsStocks = bokslStockProperties.koreainvestment.vbs.stock
-            if (!sellOpenTime) {
+            if (!TradeTimeHelper.isOpenPriceSellTime()) {
                 TimeUnit.MILLISECONDS.sleep(200)
                 continue
             }
@@ -193,6 +194,7 @@ class VbsService(
                     )
                     // 전일 종가 구함
                     val previousClosePrice = dayPriceCandle.output!![1].stckClpr
+                    log.info("${it.getName()}(${it.code}) 전일종가: $previousClosePrice, 예상체결가: $bidPrice")
                     return@filter bidPrice <= previousClosePrice
                 }
             log.info("stayGapRise == true이고 예상 체결가가 전일 종가 이하면 매도 : $gapDropSellStockList")
@@ -203,6 +205,7 @@ class VbsService(
 
     /**
      * 목표가 계산
+     * @return <종목코드, 목표가>
      */
     private fun getTargetPrice(): Map<String, Int> {
         val vbsStocks = bokslStockProperties.koreainvestment.vbs.stock
@@ -470,12 +473,20 @@ class VbsService(
             return
         }
         loadBalance()
-        val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
-        val cancelableStock =
-            stockClientService.requestCancelableList(CancelableRequest(accountNo), tokenService.getAccessToken())
-        initBuyCode(cancelableStock)
-        val message = StringBuilder()
+        initBuyCode()
+        sendBalance()
 
+        overTargetPriceCheck = bokslStockProperties.koreainvestment.vbs.stock
+            .associate { it.code to false } as MutableMap<String, Boolean>
+
+        currentDate = LocalDate.now()
+    }
+
+    /**
+     * 잔고 정보 슬랙 전송
+     */
+    private fun sendBalance() {
+        val message = StringBuilder()
         message.append("예수금(D+2): ${comma(balanceResponse!!.deposit[0].prvsRcdlExccAmt)}\n")
 
         val balanceMessage = balanceResponse!!.holdings.joinToString("\n") {
@@ -486,16 +497,13 @@ class VbsService(
                     "평가금액 ${comma(it.evluAmt)}"
         }
         message.append(balanceMessage)
-
         log.info(message.toString())
         slackMessageService.sendMessage(message.toString())
-
-        overTargetPriceCheck = bokslStockProperties.koreainvestment.vbs.stock
-            .associate { it.code to false } as MutableMap<String, Boolean>
-
-        currentDate = LocalDate.now()
     }
 
+    /**
+     * 잔고 조회
+     */
     private fun loadBalance() {
         val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
         balanceResponse = stockClientService.requestBalance(BalanceRequest(accountNo), tokenService.getAccessToken())
@@ -504,8 +512,11 @@ class VbsService(
     /**
      * 현재 매수 또는 매수 대기중인 종목
      */
-    private fun initBuyCode(cancelableStock: CommonResponse<List<CancelableResponse>>) {
+    private fun initBuyCode() {
         buyCode.clear()
+        val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
+        val cancelableStock =
+            stockClientService.requestCancelableList(CancelableRequest(accountNo), tokenService.getAccessToken())
         val holdingStock = getHoldingStock()
         // 잔고가 1이상인 경우만 보유 주식으로 인정
         val hasStock = holdingStock.entries.filter { it.value.hldgQty >= 1 }.map { it.key }
