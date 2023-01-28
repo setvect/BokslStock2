@@ -56,7 +56,7 @@ class VbsService(
     private var currentDate: LocalDate = LocalDate.now().minusDays(1)
 
     /** true이면 currentDate가 가르키는 날 휴장*/
-    private var todayClosed = false
+    private var todayClosed = true
     private var balanceResponse: BalanceResponse? = null
 
     /** 매수 또는 매수 대기중인 종목 */
@@ -96,6 +96,7 @@ class VbsService(
 
         try {
             if (!TradeTimeHelper.isTimeToTrade()) {
+                log.info("매매 가능시간 아님")
                 return
             }
             if (!isTradingDay()) {
@@ -141,6 +142,9 @@ class VbsService(
         saveAssetStatus()
     }
 
+    /**
+     * 보유 종목과 예수금 정보를 기록함
+     */
     private fun saveAssetStatus() {
         val regDate = LocalDateTime.now()
         balanceResponse!!.holdings.forEach { stock ->
@@ -168,15 +172,16 @@ class VbsService(
      */
     private fun sellSimultaneousPrice() {
         while (true) {
-            // 장 시작 이후면 동시호과 매도하지 않음
             if (TradeTimeHelper.isAfterOpen()) {
+                log.info("장시작 이후는 동시호가 매도 하지 않음")
                 return
             }
 
             // 장시작 동시호가 매도
             val vbsStocks = bokslStockProperties.koreainvestment.vbs.stock
             if (!TradeTimeHelper.isOpenPriceSellTime()) {
-                TimeUnit.MILLISECONDS.sleep(200)
+                log.debug("동시호가 매도 범위 아님. 대기함")
+                TimeUnit.MILLISECONDS.sleep(500)
                 continue
             }
 
@@ -186,18 +191,17 @@ class VbsService(
 
             val gapDropSellStockList = vbsStocks.filter { it.stayGapRise }
                 .filter {
-                    // 예상체결가가 전일 종가보다 낮으면 매도
                     val bidPrice = getBidPrice(it.code)
                     val dayPriceCandle = stockClientService.requestDatePrice(
                         DatePriceRequest(it.code, DatePriceRequest.DateType.DAY),
                         tokenService.getAccessToken()
                     )
-                    // 전일 종가 구함
                     val previousClosePrice = dayPriceCandle.output!![1].stckClpr
                     log.info("${it.getName()}(${it.code}) 전일종가: $previousClosePrice, 예상체결가: $bidPrice")
+                    // 예상체결가가 전일 종가보다 낮으면 매도
                     return@filter bidPrice <= previousClosePrice
                 }
-            log.info("stayGapRise == true이고 예상 체결가가 전일 종가 이하면 매도 : $gapDropSellStockList")
+            log.info("stayGapRise == true AND 예상 체결가가 전일 종가 이하 -> 매도 : $gapDropSellStockList")
             sellOrder(gapDropSellStockList)
             return
         }
@@ -389,6 +393,9 @@ class VbsService(
         }
     }
 
+    /**
+     * 매도 주문. 만약 잔고가 0이면 매도 하지 않음
+     */
     private fun sellOrder(stock: BalanceResponse.Holdings) {
         if (stock.hldgQty == 0) {
             log.warn("보유수량이 없는 종목을 매도 요청했음. $stock")
@@ -399,14 +406,15 @@ class VbsService(
 
         val yieldValue = ApplicationUtil.getYield(stock.pchsAvgPric.toInt(), bidPrice)
         val message = "[매도 주문] ${stock.prdtName}(${stock.code}), " +
+                "현재가: ${comma(bidPrice)}, " +
                 "주문가: ${comma(sellPrice)}, " +
                 "매수평단가: ${comma(stock.pchsAvgPric.toInt())}, " +
                 "수량: ${comma(stock.hldgQty)}, " +
-                "수익률(추정): ${percent(yieldValue * 100)}"
+                "수익률(추정): ${percent(yieldValue * 100)}, "
+                "수익금(추정): ${stock.evluAmt * yieldValue}"
         log.info(message)
 
         val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
-
         val requestOrderSell = stockClientService.requestOrderSell(
             OrderRequest(
                 cano = accountNo,
@@ -434,8 +442,8 @@ class VbsService(
                 regDate = LocalDateTime.now()
             )
             tradeRepository.save(tradeEntity)
+            slackMessageService.sendMessage(message)
         }
-        slackMessageService.sendMessage(message)
     }
 
 
@@ -450,7 +458,6 @@ class VbsService(
             val quoteResponse = stockClientService.requestQuote(QuoteRequest(code), tokenService.getAccessToken())
             quoteResponse.output2!!.expectedPrice
         } else {
-            // TODO 호가창 기준으로 조회
             val requestCurrentPrice =
                 stockClientService.requestCurrentPrice(CurrentPriceRequest(code), tokenService.getAccessToken())
             requestCurrentPrice.output!!.stckPrpr
@@ -546,9 +553,9 @@ class VbsService(
                 return@forEach
             }
 
-            // 오늘 매수한 종목으 다시 매도하지 않음
+            // 오늘 매수한 종목은 다시 매도하지 않음
             if (stock.thdtBuyqty != 0) {
-                log.info("${it.code}] 오늘 매수한 종목")
+                log.info("${it.code}] 오늘 매수한 종목. 매도 하지 않음")
                 return@forEach
             }
 
@@ -580,5 +587,4 @@ class VbsService(
             }
         }
     }
-
 }
