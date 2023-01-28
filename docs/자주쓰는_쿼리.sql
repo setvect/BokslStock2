@@ -63,3 +63,56 @@ where 1 = 1
   AND CB.CANDLE_DATE_TIME between '2021-08-31' and '2021-09-01'
 order by CANDLE_DATE_TIME
 ;
+
+
+select CA.NAME,
+       CB.CANDLE_DATE_TIME,
+       CB.OPEN_PRICE,
+       CB.CLOSE_PRICE,
+       CB.CLOSE_PRICE - CB.OPEN_PRICE         등락,
+       (CB.CLOSE_PRICE / CB.OPEN_PRICE - 1.0) 상승률
+from CA_STOCK CA
+         join CB_CANDLE CB on CA.STOCK_SEQ = CB.STOCK_SEQ
+where code = '192090'
+order by CB.CANDLE_DATE_TIME desc;
+
+
+select avg(CB.CLOSE_PRICE - CB.OPEN_PRICE) 등락, avg(CB.CLOSE_PRICE / CB.OPEN_PRICE - 1.0) 상승률
+from CA_STOCK CA
+         join CB_CANDLE CB on CA.STOCK_SEQ = CB.STOCK_SEQ
+where code = '192090';
+
+select min(CA.NAME),
+       count(*)                                                               as 매매회숫,
+       round(exp(avg(ln(CB.CLOSE_PRICE / CB.OPEN_PRICE + 1.0))) - 1, 5)       as 기하평균,
+       round(avg(CB.CLOSE_PRICE / CB.OPEN_PRICE), 5)                          as 산술평균,
+       round(exp(sum(ln(CB.CLOSE_PRICE / CB.OPEN_PRICE))) - 1, 5)             as 누적수익률,
+       round((exp(sum(ln(CB.CLOSE_PRICE / CB.OPEN_PRICE - 0.00015))) - 1), 5) as `누적수익률(매매비용 0.015%적용)`
+from CA_STOCK CA
+         join CB_CANDLE CB on CA.STOCK_SEQ = CB.STOCK_SEQ
+where 1 = 1
+  and code = '192090'
+  and CB.CANDLE_DATE_TIME between '2023-01-19' and '2023-01-27';
+
+select CA.code,
+       min(CA.NAME),
+       min(CB.CANDLE_DATE_TIME)                                                                  as 시작일,
+       max(CB.CANDLE_DATE_TIME)                                                                  as 종료일,
+       count(*)                                                                                  as 매매회숫,
+       round(exp(avg(ln(CB.CLOSE_PRICE / CB.OPEN_PRICE + 1.0))) - 1, 5)                          as 기하평균,
+       round(avg(CB.CLOSE_PRICE / CB.OPEN_PRICE), 5)                                             as 산술평균,
+       round(exp(sum(ln(CB.CLOSE_PRICE / CB.OPEN_PRICE))) - 1, 5)                                as 누적수익률,
+       round((exp(sum(ln(CB.CLOSE_PRICE / CB.OPEN_PRICE - 0.00015))) - 1),
+             5)                                                                                  as `누적수익률(매매비용 0.015%적용)`,
+       round((exp(sum(ln(CB.CLOSE_PRICE / CB.OPEN_PRICE - 0.00015))) - 1), 5) / count(*)         as `매매당 기대수익률`,
+       (round((exp(sum(ln(CB.CLOSE_PRICE / CB.OPEN_PRICE - 0.00015))) - 1), 5) / count(*)) * 260 as `약식 CAGR`
+from CA_STOCK CA
+         join CB_CANDLE CB on CA.STOCK_SEQ = CB.STOCK_SEQ
+where 1 = 1
+  and CB.CLOSE_PRICE <> 0
+  and CB.OPEN_PRICE <> 0
+  and CB.PERIOD_TYPE = 'PERIOD_DAY'
+  and CB.CANDLE_DATE_TIME between '2018-01-01' and '2023-01-01'
+group by CA.CODE
+order by `매매당 기대수익률` desc;
+
