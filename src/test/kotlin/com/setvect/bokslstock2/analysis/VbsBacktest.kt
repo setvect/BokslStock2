@@ -211,7 +211,7 @@ class VbsBacktest {
             VbsAnalysisCondition(
                 tradeConditionList = listOf(
                     backtestVbs(StockCode.KODEX_KOSDAQ_2X_233740, range),
-//                    backtestVbs(StockCode.KODEX_BANK_091170, range),
+                    backtestVbs(StockCode.KODEX_BANK_091170, range),
                 ),
                 basic = TradeCondition(
                     range = range,

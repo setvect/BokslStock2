@@ -28,7 +28,6 @@ import java.net.URL
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
-import kotlin.streams.toList
 
 
 @Service
@@ -56,15 +55,33 @@ class CrawlStockPriceService(
     fun crawlStockPriceAll() {
         val stockEntities = stockRepository.findAll()
         stockEntities.forEach {
-            val stockCode = StockCode.findByCode(it.code)
-            val deleteCount = candleRepository.deleteByStock(it)
-            log.info("시세 데이터 삭제: ${it.name}(${it.code}) - ${String.format("%,d", deleteCount)}건")
+            crawlStockPriceWithDelete(it)
+        }
+    }
 
-            when (stockCode.national) {
-                StockCode.StockType.KOR -> crawlStockPrice(it)
-                StockCode.StockType.USA -> crawlStockPriceGlobal(it)
-                StockCode.StockType.EXCHANGE -> crawlExchangeDollarAll(it)
-            }
+    /**
+     * [stockEntity] 시세 모두 지우고 다시 수집
+     */
+    @Transactional
+    fun crawlStockPriceWithDelete(stockCode: StockCode) {
+        val stockEntityOptional = stockRepository.findByCode(stockCode.code)
+        if (stockEntityOptional.isEmpty) {
+            log.info("종목 등록: $stockCode")
+            stockRepository.save(StockEntity(code = stockCode.code, name = stockCode.desc))
+        }
+        val stockEntity = stockRepository.findByCode(stockCode.code).get()
+        crawlStockPriceWithDelete(stockEntity)
+    }
+
+    private fun crawlStockPriceWithDelete(stockEntity: StockEntity) {
+        val stockCode = StockCode.findByCode(stockEntity.code)
+        val deleteCount = candleRepository.deleteByStock(stockEntity)
+        log.info("시세 데이터 삭제: ${stockEntity.name}(${stockEntity.code}) - ${String.format("%,d", deleteCount)}건")
+
+        when (stockCode.national) {
+            StockCode.StockType.KOR -> crawlStockPrice(stockEntity)
+            StockCode.StockType.USA -> crawlStockPriceGlobal(stockEntity)
+            StockCode.StockType.EXCHANGE -> crawlExchangeDollarAll(stockEntity)
         }
     }
 
