@@ -4,7 +4,9 @@ import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService
+import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
+import com.setvect.bokslstock2.util.NumberUtil.percent
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
@@ -108,6 +110,62 @@ class CancelAnalysisTest {
             }
         }
         log.info("[$stockCode] 총 날짜: $dayCount, 갭 상승: $gapRiseOpenCount, 수익 건수: $gapRiseKeepCount")
+    }
+
+
+    @Test
+    @DisplayName("갭 상승일 때 시초가 매수 후 종가 매도")
+    fun test3() {
+
+        // 의미 없는 방식이다.
+
+//        val targetRange = DateRange("2023-01-16T00:00:00", "2023-01-27T00:00:00")
+        val targetRange = DateRange("2020-01-01T00:00:00", "2023-01-27T00:00:00")
+
+        val stockCode = StockCode.TIGER_CSI300_192090
+        val range = candleRepository.findByCandleDateTimeBetween(
+            listOf(stockCode.code),
+            PeriodType.PERIOD_DAY,
+            targetRange.from,
+            targetRange.to
+        )
+        log.info("대상기간 변경: $targetRange -> $range")
+
+        val candleDtoList = movingAverageService.getMovingAverage(
+            stockCode,
+            PeriodType.PERIOD_DAY,
+            PeriodType.PERIOD_DAY,
+            listOf(1),
+            range
+        )
+
+        log.info("사이즈: ${candleDtoList.size}")
+
+        var current: LocalDate = candleDtoList[0].candleDateTimeStart.toLocalDate()
+        var dayCount = 0
+        var gapRiseOpenCount = 0
+        var gapRiseKeepCount = 0
+        var cumulativeReturn = 1.0
+
+        candleDtoList.forEach {
+            if (current == it.candleDateTimeStart.toLocalDate()) {
+                return@forEach
+            }
+
+            current = it.candleDateTimeStart.toLocalDate()
+            dayCount++
+
+            if (it.getOpenYield() > 0) {
+                gapRiseOpenCount++
+                val yieldValue = ApplicationUtil.getYield(it.openPrice, it.closePrice)
+                cumulativeReturn *= yieldValue + 1
+                if (yieldValue > 0.0) {
+                    gapRiseKeepCount++
+                }
+                log.info("매매 날짜: ${it.candleDateTimeStart}, 당일 수익률: ${percent(yieldValue)}, 누적 수익률: ${percent((cumulativeReturn - 1) * 100)}")
+            }
+        }
+        log.info("[$stockCode] 총 날짜: $dayCount, 갭 상승: $gapRiseOpenCount, 수익 건수: $gapRiseKeepCount, 수익률: ${percent((cumulativeReturn - 1) * 100)}")
     }
 }
 

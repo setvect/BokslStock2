@@ -60,7 +60,7 @@ class CrawlStockPriceService(
     }
 
     /**
-     * [stockEntity] 시세 모두 지우고 다시 수집
+     * [stockCode] 시세 모두 지우고 다시 수집
      */
     @Transactional
     fun crawlStockPriceWithDelete(stockCode: StockCode) {
@@ -256,6 +256,6 @@ class CrawlStockPriceService(
         }
 
         candleRepository.saveAll(candleList)
-        log.info("save $stockEntity, count: ${candleList.size}, from=${candleList[0].candleDateTime}, to=${candleList[candleList.size - 1].candleDateTime}")
+        log.info("save ${stockEntity.name}, count: ${candleList.size}, from=${candleList[0].candleDateTime}, to=${candleList[candleList.size - 1].candleDateTime}")
     }
 }
