@@ -320,7 +320,7 @@ class VbsService(
                     percent(
                         realtimeExecution.prdyCtrt
                     )
-                }) (매수 목표가: ${comma(targetPriceMap[vbsStock.code] ?: 0)})"
+                }) (매수 목표가: ${comma(targetPriceMap[vbsStock.code] ?: 0)}, 오늘 최고가: ${comma(realtimeExecution.stckHgpr)})"
             )
             beforePriceMap[vbsStock.code] = realtimeExecution.stckPrpr
         }
@@ -411,7 +411,7 @@ class VbsService(
                 "매수평단가: ${comma(stock.pchsAvgPric.toInt())}, " +
                 "수량: ${comma(stock.hldgQty)}, " +
                 "수익률(추정): ${percent(yieldValue * 100)}, "
-                "수익금(추정): ${stock.evluAmt * yieldValue}"
+        "수익금(추정): ${stock.evluAmt * yieldValue}"
         log.info(message)
 
         val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
