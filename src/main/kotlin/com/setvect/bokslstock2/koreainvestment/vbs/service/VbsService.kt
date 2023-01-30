@@ -568,15 +568,18 @@ class VbsService(
                 return@forEach
             }
 
+            val now = LocalTime.now()
             val minutePrice = stockClientService.requestMinutePrice(
                 MinutePriceRequest(
                     it.code,
-                    LocalTime.now()
+                    now
                 ), tokenService.getAccessToken()
             )
             val groupingCandleList = PriceGroupService.groupByMinute5(minutePrice, StockCode.findByCode(it.code))
-            // 09:05, 09:10, 09:15, ... 이런식으로 호출 되니깐 1번째 인덱스를 접근해야지 직전 5분봉을 얻을 수 있음
-            val beforeCandle = groupingCandleList[1]
+            // 09:05, 09:10, 09:15, ... 이런식으로 호출 
+            // 끝에서 2번째가 직전 5분봉
+            val beforeCandle = groupingCandleList[groupingCandleList.size - 2]
+            log.info("호출 시간: $now")
             log.info("${it.code}] 직전 5분봉: $beforeCandle")
 
             val belowOpeningPrice = beforeCandle.openPrice >= beforeCandle.closePrice

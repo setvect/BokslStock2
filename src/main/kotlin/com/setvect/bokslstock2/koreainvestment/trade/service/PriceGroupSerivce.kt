@@ -11,6 +11,10 @@ import java.util.*
 @Service
 class PriceGroupService {
     companion object {
+        /**
+         * 과거 ~ 최신 순으로 반환
+         * @return 5분봉
+         */
         fun groupByMinute5(
             minutePrice: MinutePriceResponse,
             stockCode: StockCode

@@ -64,15 +64,19 @@ internal class StockClientServiceTest {
     @Test
     fun requestMinutePrice() {
         val stockCode = StockCode.KODEX_BANK_091170
+        val now = LocalTime.of(10,10,0)
         val minutePrice = stockClientService.requestMinutePrice(
             MinutePriceRequest(
                 stockCode.code,
-                LocalTime.of(9, 29, 0)
+                now
             ), AUTHORIZATION
         )
+
         val groupingCandleList = PriceGroupService.groupByMinute5(minutePrice, stockCode)
         val json = JsonUtil.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(groupingCandleList)
         log.info(json)
+        log.info("now: $now")
+        log.info("직전 5분봉: ${groupingCandleList[groupingCandleList.size - 2]}")
     }
 
     @Test
