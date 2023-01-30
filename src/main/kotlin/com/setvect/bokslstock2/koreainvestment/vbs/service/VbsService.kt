@@ -186,7 +186,7 @@ class VbsService(
             }
 
             val openSellStockList = vbsStocks.filter { !it.stayGapRise }
-            log.info("gapRiseKepp == false인 종목 매도: $openSellStockList")
+            log.info("stayGapRise == false인 종목 매도: $openSellStockList")
             sellOrder(openSellStockList)
 
             val gapDropSellStockList = vbsStocks.filter { it.stayGapRise }
@@ -535,13 +535,15 @@ class VbsService(
 
     /** 5분마다 실행되는 매도 체크 */
     fun sellCheck() {
+        log.info("매도 체크")
         if (todayClosed) {
             log.info("휴장")
             return
         }
 
-        if (!TradeTimeHelper.isGapSellTimeRange()) {
+        if (!TradeTimeHelper.isStayGapRiseTimeRange()) {
             log.info("매도 가능시간 아님")
+            return
         }
 
         val holdingStock = getHoldingStock()
