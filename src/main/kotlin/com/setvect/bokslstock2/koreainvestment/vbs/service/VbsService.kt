@@ -20,6 +20,7 @@ import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.NumberUtil.comma
 import com.setvect.bokslstock2.util.NumberUtil.percent
 import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
@@ -57,6 +58,8 @@ class VbsService(
 
     /** true이면 currentDate가 가르키는 날 휴장*/
     private var todayClosed = true
+
+    // TODO 속성으로 사용하지 않고 지역변수로 사용하도록 변경할 필요가 있을것 같은데 검토
     private var balanceResponse: BalanceResponse? = null
 
     /** 매수 또는 매수 대기중인 종목 */
@@ -385,7 +388,7 @@ class VbsService(
      * [openSellStockList] 매도 종목
      */
     private fun sellOrder(openSellStockList: List<BokslStockProperties.Vbs.VbsStock>) {
-        val holdingsMap = getHoldingStock()
+        val holdingsMap = getHoldingStock(false)
 
         openSellStockList.forEach {
             val stock = holdingsMap[it.code] ?: return@forEach
@@ -466,9 +469,13 @@ class VbsService(
 
     /**
      * 주식 잔고
+     * [reloadBalance] true면 계좌 잔고를 조회, false면 기존 조회한 값을 그대로 반환
      * @return <종목코드, 잔고정보>
      */
-    private fun getHoldingStock(): Map<String, BalanceResponse.Holdings> {
+    private fun getHoldingStock(reloadBalance: Boolean): Map<String, BalanceResponse.Holdings> {
+        if (reloadBalance) {
+            loadBalance()
+        }
         return balanceResponse!!.holdings.associateBy { it.code }
     }
 
@@ -524,7 +531,7 @@ class VbsService(
         val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
         val cancelableStock =
             stockClientService.requestCancelableList(CancelableRequest(accountNo), tokenService.getAccessToken())
-        val holdingStock = getHoldingStock()
+        val holdingStock = getHoldingStock(false)
         // 잔고가 1이상인 경우만 보유 주식으로 인정
         val hasStock = holdingStock.entries.filter { it.value.hldgQty >= 1 }.map { it.key }
         buyCode.addAll(hasStock)
@@ -545,8 +552,8 @@ class VbsService(
             log.info("매도 가능시간 아님")
             return
         }
-
-        val holdingStock = getHoldingStock()
+        val holdingStock = getHoldingStock(true)
+        senderPurchaseStock(holdingStock)
 
         bokslStockProperties.koreainvestment.vbs.stock.forEach {
             val stock = holdingStock[it.code] ?: return@forEach
@@ -561,7 +568,7 @@ class VbsService(
                 return@forEach
             }
 
-            // 오늘 최고가가 목표를 이상이면 매도 하지 않음
+            // 오늘 최고가가 목표가 이상이면 매도 하지 않음
             log.info("종목별 오늘 최고가: $targetPriceMap")
             if (overTargetPriceCheck[stock.code] == true) {
                 log.info("${it.code}] 목표가를 넘겼음. 매도 하지 않음")
@@ -590,6 +597,22 @@ class VbsService(
             } else {
                 log.info("${it.code} 매수상태 유지")
             }
+        }
+    }
+
+    /**
+     * 매수 잔고 슬랙 전달
+     * 매수 종목이 없으면 메시지 전달하지 않음
+     */
+    private fun senderPurchaseStock(holdingStock: Map<String, BalanceResponse.Holdings>) {
+        if (holdingStock.isEmpty()) {
+            return
+        }
+        val stockInfo = holdingStock.entries.map { entry ->
+            return@map "- ${entry.value.prdtName}(${entry.value.code}), 수익률: ${percent(entry.value.evluPflsRt)}, 평가손익: ${comma(entry.value.evluPflsAmt)}"
+        }.joinToString("\n")
+        if (StringUtils.isNotBlank(stockInfo)) {
+            slackMessageService.sendMessage(stockInfo)
         }
     }
 }
