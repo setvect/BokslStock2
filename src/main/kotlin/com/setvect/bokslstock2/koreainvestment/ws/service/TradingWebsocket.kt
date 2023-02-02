@@ -44,7 +44,6 @@ class TradingWebsocket(
             websocketClientEndpoint!!.sendMessage(message)
         }
         log.info("웹소켓 시작 완료")
-        slackMessageService.sendMessage("웹소켓 오픈")
     }
 
     fun close() {

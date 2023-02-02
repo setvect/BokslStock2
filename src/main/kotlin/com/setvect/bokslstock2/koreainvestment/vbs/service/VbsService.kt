@@ -608,6 +608,11 @@ class VbsService(
         if (holdingStock.isEmpty()) {
             return
         }
+
+        if (holdingStock.entries.none { it.value.hldgQty != 0 }) {
+            return
+        }
+
         val stockInfo = holdingStock.entries.map { entry ->
             return@map "- ${entry.value.prdtName}(${entry.value.code}), 수익률: ${percent(entry.value.evluPflsRt)}, 평가손익: ${comma(entry.value.evluPflsAmt)}"
         }.joinToString("\n")
