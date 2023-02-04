@@ -312,4 +312,27 @@ object ApplicationUtil {
         return (mean - riskFreeReturn) / stdev * sqrt(periodByCount.toDouble())
     }
 
+
+    /**
+     * chat GPT 통해서 얻은 계산 방식
+     * TODO 검증 필요함
+     */
+    fun getSharpeRateFromChatGpt(returns: List<Double>, riskFreeRate: Double, periodsPerYear: Int): Double {
+        var expectedReturn = 0.0
+        var expectedVolatility = 0.0
+        var sharpeRatio: Double
+
+        for (returnValue in returns) {
+            expectedReturn += returnValue
+        }
+        expectedReturn /= returns.size
+
+        for (returnValue in returns) {
+            expectedVolatility += (returnValue - expectedReturn).pow(2.0)
+        }
+        expectedVolatility = sqrt(expectedVolatility / returns.size)
+        val stdev = expectedVolatility / sqrt(periodsPerYear.toDouble())
+        sharpeRatio = (expectedReturn - riskFreeRate) / stdev
+        return sharpeRatio
+    }
 }
