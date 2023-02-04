@@ -44,4 +44,11 @@ data class CandleDto(
     fun getOpenYield(): Double {
         return ApplicationUtil.getYield(beforeClosePrice, openPrice)
     }
+    /**
+     *
+     * @return 수익률(오늘 종가 / 오늘 시가)
+     */
+    fun getTodayYield(): Double {
+        return ApplicationUtil.getYield(openPrice, closePrice)
+    }
 }
