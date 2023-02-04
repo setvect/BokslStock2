@@ -283,7 +283,7 @@ object ApplicationUtil {
         stockBuyTotalCount: Int,
         investRatio: Double
     ): Double {
-        // 매수에 사용할 현금
+        // 현재현금과 매수 종목 수를 가지고 역산해 총 현금을 구함
         // 현재현금 * 직전 매수 종목 수 / 매매 대상 종목수 * 사용비율 * 매매 대상 종목수  / 사용비율 / (매매 대상 종목수 / 사용비율 - 직전 매수 종목 수) + 현재현금
         val startCash =
             cash * currentBuyStockCount / stockBuyTotalCount * investRatio * stockBuyTotalCount / investRatio / (stockBuyTotalCount / investRatio - currentBuyStockCount) + cash
