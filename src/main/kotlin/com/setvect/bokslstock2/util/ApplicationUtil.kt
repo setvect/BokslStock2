@@ -320,7 +320,6 @@ object ApplicationUtil {
     fun getSharpeRateFromChatGpt(returns: List<Double>, riskFreeRate: Double, periodsPerYear: Int): Double {
         var expectedReturn = 0.0
         var expectedVolatility = 0.0
-        var sharpeRatio: Double
 
         for (returnValue in returns) {
             expectedReturn += returnValue
@@ -331,8 +330,6 @@ object ApplicationUtil {
             expectedVolatility += (returnValue - expectedReturn).pow(2.0)
         }
         expectedVolatility = sqrt(expectedVolatility / returns.size)
-        val stdev = expectedVolatility / sqrt(periodsPerYear.toDouble())
-        sharpeRatio = (expectedReturn - riskFreeRate) / stdev
-        return sharpeRatio
+        return (expectedReturn - riskFreeRate) / (expectedVolatility / sqrt(periodsPerYear.toDouble()))
     }
 }
