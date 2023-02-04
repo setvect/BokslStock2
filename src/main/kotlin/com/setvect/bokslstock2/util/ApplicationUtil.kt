@@ -2,6 +2,7 @@ package com.setvect.bokslstock2.util
 
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
 import com.setvect.bokslstock2.index.model.PeriodType
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import org.apache.http.HttpStatus
 import org.apache.http.client.HttpClient
 import org.apache.http.client.config.RequestConfig
@@ -14,6 +15,7 @@ import java.time.LocalDateTime
 import java.util.stream.Collectors
 import java.util.stream.IntStream
 import kotlin.math.pow
+import kotlin.math.sqrt
 
 /**
  * 어플리케이션의 의존적인 유틸성 메소드
@@ -290,4 +292,24 @@ object ApplicationUtil {
         // 매수에 사용할 현금 = 시작현금 역산 * 사용비율 * (1/매매종목수)
         return startCash * investRatio * (1 / stockBuyTotalCount.toDouble())
     }
+
+    /**
+     * [yieldList] 투자 비율
+     * @return 사프 지수
+     */
+    fun getSharpeRatio(yieldList: List<Double>): Double {
+        return getSharpeRatio(yieldList, 0.0, yieldList.size)
+    }
+
+    /**
+     *[yieldList] 월 단위 수익률
+     * [riskFreeReturn] 무위험 수익률(예를 들어 3%라고 하면 0.03 입력)
+     */
+    fun getSharpeRatio(yieldList: List<Double>, riskFreeReturn: Double, periodByCount: Int): Double {
+        val ds = DescriptiveStatistics(yieldList.toDoubleArray())
+        val mean = ds.mean
+        val stdev = ds.standardDeviation
+        return (mean - riskFreeReturn) / stdev * sqrt(periodByCount.toDouble())
+    }
+
 }

@@ -1,10 +1,7 @@
 package com.setvect.bokslstock2.analysis.common.model
 
 import com.setvect.bokslstock2.util.ApplicationUtil
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import java.time.LocalDateTime
-import kotlin.math.sqrt
-import kotlin.streams.toList
 
 /**
  * 멀티 종목 매매 백테스트 분석 결과
@@ -84,32 +81,21 @@ data class CommonAnalysisReportResult(
      * @return Buy&Hold 사프지수
      */
     fun getBuyHoldSharpeRatio(): Double {
-        return getSharpeRatio(evaluationAmountHistory.stream().map { it.buyHoldYield }.toList())
+        return ApplicationUtil.getSharpeRatio(evaluationAmountHistory.stream().map { it.buyHoldYield }.toList())
     }
 
     /**
      * @return 밴치마크 사프지수
      */
     fun getBenchmarkSharpeRatio(): Double {
-        return getSharpeRatio(evaluationAmountHistory.stream().map { it.benchmarkYield }.toList())
+        return ApplicationUtil.getSharpeRatio(evaluationAmountHistory.stream().map { it.benchmarkYield }.toList())
     }
 
     /**
      * @return 전략 사프지수
      */
     fun getBacktestSharpeRatio(): Double {
-        return getSharpeRatio(evaluationAmountHistory.stream().map { it.backtestYield }.toList())
-    }
-
-    /**
-     * [yieldList] 투자 비율
-     * @return 사프 지수
-     */
-    private fun getSharpeRatio(yieldList: List<Double>): Double {
-        val ds = DescriptiveStatistics(yieldList.toDoubleArray())
-        val mean = ds.mean
-        val stdev = ds.standardDeviation
-        return mean / stdev * sqrt(yieldList.size.toDouble())
+        return ApplicationUtil.getSharpeRatio(evaluationAmountHistory.stream().map { it.backtestYield }.toList())
     }
 
     /*
