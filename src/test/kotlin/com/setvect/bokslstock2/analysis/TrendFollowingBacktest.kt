@@ -192,13 +192,69 @@ class TrendFollowingBacktest {
         }
     }
 
+    // 결과: 쓰지마
+    @Test
+    @DisplayName(
+        "매수조건: 오늘 종가가 5일 평균 이평선 보다 높고 && n일 전 종가 대비 오늘 종가가 높으면 종가 매수 " +
+                " 매도 조건: 다음날 종가 매도"
+    )
+    fun test5() {
+        val dateRange = DateRange(LocalDate.of(2018, 1, 1), LocalDate.of(2022, 12, 31))
+        val fee = 0.0
+
+        for (stockCode in listOf<StockCode>(
+            KODEX_200_069500,
+            KODEX_IV_2X_252670,
+            KODEX_KOSDAQ_229200,
+            KODEX_KOSDAQ_IV_251340,
+            KODEX_BANK_091170
+        )) {
+            for (n in 1..5) {
+                println(" === ${stockCode.name},  $n  ===")
+                val backTester = object : FollowingBacktest {
+                    override fun trading(candleList: List<CandleDto>): List<TradeStock> {
+                        val tradeHistory = mutableListOf<TradeStock>()
+                        for (i in n until candleList.size) {
+                            val compareTargetCandle = candleList[i - n]
+                            val todayCandle = candleList[i]
+
+                            val sell = tradeHistory.isNotEmpty() && tradeHistory.last().tradeType == TradeType.BUY
+                            val buy = compareTargetCandle.closePrice < todayCandle.closePrice
+                                    && todayCandle.average[5] != null
+                                    && todayCandle.average[5]!! < todayCandle.closePrice
+                            if (sell) {
+                                tradeHistory.add(TradeStock(TradeType.SELL, todayCandle))
+                            } else if (buy) {
+                                tradeHistory.add(TradeStock(TradeType.BUY, todayCandle))
+                            }
+                        }
+                        return tradeHistory.toImmutableList()
+                    }
+
+                    override fun calcYield(buy: CandleDto, sell: CandleDto, fee: Double): Double {
+                        val rateReturn = ApplicationUtil.getYield(buy.closePrice, sell.closePrice) - fee * 2
+//                        println(
+//                            "[${DateUtil.format(buy.candleDateTimeStart, "yyyy.MM.dd")}] " +
+//                                    "매수: ${buy.closePrice}, " +
+//                                    "[${DateUtil.format(sell.candleDateTimeStart, "yyyy.MM.dd")}] " +
+//                                    "매도: ${sell.closePrice}, " +
+//                                    "수익률: ${percent(rateReturn * 100)}"
+//                        )
+                        return rateReturn
+                    }
+                }
+                calcTrade(backTester, stockCode, dateRange, fee)
+            }
+        }
+    }
+
     private fun calcTrade(backTester: FollowingBacktest, stockCode: StockCode, dateRange: DateRange, fee: Double) {
         // 매매 수수료
         val candleList = movingAverageService.getMovingAverage(
             stockCode,
             PeriodType.PERIOD_DAY,
             PeriodType.PERIOD_DAY,
-            listOf(1),
+            listOf(5, 10, 20),
             dateRange
         )
         val tradeHistory = backTester.trading(candleList)
