@@ -7,35 +7,35 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class CancelableResponse(
     /**주문채번지점번호*/
-    @JsonProperty("ORD_GNO_BRNO") val ordGnoBrno: String,
+    @JsonProperty("ord_gno_brno") val ordGnoBrno: String,
     /**주문번호*/
-    @JsonProperty("ODNO") val odno: String,
+    @JsonProperty("odno") val odno: String,
     /**원주문번호*/
-    @JsonProperty("ORGN_ODNO") val orgnOdno: String,
+    @JsonProperty("orgn_odno") val orgnOdno: String,
     /**주문구분명*/
-    @JsonProperty("ORD_DVSN_NAME") val ordDvsnName: String,
+    @JsonProperty("ord_dvsn_name") val ordDvsnName: String,
     /**상품번호 - 종목코드*/
-    @JsonProperty("PDNO") val code: String,
+    @JsonProperty("pdno") val code: String,
     /**상품명*/
-    @JsonProperty("PRDT_NAME") val prdtName: String,
+    @JsonProperty("prdt_name") val prdtName: String,
     /**정정취소구분명*/
-    @JsonProperty("RVSE_CNCL_DVSN_NAME") val rvseCnclDvsnName: String,
+    @JsonProperty("rvse_cncl_dvsn_name") val rvseCnclDvsnName: String,
     /**주문수량*/
-    @JsonProperty("ORD_QTY") val ordQty: String,
+    @JsonProperty("ord_qty") val ordQty: String,
     /**주문단가*/
-    @JsonProperty("ORD_UNPR") val ordUnpr: String,
+    @JsonProperty("ord_unpr") val ordUnpr: String,
     /**주문시각*/
-    @JsonProperty("ORD_TMD") val ordTmd: String,
+    @JsonProperty("ord_tmd") val ordTmd: String,
     /**총체결수량*/
-    @JsonProperty("TOT_CCLD_QTY") val totCcldQty: String,
+    @JsonProperty("tot_ccld_qty") val totCcldQty: String,
     /**총체결금액*/
-    @JsonProperty("TOT_CCLD_AMT") val totCcldAmt: String,
+    @JsonProperty("tot_ccld_amt") val totCcldAmt: String,
     /**가능수량*/
-    @JsonProperty("PSBL_QTY") val psblQty: String,
+    @JsonProperty("psbl_qty") val psblQty: String,
     /**매도매수구분코드*/
-    @JsonProperty("SLL_BUY_DVSN_CD") val sllBuyDvsnCd: String,
+    @JsonProperty("sll_buy_dvsn_cd") val sllBuyDvsnCd: String,
     /**주문구분코드*/
-    @JsonProperty("ORD_DVSN_CD") val ordDvsnCd: String,
+    @JsonProperty("ord_dvsn_cd") val ordDvsnCd: String,
     /**운용사지정주문번호*/
-    @JsonProperty("MGCO_APTM_ODNO") val mgcoAptmOdno: String,
+    @JsonProperty("mgco_aptm_odno") val mgcoAptmOdno: String,
 )
