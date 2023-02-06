@@ -34,7 +34,7 @@ data class BalanceResponse(
         /**보유수량*/
         @JsonProperty("hldg_qty") val hldgQty: Int,
         /**주문가능수량*/
-        @JsonProperty("ord_psbl_qty") val ordPsblQty: String,
+        @JsonProperty("ord_psbl_qty") val ordPsblQty: Int,
         /**매입평균가격*/
         @JsonProperty("pchs_avg_pric") val pchsAvgPric: Double,
         /**매입금액*/

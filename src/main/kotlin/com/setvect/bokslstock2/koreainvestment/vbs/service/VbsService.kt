@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit
 
 
 /** 매도호가 차이(원) */
-private const val SELL_DIFF = 15
+private const val SELL_DIFF = 30
 
 /** ETF 호가 단위(원)*/
 private const val QUOTE_UNIT = 5
@@ -400,8 +400,8 @@ class VbsService(
      * 매도 주문. 만약 잔고가 0이면 매도 하지 않음
      */
     private fun sellOrder(stock: BalanceResponse.Holdings) {
-        if (stock.hldgQty == 0) {
-            log.warn("보유수량이 없는 종목을 매도 요청했음. $stock")
+        if (stock.ordPsblQty == 0) {
+            log.warn("주문가능 수량 없는데 매도 요청했음. $stock")
             return
         }
         val bidPrice = getBidPrice(stock.code)
@@ -412,7 +412,7 @@ class VbsService(
                 "현재가: ${comma(bidPrice)}, " +
                 "주문가: ${comma(sellPrice)}, " +
                 "매수평단가: ${comma(stock.pchsAvgPric.toInt())}, " +
-                "수량: ${comma(stock.hldgQty)}, " +
+                "수량: ${comma(stock.ordPsblQty)}, " +
                 "수익률(추정): ${percent(yieldValue * 100)}, "
         "수익금(추정): ${stock.evluAmt * yieldValue}"
         log.info(message)
@@ -423,7 +423,7 @@ class VbsService(
                 cano = accountNo,
                 code = stock.code,
                 ordunpr = sellPrice,
-                ordqty = stock.hldgQty
+                ordqty = stock.ordPsblQty
             ),
             tokenService.getAccessToken()
         )
@@ -438,7 +438,7 @@ class VbsService(
                 account = DigestUtils.md5Hex(accountNo),
                 code = stock.code,
                 tradeType = TradeType.SELL,
-                qty = stock.hldgQty,
+                qty = stock.ordPsblQty,
                 // TODO 채결 기준이 아니라 주문 기준이라 가격이 정확하지 않음
                 unitPrice = bidPrice.toDouble(),
                 yield = yieldValue,
@@ -533,7 +533,7 @@ class VbsService(
             stockClientService.requestCancelableList(CancelableRequest(accountNo), tokenService.getAccessToken())
         val holdingStock = getHoldingStock(false)
         // 잔고가 1이상인 경우만 보유 주식으로 인정
-        val hasStock = holdingStock.entries.filter { it.value.hldgQty >= 1 }.map { it.key }
+        val hasStock = holdingStock.entries.filter { it.value.ordPsblQty >= 1 }.map { it.key }
         buyCode.addAll(hasStock)
         cancelableStock.output!!.forEach {
             buyCode.add(it.code)
@@ -557,7 +557,7 @@ class VbsService(
 
         bokslStockProperties.koreainvestment.vbs.stock.forEach {
             val stock = holdingStock[it.code] ?: return@forEach
-            if (stock.hldgQty == 0) {
+            if (stock.ordPsblQty == 0) {
                 log.info("${it.code}] 보유 수량 없음")
                 return@forEach
             }
