@@ -207,7 +207,8 @@ class TrendFollowingBacktest {
             KODEX_IV_2X_252670,
             KODEX_KOSDAQ_229200,
             KODEX_KOSDAQ_IV_251340,
-            KODEX_BANK_091170
+            KODEX_BANK_091170,
+            OS_CODE_SPY
         )) {
             for (n in 1..5) {
                 println(" === ${stockCode.name},  $n  ===")
