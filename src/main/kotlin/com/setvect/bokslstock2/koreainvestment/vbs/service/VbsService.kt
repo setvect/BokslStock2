@@ -536,7 +536,14 @@ class VbsService(
         val hasStock = holdingStock.entries.filter { it.value.ordPsblQty >= 1 }.map { it.key }
         buyCode.addAll(hasStock)
         cancelableStock.output!!.forEach {
-            buyCode.add(it.code)
+            if (it.sllBuyDvsnCd == "02") {
+                log.info("[${it.prdtName}-${it.code}]매수 대기")
+                buyCode.add(it.code)
+            } else if (it.sllBuyDvsnCd == "01") {
+                log.info("[${it.prdtName}-${it.code}]매도 대기")
+            } else {
+                log.warn("[${it.prdtName}-${it.code}]없는 코드")
+            }
         }
     }
 
@@ -614,7 +621,11 @@ class VbsService(
         }
 
         val stockInfo = holdingStock.entries.map { entry ->
-            return@map "- ${entry.value.prdtName}(${entry.value.code}), 수익률: ${percent(entry.value.evluPflsRt)}, 평가손익: ${comma(entry.value.evluPflsAmt)}"
+            return@map "- ${entry.value.prdtName}(${entry.value.code}), 수익률: ${percent(entry.value.evluPflsRt)}, 평가손익: ${
+                comma(
+                    entry.value.evluPflsAmt
+                )
+            }"
         }.joinToString("\n")
         if (StringUtils.isNotBlank(stockInfo)) {
             slackMessageService.sendMessage(stockInfo)

@@ -32,7 +32,7 @@ data class CancelableResponse(
     @JsonProperty("tot_ccld_amt") val totCcldAmt: String,
     /**가능수량*/
     @JsonProperty("psbl_qty") val psblQty: String,
-    /**매도매수구분코드*/
+    /**매도매수구분코드 01 : 매도, 02 : 매수*/
     @JsonProperty("sll_buy_dvsn_cd") val sllBuyDvsnCd: String,
     /**주문구분코드*/
     @JsonProperty("ord_dvsn_cd") val ordDvsnCd: String,
