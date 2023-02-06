@@ -537,12 +537,12 @@ class VbsService(
         buyCode.addAll(hasStock)
         cancelableStock.output!!.forEach {
             if (it.sllBuyDvsnCd == "02") {
-                log.info("[${it.prdtName}-${it.code}]매수 대기")
+                log.info("[${it.prdtName}-${it.code}] 매수 대기 - $it")
                 buyCode.add(it.code)
             } else if (it.sllBuyDvsnCd == "01") {
-                log.info("[${it.prdtName}-${it.code}]매도 대기")
+                log.info("[${it.prdtName}-${it.code}] 매도 대기 - $it")
             } else {
-                log.warn("[${it.prdtName}-${it.code}]없는 코드")
+                log.warn("[${it.prdtName}-${it.code}] 없는 코드 - $it")
             }
         }
     }
