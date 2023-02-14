@@ -19,6 +19,8 @@ enum class StockCode(val national: StockType, val code: String, val desc: String
     KODEX_BANK_091170(StockType.KOR, "091170", "KODEX 은행"),
     KODEX_SHORT_BONDS_153130(StockType.KOR, "153130", "KODEX 단기채권"),
     TIGER_USD_SHORT_BONDS_329750(StockType.KOR, "329750", "TIGER 미국달러단기채권액티브"),
+    KODEX_TREASURY_BOND_3_114260(StockType.KOR, "114260", "KODEX 국고채3년"),
+    KOSEF_TREASURY_BOND_10_148070(StockType.KOR, "148070", "KOSEF 국고채10년"),
 
     OS_CODE_QQQ(StockType.USA, "QQQ", "NASDAQ100"),
     OS_CODE_QLD(StockType.USA, "QLD", "NASDAQ100 * 2"),

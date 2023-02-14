@@ -18,7 +18,7 @@ import java.time.LocalDate
 
 @SpringBootTest
 @ActiveProfiles("local")
-class CancelAnalysisTest {
+class CandleAnalysisTest {
     @Autowired
     private lateinit var candleRepository: CandleRepository
 
