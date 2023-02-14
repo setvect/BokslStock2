@@ -1,17 +1,21 @@
-package com.setvect.bokslstock2.analysis
+package com.setvect.bokslstock2.analysis.price
 
 import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.analysis.common.model.StockCode.*
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType
+import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import com.setvect.bokslstock2.util.DateUtil
 import com.setvect.bokslstock2.util.NumberUtil.percent
 import okhttp3.internal.toImmutableList
+import org.apache.commons.collections4.queue.CircularFifoQueue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -26,6 +30,10 @@ import java.time.LocalDate
 class TrendFollowingBacktest {
     @Autowired
     private lateinit var movingAverageService: MovingAverageService
+
+    @Autowired
+    private lateinit var candleRepository: CandleRepository
+    private val log: Logger = LoggerFactory.getLogger(javaClass)
 
     // KODEX_200에서는 의미 있음
     @Test
@@ -248,6 +256,84 @@ class TrendFollowingBacktest {
             }
         }
     }
+
+    // 의미는 있어 보이지만 기간에 따라 수익률이 들쑥날쑥함
+    // 레버리지 종목은 처참함
+    @Test
+    @DisplayName(
+        "매수: 당일 주가가 최근 n일 최고가보다 높은 경우 종가 매수\n" +
+                "매도: 당일 주가가 최근 n일 최고가보다 낮은 경우 종가 매도\n"
+    )
+    fun test6() {
+        val targetRange = DateRange("2001-01-01T00:00:00", "2023-01-01T00:00:00")
+
+        val stockCode = StockCode.KODEX_200_069500
+        val dateRange = candleRepository.findByCandleDateTimeBetween(
+            listOf(stockCode.code),
+            PeriodType.PERIOD_DAY,
+            targetRange.from,
+            targetRange.to
+        )
+        log.info("대상기간 변경: $targetRange -> $dateRange")
+        val fee = 0.0
+
+        val backTester = object : FollowingBacktest {
+            override fun trading(candleList: List<CandleDto>): List<TradeStock> {
+                val period = 20
+                val periodCandleList = CircularFifoQueue<CandleDto>(period)
+                // 최초 값 입력
+                candleList.stream().limit(period.toLong()).forEach {
+                    periodCandleList.add(it)
+                }
+
+                val tradeHistory = mutableListOf<TradeStock>()
+                val yieldHistory = mutableListOf<Double>()
+
+                var i = period
+                while (i < candleList.size) {
+                    val todayCandle = candleList[i]
+                    val candleListSortByClosePrice =
+                        periodCandleList.stream().sorted { o1, o2 -> o1.closePrice.compareTo(o2.closePrice) }.toList()
+
+                    var max = candleListSortByClosePrice.last()
+                    var min = candleListSortByClosePrice.first()
+//                    println(
+//                        "기준날짜: ${todayCandle.candleDateTimeStart}, 최근 $period 거래일(오늘제외) 종가 최고가: ${max.closePrice}(${max.candleDateTimeStart}), " +
+//                                "종가 최적가: ${min.closePrice}(${min.candleDateTimeStart})"
+//                    )
+                    periodCandleList.add(todayCandle)
+                    i++
+                    val sellable = tradeHistory.isNotEmpty() && tradeHistory.last().tradeType == TradeType.BUY
+                    if (sellable) {
+                        // 오늘 종가가 기간 최저가 이하면 매도
+                        if (todayCandle.closePrice <= min.closePrice) {
+                            tradeHistory.add(TradeStock(TradeType.SELL, todayCandle))
+                        }
+                    }
+                    // 오늘 종가가 기간 최고가 이상이면 매수
+                    else if (todayCandle.closePrice >= max.closePrice) {
+                        tradeHistory.add(TradeStock(TradeType.BUY, todayCandle))
+                    }
+                }
+                return tradeHistory.toImmutableList()
+            }
+
+            override fun calcYield(buy: CandleDto, sell: CandleDto, fee: Double): Double {
+                val rateReturn = ApplicationUtil.getYield(buy.closePrice, sell.closePrice) - fee * 2
+                println(
+                    "[${DateUtil.format(buy.candleDateTimeStart, "yyyy.MM.dd")}] " +
+                            "매수: ${buy.closePrice}, " +
+                            "[${DateUtil.format(sell.candleDateTimeStart, "yyyy.MM.dd")}] " +
+                            "매도: ${sell.closePrice}, " +
+                            "수익률: ${percent(rateReturn * 100)}"
+                )
+                return rateReturn
+            }
+        }
+
+        calcTrade(backTester, stockCode, dateRange, fee)
+    }
+
 
     private fun calcTrade(backTester: FollowingBacktest, stockCode: StockCode, dateRange: DateRange, fee: Double) {
         // 매매 수수료
