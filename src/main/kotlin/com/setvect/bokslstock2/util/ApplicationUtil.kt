@@ -2,6 +2,7 @@ package com.setvect.bokslstock2.util
 
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
 import com.setvect.bokslstock2.index.model.PeriodType
+import okhttp3.internal.toImmutableList
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import org.apache.http.HttpStatus
 import org.apache.http.client.HttpClient
@@ -315,9 +316,11 @@ object ApplicationUtil {
 
     /**
      * chat GPT 통해서 얻은 계산 방식
+     * [returns]가 일 기준 수익률이면 [periodsPerCount]는 247(연간 영업일 수)
+     * [returns]가 월 기준 수익률이면 [periodsPerCount]는 12
      * TODO 검증 필요함
      */
-    fun getSharpeRateFromChatGpt(returns: List<Double>, riskFreeRate: Double, periodsPerYear: Int): Double {
+    fun getSharpeRatioFromChatGpt(returns: List<Double>, riskFreeRate: Double, periodsPerCount: Int): Double {
         var expectedReturn = 0.0
         var expectedVolatility = 0.0
 
@@ -330,6 +333,17 @@ object ApplicationUtil {
             expectedVolatility += (returnValue - expectedReturn).pow(2.0)
         }
         expectedVolatility = sqrt(expectedVolatility / returns.size)
-        return (expectedReturn - riskFreeRate) / (expectedVolatility / sqrt(periodsPerYear.toDouble()))
+        return (expectedReturn - riskFreeRate) / (expectedVolatility / sqrt(periodsPerCount.toDouble()))
+    }
+
+    /**
+     * 가격 변화략에 대한 수익률 이력 계산
+     */
+    fun calcPriceYield(priceHistory: List<Double>): List<Double> {
+        val yieldHistory = mutableListOf<Double>()
+        for (i in 1 until priceHistory.size) {
+            yieldHistory.add(ApplicationUtil.getYield(priceHistory[i - 1], priceHistory[i]))
+        }
+        return yieldHistory.toImmutableList()
     }
 }
