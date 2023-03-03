@@ -171,7 +171,7 @@ class VbsService(
     }
 
     /**
-     * 장 시작 동시호가
+     * 장 시작 동시호가 매도
      */
     private fun sellSimultaneousPrice() {
         while (true) {
@@ -192,22 +192,29 @@ class VbsService(
             log.info("stayGapRise == false인 종목 매도: $openSellStockList")
             sellOrder(openSellStockList)
 
-            val gapDropSellStockList = vbsStocks.filter { it.stayGapRise }
-                .filter {
-                    val bidPrice = getBidPrice(it.code)
-                    val dayPriceCandle = stockClientService.requestDatePrice(
-                        DatePriceRequest(it.code, DatePriceRequest.DateType.DAY),
-                        tokenService.getAccessToken()
-                    )
-                    val previousClosePrice = dayPriceCandle.output!![1].stckClpr
-                    log.info("${it.getName()}(${it.code}) 전일종가: $previousClosePrice, 예상체결가: $bidPrice")
-                    // 예상체결가가 전일 종가보다 낮으면 매도
-                    return@filter bidPrice <= previousClosePrice
-                }
-            log.info("stayGapRise == true AND 예상 체결가가 전일 종가 이하 -> 매도 : $gapDropSellStockList")
-            sellOrder(gapDropSellStockList)
+//            sellStayGapRise(vbsStocks)
             return
         }
+    }
+
+    /**
+     * stayGapRise == true AND 예상 체결가가 전일 종가 이하 -> 매도
+     */
+    private fun VbsService.sellStayGapRise(vbsStocks: List<BokslStockProperties.Vbs.VbsStock>) {
+        val gapDropSellStockList = vbsStocks.filter { it.stayGapRise }
+            .filter {
+                val bidPrice = getBidPrice(it.code)
+                val dayPriceCandle = stockClientService.requestDatePrice(
+                    DatePriceRequest(it.code, DatePriceRequest.DateType.DAY),
+                    tokenService.getAccessToken()
+                )
+                val previousClosePrice = dayPriceCandle.output!![1].stckClpr
+                log.info("${it.getName()}(${it.code}) 전일종가: $previousClosePrice, 예상체결가: $bidPrice")
+                // 예상체결가가 전일 종가보다 낮으면 매도
+                return@filter bidPrice <= previousClosePrice
+            }
+        log.info("stayGapRise == true AND 예상 체결가가 전일 종가 이하 -> 매도 : $gapDropSellStockList")
+        sellOrder(gapDropSellStockList)
     }
 
     /**
@@ -560,7 +567,8 @@ class VbsService(
             return
         }
         val holdingStock = getHoldingStock(true)
-        senderPurchaseStock(holdingStock)
+        // 잔고 수익률 보내지 않음 - 의미 없음
+        // senderPurchaseStock(holdingStock)
 
         bokslStockProperties.koreainvestment.vbs.stock.forEach {
             val stock = holdingStock[it.code] ?: return@forEach
