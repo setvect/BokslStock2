@@ -81,7 +81,9 @@ class VbsBacktestService(
                 // 매도
                 var sellPrice = currentCandle.openPrice
                 //  시가 기존 전일 종가보다 높으면 그 다음 턴까지 유지함
-                if (condition.stayGapRise && currentCandle.getOpenYield() > 0) {
+//                if (condition.stayGapRise && currentCandle.getOpenYield() > 0) { // 이 방식 보다
+                // 5분 마다 상승/하락 체크
+                if (condition.stayGapRise) { // 이 방식이 더 좋음
                     val cancelMinute5List = candleRepository.findByRange(
                         condition.stock.code,
                         PeriodType.PERIOD_MINUTE_5,
