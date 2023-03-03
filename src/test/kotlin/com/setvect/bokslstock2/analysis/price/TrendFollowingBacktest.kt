@@ -335,6 +335,13 @@ class TrendFollowingBacktest {
     }
 
 
+    @Test
+    @DisplayName("현금(또는 채권) 1 : 1 혼합 전략")
+    fun test7() {
+
+    }
+
+
     private fun calcTrade(backTester: FollowingBacktest, stockCode: StockCode, dateRange: DateRange, fee: Double) {
         // 매매 수수료
         val candleList = movingAverageService.getMovingAverage(

@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.RestTemplate
 import java.io.File
 import java.net.URL
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
@@ -82,8 +83,10 @@ class CrawlStockPriceService(
             StockCode.StockType.KOR -> crawlStockPrice(stockEntity)
             StockCode.StockType.USA -> crawlStockPriceGlobal(stockEntity)
             StockCode.StockType.EXCHANGE -> crawlExchangeDollarAll(stockEntity)
+            StockCode.StockType.CASH -> crawlCash(stockEntity)
         }
     }
+
 
     /**
      * 전체 기간 수집
@@ -214,7 +217,6 @@ class CrawlStockPriceService(
         saveCandle(candleList, stockEntity)
     }
 
-
     private fun saveCandleEntityList(stockEntity: StockEntity, range: DateRange) {
         val stockList = bokslStockProperties.crawl.korea.url.stockPrice
         val url = stockList.replace("{code}", stockEntity.code)
@@ -246,6 +248,45 @@ class CrawlStockPriceService(
             )
         }.toList()
 
+        saveCandle(candleList, stockEntity)
+    }
+
+    private fun crawlCash(stockEntity: StockEntity) {
+        val stockCode = StockCode.findByCode(stockEntity.code)
+        var current = LocalDate.of(2000, 1, 1)
+        val end = LocalDate.now()
+        var currentPrice = 10_000.0
+        val skipWeek = setOf<DayOfWeek>(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
+        val interest = mapOf(
+            Pair(StockCode.CASH_1, 0.01),
+            Pair(StockCode.CASH_2, 0.02),
+            Pair(StockCode.CASH_3, 0.03),
+            Pair(StockCode.CASH_4, 0.04),
+            Pair(StockCode.CASH_5, 0.05)
+        )
+
+        val rate = interest[stockCode]!!
+        val dayRate = rate / 365
+
+        val candleList = mutableListOf<CandleEntity>()
+        while (current.isBefore(end)) {
+            // 토, 일이 아닌경우만 입력
+            if (!skipWeek.contains(current.dayOfWeek)) {
+                candleList.add(
+                    CandleEntity(
+                        stock = stockEntity,
+                        periodType = PERIOD_DAY,
+                        candleDateTime = current.atStartOfDay(),
+                        openPrice = currentPrice,
+                        highPrice = currentPrice,
+                        lowPrice = currentPrice,
+                        closePrice = currentPrice,
+                    )
+                )
+            }
+            current = current.plusDays(1)
+            currentPrice += currentPrice * dayRate
+        }
         saveCandle(candleList, stockEntity)
     }
 

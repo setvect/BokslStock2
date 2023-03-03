@@ -48,6 +48,7 @@ data class RebalanceBacktestCondition(
 
         /**
          * 리벨런싱 임계점
+         * 0.1 = 10%
          */
         val threshold: Double
     )

@@ -22,6 +22,12 @@ enum class StockCode(val national: StockType, val code: String, val desc: String
     KODEX_TREASURY_BOND_3_114260(StockType.KOR, "114260", "KODEX 국고채3년"),
     KOSEF_TREASURY_BOND_10_148070(StockType.KOR, "148070", "KOSEF 국고채10년"),
 
+    CASH_1(StockType.CASH, "CASH_1", "현금 수익률 1%"),
+    CASH_2(StockType.CASH, "CASH_2", "현금 수익률 2%"),
+    CASH_3(StockType.CASH, "CASH_3", "현금 수익률 3%"),
+    CASH_4(StockType.CASH, "CASH_4", "현금 수익률 4%"),
+    CASH_5(StockType.CASH, "CASH_5", "현금 수익률 5%"),
+
     OS_CODE_QQQ(StockType.USA, "QQQ", "NASDAQ100"),
     OS_CODE_QLD(StockType.USA, "QLD", "NASDAQ100 * 2"),
     OS_CODE_TQQQ(StockType.USA, "TQQQ", "NASDAQ100 * 3"),
@@ -55,7 +61,7 @@ enum class StockCode(val national: StockType, val code: String, val desc: String
     }
 
     enum class StockType {
-        KOR, USA, EXCHANGE
+        KOR, USA, EXCHANGE, CASH
     }
 
 }

@@ -105,13 +105,6 @@ object RebalanceReportHelper {
         report.append(String.format("합산 실현 MDD\t %,.2f%%", totalYield.mdd * 100)).append("\n")
         report.append(String.format("합산 매매회수\t %d", commonAnalysisReportResult.getWinningRateTotal().getTradeCount()))
             .append("\n")
-        report.append(
-            String.format(
-                "합산 승률\t %,.2f%%",
-                commonAnalysisReportResult.getWinningRateTotal().getWinRate() * 100
-            )
-        )
-            .append("\n")
         report.append(String.format("합산 CAGR\t %,.2f%%", totalYield.getCagr() * 100)).append("\n")
         report.append(String.format("샤프지수\t %,.2f", commonAnalysisReportResult.getBacktestSharpeRatio())).append("\n")
 

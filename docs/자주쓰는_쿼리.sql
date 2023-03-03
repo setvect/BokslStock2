@@ -73,7 +73,7 @@ select CA.NAME,
        (CB.CLOSE_PRICE / CB.OPEN_PRICE - 1.0) 상승률
 from CA_STOCK CA
          join CB_CANDLE CB on CA.STOCK_SEQ = CB.STOCK_SEQ
-where code = '192090'
+where code = 'CASH_5'
 order by CB.CANDLE_DATE_TIME desc;
 
 
@@ -94,6 +94,7 @@ where 1 = 1
   and code = '192090'
   and CB.CANDLE_DATE_TIME between '2023-01-19' and '2023-01-27';
 
+-- 갭 상승 하락 적용이 되지 않아 신뢰 할 수 없음
 select CA.code,
        min(CA.NAME),
        min(CB.CANDLE_DATE_TIME)                                                                  as 시작일,

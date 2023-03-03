@@ -22,11 +22,12 @@ class RebalanceBacktest {
     @Autowired
     private lateinit var rebalanceAnalysisService: RebalanceAnalysisService
 
+    
+    // TODO 전체적으로 맞는지 확인
+    
     @Test
     fun 일회성_백테스팅_리포트_만듦() {
-        val from = LocalDateTime.of(2007, 1, 1, 0, 0)
-        val to = LocalDateTime.now()
-        val realRange = DateRange(from, to)
+        val realRange = DateRange("2002-08-01T00:00:00", "2023-01-01T00:00:00")
 
         val basic = TradeCondition(
             range = realRange,
