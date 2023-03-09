@@ -499,6 +499,8 @@ class VbsService(
 
         overTargetPriceCheck = bokslStockProperties.koreainvestment.vbs.stock
             .associate { it.code to false } as MutableMap<String, Boolean>
+        targetPriceMap = mapOf()
+        log.info("목표가 및 목표가 돌파 여부 초기화")
 
         currentDate = LocalDate.now()
     }
