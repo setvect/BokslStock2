@@ -96,6 +96,15 @@ class RebalanceAnalysisService(
 
         var current =
             ApplicationUtil.fitStartDate(condition.rebalanceFacter.periodType, condition.tradeCondition.range.fromDate)
+        
+        // 기간이 부족하면 다음 기간으로 이동
+        if (current.isBefore(condition.tradeCondition.range.fromDate)) {
+            current = ApplicationUtil.fitEndDate(
+                condition.rebalanceFacter.periodType,
+                condition.tradeCondition.range.fromDate
+            ).plusDays(1)
+        }
+
         var beforeTrade = TradeInfo(date = current, buyStocks = listOf(), cash = condition.tradeCondition.cash, false)
 
         val rebalanceTradeHistory = mutableListOf<TradeInfo>()
@@ -299,13 +308,13 @@ class RebalanceAnalysisService(
         periodType: PeriodType,
     ): Map<StockCode, Map<LocalDate, CandleDto>> {
         val stockPriceIndex = stockCodes.associateWith { code ->
-            movingAverageService.getMovingAverage(
+            val movingAverage = movingAverageService.getMovingAverage(
                 code,
                 PeriodType.PERIOD_DAY,
                 periodType,
                 Collections.emptyList(),
             )
-                .associateBy { it.candleDateTimeStart.toLocalDate().withDayOfMonth(1) }
+            movingAverage.associateBy { it.candleDateTimeStart.toLocalDate().withDayOfMonth(1) }
         }
         return stockPriceIndex
     }

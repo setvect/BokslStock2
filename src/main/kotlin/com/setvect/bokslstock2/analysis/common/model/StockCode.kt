@@ -21,6 +21,11 @@ enum class StockCode(val national: StockType, val code: String, val desc: String
     TIGER_USD_SHORT_BONDS_329750(StockType.KOR, "329750", "TIGER 미국달러단기채권액티브"),
     KODEX_TREASURY_BOND_3_114260(StockType.KOR, "114260", "KODEX 국고채3년"),
     KOSEF_TREASURY_BOND_10_148070(StockType.KOR, "148070", "KOSEF 국고채10년"),
+    TIGER_SNP_360750(StockType.KOR, "360750", "TIGER 미국S&P500"),
+    KOSEF_200TR_294400(StockType.KOR, "294400", "KOSEF 200TR"),
+    KODEX_GLD_H_132030(StockType.KOR, "132030", "KODEX 골드선물(H)"),
+    TIGER_USA_TREASURY_BOND_305080(StockType.KOR, "305080", "TIGER 미국채10년선물"),
+    ACE_GLD_411060(StockType.KOR, "411060", "ACE KRX금현물"),
 
     CASH_1(StockType.CASH, "CASH_1", "현금 수익률 1%"),
     CASH_2(StockType.CASH, "CASH_2", "현금 수익률 2%"),
