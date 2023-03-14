@@ -26,6 +26,7 @@ enum class StockCode(val national: StockType, val code: String, val desc: String
     KODEX_GLD_H_132030(StockType.KOR, "132030", "KODEX 골드선물(H)"),
     TIGER_USA_TREASURY_BOND_305080(StockType.KOR, "305080", "TIGER 미국채10년선물"),
     ACE_GLD_411060(StockType.KOR, "411060", "ACE KRX금현물"),
+    KODEX_200_USD_BOND_284430(StockType.KOR, "284430", "KODEX 200미국채혼합"),
 
     CASH_1(StockType.CASH, "CASH_1", "현금 수익률 1%"),
     CASH_2(StockType.CASH, "CASH_2", "현금 수익률 2%"),

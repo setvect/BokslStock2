@@ -117,3 +117,9 @@ where 1 = 1
 group by CA.CODE
 order by `매매당 기대수익률` desc;
 
+
+select CB.*
+from CA_STOCK CA
+         join CB_CANDLE CB on CA.STOCK_SEQ = CB.STOCK_SEQ
+where CA.CODE = 'WON-DOLLAR'
+order by CANDLE_DATE_TIME;

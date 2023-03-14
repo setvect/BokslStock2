@@ -21,9 +21,9 @@ class RebalanceBacktest {
     @Autowired
     private lateinit var rebalanceAnalysisService: RebalanceAnalysisService
 
-    
+
     // TODO 전체적으로 맞는지 확인
-    
+
     @Test
     fun 일회성_백테스팅_리포트_만듦() {
         val realRange = DateRange("2002-08-01T00:00:00", "2023-03-01T00:00:00")
@@ -65,12 +65,23 @@ class RebalanceBacktest {
 //                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_GLD, 25),
 //                    RebalanceBacktestCondition.TradeStock(StockCode.OS_CODE_SHY, 25),
 
-                    RebalanceBacktestCondition.TradeStock(StockCode.TIGER_SNP_360750, 17),
-                    RebalanceBacktestCondition.TradeStock(StockCode.KOSEF_200TR_294400, 18),
+//                    RebalanceBacktestCondition.TradeStock(StockCode.TIGER_SNP_360750, 17),
+//                    RebalanceBacktestCondition.TradeStock(StockCode.KOSEF_200TR_294400, 18),
+//                    RebalanceBacktestCondition.TradeStock(StockCode.KODEX_GLD_H_132030, 15),
+//                    RebalanceBacktestCondition.TradeStock(StockCode.KOSEF_TREASURY_BOND_10_148070, 25),
+//                    RebalanceBacktestCondition.TradeStock(StockCode.TIGER_USA_TREASURY_BOND_305080, 25),
+
+//                    RebalanceBacktestCondition.TradeStock(StockCode.TIGER_SNP_360750, 18),
+//                    RebalanceBacktestCondition.TradeStock(StockCode.ACE_GLD_411060, 15),
+//                    RebalanceBacktestCondition.TradeStock(StockCode.KOSEF_TREASURY_BOND_10_148070, 25),
+//                    RebalanceBacktestCondition.TradeStock(StockCode.KODEX_200_USD_BOND_284430, 42),
+
+                    RebalanceBacktestCondition.TradeStock(StockCode.TIGER_NASDAQ_133690, 17),
+                    RebalanceBacktestCondition.TradeStock(StockCode.KODEX_200_069500, 18),
                     RebalanceBacktestCondition.TradeStock(StockCode.KODEX_GLD_H_132030, 15),
                     RebalanceBacktestCondition.TradeStock(StockCode.KOSEF_TREASURY_BOND_10_148070, 25),
-                    RebalanceBacktestCondition.TradeStock(StockCode.TIGER_USA_TREASURY_BOND_305080, 25),
-                ),
+                    RebalanceBacktestCondition.TradeStock(StockCode.EXCHANGE_DOLLAR, 25),
+                    ),
                 rebalanceFacter = it,
             )
         }
