@@ -42,13 +42,16 @@ class CsvStoreService(
      * 크래온PLUS로 수집한 데이터 저장
      * [code] 종목 코드(티커)
      * [csvStock] 수정 주가가 들어 왔다고 가정하고 진행
+     * [append] false면 기존거 지우고 입력
      */
     @Transactional
-    fun storeFromCron(code: String, csvStock: File) {
+    fun storeFromCron(code: String, csvStock: File, append: Boolean) {
         val stock = stockRepository.findByCode(code).get()
         val periodType = PeriodType.PERIOD_MINUTE_5
 
-        deleteStock(stock, periodType)
+        if (!append) {
+            deleteStock(stock, periodType)
+        }
         val candleList: MutableList<CandleEntity> = loadCandleCron(csvStock, stock, periodType)
         candleRepository.saveAll(candleList)
         log.info("시세 데이터 입력: ${stock.name}(${stock.code} - ${periodType}) - ${String.format("%,d", candleList.size)}건")
