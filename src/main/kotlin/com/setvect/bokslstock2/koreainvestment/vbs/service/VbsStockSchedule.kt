@@ -18,7 +18,8 @@ class VbsStockSchedule(
     }
 
     // 월~금 매일 09:00 ~ 14:00 까지 5분 마다 실행. 15:20 이후 장 종료 판단으로 프로그래밍 적으로 해결함
-    @Scheduled(cron = "0 0/5 09-16 * * MON-FRI")
+    // 1초를 여유를 줘 계산에 분봉 계산 오류를 방지함
+    @Scheduled(cron = "1 0/5 09-16 * * MON-FRI")
     fun vbsSellCheck() {
         log.info("매도 체크")
         vbsService.sellCheck()

@@ -594,10 +594,7 @@ class VbsService(
 
             val now = LocalTime.now()
             val minutePrice = stockClientService.requestMinutePrice(
-                MinutePriceRequest(
-                    it.code,
-                    now
-                ), tokenService.getAccessToken()
+                MinutePriceRequest(it.code, now), tokenService.getAccessToken()
             )
             val groupingCandleList = PriceGroupService.groupByMinute5(minutePrice, StockCode.findByCode(it.code))
             // 09:05, 09:10, 09:15, ... 이런식으로 호출 
@@ -607,7 +604,7 @@ class VbsService(
             log.info("${it.code}] 직전 5분봉: $beforeCandle")
 
             val belowOpeningPrice = beforeCandle.openPrice >= beforeCandle.closePrice
-            log.info("[${it.code}] $beforeCandle.openPrice >= $beforeCandle.closePrice = $belowOpeningPrice")
+            log.info("[${it.code}] ${beforeCandle.openPrice} >= ${beforeCandle.closePrice} = $belowOpeningPrice")
             if (belowOpeningPrice) {
                 log.info("${it.code} 매도")
                 sellOrder(stock)
