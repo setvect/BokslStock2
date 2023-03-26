@@ -18,11 +18,14 @@ plugins {
 
 group = "com.setvect.bokslstock2"
 version = "0.0.2"
-java.sourceCompatibility = JavaVersion.VERSION_11
+java.sourceCompatibility = JavaVersion.VERSION_17
 
 configurations {
     compileOnly {
         extendsFrom(configurations.annotationProcessor.get())
+    }
+    runtimeOnly { // runtimeOnly 구성
+        isCanBeResolved = true
     }
 }
 
@@ -57,9 +60,7 @@ dependencies {
     kapt("org.springframework.boot:spring-boot-configuration-processor")
 
     compileOnly("org.projectlombok:lombok")
-    // runtimeOnly 사용하면 "testDependency"에 있는 테스트 코드에서 h2 driver 못 찾음. 어쩔수 없이 implementation 사용
-    implementation("com.h2database:h2")
-//    runtimeOnly("com.h2database:h2")
+    runtimeOnly("com.h2database:h2")
     annotationProcessor("org.projectlombok:lombok")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
     providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
@@ -79,6 +80,7 @@ sourceSets {
     create("testDependency") {
         compileClasspath += sourceSets.main.get().output + sourceSets.test.get().output
         runtimeClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+        runtimeClasspath += configurations.getByName("runtimeOnly")
 
         resources.srcDir(file("src/testDependency/resources"))
     }
@@ -106,7 +108,7 @@ idea.module {
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
 }
 
