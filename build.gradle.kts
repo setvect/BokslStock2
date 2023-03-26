@@ -9,6 +9,7 @@ plugins {
     id("org.asciidoctor.convert") version "1.5.8"
     id("org.hidetake.ssh") version "2.10.1"
     war
+    idea
     kotlin("jvm") version "1.6.10"
     kotlin("plugin.spring") version "1.6.10"
     kotlin("plugin.jpa") version "1.6.10"
@@ -56,7 +57,9 @@ dependencies {
     kapt("org.springframework.boot:spring-boot-configuration-processor")
 
     compileOnly("org.projectlombok:lombok")
-    runtimeOnly("com.h2database:h2")
+    // runtimeOnly 사용하면 "testDependency"에 있는 테스트 코드에서 h2 driver 못 찾음. 어쩔수 없이 implementation 사용
+    implementation("com.h2database:h2")
+//    runtimeOnly("com.h2database:h2")
     annotationProcessor("org.projectlombok:lombok")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
     providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
@@ -70,6 +73,34 @@ dependencies {
 kotlin.sourceSets.main {
     println("buildDir: $buildDir")
     setBuildDir("$buildDir/generated/source/kapt/main")
+}
+
+sourceSets {
+    create("testDependency") {
+        compileClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+        runtimeClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+
+        resources.srcDir(file("src/testDependency/resources"))
+    }
+}
+
+task<Test>("testDependency") {
+    description = "환경에 의존된 테스트. 항상 같은 결과를 보장하지 않음. 배포시 테스트로 사용하면 안됨"
+    group = "verification"
+
+    testClassesDirs = sourceSets["testDependency"].output.classesDirs
+    classpath = sourceSets["testDependency"].runtimeClasspath
+
+    shouldRunAfter("test")
+}
+
+val testDependencyImplementation: Configuration by configurations.getting {
+    extendsFrom(configurations.implementation.get(), configurations.testImplementation.get())
+}
+
+idea.module {
+    testSourceDirs = testSourceDirs + project.sourceSets.getByName("testDependency").allSource.srcDirs
+    testResourceDirs = testResourceDirs + project.sourceSets.getByName("testDependency").resources.srcDirs
 }
 
 tasks.withType<KotlinCompile> {
