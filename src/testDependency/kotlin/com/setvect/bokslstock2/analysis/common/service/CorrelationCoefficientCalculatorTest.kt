@@ -26,12 +26,31 @@ class CorrelationCoefficientCalculatorTest {
 
         val calculateByMonth = correlationCoefficientCalculator.calculateByMonth(
             StockCode.EXCHANGE_DOLLAR,
-            StockCode.KODEX_200_069500,
+            StockCode.TIGER_USA_TREASURY_BOND_305080,
             DateRange.maxRange
 //            DateRange(LocalDate.of(2010, 1, 1), LocalDate.of(2010, 12, 31))
 //            DateRange(LocalDate.of(2022, 1, 1), LocalDate.now())
         )
         println(calculateByMonth)
         println("끝.")
+    }
+
+    @Test
+    fun calculateByMonthMatrix() {
+        val stockCodeList = listOf(
+            StockCode.OS_CODE_TQQQ,
+            StockCode.OS_CODE_TMF,
+            StockCode.OS_CODE_UGL,
+            StockCode.OS_CODE_SHY,
+            )
+        val calculateByMonthMatrix =
+            correlationCoefficientCalculator.calculateByMonthMatrix(stockCodeList, DateRange.maxRange)
+
+        for (i in calculateByMonthMatrix.indices) {
+            for (j in calculateByMonthMatrix[i].indices) {
+                println("${calculateByMonthMatrix[i][j]} ")
+            }
+            println()
+        }
     }
 }

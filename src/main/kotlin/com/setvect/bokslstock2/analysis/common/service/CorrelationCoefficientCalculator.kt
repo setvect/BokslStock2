@@ -28,14 +28,35 @@ class CorrelationCoefficientCalculator(
         val corrDateRange = DateRange(dateRange.fromDate.minusMonths(1), dateRange.toDate)
 
         val fitRange = backtestTradeService.fitBacktestRange(listOf(stockCode1, stockCode2), corrDateRange, 1)
-        log.debug("범위 조건 변경: $corrDateRange -> $fitRange")
+        log.debug("범위 조건 변경: $corrDateRange -> $fitRange, {$stockCode1, $stockCode2}")
 
         val yieldRate1 = getYield(fitRange, stockCode1)
         val yieldRate2 = getYield(fitRange, stockCode2)
 
         val corr = PearsonsCorrelation()
         val correlation = corr.correlation(yieldRate1.toDoubleArray(), yieldRate2.toDoubleArray())
-        return CorrelationResult(DateRange(fitRange.fromDate.plusMonths(1), fitRange.toDate), correlation)
+        return CorrelationResult(
+            DateRange(fitRange.fromDate.plusMonths(1), fitRange.toDate),
+            stockCode1,
+            stockCode2,
+            correlation
+        )
+    }
+
+    /**
+     * @return 상관계수 행렬
+     */
+    fun calculateByMonthMatrix(stockCodeList: List<StockCode>, dateRange: DateRange): List<List<CorrelationResult>> {
+        val result = mutableListOf<List<CorrelationResult>>()
+        for (i in stockCodeList.indices) {
+            val row = mutableListOf<CorrelationResult>()
+            for (j in i + 1..stockCodeList.indices.last) {
+                val corr = calculateByMonth(stockCodeList[i], stockCodeList[j], dateRange)
+                row.add(corr)
+            }
+            result.add(row)
+        }
+        return result
     }
 
     private fun getYield(
@@ -54,5 +75,10 @@ class CorrelationCoefficientCalculator(
             .map { it.getYield() }.toList()
     }
 
-    data class CorrelationResult(val dateRange: DateRange, val correlation: Double)
+    data class CorrelationResult(
+        val dateRange: DateRange,
+        val stockCode1: StockCode,
+        val stockCode2: StockCode,
+        val correlation: Double
+    )
 }
