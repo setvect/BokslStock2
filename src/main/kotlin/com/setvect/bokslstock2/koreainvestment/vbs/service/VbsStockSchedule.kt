@@ -28,7 +28,7 @@ class VbsStockSchedule(
     /**
      * 장 종료 이후 현재 잔고상황 리포트
      */
-    @Scheduled(cron = "10 30 15 * * MON-FRI") //
+    @Scheduled(cron = "00 32 15 * * MON-FRI") //
     fun vbsReport() {
         log.info("report")
         vbsService.report()
