@@ -208,3 +208,56 @@ gradlew makeInstallFile
 - 매도 조건
     - 1년에 한 번 또는 두 번 리벨런싱
 
+## 8. 기타
+### 8.1. 인증서 연결
+1. 접속하는 서버에서 작업
+```shell
+$ ssh-keygen -t rsa -C '아이디@주소.com'
+The key''s randomart image is:
++---[RSA 3072]----+
+|                 |
+|     +           |
+|      O          |
+|..   O o         |
+|                 |
+|+X.o .           |
+|B*@o.            |
+|                 |
+|OO%E.            |
++----[SHA256]-----+
+
+$ ls -la
+-rw-------  1 setvect setvect 1679  6월 14 19:34 id_rsa      <== 비밀키
+-rw-r--r--  1 setvect setvect  390  6월 14 19:34 id_rsa.pub  <== 공개키
+
+2. 접속할 서버에서 작업
+```shell 
+$ mkdir .ssh
+$ chmod 700 .ssh/                                            <== 꼭 700 퍼미션 가져야됨.
+$ vi ./ssh/id_rsa.pub                                        <== 공개키 복사
+$ chmod 644 .ssh/authorized_keys                             <== 꼭 644 퍼미션 가져야됨.
+```
+
+3. 접속하는 쪽에서 확인
+```shell
+$ ssh id@대상_아이피
+```
+
+4. 접속 과정 상세 디버깅
+```shell
+$ ssh -v id@대상_아이피
+$ ssh -vv id@대상_아이피
+$ ssh -vvv id@대상_아이피
+```
+
+### 8.2. 오류 대응
+#### com.jcraft.jsch.JSchException: invalid privatekey
+오류 내용
+```
+com.jcraft.jsch.JSchException: invalid privatekey: [B@60f8a7c0
+```
+
+해결방법
+```shell
+$ ssh-keygen -p -f .ssh/id_rsa -m pem
+```
