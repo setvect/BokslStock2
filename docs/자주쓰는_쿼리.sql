@@ -130,3 +130,7 @@ from CA_STOCK CA
          join CB_CANDLE CB on CA.STOCK_SEQ = CB.STOCK_SEQ
 where CA.CODE IN('091170', '233740')
 group by CA.CODE, CB.PERIOD_TYPE
+
+
+select *
+from GB_VBS_TRADE;

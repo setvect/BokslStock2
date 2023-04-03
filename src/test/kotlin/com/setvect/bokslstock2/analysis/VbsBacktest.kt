@@ -11,6 +11,8 @@ import com.setvect.bokslstock2.analysis.vbs.service.VbsBacktestService
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
+import com.setvect.bokslstock2.koreainvestment.vbs.service.VbsEventHandler
+import com.setvect.bokslstock2.koreainvestment.vbs.service.VbsStockSchedule
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import org.junit.jupiter.api.Test
@@ -18,6 +20,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.test.mock.mockito.MockBeans
 import org.springframework.test.annotation.Rollback
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
@@ -26,6 +30,8 @@ import javax.persistence.EntityManager
 
 @SpringBootTest
 @ActiveProfiles("local")
+// 실제 매매 동작를 하지 않도록 MockBean으로 대체
+@MockBeans(value = [MockBean(VbsEventHandler::class, VbsStockSchedule::class)])
 class VbsBacktest {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -211,11 +217,11 @@ class VbsBacktest {
             VbsAnalysisCondition(
                 tradeConditionList = listOf(
                     backtestVbs(StockCode.KODEX_KOSDAQ_2X_233740, range, true),
-                    backtestVbs(StockCode.KODEX_BANK_091170, range, false),
+//                    backtestVbs(StockCode.KODEX_BANK_091170, range, false),
                 ),
                 basic = TradeCondition(
                     range = range,
-                    investRatio = 0.99,
+                    investRatio = 0.5,
                     cash = 20_000_000.0,
                     feeBuy = 0.0002,
                     feeSell = 0.0002,
