@@ -3,6 +3,7 @@ package com.setvect.bokslstock2.analysis.vbs.model
 import com.setvect.bokslstock2.analysis.common.entity.ConditionEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
+import com.setvect.bokslstock2.util.DateRange
 import javax.persistence.*
 
 /**
@@ -13,6 +14,11 @@ class VbsCondition(
      * 주식 종목
      */
     override val stock: StockEntity,
+
+    /**
+     * 매매 기간
+     */
+    val range: DateRange,
 
     /**
      * 매매 주기

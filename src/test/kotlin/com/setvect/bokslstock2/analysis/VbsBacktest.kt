@@ -47,15 +47,17 @@ class VbsBacktest {
         // 거래 조건
 //        val range = DateRange(LocalDateTime.of(2021, 8, 31, 0, 0), LocalDateTime.now())
 //        val range = DateRange(LocalDateTime.of(2021, 9, 20, 0, 0), LocalDateTime.of(2021, 10, 1, 0, 0))
-        val range = DateRange(LocalDateTime.of(2018, 1, 1, 0, 0), LocalDateTime.now())
 //        val range = DateRange(LocalDateTime.of(2018, 1, 1, 0, 0), LocalDateTime.of(2023, 1, 6, 0, 0))
 //        val range = DateRange(LocalDateTime.of(2022, 8, 24, 0, 0), LocalDateTime.of(2022, 8, 31, 0, 0))
+
+        val range = DateRange(LocalDateTime.of(2018, 1, 1, 0, 0), LocalDateTime.now())
+        val condition1 = makeCondition(StockCode.KODEX_KOSDAQ_2X_233740, range, true)
+        val condition2 = makeCondition(StockCode.KODEX_BANK_091170, range, false)
+        condition1.tradeList = vbsBacktestService.runTest(condition1)
+        condition2.tradeList = vbsBacktestService.runTest(condition2)
         val vbsAnalysisCondition = listOf(
             VbsAnalysisCondition(
-                tradeConditionList = listOf(
-                    backtestVbs(StockCode.KODEX_KOSDAQ_2X_233740, range, true),
-                    backtestVbs(StockCode.KODEX_BANK_091170, range, false),
-                ),
+                tradeConditionList = listOf(condition1, condition2),
                 basic = TradeCondition(
                     range = range,
                     investRatio = 0.99,
@@ -66,32 +68,6 @@ class VbsBacktest {
                     benchmark = listOf(StockCode.KODEX_200_069500)
                 )
             ),
-//            VbsAnalysisCondition(
-//                tradeConditionList = listOf(
-//                    makeCondition(StockCode.CODE_KODEX_KOSDAQ_2X_233740),
-//                ),
-//                basic = TradeCondition(
-//                    range = range,
-//                    investRatio = 0.7,
-//                    cash = 10_000_000.0,
-//                    feeBuy = 0.0002,
-//                    feeSell = 0.0002,
-//                    comment = ""
-//                )
-//            ),
-//            VbsAnalysisCondition(
-//                tradeConditionList = listOf(
-//                    makeCondition(StockCode.CODE_KODEX_KOSDAQ_2X_233740),
-//                ),
-//                basic = TradeCondition(
-//                    range = range,
-//                    investRatio = 0.5,
-//                    cash = 10_000_000.0,
-//                    feeBuy = 0.0002,
-//                    feeSell = 0.0002,
-//                    comment = ""
-//                )
-//            )
         )
 
         // 리포트 만듦
@@ -100,10 +76,11 @@ class VbsBacktest {
         log.info("끝.")
     }
 
-    private fun backtestVbs(stockCode: StockCode, range: DateRange, stayGapRise: Boolean): VbsCondition {
+    private fun makeCondition(stockCode: StockCode, range: DateRange, stayGapRise: Boolean): VbsCondition {
         val stock = stockRepository.findByCode(stockCode.code).get()
-        val condition = VbsCondition(
+        return VbsCondition(
             stock = stock,
+            range = range,
             periodType = PERIOD_DAY,
             kRate = 0.5,
             maPeriod = 0,
@@ -113,8 +90,5 @@ class VbsBacktest {
             comment = null,
             stayGapRise = stayGapRise
         )
-        val vbsTradeList = vbsBacktestService.runTest(condition, range)
-        condition.tradeList = vbsTradeList
-        return condition
     }
 }

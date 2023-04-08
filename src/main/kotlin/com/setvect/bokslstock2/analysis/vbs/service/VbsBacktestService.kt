@@ -9,7 +9,6 @@ import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
-import com.setvect.bokslstock2.util.DateRange
 import okhttp3.internal.toImmutableList
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -27,13 +26,13 @@ class VbsBacktestService(
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
     @Transactional
-    fun runTest(condition: VbsCondition, range: DateRange = DateRange.maxRange): List<VbsTrade> {
+    fun runTest(condition: VbsCondition): List<VbsTrade> {
         val movingAverageCandle = movingAverageService.getMovingAverage(
             condition.stock.convertStockCode(),
             PeriodType.PERIOD_MINUTE_5,
             condition.periodType,
             listOf(condition.maPeriod),
-            range
+            condition.range
         )
 
         var lastBuyInfo: VbsTrade? = null
