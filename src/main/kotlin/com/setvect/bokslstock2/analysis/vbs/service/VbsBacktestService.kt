@@ -1,9 +1,7 @@
 package com.setvect.bokslstock2.analysis.vbs.service
 
-import com.setvect.bokslstock2.analysis.vbs.entity.VbsConditionEntity
-import com.setvect.bokslstock2.analysis.vbs.entity.VbsTradeEntity
-import com.setvect.bokslstock2.analysis.vbs.repository.VbsConditionRepository
-import com.setvect.bokslstock2.analysis.vbs.repository.VbsTradeRepository
+import com.setvect.bokslstock2.analysis.vbs.model.VbsCondition
+import com.setvect.bokslstock2.analysis.vbs.model.VbsTrade
 import com.setvect.bokslstock2.common.model.TradeType.BUY
 import com.setvect.bokslstock2.common.model.TradeType.SELL
 import com.setvect.bokslstock2.index.dto.CandleDto
@@ -12,6 +10,7 @@ import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
+import okhttp3.internal.toImmutableList
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -22,38 +21,13 @@ import org.springframework.transaction.annotation.Transactional
  */
 @Service
 class VbsBacktestService(
-    val vbsConditionRepository: VbsConditionRepository,
-    val vbsTradeRepository: VbsTradeRepository,
     val movingAverageService: MovingAverageService,
     val candleRepository: CandleRepository
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
-    /**
-     * 백테스트 조건 저장
-     */
-    fun saveCondition(vbsCondition: VbsConditionEntity) {
-        vbsConditionRepository.save(vbsCondition)
-    }
-
-    /**
-     * 모든 조건에 대한 백테스트 진행
-     * 기존 백테스트 기록을 모두 삭제하고 다시 테스트 함
-     */
     @Transactional
-    fun runTestBatch() {
-        val conditionList = vbsConditionRepository.findAll()
-        var i = 0
-        conditionList
-            .forEach {
-                vbsTradeRepository.deleteByCondition(it)
-                runTest(it)
-                log.info("백테스트 진행 ${++i}/${conditionList.size}")
-            }
-    }
-
-    @Transactional
-    fun runTest(condition: VbsConditionEntity, range: DateRange = DateRange.maxRange) {
+    fun runTest(condition: VbsCondition, range: DateRange = DateRange.maxRange): List<VbsTrade> {
         val movingAverageCandle = movingAverageService.getMovingAverage(
             condition.stock.convertStockCode(),
             PeriodType.PERIOD_MINUTE_5,
@@ -62,8 +36,9 @@ class VbsBacktestService(
             range
         )
 
-        var lastBuyInfo: VbsTradeEntity? = null
+        var lastBuyInfo: VbsTrade? = null
 
+        val rtnValue = mutableListOf<VbsTrade>()
         for (idx in 1 until movingAverageCandle.size) {
             val currentCandle = movingAverageCandle[idx]
             // -1 영업일
@@ -109,8 +84,8 @@ class VbsBacktestService(
                     }
                 }
 
-                val sellInfo = VbsTradeEntity(
-                    vbsConditionEntity = condition,
+                val sellInfo = VbsTrade(
+                    vbsCondition = condition,
                     tradeType = SELL,
                     maPrice = currentCandle.average[condition.maPeriod] ?: 0.0,
                     yield = ApplicationUtil.getYield(lastBuyInfo.unitPrice, sellPrice),
@@ -118,7 +93,8 @@ class VbsBacktestService(
                     // 당일 거래 판단을 위해 시, 분 정보를 제거함
                     tradeDate = currentCandle.candleDateTimeStart.withHour(0).withMinute(0)
                 )
-                vbsTradeRepository.save(sellInfo)
+
+                rtnValue.add(sellInfo)
                 lastBuyInfo = null
                 sell = true
             }
@@ -134,8 +110,8 @@ class VbsBacktestService(
             val isTarget = targetPrice <= currentCandle.highPrice
             val isMa = maPrice <= targetPrice || maPrice == 0.0
             if (isTarget && isMa) {
-                lastBuyInfo = VbsTradeEntity(
-                    vbsConditionEntity = condition,
+                lastBuyInfo = VbsTrade(
+                    vbsCondition = condition,
                     tradeType = BUY,
                     maPrice = maPrice,
                     yield = 0.0,
@@ -143,9 +119,11 @@ class VbsBacktestService(
                     // 당일 거래 판단을 위해 시, 분 정보를 제거함
                     tradeDate = currentCandle.candleDateTimeStart.withHour(0).withMinute(0)
                 )
-                vbsTradeRepository.save(lastBuyInfo)
+                rtnValue.add(lastBuyInfo)
             }
         }
+        return rtnValue.toImmutableList()
+
     }
 
     /**
@@ -154,7 +132,7 @@ class VbsBacktestService(
     private fun getTargetPrice(
         beforeCandle: CandleDto,
         currentCandle: CandleDto,
-        condition: VbsConditionEntity
+        condition: VbsCondition
     ): Double {
         var volatilityPrice = (beforeCandle.highPrice - beforeCandle.lowPrice) * condition.kRate
         // 호가단위 기준으로 절삭

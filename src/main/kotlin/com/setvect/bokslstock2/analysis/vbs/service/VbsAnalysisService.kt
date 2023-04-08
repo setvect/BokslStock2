@@ -4,7 +4,7 @@ import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult.TotalYield
 import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
-import com.setvect.bokslstock2.analysis.vbs.entity.VbsConditionEntity
+import com.setvect.bokslstock2.analysis.vbs.model.VbsCondition
 import com.setvect.bokslstock2.analysis.vbs.model.VbsAnalysisCondition
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.IndexedColors
@@ -164,10 +164,6 @@ class VbsAnalysisService(
             createCell.cellStyle = dateStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeConditionList.joinToString("|") { it.conditionSeq.toString() })
-            createCell.cellStyle = defaultStyle
-
-            createCell = row.createCell(cellIdx++)
             createCell.setCellValue(tradeConditionList.joinToString(",") { it.stock.name })
             createCell.cellStyle = defaultStyle
 
@@ -301,7 +297,7 @@ class VbsAnalysisService(
         val conditionHeader = "분석 아이디,종목이름,종목코드,매매주기,변동성비율,이동평균단위,갭 상승 매도 넘김,하루에 한번 거래,호가단위,조건설명"
         ReportMakerHelperService.applyHeader(sheet, conditionHeader)
 
-        val vbsConditionList: List<VbsConditionEntity> = conditionList
+        val vbsConditionList: List<VbsCondition> = conditionList
             .flatMap { it.tradeConditionList }
             .distinct()
             .toList()
@@ -316,10 +312,6 @@ class VbsAnalysisService(
             var cellIdx = 0
 
             var createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(condition.conditionSeq.toString())
-            createCell.cellStyle = defaultStyle
-
-            createCell = row.createCell(cellIdx++)
             createCell.setCellValue(condition.stock.name)
             createCell.cellStyle = defaultStyle
 
