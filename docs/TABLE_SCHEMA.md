@@ -55,63 +55,7 @@
 
 ## 1.3. 백테스트
 
-### 1.3.1. FA_RB_CONDITION: 리벨러싱 전략 조건
-
-| Column Name   | Attribute Name   | Key | Type     | Len | Not Null | Description                           |
-| ------------- | ---------------- | --- | -------- | --- | -------- | ------------------------------------- |
-| CONDITION_SEQ | 일련번호         | PK  | BIGINT   |     | Y        |                                       |
-| STOCK_SEQ     | 종목             | FK  | BIGINT   |     | Y        | CA_STOCK                              |
-| PERIOD_TYPE   | 매매 주기        |     | VARCHAR  | 20  | Y        | PERIOD_DAY, PERIOD_WEEK, PERIOD_MONTH |
-| COMMENT       | 조건에 대한 설명 |     | VARCHAR  | 100 | N        |                                       |
-| REG_DATE      | 등록일           |     | DATETIME |     | Y        |                                       |
-| EDIT_DATE     | 마지막 수정일    |     | DATETIME |     | Y        |                                       |
-
-### 1.3.2. FB_RB_TRADE: 리벨러싱 전략 조건
-
-| Column Name   | Attribute Name     | Key | Type     | Len | Not Null | Description     |
-| ------------- | ------------------ | --- | -------- | --- | -------- | --------------- |
-| TRADE_SEQ     | 일련번호           | PK  | BIGINT   |     | Y        |                 |
-| CONDITION_SEQ | 매매 조건 일련번호 | FK  | BIGINT   |     | Y        | FA_RB_CONDITION |
-| TRADE_TYPE    | 매수/매도          |     | VARCHAR  | 20  | Y        | BUY, SELL       |
-| YIELD         | 매도시 수익률      |     | DOUBLE   |     | Y        |                 |
-| UNIT_PRICE    | 거래 단가          |     | DOUBLE   |     | Y        |                 |
-| TRADE_DATE    | 거래시간           |     | DATETIME |     | Y        |                 |
-
-- Index
-  - TRADE_DATE
-
-### 1.3.3. GA_VBS_CONDITION: 변동성돌파 전략 조건
-
-| Column Name        | Attribute Name       | Key | Type     | Len | Not Null | Description                           |
-| ------------------ | -------------------- | --- | -------- | --- | -------- | ------------------------------------- |
-| CONDITION_SEQ      | 일련번호             | PK  | BIGINT   |     | Y        |                                       |
-| STOCK_SEQ          | 종목                 | FK  | BIGINT   |     | Y        | CA_STOCK                              |
-| PERIOD_TYPE        | 매매 주기            |     | VARCHAR  | 20  | Y        | PERIOD_DAY, PERIOD_WEEK, PERIOD_MONTH |
-| K_RATE             | 변동성 비율          |     | DOUBLE   |     | Y        |                                       |
-| MA_PERIOD          | 이동평균 주기        |     | INTEGER  |     | Y        |                                       |
-| UNIT_ASK_PRICE     | 호가단위             |     | DOUBLE   |     | Y        |                                       |
-| GAP_RISEN_SKIP     | 갭 상승 시 매도 넘김 |     | VARCHAR  | 1   | Y        | Y, N                                  |
-| ONLY_ONE_DAY_TRADE | 하루에 한번 거래     |     | VARCHAR  | 1   | Y        | Y, N                                  |
-| COMMENT            | 조건에 대한 설명     |     | VARCHAR  | 100 | N        |                                       |
-| REG_DATE           | 등록일               |     | DATETIME |     | Y        |                                       |
-| EDIT_DATE          | 마지막 수정일        |     | DATETIME |     | Y        |                                       |
-
-### 1.3.4. GB_VBS_TRADE: 변동성돌파 전략 조건
-
-| Column Name   | Attribute Name        | Key | Type     | Len | Not Null | Description      |
-| ------------- | --------------------- | --- | -------- | --- | -------- | ---------------- |
-| TRADE_SEQ     | 일련번호              | PK  | BIGINT   |     | Y        |                  |
-| CONDITION_SEQ | 매매 조건 일련번호    | FK  | BIGINT   |     | Y        | GA_VBS_CONDITION |
-| TRADE_TYPE    | 매수/매도             |     | VARCHAR  | 20  | Y        | BUY, SELL        |
-| MA_PRICE      | 매매 시 이동평균 가격 |     | DOUBLE   |     | Y        |                  |
-| YIELD         | 매도시 수익률         |     | DOUBLE   |     | Y        |                  |
-| UNIT_PRICE    | 거래 단가             |     | DOUBLE   |     | Y        |                  |
-| TRADE_DATE    | 거래시간              |     | DATETIME |     | Y        |                  |
-
-- Index
-  - TRADE_DATE
-
-### 1.3.5. HA_MABS_CONDITION: 이평선 돌파 백테스트 조건
+### 1.3.1. HA_MABS_CONDITION: 이평선 돌파 백테스트 조건
 
 | Column Name   | Attribute Name     | Key | Type     | Len | Not Null | Description                           |
 | ------------- | ------------------ | --- | -------- | --- | -------- | ------------------------------------- |
@@ -126,7 +70,7 @@
 | REG_DATE      | 등록일             |     | DATETIME |     | Y        |                                       |
 | EDIT_DATE     | 마지막 수정일      |     | DATETIME |     | Y        |                                       |
 
-### 1.3.6. HB_MABS_TRADE: 이평선 돌파 백테스트 매매 건별 정보
+### 1.3.2. HB_MABS_TRADE: 이평선 돌파 백테스트 매매 건별 정보
 
 | Column Name   | Attribute Name     | Key | Type     | Len | Not Null | Description       |
 | ------------- | ------------------ | --- | -------- | --- | -------- | ----------------- |

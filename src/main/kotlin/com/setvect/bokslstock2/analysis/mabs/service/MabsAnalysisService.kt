@@ -4,7 +4,7 @@ import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult.TotalYield
 import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
-import com.setvect.bokslstock2.analysis.mabs.entity.MabsConditionEntity
+import com.setvect.bokslstock2.analysis.mabs.model.MabsCondition
 import com.setvect.bokslstock2.analysis.mabs.model.MabsAnalysisCondition
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.IndexedColors
@@ -298,7 +298,7 @@ class MabsAnalysisService(
         val conditionHeader = "분석 아이디,종목이름,종목코드,매매주기,단기 이동평균 기간,장기 이동평균 기간,하락매도률,상승매도률"
         ReportMakerHelperService.applyHeader(sheet, conditionHeader)
 
-        val mabsConditionList: List<MabsConditionEntity> = conditionList
+        val mabsConditionList: List<MabsCondition> = conditionList
             .flatMap { it.tradeConditionList }
             .distinct()
             .toList()

@@ -1,15 +1,14 @@
 package com.setvect.bokslstock2.analysis.mabs.service
 
-import com.setvect.bokslstock2.analysis.mabs.entity.MabsConditionEntity
-import com.setvect.bokslstock2.analysis.mabs.entity.MabsTradeEntity
-import com.setvect.bokslstock2.analysis.mabs.repository.MabsConditionRepository
-import com.setvect.bokslstock2.analysis.mabs.repository.MabsTradeRepository
+import com.setvect.bokslstock2.analysis.mabs.model.MabsCondition
+import com.setvect.bokslstock2.analysis.mabs.model.MabsTrade
 import com.setvect.bokslstock2.common.model.TradeType.BUY
 import com.setvect.bokslstock2.common.model.TradeType.SELL
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
+import okhttp3.internal.toImmutableList
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -20,37 +19,12 @@ import org.springframework.transaction.annotation.Transactional
  */
 @Service
 class MabsBacktestService(
-    val mabsConditionRepository: MabsConditionRepository,
-    val mabsTradeRepository: MabsTradeRepository,
     val movingAverageService: MovingAverageService,
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
-    /**
-     * 백테스트 조건 저장
-     */
-    fun saveCondition(mabsCondition: MabsConditionEntity) {
-        mabsConditionRepository.save(mabsCondition)
-    }
-
-    /**
-     * 모든 조건에 대한 백테스트 진행
-     * 기존 백테스트 기록을 모두 삭제하고 다시 테스트 함
-     */
     @Transactional
-    fun runTestBatch() {
-        val conditionList = mabsConditionRepository.findAll()
-        var i = 0
-        conditionList
-            .forEach {
-                mabsTradeRepository.deleteByCondition(it)
-                runTest(it)
-                log.info("백테스트 진행 ${++i}/${conditionList.size}")
-            }
-    }
-
-    @Transactional
-    fun runTest(condition: MabsConditionEntity) {
+    fun runTest(condition: MabsCondition): List<MabsTrade> {
         val movingAverageCandle = movingAverageService.getMovingAverage(
             condition.stock.convertStockCode(),
             PeriodType.PERIOD_DAY,
@@ -61,7 +35,8 @@ class MabsBacktestService(
         var lastStatus = SELL
         var highYield = 0.0
         var lowYield = 0.0
-        var lastBuyInfo: MabsTradeEntity? = null
+        var lastBuyInfo: MabsTrade? = null
+        val rtnValue: MutableList<MabsTrade> = mutableListOf()
 
         for (idx in 2 until movingAverageCandle.size) {
             val currentCandle = movingAverageCandle[idx]
@@ -77,8 +52,8 @@ class MabsBacktestService(
                     continue
                 }
                 if (buyCheck(currentCandle, condition)) {
-                    lastBuyInfo = MabsTradeEntity(
-                        mabsConditionEntity = condition,
+                    lastBuyInfo = MabsTrade(
+                        mabsCondition = condition,
                         tradeType = BUY,
                         highYield = 0.0,
                         lowYield = 0.0,
@@ -88,7 +63,7 @@ class MabsBacktestService(
                         unitPrice = currentCandle.openPrice,
                         tradeDate = currentCandle.candleDateTimeStart
                     )
-                    mabsTradeRepository.save(lastBuyInfo)
+                    rtnValue.add(lastBuyInfo)
                     lastStatus = BUY
                     // 매도 판단
                     val currentCloseYield = ApplicationUtil.getYield(lastBuyInfo.unitPrice, currentCandle.closePrice)
@@ -97,8 +72,8 @@ class MabsBacktestService(
                 }
             } else {
                 if (sellCheck(currentCandle, condition)) {
-                    val sellInfo = MabsTradeEntity(
-                        mabsConditionEntity = condition,
+                    val sellInfo = MabsTrade(
+                        mabsCondition = condition,
                         tradeType = SELL,
                         highYield = highYield,
                         lowYield = lowYield,
@@ -108,7 +83,7 @@ class MabsBacktestService(
                         unitPrice = currentCandle.openPrice,
                         tradeDate = currentCandle.candleDateTimeStart
                     )
-                    mabsTradeRepository.save(sellInfo)
+                    rtnValue.add(sellInfo)
                     lastStatus = SELL
                     continue
                 }
@@ -117,12 +92,13 @@ class MabsBacktestService(
                 lowYield = lowYield.coerceAtMost(currentCloseYield)
             }
         }
+        return rtnValue.toImmutableList()
     }
 
     /**
      * @return [candle]이 매수 조건이면 true
      */
-    private fun buyCheck(candle: CandleDto, condition: MabsConditionEntity): Boolean {
+    private fun buyCheck(candle: CandleDto, condition: MabsCondition): Boolean {
         val shortValue = candle.average[condition.shortPeriod]
         val longValue = candle.average[condition.longPeriod]
         if (shortValue == null || longValue == null) {
@@ -135,7 +111,7 @@ class MabsBacktestService(
     /**
      * @return [candle]이 매도 조건이면 true
      */
-    private fun sellCheck(candle: CandleDto, condition: MabsConditionEntity): Boolean {
+    private fun sellCheck(candle: CandleDto, condition: MabsCondition): Boolean {
         val shortValue = candle.average[condition.shortPeriod]
         val longValue = candle.average[condition.longPeriod]
         if (shortValue == null || longValue == null) {
