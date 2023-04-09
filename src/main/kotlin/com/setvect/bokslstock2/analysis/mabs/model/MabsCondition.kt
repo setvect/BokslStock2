@@ -43,7 +43,5 @@ class MabsCondition(
      */
     val comment: String,
 ) : ConditionEntity{
-     override val conditionSeq = 0L
-
      override var tradeList: List<MabsTrade> = ArrayList()
 }

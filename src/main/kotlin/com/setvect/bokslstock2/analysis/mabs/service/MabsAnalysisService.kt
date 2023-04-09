@@ -160,10 +160,6 @@ class MabsAnalysisService(
             createCell.cellStyle = dateStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeConditionList.joinToString("|") { it.conditionSeq.toString() })
-            createCell.cellStyle = defaultStyle
-
-            createCell = row.createCell(cellIdx++)
             createCell.setCellValue(tradeConditionList.joinToString(",") { it.stock.name })
             createCell.cellStyle = defaultStyle
 
@@ -313,8 +309,6 @@ class MabsAnalysisService(
             var cellIdx = 0
 
             var createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(condition.conditionSeq.toString())
-            createCell.cellStyle = defaultStyle
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(condition.stock.name)
@@ -369,7 +363,6 @@ class MabsAnalysisService(
         val report = StringBuilder()
         for (i in 1..mabsAnalysisCondition.tradeConditionList.size) {
             val tradeCondition = mabsAnalysisCondition.tradeConditionList[i - 1]
-            report.append(String.format("${i}. 조건아이디\t %s", tradeCondition.conditionSeq)).append("\n")
             report.append(String.format("${i}. 분석주기\t %s", tradeCondition.periodType)).append("\n")
             report.append(String.format("${i}. 대상 종목\t %s", tradeCondition.stock.getNameCode())).append("\n")
             report.append(String.format("${i}. 상승 매수률\t %,.2f%%", tradeCondition.upBuyRate * 100)).append("\n")

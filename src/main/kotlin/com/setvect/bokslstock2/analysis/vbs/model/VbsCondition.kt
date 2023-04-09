@@ -66,7 +66,5 @@ class VbsCondition(
      */
     val stayGapRise: Boolean
 ) : ConditionEntity {
-    override val conditionSeq = 0L
-
     override var tradeList: List<VbsTrade> = ArrayList()
 }

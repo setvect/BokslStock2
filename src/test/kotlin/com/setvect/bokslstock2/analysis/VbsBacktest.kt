@@ -51,13 +51,13 @@ class VbsBacktest {
 //        val range = DateRange(LocalDateTime.of(2022, 8, 24, 0, 0), LocalDateTime.of(2022, 8, 31, 0, 0))
 
         val range = DateRange(LocalDateTime.of(2018, 1, 1, 0, 0), LocalDateTime.now())
-        val condition1 = makeCondition(StockCode.KODEX_KOSDAQ_2X_233740, range, true)
-        val condition2 = makeCondition(StockCode.KODEX_BANK_091170, range, false)
+        val condition1 = makeCondition(StockCode.KODEX_KOSDAQ_2X_233740, range, listOf(0.2, 0.4, 0.6, 0.8, 1.0), true)
+//        val condition2 = makeCondition(StockCode.KODEX_BANK_091170, range, false)
         condition1.tradeList = vbsBacktestService.runTest(condition1)
-        condition2.tradeList = vbsBacktestService.runTest(condition2)
+//        condition2.tradeList = vbsBacktestService.runTest(condition2)
         val vbsAnalysisCondition = listOf(
             VbsAnalysisCondition(
-                tradeConditionList = listOf(condition1, condition2),
+                tradeConditionList = listOf(condition1),
                 basic = TradeCondition(
                     range = range,
                     investRatio = 0.99,
@@ -76,7 +76,7 @@ class VbsBacktest {
         log.info("끝.")
     }
 
-    private fun makeCondition(stockCode: StockCode, range: DateRange, stayGapRise: Boolean): VbsCondition {
+    private fun makeCondition(stockCode: StockCode, range: DateRange, kRate: List<Double>, stayGapRise: Boolean): VbsCondition {
         val stock = stockRepository.findByCode(stockCode.code).get()
         return VbsCondition(
             stock = stock,

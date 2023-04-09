@@ -12,7 +12,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import kotlin.streams.toList
 
 /**
  * 리포트 생성에 필요한 공통 메소드 제공
@@ -284,13 +283,10 @@ object ReportMakerHelperService {
 
         for (i in 1..tradeConditionList.size) {
             val condition = tradeConditionList[i - 1]
-            report.append(
-                "${i}. 조건번호\t${condition.conditionSeq}\n"
-            )
 
             val winningRate = commonAnalysisReportResult.winningRateTarget[condition.stock.code]
             if (winningRate == null) {
-                log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${condition.conditionSeq}")
+                log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${condition.stock.name}(${condition.stock.code})")
                 break
             }
             report.append(String.format("${i}. 실현 수익(수수료제외)\t %,.0f", winningRate.invest)).append("\n")
