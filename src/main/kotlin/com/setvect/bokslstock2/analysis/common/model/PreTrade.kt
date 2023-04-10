@@ -7,6 +7,7 @@ import java.time.LocalDateTime
  * 매매 내역
  */
 data class PreTrade(
+    val name: String = "",
     /**
      * 매매 종목
      */

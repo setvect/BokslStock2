@@ -6,6 +6,7 @@ import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.config.BokslStockProperties
 import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
+import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
@@ -56,7 +57,7 @@ class CrawlStockPriceService(
     fun crawlStockPriceAll() {
         val stockEntities = stockRepository.findAll()
         stockEntities.forEach {
-            crawlStockPriceWithDelete(it)
+            crawlStockPriceWithDelete(it, null)
         }
     }
 
@@ -64,19 +65,23 @@ class CrawlStockPriceService(
      * [stockCode] 시세 모두 지우고 다시 수집
      */
     @Transactional
-    fun crawlStockPriceWithDelete(stockCode: StockCode) {
+    fun crawlStockPriceWithDelete(stockCode: StockCode, periodType: PeriodType? = null) {
         val stockEntityOptional = stockRepository.findByCode(stockCode.code)
         if (stockEntityOptional.isEmpty) {
             log.info("종목 등록: $stockCode")
             stockRepository.save(StockEntity(code = stockCode.code, name = stockCode.desc))
         }
         val stockEntity = stockRepository.findByCode(stockCode.code).get()
-        crawlStockPriceWithDelete(stockEntity)
+        crawlStockPriceWithDelete(stockEntity, periodType)
     }
 
-    private fun crawlStockPriceWithDelete(stockEntity: StockEntity) {
+    private fun crawlStockPriceWithDelete(stockEntity: StockEntity, periodType: PeriodType?) {
         val stockCode = StockCode.findByCode(stockEntity.code)
-        val deleteCount = candleRepository.deleteByStock(stockEntity)
+        val deleteCount = if (periodType == null) {
+            candleRepository.deleteByStock(stockEntity)
+        } else {
+            candleRepository.deleteByStockPeriodType(stockEntity, periodType)
+        }
         log.info("시세 데이터 삭제: ${stockEntity.name}(${stockEntity.code}) - ${String.format("%,d", deleteCount)}건")
 
         when (stockCode.national) {

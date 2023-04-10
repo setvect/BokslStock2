@@ -10,6 +10,8 @@ import javax.persistence.*
  * 변동성돌파 전략 조건
  */
 class VbsCondition(
+    override val name: String,
+
     /**
      * 주식 종목
      */

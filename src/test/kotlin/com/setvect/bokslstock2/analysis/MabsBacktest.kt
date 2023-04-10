@@ -64,6 +64,7 @@ class MabsBacktest {
     private fun makeCondition(codeNam: String): MabsCondition {
         val stock = stockRepository.findByCode(codeNam).get()
         return MabsCondition(
+            name = stock.name,
             stock = stock,
             periodType = PERIOD_DAY,
             upBuyRate = 0.00,

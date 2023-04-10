@@ -125,12 +125,20 @@ where CA.CODE = 'WON-DOLLAR'
 order by CANDLE_DATE_TIME;
 
 -- 변동성 돌파전략 백테스트 5분봉 데이터 조회
-select CA.CODE, CB.PERIOD_TYPE, count(*), max(CB.CANDLE_DATE_TIME)
+select CA.NAME, CA.CODE, CB.PERIOD_TYPE, count(*), max(CB.CANDLE_DATE_TIME)
 from CA_STOCK CA
          join CB_CANDLE CB on CA.STOCK_SEQ = CB.STOCK_SEQ
-where CA.CODE IN('091170', '233740')
-group by CA.CODE, CB.PERIOD_TYPE
+where CA.CODE IN ('091170', '233740')
+group by CA.CODE, CB.PERIOD_TYPE;
 
 
-select *
-from GB_VBS_TRADE;
+select CA.NAME, CA.CODE, CB.PERIOD_TYPE, CB.*
+from CA_STOCK CA
+         join CB_CANDLE CB on CA.STOCK_SEQ = CB.STOCK_SEQ
+where CA.CODE IN ( '233740')
+and CB.PERIOD_TYPE = 'PERIOD_DAY'
+order by CB.CANDLE_DATE_TIME desc;
+
+
+
+

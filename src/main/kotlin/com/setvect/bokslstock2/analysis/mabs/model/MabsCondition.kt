@@ -8,6 +8,7 @@ import com.setvect.bokslstock2.index.model.PeriodType
  * 이평선 돌파 백테스트 조건
  */
 class MabsCondition(
+    override val name: String,
     /**
      * 주식 종목
      */

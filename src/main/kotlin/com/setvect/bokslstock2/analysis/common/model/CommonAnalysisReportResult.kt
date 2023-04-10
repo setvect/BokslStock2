@@ -19,13 +19,12 @@ data class CommonAnalysisReportResult(
 
     /**
      * 전략 종목 기준 승률 합
-     * <종목코드, 승률>
+     * <조건이름, 승률>
      */
     val winningRateTarget: Map<String, WinningRate>,
 
     /**
      * 전략 종목 Buy&Hold 수익률
-     * <종목코드, 수익률>
      */
     val baseStockYieldCode: CompareYieldCode,
 

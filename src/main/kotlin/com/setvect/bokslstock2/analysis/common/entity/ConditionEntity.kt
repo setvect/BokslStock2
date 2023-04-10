@@ -4,6 +4,10 @@ import com.setvect.bokslstock2.index.entity.StockEntity
 
 interface ConditionEntity {
     /**
+     * @return 조건명
+     */
+    val name : String
+    /**
      * @return 종목
      */
     val stock: StockEntity

@@ -284,9 +284,9 @@ object ReportMakerHelperService {
         for (i in 1..tradeConditionList.size) {
             val condition = tradeConditionList[i - 1]
 
-            val winningRate = commonAnalysisReportResult.winningRateTarget[condition.stock.code]
+            val winningRate = commonAnalysisReportResult.winningRateTarget[condition.name]
             if (winningRate == null) {
-                log.warn("조건에 해당하는 결과가 없습니다. vbsConditionSeq: ${condition.stock.name}(${condition.stock.code})")
+                log.warn("조건에 해당하는 결과가 없습니다. ${condition.name}")
                 break
             }
             report.append(String.format("${i}. 실현 수익(수수료제외)\t %,.0f", winningRate.invest)).append("\n")
