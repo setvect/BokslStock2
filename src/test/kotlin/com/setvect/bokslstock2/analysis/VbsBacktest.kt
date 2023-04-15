@@ -52,13 +52,13 @@ class VbsBacktest {
 
         val range = DateRange(LocalDateTime.of(2018, 1, 1, 0, 0), LocalDateTime.of(2023, 3, 18, 0, 0))
 
-        val condition1 = makeCondition(StockCode.KODEX_KOSDAQ_2X_233740, range, 0.3, true)
+        val condition1 = makeCondition(StockCode.KODEX_KOSDAQ_2X_233740, range, 0.5, true)
         condition1.tradeList = vbsBacktestService.runTest(condition1)
 
-//        val condition2 = makeCondition(StockCode.KODEX_BANK_091170, range, 0.5, true)
-//        condition2.tradeList = vbsBacktestService.runTest(condition2)
+        val condition2 = makeCondition(StockCode.KODEX_BANK_091170, range, 0.5, false)
+        condition2.tradeList = vbsBacktestService.runTest(condition2)
 
-        val tradeConditionList = listOf(condition1)
+        val tradeConditionList = listOf(condition1, condition2)
 
         val vbsAnalysisCondition = listOf(
             VbsAnalysisCondition(
@@ -76,9 +76,9 @@ class VbsBacktest {
         )
 
         // 리포트 만듦
-        val conditionResults = analysisService.runAnalysis(vbsAnalysisCondition)
-        analysisService.makeTradeReport(conditionResults, vbsAnalysisCondition)
-        analysisService.makeSummaryReport(conditionResults, vbsAnalysisCondition)
+        val vbsAnalysisConditionAndResults = analysisService.runAnalysis(vbsAnalysisCondition)
+        analysisService.makeTradeReport(vbsAnalysisConditionAndResults)
+        analysisService.makeSummaryReport(vbsAnalysisConditionAndResults)
 
         log.info("끝.")
     }

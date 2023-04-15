@@ -184,7 +184,8 @@ class BacktestTradeService(
 
         // 현재 가지고 있는 주식 수
         // <거래 종목 구분명, <종목코드, 주식수>>
-        val condByStockQty = trades.associateBy({ it.preTrade.getTradeName() }, { StockCodeByQty(it.preTrade.stockCode, 0) })
+        val condByStockQty =
+            trades.associateBy({ it.preTrade.getTradeName() }, { StockCodeByQty(it.preTrade.stockCode, 0) })
 
         val buyHoldRateMap: SortedMap<LocalDateTime, Double> = getBuyAndHoldEvalRate(condition.range, holdStockCodes)
         val benchmarkRateMap: SortedMap<LocalDateTime, Double> =

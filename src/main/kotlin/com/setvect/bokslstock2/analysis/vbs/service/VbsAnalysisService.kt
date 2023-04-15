@@ -5,6 +5,7 @@ import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult.
 import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.analysis.vbs.model.VbsAnalysisCondition
+import com.setvect.bokslstock2.analysis.vbs.model.VbsAnalysisConditionAndResult
 import com.setvect.bokslstock2.analysis.vbs.model.VbsCondition
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.IndexedColors
@@ -81,7 +82,7 @@ class VbsAnalysisService(
     /**
      *  복수개의 조건에 대한 매매 분석 진행
      */
-    fun runAnalysis(conditionList: List<VbsAnalysisCondition>): List<Pair<VbsAnalysisCondition, AnalysisResult>> {
+    fun runAnalysis(conditionList: List<VbsAnalysisCondition>): List<VbsAnalysisConditionAndResult> {
         var i = 0
         val conditionResults = conditionList.map { vbsAnalysisCondition ->
             val range = backtestTradeService.fitBacktestRange(
@@ -99,35 +100,32 @@ class VbsAnalysisService(
                 vbsAnalysisCondition.getStockCodes()
             )
             log.info("분석 진행 ${++i}/${conditionList.size}")
-            Pair(vbsAnalysisCondition, analysisResult)
+            VbsAnalysisConditionAndResult(vbsAnalysisCondition, analysisResult)
         }.toList()
         return conditionResults;
 
     }
 
-    fun makeTradeReport(
-        conditionResults: List<Pair<VbsAnalysisCondition, AnalysisResult>>,
-        conditionList: List<VbsAnalysisCondition>
-    ) {
-        for (idx in conditionResults.indices) {
-            val conditionResult = conditionResults[idx]
-            makeReportFile(conditionResult.first, conditionResult.second)
-            log.info("개별분석파일 생성 ${idx + 1}/${conditionList.size}")
+    fun makeTradeReport(vbsAnalysisConditionAndResults: List<VbsAnalysisConditionAndResult>) {
+        for (idx in vbsAnalysisConditionAndResults.indices) {
+            val conditionResult = vbsAnalysisConditionAndResults[idx]
+            makeReportFile(conditionResult.vbsAnalysisCondition, conditionResult.analysisResult)
+            log.info("개별분석파일 생성 ${idx + 1}/${vbsAnalysisConditionAndResults.size}")
         }
     }
 
     fun makeSummaryReport(
-        conditionResults: List<Pair<VbsAnalysisCondition, AnalysisResult>>,
-        conditionList: List<VbsAnalysisCondition>
+        vbsAnalysisConditionAndResults: List<VbsAnalysisConditionAndResult>,
     ) {
         // 결과 저장
         val reportFile =
             File("./backtest-result", "변동성돌파_전략_백테스트_분석결과_" + Timestamp.valueOf(LocalDateTime.now()).time + ".xlsx")
         XSSFWorkbook().use { workbook ->
-            val sheetBacktestSummary = createTotalSummary(workbook, conditionResults)
+            val sheetBacktestSummary = createTotalSummary(workbook, vbsAnalysisConditionAndResults)
             workbook.setSheetName(workbook.getSheetIndex(sheetBacktestSummary), "1. 평가표")
 
-            val sheetCondition = createMultiCondition(workbook, conditionList)
+            val sheetCondition =
+                createMultiCondition(workbook, vbsAnalysisConditionAndResults.map { it.vbsAnalysisCondition })
             workbook.setSheetName(workbook.getSheetIndex(sheetCondition), "2. 테스트 조건")
             FileOutputStream(reportFile).use { ous ->
                 workbook.write(ous)
@@ -141,7 +139,7 @@ class VbsAnalysisService(
      */
     private fun createTotalSummary(
         workbook: XSSFWorkbook,
-        conditionResults: List<Pair<VbsAnalysisCondition, AnalysisResult>>
+        conditionResults: List<VbsAnalysisConditionAndResult>
     ): XSSFSheet {
         val sheet = workbook.createSheet()
 
@@ -165,7 +163,7 @@ class VbsAnalysisService(
 
 
         conditionResults.forEach { conditionResult ->
-            val multiCondition = conditionResult.first
+            val multiCondition = conditionResult.vbsAnalysisCondition
             val tradeConditionList = multiCondition.tradeConditionList
 
             val row = sheet.createRow(rowIdx++)
@@ -222,7 +220,7 @@ class VbsAnalysisService(
             createCell.setCellValue(multiCondition.basic.comment)
             createCell.cellStyle = defaultStyle
 
-            val result = conditionResult.second
+            val result = conditionResult.analysisResult
 
 
             val buyHoldTotalYield: TotalYield = result.common.benchmarkTotalYield.buyHoldTotalYield
