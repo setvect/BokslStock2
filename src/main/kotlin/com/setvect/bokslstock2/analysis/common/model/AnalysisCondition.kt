@@ -1,12 +1,10 @@
 package com.setvect.bokslstock2.analysis.common.model
 
-import com.setvect.bokslstock2.analysis.common.entity.ConditionEntity
-
 abstract class AnalysisCondition {
     /**
      * 분석 조건
      */
-    abstract val tradeConditionList: List<ConditionEntity>
+    abstract val tradeConditionList: List<CommonCondition>
 
     fun getStockCodes(): List<StockCode> {
         return tradeConditionList.map { StockCode.findByCode(it.stock.code) }.toList()
@@ -20,7 +18,7 @@ abstract class AnalysisCondition {
             .map { vc ->
                 vc.tradeList.map {
                     PreTrade(
-                        name = vc.name,
+                        conditionName = vc.name,
                         stockCode = StockCode.findByCode(vc.stock.code),
                         tradeDate = it.tradeDate,
                         tradeType = it.tradeType,

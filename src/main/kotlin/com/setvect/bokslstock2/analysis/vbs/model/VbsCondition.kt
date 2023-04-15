@@ -1,10 +1,9 @@
 package com.setvect.bokslstock2.analysis.vbs.model
 
-import com.setvect.bokslstock2.analysis.common.entity.ConditionEntity
+import com.setvect.bokslstock2.analysis.common.model.CommonCondition
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.util.DateRange
-import javax.persistence.*
 
 /**
  * 변동성돌파 전략 조건
@@ -67,6 +66,6 @@ class VbsCondition(
      * 갭 상승 시 5분 마다 시세 체크, 직전 5분봉 하락 반전 시 매도
      */
     val stayGapRise: Boolean
-) : ConditionEntity {
+) : CommonCondition {
     override var tradeList: List<VbsTrade> = ArrayList()
 }

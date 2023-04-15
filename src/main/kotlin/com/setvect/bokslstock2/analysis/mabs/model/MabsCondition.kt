@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2.analysis.mabs.model
 
-import com.setvect.bokslstock2.analysis.common.entity.ConditionEntity
+import com.setvect.bokslstock2.analysis.common.model.CommonCondition
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 
@@ -43,6 +43,6 @@ class MabsCondition(
      * 조건에 대한 설명. 리포트에서 사용하기 위함
      */
     val comment: String,
-) : ConditionEntity{
+) : CommonCondition {
      override var tradeList: List<MabsTrade> = ArrayList()
 }

@@ -7,7 +7,10 @@ import java.time.LocalDateTime
  * 매매 내역
  */
 data class PreTrade(
-    val name: String = "",
+    /**
+     * ConditionEntity.name
+     */
+    val conditionName: String = "",
     /**
      * 매매 종목
      */
@@ -35,6 +38,6 @@ data class PreTrade(
     val tradeDate: LocalDateTime,
 ){
     fun getTradeName(): String {
-        return name.ifEmpty { stockCode.name }
+        return conditionName.ifEmpty { stockCode.name }
     }
 }

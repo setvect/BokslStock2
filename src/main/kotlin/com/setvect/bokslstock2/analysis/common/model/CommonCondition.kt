@@ -1,8 +1,9 @@
-package com.setvect.bokslstock2.analysis.common.entity
+package com.setvect.bokslstock2.analysis.common.model
 
+import com.setvect.bokslstock2.analysis.common.entity.TradeEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
 
-interface ConditionEntity {
+interface CommonCondition {
     /**
      * @return 조건명
      */

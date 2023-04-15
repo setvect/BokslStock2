@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2.analysis.common.service
 
-import com.setvect.bokslstock2.analysis.common.entity.ConditionEntity
+import com.setvect.bokslstock2.analysis.common.model.CommonCondition
 import com.setvect.bokslstock2.analysis.common.model.*
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
@@ -239,7 +239,7 @@ object ReportMakerHelperService {
      */
     fun createSummary(
         commonAnalysisReportResult: CommonAnalysisReportResult,
-        tradeConditionList: List<ConditionEntity>,
+        tradeConditionList: List<CommonCondition>,
         tradeCondition: TradeCondition,
         specialInfo: String
     ): String {

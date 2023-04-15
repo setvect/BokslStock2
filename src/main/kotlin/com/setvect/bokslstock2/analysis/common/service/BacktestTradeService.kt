@@ -70,13 +70,13 @@ class BacktestTradeService(
                     stockEvalPrice = stockEvalPrice
                 )
                 tradeItemHistory.add(tradeReportItem)
-                buyStock[tradeItem.name] = tradeReportItem
+                buyStock[tradeItem.getTradeName()] = tradeReportItem
             } else if (tradeItem.tradeType == TradeType.SELL) {
                 // 매도 처리
                 // 투자수익금 = 매수금액 * 수익률 - 수수료
-                val buyTrade = buyStock[tradeItem.name]
-                    ?: throw RuntimeException("${tradeItem.name} - ${tradeItem.tradeDate} 매수 내역이 없습니다.")
-                buyStock.remove(tradeItem.name)
+                val buyTrade = buyStock[tradeItem.getTradeName()]
+                    ?: throw RuntimeException("${tradeItem.getTradeName()} - ${tradeItem.tradeDate} 매수 내역이 없습니다.")
+                buyStock.remove(tradeItem.getTradeName())
                 val sellPrice = buyTrade.getBuyAmount() * (1 + tradeItem.yield)
                 val sellFee = sellPrice * condition.feeSell
                 val gains = sellPrice - buyTrade.getBuyAmount()
@@ -184,7 +184,7 @@ class BacktestTradeService(
 
         // 현재 가지고 있는 주식 수
         // <거래 종목 구분명, <종목코드, 주식수>>
-        val condByStockQty = trades.associateBy({ it.preTrade.name }, { StockCodeByQty(it.preTrade.stockCode, 0) })
+        val condByStockQty = trades.associateBy({ it.preTrade.getTradeName() }, { StockCodeByQty(it.preTrade.stockCode, 0) })
 
         val buyHoldRateMap: SortedMap<LocalDateTime, Double> = getBuyAndHoldEvalRate(condition.range, holdStockCodes)
         val benchmarkRateMap: SortedMap<LocalDateTime, Double> =
@@ -195,15 +195,16 @@ class BacktestTradeService(
             val benchmarkRate = benchmarkRateMap[date] ?: benchmarkLastRate
             val currentTradeList = tradeByDate[date] ?: emptyList()
             for (trade in currentTradeList) {
-                val tradeName = trade.preTrade.name
-                condByStockQty[tradeName]?.qty = trade.qty
+                val tradeName = trade.preTrade.getTradeName()
+                (condByStockQty[tradeName] ?: error("$tradeName 값이 없음")).qty = trade.qty
                 backtestLastCash = trade.cash
             }
 
             // 종가기준으로 보유 주식 평가금액 구하기
             val evalStockAmount = condByStockQty.entries.stream().filter { it.value.qty > 0 }
                 .mapToDouble {
-                    val closePrice: Double = getBeforeNearPrice(condClosePriceMap[it.value.stockCode.code]!!, date, it.value.stockCode.code)
+                    val closePrice: Double =
+                        getBeforeNearPrice(condClosePriceMap[it.value.stockCode.code]!!, date, it.value.stockCode.code)
                     closePrice * it.value.qty
                 }.sum()
 
@@ -371,10 +372,10 @@ class BacktestTradeService(
         tradeItemHistory: List<Trade>
     ): Map<String, CommonAnalysisReportResult.WinningRate> {
         val sellList = tradeItemHistory.filter { it.preTrade.tradeType == TradeType.SELL }.toList()
-        val groupBy = sellList.groupBy { it.preTrade.name }
+        val groupBy = sellList.groupBy { it.preTrade.getTradeName() }
 
         // <종목코드, 수수료합>
-        val feeMap = tradeItemHistory.groupBy { it.preTrade.name }.entries.associate { entity ->
+        val feeMap = tradeItemHistory.groupBy { it.preTrade.getTradeName() }.entries.associate { entity ->
             entity.key to entity.value.sumOf { it.feePrice }
         }
 
