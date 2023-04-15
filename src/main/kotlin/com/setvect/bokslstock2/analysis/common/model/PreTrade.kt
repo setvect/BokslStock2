@@ -33,4 +33,8 @@ data class PreTrade(
      * 거래시간
      */
     val tradeDate: LocalDateTime,
-)
+){
+    fun getTradeName(): String {
+        return name.ifEmpty { stockCode.name }
+    }
+}

@@ -4,8 +4,8 @@ import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult.TotalYield
 import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
-import com.setvect.bokslstock2.analysis.vbs.model.VbsCondition
 import com.setvect.bokslstock2.analysis.vbs.model.VbsAnalysisCondition
+import com.setvect.bokslstock2.analysis.vbs.model.VbsCondition
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.xssf.usermodel.XSSFSheet
@@ -31,7 +31,7 @@ class VbsAnalysisService(
     /**
      *  분석 리포트
      */
-    fun makeReport(vbsAnalysisCondition: VbsAnalysisCondition) {
+    fun makeTradeReport(vbsAnalysisCondition: VbsAnalysisCondition) {
         val trades =
             backtestTradeService.tradeBundle(vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTradeBundles())
         val analysisResult =
@@ -79,9 +79,9 @@ class VbsAnalysisService(
     }
 
     /**
-     *  복수개의 조건에 대한 분석 요약 리포트를 만듦
+     *  복수개의 조건에 대한 매매 분석 진행
      */
-    fun makeSummaryReport(conditionList: List<VbsAnalysisCondition>): File {
+    fun runAnalysis(conditionList: List<VbsAnalysisCondition>): List<Pair<VbsAnalysisCondition, AnalysisResult>> {
         var i = 0
         val conditionResults = conditionList.map { vbsAnalysisCondition ->
             val range = backtestTradeService.fitBacktestRange(
@@ -101,13 +101,25 @@ class VbsAnalysisService(
             log.info("분석 진행 ${++i}/${conditionList.size}")
             Pair(vbsAnalysisCondition, analysisResult)
         }.toList()
+        return conditionResults;
 
+    }
+
+    fun makeTradeReport(
+        conditionResults: List<Pair<VbsAnalysisCondition, AnalysisResult>>,
+        conditionList: List<VbsAnalysisCondition>
+    ) {
         for (idx in conditionResults.indices) {
             val conditionResult = conditionResults[idx]
             makeReportFile(conditionResult.first, conditionResult.second)
             log.info("개별분석파일 생성 ${idx + 1}/${conditionList.size}")
         }
+    }
 
+    fun makeSummaryReport(
+        conditionResults: List<Pair<VbsAnalysisCondition, AnalysisResult>>,
+        conditionList: List<VbsAnalysisCondition>
+    ) {
         // 결과 저장
         val reportFile =
             File("./backtest-result", "변동성돌파_전략_백테스트_분석결과_" + Timestamp.valueOf(LocalDateTime.now()).time + ".xlsx")
@@ -121,8 +133,7 @@ class VbsAnalysisService(
                 workbook.write(ous)
             }
         }
-        println("결과 파일:" + reportFile.name)
-        return reportFile
+        log.info("결과 파일:" + reportFile.name)
     }
 
     /**
@@ -372,7 +383,7 @@ class VbsAnalysisService(
         val report = StringBuilder()
         for (i in 1..vbsAnalysisCondition.tradeConditionList.size) {
             val tradeCondition = vbsAnalysisCondition.tradeConditionList[i - 1]
-            report.append(String.format("${i}. 조건명\t %s", tradeCondition.name)).append("\n")
+            report.append(String.format("${i}. 매매 조건명\t %s", tradeCondition.name)).append("\n")
             report.append(String.format("${i}. 분석주기\t %s", tradeCondition.periodType)).append("\n")
             report.append(String.format("${i}. 대상 종목\t %s", tradeCondition.stock.getNameCode())).append("\n")
             report.append(String.format("${i}. 변동성 비율\t %,.2f", tradeCondition.kRate)).append("\n")
