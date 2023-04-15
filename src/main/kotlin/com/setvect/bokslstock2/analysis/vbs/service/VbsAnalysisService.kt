@@ -372,6 +372,7 @@ class VbsAnalysisService(
         val report = StringBuilder()
         for (i in 1..vbsAnalysisCondition.tradeConditionList.size) {
             val tradeCondition = vbsAnalysisCondition.tradeConditionList[i - 1]
+            report.append(String.format("${i}. 조건명\t %s", tradeCondition.name)).append("\n")
             report.append(String.format("${i}. 분석주기\t %s", tradeCondition.periodType)).append("\n")
             report.append(String.format("${i}. 대상 종목\t %s", tradeCondition.stock.getNameCode())).append("\n")
             report.append(String.format("${i}. 변동성 비율\t %,.2f", tradeCondition.kRate)).append("\n")
