@@ -2,6 +2,7 @@ package com.setvect.bokslstock2.analysis.price
 
 import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.analysis.common.model.StockCode.*
+import com.setvect.bokslstock2.common.model.TradeType
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.CandleRepository
@@ -421,10 +422,6 @@ class TrendFollowingBacktest {
     }
 
     data class TradeStock(val tradeType: TradeType, val candle: CandleDto)
-
-    enum class TradeType {
-        BUY, SELL
-    }
 
     interface FollowingBacktest {
         /**

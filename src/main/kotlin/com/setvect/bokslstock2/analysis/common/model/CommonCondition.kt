@@ -1,6 +1,5 @@
 package com.setvect.bokslstock2.analysis.common.model
 
-import com.setvect.bokslstock2.analysis.common.entity.TradeEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
 
 interface CommonCondition {
@@ -13,5 +12,5 @@ interface CommonCondition {
      */
     val stock: StockEntity
 
-    val tradeList: List<TradeEntity>
+    val tradeList: List<CommonTrade>
 }

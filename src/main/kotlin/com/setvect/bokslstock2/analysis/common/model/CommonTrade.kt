@@ -1,10 +1,9 @@
-package com.setvect.bokslstock2.analysis.common.entity
+package com.setvect.bokslstock2.analysis.common.model
 
-import com.setvect.bokslstock2.analysis.common.model.CommonCondition
 import com.setvect.bokslstock2.common.model.TradeType
 import java.time.LocalDateTime
 
-interface TradeEntity {
+interface CommonTrade {
     fun getConditionEntity(): CommonCondition
 
     /**

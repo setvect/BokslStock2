@@ -1,7 +1,7 @@
 package com.setvect.bokslstock2.analysis.vbs.model
 
 import com.setvect.bokslstock2.analysis.common.model.CommonCondition
-import com.setvect.bokslstock2.analysis.common.entity.TradeEntity
+import com.setvect.bokslstock2.analysis.common.model.CommonTrade
 import com.setvect.bokslstock2.common.model.TradeType
 import java.time.LocalDateTime
 
@@ -42,7 +42,7 @@ class VbsTrade(
      * 거래시간
      */
     override val tradeDate: LocalDateTime,
-) : TradeEntity {
+) : CommonTrade {
     val tradeSeq = 0L
     override fun getConditionEntity(): CommonCondition {
         return vbsCondition
