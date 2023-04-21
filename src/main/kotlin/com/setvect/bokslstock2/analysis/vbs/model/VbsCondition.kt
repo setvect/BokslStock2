@@ -1,6 +1,5 @@
 package com.setvect.bokslstock2.analysis.vbs.model
 
-import com.setvect.bokslstock2.analysis.common.model.CommonCondition
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.util.DateRange
@@ -9,12 +8,14 @@ import com.setvect.bokslstock2.util.DateRange
  * 변동성돌파 전략 조건
  */
 class VbsCondition(
-    override val name: String,
+    val name: String,
 
     /**
      * 주식 종목
      */
-    override val stock: StockEntity,
+    val stock: StockEntity,
+
+    var tradeList: List<VbsTrade> = ArrayList(),
 
     /**
      * 매매 기간
@@ -66,6 +67,4 @@ class VbsCondition(
      * 갭 상승 시 5분 마다 시세 체크, 직전 5분봉 하락 반전 시 매도
      */
     val stayGapRise: Boolean
-) : CommonCondition {
-    override var tradeList: List<VbsTrade> = ArrayList()
-}
+)

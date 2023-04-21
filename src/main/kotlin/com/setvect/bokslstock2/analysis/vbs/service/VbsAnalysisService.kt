@@ -18,6 +18,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.sql.Timestamp
 import java.time.LocalDateTime
+import kotlin.streams.toList
 
 
 /**
@@ -369,9 +370,10 @@ class VbsAnalysisService(
      * 분석 요약결과
      */
     private fun getSummary(vbsAnalysisCondition: VbsAnalysisCondition, analysisResult: AnalysisResult): String {
+        val tradeConditionList = vbsAnalysisCondition.tradeConditionList.stream().map { it.name }.toList()
         return ReportMakerHelperService.createSummary(
             analysisResult.common,
-            vbsAnalysisCondition.tradeConditionList,
+            tradeConditionList,
             vbsAnalysisCondition.basic,
             getSpecialInfo(vbsAnalysisCondition)
         )

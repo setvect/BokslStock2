@@ -1,6 +1,5 @@
 package com.setvect.bokslstock2.analysis.common.service
 
-import com.setvect.bokslstock2.analysis.common.model.CommonCondition
 import com.setvect.bokslstock2.analysis.common.model.*
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
@@ -239,7 +238,7 @@ object ReportMakerHelperService {
      */
     fun createSummary(
         commonAnalysisReportResult: CommonAnalysisReportResult,
-        tradeConditionList: List<CommonCondition>,
+        conditionNameList: List<String>,
         tradeCondition: TradeCondition,
         specialInfo: String
     ): String {
@@ -281,12 +280,12 @@ object ReportMakerHelperService {
         report.append(String.format("샤프지수\t %,.2f", commonAnalysisReportResult.getBacktestSharpeRatio()))
             .append("\n")
 
-        for (i in 1..tradeConditionList.size) {
-            val condition = tradeConditionList[i - 1]
+        for (i in 1..conditionNameList.size) {
+            val conditionName = conditionNameList[i - 1]
 
-            val winningRate = commonAnalysisReportResult.winningRateTarget[condition.name]
+            val winningRate = commonAnalysisReportResult.winningRateTarget[conditionName]
             if (winningRate == null) {
-                log.warn("조건에 해당하는 결과가 없습니다. ${condition.name}")
+                log.warn("조건에 해당하는 결과가 없습니다. ${conditionName}")
                 break
             }
             report.append(String.format("${i}. 실현 수익(수수료제외)\t %,.0f", winningRate.invest)).append("\n")

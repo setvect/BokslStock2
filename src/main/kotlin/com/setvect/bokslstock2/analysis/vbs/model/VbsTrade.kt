@@ -1,7 +1,5 @@
 package com.setvect.bokslstock2.analysis.vbs.model
 
-import com.setvect.bokslstock2.analysis.common.model.CommonCondition
-import com.setvect.bokslstock2.analysis.common.model.CommonTrade
 import com.setvect.bokslstock2.common.model.TradeType
 import java.time.LocalDateTime
 
@@ -17,7 +15,7 @@ class VbsTrade(
     /**
      * 매수/매도
      */
-    override val tradeType: TradeType,
+    val tradeType: TradeType,
 
     /**
      * 매매 시 이동평균 가격
@@ -29,22 +27,21 @@ class VbsTrade(
      * 소수로 표현, 1->100%, -0.02 -> -2%
      * 매수는 0으로 표현
      */
-    override val yield: Double,
+    val yield: Double,
 
     /**
      * 거래 단가
      * - 매수일 경우 매수 단가
      * - 매도일 경우 매도 단가
      */
-    override val unitPrice: Double,
+    val unitPrice: Double,
 
     /**
      * 거래시간
      */
-    override val tradeDate: LocalDateTime,
-) : CommonTrade {
-    val tradeSeq = 0L
-    override fun getConditionEntity(): CommonCondition {
+    val tradeDate: LocalDateTime,
+) {
+    fun getConditionEntity(): VbsCondition {
         return vbsCondition
     }
 }

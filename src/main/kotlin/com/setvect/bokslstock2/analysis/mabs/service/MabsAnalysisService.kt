@@ -353,7 +353,7 @@ class MabsAnalysisService(
     private fun getSummary(mabsAnalysisCondition: MabsAnalysisCondition, analysisResult: AnalysisResult): String {
         return ReportMakerHelperService.createSummary(
             analysisResult.common,
-            mabsAnalysisCondition.tradeConditionList,
+            mabsAnalysisCondition.tradeConditionList.stream().map { it.name }.toList(),
             mabsAnalysisCondition.basic,
             getSpecialInfo(mabsAnalysisCondition)
         )
