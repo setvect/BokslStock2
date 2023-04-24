@@ -40,8 +40,4 @@ class VbsTrade(
      * 거래시간
      */
     val tradeDate: LocalDateTime,
-) {
-    fun getConditionEntity(): VbsCondition {
-        return vbsCondition
-    }
-}
+)

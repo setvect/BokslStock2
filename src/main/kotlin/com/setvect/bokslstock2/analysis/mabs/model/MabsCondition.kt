@@ -1,6 +1,5 @@
 package com.setvect.bokslstock2.analysis.mabs.model
 
-import com.setvect.bokslstock2.analysis.common.model.CommonCondition
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 
@@ -8,11 +7,13 @@ import com.setvect.bokslstock2.index.model.PeriodType
  * 이평선 돌파 백테스트 조건
  */
 class MabsCondition(
-    override val name: String,
+    val name: String,
     /**
      * 주식 종목
      */
-    override val stock: StockEntity,
+    val stock: StockEntity,
+
+    var tradeList: List<MabsTrade> = ArrayList(),
 
     /**
      * 매매 주기
@@ -43,6 +44,4 @@ class MabsCondition(
      * 조건에 대한 설명. 리포트에서 사용하기 위함
      */
     val comment: String,
-) : CommonCondition {
-     override var tradeList: List<MabsTrade> = ArrayList()
-}
+)

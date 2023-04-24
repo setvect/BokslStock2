@@ -18,9 +18,6 @@ data class VbsAnalysisCondition(
      */
     val basic: TradeCondition,
 ) {
-    val conditionList: List<VbsCondition>
-        get() = tradeConditionList
-
     fun getStockCodes(): List<StockCode> {
         return tradeConditionList.map { StockCode.findByCode(it.stock.code) }.toList()
     }
