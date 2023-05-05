@@ -37,7 +37,7 @@ class CrawlerCompanyValueService(
         var count = 0
         companyList.forEach { company ->
             val url = valueCommonService.getDetailUrl(company.code)
-            log.info("${company.name} 조회, $url, [${count++}]")
+            log.info("${company.name} 조회, $url, [${count++}/${companyList.size}]")
 
             val document = Jsoup.connect(url).get()
             val infoBox = document.select("#tab_con1")

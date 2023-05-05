@@ -139,6 +139,7 @@ class ValueAnalysisService(
             .toList()
         println("필터 Size: " + companyFilterList.size)
 
+        // 시총 기준 추출범위 설정
         val fromIndex = (companyFilterList.size * upperRatio).toInt()
         val toIndex = (companyFilterList.size * lowerRatio).toInt()
         return companyFilterList.subList(fromIndex, toIndex)
