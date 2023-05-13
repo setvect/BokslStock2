@@ -9,10 +9,12 @@ import com.setvect.bokslstock2.util.DateUtil
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVRecord
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.File
 import java.io.FileReader
+import java.time.LocalDateTime
 import java.util.stream.Collectors
 import java.util.stream.StreamSupport
 
@@ -52,9 +54,20 @@ class CsvStoreService(
         if (!append) {
             deleteStock(stock, periodType)
         }
-        val candleList: MutableList<CandleEntity> = loadCandleCron(csvStock, stock, periodType)
+        val lastCandle = candleRepository.findByBeforeLastCandle(code, LocalDateTime.now(), periodType, Pageable.ofSize(1))
+        val lastCandleDate = if (lastCandle.isEmpty()) {
+            LocalDateTime.MIN
+        } else {
+            lastCandle[0].candleDateTime
+        }
+
+        val candleList: MutableList<CandleEntity> = loadCandleCron(csvStock, stock, periodType, lastCandleDate)
+        if (candleList.isEmpty()) {
+            log.info("시세 데이터 입력: ${stock.name}(${stock.code} - ${periodType}), 데이터 없음")
+            return
+        }
         candleRepository.saveAll(candleList)
-        log.info("시세 데이터 입력: ${stock.name}(${stock.code} - ${periodType}) - ${String.format("%,d", candleList.size)}건")
+        log.info("시세 데이터 입력: ${stock.name}(${stock.code} - ${periodType}), ${candleList.first().candleDateTime} ~ ${candleList.last().candleDateTime}, ${String.format("%,d", candleList.size)}건")
     }
 
     private fun loadCandle(
@@ -89,10 +102,14 @@ class CsvStoreService(
         }
     }
 
+    /**
+     * [lastCandleDate] 이후 데이터만 필터링
+     */
     private fun loadCandleCron(
         csvStock: File,
         stock: StockEntity,
-        periodType: PeriodType
+        periodType: PeriodType,
+        lastCandleDate: LocalDateTime
     ): MutableList<CandleEntity> {
         FileReader(csvStock).use { file ->
             val records: Iterable<CSVRecord> = CSVFormat.RFC4180.builder()
@@ -116,6 +133,7 @@ class CsvStoreService(
                         closePrice = it.get("close").toDouble(),
                     )
                 }
+                .filter { it.candleDateTime.isAfter(lastCandleDate) }
                 .collect(Collectors.toList())
         }
     }
