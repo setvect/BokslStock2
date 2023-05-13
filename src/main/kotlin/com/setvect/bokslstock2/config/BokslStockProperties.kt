@@ -36,13 +36,10 @@ data class BokslStockProperties(
 
         data class Global(
             val url: String
-        ) {
-        }
-
+        )
         data class ExchangeRate(
             val url: String
-        ) {
-        }
+        )
     }
 
     data class Koreainvestment(
@@ -52,11 +49,9 @@ data class BokslStockProperties(
         val trade: Trade,
         val vbs: Vbs
     ) {
-        data class Ws(val url: String) {
-        }
+        data class Ws(val url: String)
 
-        data class Trade(val url: String) {
-        }
+        data class Trade(val url: String)
     }
 
     data class RestTemplate(
@@ -84,7 +79,9 @@ data class BokslStockProperties(
              * true: 5분마다 직전 5분봉을 체크해 시가 >= 종가 이면 매도, 아니면 유지
              */
             val stayGapRise: Boolean,
-            val k: Double
+            val k: Double,
+            /** 종목별 거래 비율(0 ~ 1) */
+            val investmentRatio: Double
         ) {
             fun getName(): String? {
                 return StockCode.findByCodeOrNull(code)?.desc

@@ -287,7 +287,7 @@ object ApplicationUtil {
         investRatio: Double
     ): Double {
         // 현재현금과 매수 종목 수를 가지고 역산해 총 현금을 구함
-        // 현재현금 * 직전 매수 종목 수 / 매매 대상 종목수 * 사용비율 * 매매 대상 종목수  / 사용비율 / (매매 대상 종목수 / 사용비율 - 직전 매수 종목 수) + 현재현금
+        // 시작현금 역산 = 현재현금 * 직전 매수 종목 수 / 매매 대상 종목수 * 사용비율 * 매매 대상 종목수  / 사용비율 / (매매 대상 종목수 / 사용비율 - 직전 매수 종목 수) + 현재현금
         val startCash =
             cash * currentBuyStockCount / stockBuyTotalCount * investRatio * stockBuyTotalCount / investRatio / (stockBuyTotalCount / investRatio - currentBuyStockCount) + cash
         // 매수에 사용할 현금 = 시작현금 역산 * 사용비율 * (1/매매종목수)
@@ -311,7 +311,7 @@ object ApplicationUtil {
         investRatio: Double
     ): Double {
         // 현재현금과 매수 종목의 투자비율 합을 가지고 역산해 총 현금을 구함
-        // 현재현금 + (현재현금 * 매수한종목비율합계 / (1 - (매수한종목비율합계 - (1 / 사용비율 - 1))))
+        // 시작현금 역산 = 현재현금 + (현재현금 * 매수한종목비율합계 / (1 - (매수한종목비율합계 - (1 / 사용비율 - 1))))
         val startCash = cash + (cash * purchasedAllRatio / (1 - (purchasedAllRatio - (1 / investRatio - 1))))
         // 매수에 사용할 현금 = 시작현금 역산 * 매매비율 * 사용비율
         return startCash * buyRatio * investRatio
@@ -365,7 +365,7 @@ object ApplicationUtil {
     fun calcPriceYield(priceHistory: List<Double>): List<Double> {
         val yieldHistory = mutableListOf<Double>()
         for (i in 1 until priceHistory.size) {
-            yieldHistory.add(ApplicationUtil.getYield(priceHistory[i - 1], priceHistory[i]))
+            yieldHistory.add(getYield(priceHistory[i - 1], priceHistory[i]))
         }
         return yieldHistory.toImmutableList()
     }

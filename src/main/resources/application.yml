@@ -64,9 +64,11 @@ com:
             - code: "069500"
               stayGapRise: false
               k: 0.2
+              investmentRatio: 0.5
             - code: "091170"
               stayGapRise: false
               k: 0.2
+              investmentRatio: 0.5
 
       restTemplate:
         connectionTimeoutMs: 5000

@@ -339,18 +339,25 @@ class VbsService(
     /**
      * 매수 주문
      */
-    private fun buyOrder(vbsStock: BokslStockProperties.Vbs.VbsStock, targetPrice: Int) {
+    private fun buyOrder(buyStock: BokslStockProperties.Vbs.VbsStock, targetPrice: Int) {
         loadBalance()
 
         val deposit = balanceResponse!!.deposit[0].prvsRcdlExccAmt
         val vbsConfig = bokslStockProperties.koreainvestment.vbs
-        val buyCash =
-            ApplicationUtil.getBuyCash(buyCode.size, deposit.toDouble(), vbsConfig.stock.size, vbsConfig.investRatio)
-                .toLong()
+        val purchasedAllRatio = vbsConfig.stock
+            .filter { buyCode.contains(it.code) }
+            .sumOf { it.investmentRatio }
+
+        val investmentRatio = vbsConfig.stock
+            .filter { buyCode.contains(buyStock.code) }
+            .stream().findFirst().map { it.investmentRatio }
+            .orElseThrow { RuntimeException("주문할 종목 '${buyStock.code}'의 매매 비율 설정이 없습니다.") }
+
+        val buyCash = ApplicationUtil.getBuyCash(purchasedAllRatio, deposit.toDouble(), investmentRatio, vbsConfig.investRatio).toLong()
 
         val ordqty = (buyCash / targetPrice).toInt()
 
-        val message = "[매수 주문] ${vbsStock.getName()}(${vbsStock.code}), " +
+        val message = "[매수 주문] ${buyStock.getName()}(${buyStock.code}), " +
                 "주문가: ${comma(targetPrice)}, " +
                 "수량: ${comma(ordqty)}"
 
@@ -359,7 +366,7 @@ class VbsService(
         val requestOrderBuy = stockClientService.requestOrderBuy(
             OrderRequest(
                 cano = vbsConfig.accountNo,
-                code = vbsStock.code,
+                code = buyStock.code,
                 ordunpr = targetPrice,
                 ordqty = ordqty
             ),
@@ -369,15 +376,15 @@ class VbsService(
         if (requestOrderBuy.isError()) {
             log.info("주문요청 에러: $requestOrderBuy")
             slackMessageService.sendMessage("@channel 주문요청 에러: $requestOrderBuy")
-            errorOccursTime[vbsStock.code] = LocalDateTime.now()
+            errorOccursTime[buyStock.code] = LocalDateTime.now()
             TimeUnit.SECONDS.sleep(2)
         } else {
-            buyCode.add(vbsStock.code)
+            buyCode.add(buyStock.code)
             log.info("주문요청 응답: $requestOrderBuy")
 
             val tradeEntity = TradeEntity(
                 account = DigestUtils.md5Hex(vbsConfig.accountNo),
-                code = vbsStock.code,
+                code = buyStock.code,
                 tradeType = TradeType.BUY,
                 qty = ordqty,
                 unitPrice = targetPrice.toDouble(),
@@ -545,13 +552,13 @@ class VbsService(
         val hasStock = holdingStock.entries.filter { it.value.ordPsblQty >= 1 }.map { it.key }
         buyCode.addAll(hasStock)
         cancelableStock.output!!.forEach {
-            if (it.sllBuyDvsnCd == "02") {
-                log.info("[${it.prdtName}-${it.code}] 매수 대기 - $it")
-                buyCode.add(it.code)
-            } else if (it.sllBuyDvsnCd == "01") {
-                log.info("[${it.prdtName}-${it.code}] 매도 대기 - $it")
-            } else {
-                log.warn("[${it.prdtName}-${it.code}] 없는 코드 - $it")
+            when (it.sllBuyDvsnCd) {
+                "02" -> {
+                    log.info("[${it.prdtName}-${it.code}] 매수 대기 - $it")
+                    buyCode.add(it.code)
+                }
+                "01" -> log.info("[${it.prdtName}-${it.code}] 매도 대기 - $it")
+                else -> log.warn("[${it.prdtName}-${it.code}] 없는 코드 - $it")
             }
         }
     }
