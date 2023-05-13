@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 class MabsBacktest {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 

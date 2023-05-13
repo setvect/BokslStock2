@@ -16,7 +16,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 class DmBacktest {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 

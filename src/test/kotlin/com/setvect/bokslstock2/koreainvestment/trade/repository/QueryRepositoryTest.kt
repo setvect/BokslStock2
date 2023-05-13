@@ -13,7 +13,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.test.context.ActiveProfiles
 
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 internal class QueryRepositoryTest {
 
     @Autowired

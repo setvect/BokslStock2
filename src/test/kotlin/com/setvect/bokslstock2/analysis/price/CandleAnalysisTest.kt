@@ -17,7 +17,7 @@ import org.springframework.test.context.ActiveProfiles
 import java.time.LocalDate
 
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 class CandleAnalysisTest {
     @Autowired
     private lateinit var candleRepository: CandleRepository

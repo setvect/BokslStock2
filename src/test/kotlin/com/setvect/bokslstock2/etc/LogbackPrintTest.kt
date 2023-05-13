@@ -7,7 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 class LogbackPrintTest {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 

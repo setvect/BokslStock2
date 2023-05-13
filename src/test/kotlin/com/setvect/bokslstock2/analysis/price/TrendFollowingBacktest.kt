@@ -27,7 +27,7 @@ import java.time.LocalDate
  * 다양한 추세 추종 방법 테스트
  */
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 class TrendFollowingBacktest {
     @Autowired
     private lateinit var movingAverageService: MovingAverageService

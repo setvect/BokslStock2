@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 // 실제 매매 동작를 하지 않도록 MockBean으로 대체
 @MockBeans(value = [MockBean(VbsEventHandler::class, VbsStockSchedule::class)])
 class VbsBacktest {

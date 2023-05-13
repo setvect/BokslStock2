@@ -14,7 +14,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 class MovingAverageTest {
     @Autowired
     private lateinit var movingAverageService: MovingAverageService

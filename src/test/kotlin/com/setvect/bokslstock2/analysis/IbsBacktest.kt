@@ -21,7 +21,7 @@ import java.time.LocalDateTime
  * 결과가 좋지 않음.
  */
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 class IbsBacktest {
     @Autowired
     private lateinit var movingAverageService: MovingAverageService

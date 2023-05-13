@@ -16,7 +16,7 @@ import org.springframework.test.context.ActiveProfiles
 import java.io.File
 
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 class TradeHistoryMigration {
     private val log = LoggerFactory.getLogger(javaClass)
 
