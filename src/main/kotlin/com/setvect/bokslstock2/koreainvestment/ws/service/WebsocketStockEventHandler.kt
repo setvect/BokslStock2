@@ -2,6 +2,7 @@ package com.setvect.bokslstock2.koreainvestment.ws.service
 
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.event.ApplicationStartedEvent
+import org.springframework.context.annotation.Profile
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component
  * 실시간 체결 웹소캣 오픈
  */
 @Component
+@Profile("!test") // 테스트 때는 실행 안함
 class WebsocketStockEventHandler(
     var tradingWebsocket: TradingWebsocket
 ) {
@@ -25,7 +27,6 @@ class WebsocketStockEventHandler(
             log.info("매매 가능 시간이 아닙니다.")
             return
         }
-        // TODO 테스트 실행시 아래 로직 실행 안되게 하기
         tradingWebsocket.open()
     }
 }

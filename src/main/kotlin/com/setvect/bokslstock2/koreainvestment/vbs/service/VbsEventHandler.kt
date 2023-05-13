@@ -6,6 +6,7 @@ import com.setvect.bokslstock2.koreainvestment.ws.service.TradeTimeHelper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.event.ApplicationStartedEvent
+import org.springframework.context.annotation.Profile
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component
  * 호가, 매수 채결가 이벤트
  */
 @Component
+@Profile("!test") // 테스트 때는 실행 안함
 class VbsEventHandler(
     val vbsService: VbsService
 ) {
@@ -26,7 +28,6 @@ class VbsEventHandler(
         }
 
         log.info("복슬매매2 실행")
-        // TODO 테스트 실행시 아래 로직 실행 안되게 하기
         vbsService.start()
     }
 
