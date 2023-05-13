@@ -27,7 +27,8 @@ class BacktestTradeService(
      * @return 수수료등 각종 조건을 적용시킨 매매 내역
      */
     fun trade(condition: TradeCondition, preTrades: List<PreTrade>): List<Trade> {
-        return tradeBundle(condition, listOf(preTrades))
+        val investmentRatioMap = preTrades.associate { it.stockCode.code to condition.investRatio }
+        return tradeBundle(condition, listOf(preTrades), investmentRatioMap)
     }
 
     /**
@@ -36,8 +37,7 @@ class BacktestTradeService(
     fun tradeBundle(
         condition: TradeCondition,
         preTrades: List<List<PreTrade>>,
-        // TODO default 제거하기
-        investmentRatioMap: Map<String, Double> = Collections.emptyMap()
+        investmentRatioMap: Map<String, Double>
     ): List<Trade> {
         val bundleCount = preTrades.size
 
@@ -53,19 +53,7 @@ class BacktestTradeService(
 
         tradeAllList.forEach { tradeItem ->
             if (tradeItem.tradeType == TradeType.BUY) {
-                // 매수 가격 구하기
-                val buyCash = if (investmentRatioMap.isEmpty()) {
-                    ApplicationUtil.getBuyCash(buyStock.size, cash, bundleCount, condition.investRatio)
-                } else {
-                    val purchasedAllRatio = buyStock.entries.sumOf {
-                        val code = it.value.preTrade.stockCode.code
-                        Optional.ofNullable<Double>(investmentRatioMap[code]).orElseThrow { RuntimeException("${code}값 investmentRatioMap에 없음") }
-                    }
-
-                    val buyRatio = Optional.ofNullable(investmentRatioMap[tradeItem.stockCode.code])
-                        .orElseThrow { RuntimeException("${tradeItem.stockCode.code}값 investmentRatioMap에 없음") }
-                    ApplicationUtil.getBuyCash(purchasedAllRatio, cash, buyRatio, condition.investRatio)
-                }
+                val buyCash = getBuyCash(buyStock, investmentRatioMap, tradeItem, cash, condition.investRatio)
 
                 val buyQty: Int = (buyCash / tradeItem.unitPrice).toInt()
                 val buyAmount = buyQty * tradeItem.unitPrice
@@ -112,6 +100,27 @@ class BacktestTradeService(
             }
         }
         return tradeItemHistory
+    }
+
+    /**
+     *
+     * [cash] 현재보유 현금
+     * @return 매수 금액
+     */
+    private fun getBuyCash(
+        buyStock: HashMap<String, Trade>,
+        investmentRatioMap: Map<String, Double>,
+        tradeItem: PreTrade,
+        cash: Double,
+        investRatio: Double
+    ): Double {
+        val purchasedAllRatio = buyStock.entries.sumOf {
+            val code = it.value.preTrade.stockCode.code
+            Optional.ofNullable<Double>(investmentRatioMap[code]).orElseThrow { RuntimeException("${code}값 investmentRatioMap에 없음") }
+        }
+        val buyRatio = Optional.ofNullable(investmentRatioMap[tradeItem.stockCode.code])
+            .orElseThrow { RuntimeException("${tradeItem.stockCode.code}값 investmentRatioMap에 없음") }
+        return ApplicationUtil.getBuyCash(purchasedAllRatio, cash, buyRatio, investRatio)
     }
 
     /**

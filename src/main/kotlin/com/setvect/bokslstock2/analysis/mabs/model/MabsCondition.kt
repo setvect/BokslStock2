@@ -44,4 +44,10 @@ class MabsCondition(
      * 조건에 대한 설명. 리포트에서 사용하기 위함
      */
     val comment: String,
+
+    /**
+     * 전체금액에서 투자 비율
+     * 0 초과 1이하 값
+     */
+    val investmentRatio: Double,
 )

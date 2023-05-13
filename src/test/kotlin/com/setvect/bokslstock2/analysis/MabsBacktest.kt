@@ -71,6 +71,7 @@ class MabsBacktest {
             downSellRate = 0.00,
             shortPeriod = 1,
             longPeriod = 200,
+            investmentRatio = 0.99,
             comment = ""
         )
     }

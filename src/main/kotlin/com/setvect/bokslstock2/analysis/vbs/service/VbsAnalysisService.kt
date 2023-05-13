@@ -33,10 +33,9 @@ class VbsAnalysisService(
      *  분석 리포트
      */
     fun makeTradeReport(vbsAnalysisCondition: VbsAnalysisCondition) {
-        val trades =
-            backtestTradeService.tradeBundle(vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTradeBundles())
-        val analysisResult =
-            backtestTradeService.analysis(trades, vbsAnalysisCondition.basic, vbsAnalysisCondition.getStockCodes())
+        val investmentRatioMap = vbsAnalysisCondition.tradeConditionList.associate { it.stock.code to it.investmentRatio }
+        val trades = backtestTradeService.tradeBundle(vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTradeBundles(), investmentRatioMap)
+        val analysisResult = backtestTradeService.analysis(trades, vbsAnalysisCondition.basic, vbsAnalysisCondition.getStockCodes())
         val summary = getSummary(vbsAnalysisCondition, analysisResult)
         println(summary)
         makeReportFile(vbsAnalysisCondition, analysisResult)
@@ -94,15 +93,12 @@ class VbsAnalysisService(
             log.info("범위 조건 변경: ${vbsAnalysisCondition.basic.range} -> $range")
             vbsAnalysisCondition.basic.range = range
 
-            val investmentRatioMap = vbsAnalysisCondition.tradeConditionList.associate { it -> it.stock.code to it.investmentRatio }
+            val investmentRatioMap = vbsAnalysisCondition.tradeConditionList.associate { it.stock.code to it.investmentRatio }
 
-            val tradeItemHistory =
-                backtestTradeService.tradeBundle(vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTradeBundles(), investmentRatioMap)
-            val analysisResult = backtestTradeService.analysis(
-                tradeItemHistory,
-                vbsAnalysisCondition.basic,
-                vbsAnalysisCondition.getStockCodes()
+            val tradeItemHistory = backtestTradeService.tradeBundle(
+                vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTradeBundles(), investmentRatioMap
             )
+            val analysisResult = backtestTradeService.analysis(tradeItemHistory, vbsAnalysisCondition.basic, vbsAnalysisCondition.getStockCodes())
             log.info("분석 진행 ${++i}/${conditionList.size}")
             VbsAnalysisConditionAndResult(vbsAnalysisCondition, analysisResult)
         }.toList()
@@ -390,6 +386,7 @@ class VbsAnalysisService(
             report.append(String.format("${i}. 분석주기\t %s", tradeCondition.periodType)).append("\n")
             report.append(String.format("${i}. 대상 종목\t %s", tradeCondition.stock.getNameCode())).append("\n")
             report.append(String.format("${i}. 변동성 비율\t %,.2f", tradeCondition.kRate)).append("\n")
+            report.append(String.format("${i}. 투자 비율\t %,.2f%%", tradeCondition.investmentRatio * 100)).append("\n")
             report.append(String.format("${i}. 이동평균 단위\t %d", tradeCondition.maPeriod)).append("\n")
             report.append(String.format("${i}. 갭 상승 시 매도 넘김\t %s", tradeCondition.gapRisenSkip)).append("\n")
             report.append(String.format("${i}. 5분 마다 시세 체크\t %s", tradeCondition.stayGapRise)).append("\n")

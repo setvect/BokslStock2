@@ -4,8 +4,8 @@ import com.setvect.bokslstock2.analysis.common.model.AnalysisResult
 import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult.TotalYield
 import com.setvect.bokslstock2.analysis.common.service.BacktestTradeService
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
-import com.setvect.bokslstock2.analysis.mabs.model.MabsCondition
 import com.setvect.bokslstock2.analysis.mabs.model.MabsAnalysisCondition
+import com.setvect.bokslstock2.analysis.mabs.model.MabsCondition
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.xssf.usermodel.XSSFSheet
@@ -32,10 +32,9 @@ class MabsAnalysisService(
      *  분석 리포트
      */
     fun makeReport(mabsAnalysisCondition: MabsAnalysisCondition) {
-        val trades =
-            backtestTradeService.tradeBundle(mabsAnalysisCondition.basic, mabsAnalysisCondition.getPreTradeBundles())
-        val analysisResult =
-            backtestTradeService.analysis(trades, mabsAnalysisCondition.basic, mabsAnalysisCondition.getStockCodes())
+        val investmentRatioMap = mabsAnalysisCondition.tradeConditionList.associate { it.stock.code to it.investmentRatio }
+        val trades = backtestTradeService.tradeBundle(mabsAnalysisCondition.basic, mabsAnalysisCondition.getPreTradeBundles(), investmentRatioMap)
+        val analysisResult = backtestTradeService.analysis(trades, mabsAnalysisCondition.basic, mabsAnalysisCondition.getStockCodes())
         val summary = getSummary(mabsAnalysisCondition, analysisResult)
         println(summary)
         makeReportFile(mabsAnalysisCondition, analysisResult)
@@ -84,15 +83,11 @@ class MabsAnalysisService(
     fun makeSummaryReport(conditionList: List<MabsAnalysisCondition>): File {
         var i = 0
         val conditionResults = conditionList.map { mabsAnalysisCondition ->
+            val investmentRatioMap = mabsAnalysisCondition.tradeConditionList.associate { it.stock.code to it.investmentRatio }
             val tradeItemHistory = backtestTradeService.tradeBundle(
-                mabsAnalysisCondition.basic,
-                mabsAnalysisCondition.getPreTradeBundles()
+                mabsAnalysisCondition.basic, mabsAnalysisCondition.getPreTradeBundles(), investmentRatioMap
             )
-            val analysisResult = backtestTradeService.analysis(
-                tradeItemHistory,
-                mabsAnalysisCondition.basic,
-                mabsAnalysisCondition.getStockCodes()
-            )
+            val analysisResult = backtestTradeService.analysis(tradeItemHistory, mabsAnalysisCondition.basic, mabsAnalysisCondition.getStockCodes())
             log.info("분석 진행 ${++i}/${conditionList.size}")
             Pair(mabsAnalysisCondition, analysisResult)
         }.toList()
@@ -367,6 +362,7 @@ class MabsAnalysisService(
             report.append(String.format("${i}. 대상 종목\t %s", tradeCondition.stock.getNameCode())).append("\n")
             report.append(String.format("${i}. 상승 매수률\t %,.2f%%", tradeCondition.upBuyRate * 100)).append("\n")
             report.append(String.format("${i}. 하락 매도률\t %,.2f%%", tradeCondition.downSellRate * 100)).append("\n")
+            report.append(String.format("${i}. 투자 비율\t %,.2f%%", tradeCondition.investmentRatio * 100)).append("\n")
             report.append(String.format("${i}. 단기 이동평균 기간\t %d", tradeCondition.shortPeriod)).append("\n")
             report.append(String.format("${i}. 장기 이동평균 기간\t %d", tradeCondition.longPeriod)).append("\n")
         }
@@ -384,6 +380,7 @@ class MabsAnalysisService(
         val sheet = workbook.createSheet()
         val summary = getSummary(mabsAnalysisCondition, analysisResult)
         ReportMakerHelperService.textToSheet(summary, sheet)
+        log.info(summary)
 
         sheet.defaultColumnWidth = 60
         return sheet

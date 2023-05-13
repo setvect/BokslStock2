@@ -11,6 +11,7 @@ import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.koreainvestment.vbs.service.VbsEventHandler
 import com.setvect.bokslstock2.koreainvestment.vbs.service.VbsStockSchedule
 import com.setvect.bokslstock2.util.DateRange
+import com.setvect.bokslstock2.util.DateUtil
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -50,12 +51,13 @@ class VbsBacktest {
 //        val range = DateRange(LocalDateTime.of(2018, 1, 1, 0, 0), LocalDateTime.of(2023, 1, 6, 0, 0))
 //        val range = DateRange(LocalDateTime.of(2022, 8, 24, 0, 0), LocalDateTime.of(2022, 8, 31, 0, 0))
 
-        val range = DateRange(LocalDateTime.of(2023, 1, 1, 0, 0), LocalDateTime.of(2023, 5, 13, 0, 0))
+//        val range = DateRange(DateUtil.getLocalDateTime("2018-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-03-18T00:00:00"))
+        val range = DateRange(DateUtil.getLocalDateTime("2018-01-01T00:00:00"), LocalDateTime.now())
 
-        val condition1 = makeCondition(StockCode.KODEX_KOSDAQ_2X_233740, range, 0.5, true, 0.495)
+        val condition1 = makeCondition(StockCode.KODEX_KOSDAQ_2X_233740, range, 0.5, true, 0.5)
         condition1.tradeList = vbsBacktestService.runTest(condition1)
 
-        val condition2 = makeCondition(StockCode.KODEX_BANK_091170, range, 0.5, false, 0.495)
+        val condition2 = makeCondition(StockCode.KODEX_BANK_091170, range, 0.5, false, 0.5)
         condition2.tradeList = vbsBacktestService.runTest(condition2)
 
         val tradeConditionList = listOf(condition1, condition2)
