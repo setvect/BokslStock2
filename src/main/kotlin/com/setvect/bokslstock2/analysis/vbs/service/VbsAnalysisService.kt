@@ -18,7 +18,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.sql.Timestamp
 import java.time.LocalDateTime
-import kotlin.streams.toList
 
 
 /**
@@ -85,6 +84,8 @@ class VbsAnalysisService(
      */
     fun runAnalysis(conditionList: List<VbsAnalysisCondition>): List<VbsAnalysisConditionAndResult> {
         var i = 0
+        val list = listOf("apple", "banana", "orange")
+
         val conditionResults = conditionList.map { vbsAnalysisCondition ->
             val range = backtestTradeService.fitBacktestRange(
                 vbsAnalysisCondition.getStockCodes(),
@@ -93,8 +94,10 @@ class VbsAnalysisService(
             log.info("범위 조건 변경: ${vbsAnalysisCondition.basic.range} -> $range")
             vbsAnalysisCondition.basic.range = range
 
+            val investmentRatioMap = vbsAnalysisCondition.tradeConditionList.associate { it -> it.stock.code to it.investmentRatio }
+
             val tradeItemHistory =
-                backtestTradeService.tradeBundle(vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTradeBundles())
+                backtestTradeService.tradeBundle(vbsAnalysisCondition.basic, vbsAnalysisCondition.getPreTradeBundles(), investmentRatioMap)
             val analysisResult = backtestTradeService.analysis(
                 tradeItemHistory,
                 vbsAnalysisCondition.basic,

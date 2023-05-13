@@ -60,14 +60,12 @@ class VbsBacktest {
 
         val tradeConditionList = listOf(condition1, condition2)
 
-        val investRatio = tradeConditionList.sumOf { it.investmentRatio }
-
         val vbsAnalysisCondition = listOf(
             VbsAnalysisCondition(
                 tradeConditionList = tradeConditionList,
                 basic = TradeCondition(
                     range = range,
-                    investRatio = investRatio,
+                    investRatio = 1.0,
                     cash = 20_000_000.0,
                     feeBuy = 0.0002,
                     feeSell = 0.0002,

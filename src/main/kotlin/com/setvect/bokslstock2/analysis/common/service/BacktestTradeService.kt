@@ -30,7 +30,15 @@ class BacktestTradeService(
         return tradeBundle(condition, listOf(preTrades))
     }
 
-    fun tradeBundle(condition: TradeCondition, preTrades: List<List<PreTrade>>): List<Trade> {
+    /**
+     * [investmentRatioMap] 종목별 매수
+     */
+    fun tradeBundle(
+        condition: TradeCondition,
+        preTrades: List<List<PreTrade>>,
+        // TODO default 제거하기
+        investmentRatioMap: Map<String, Double> = Collections.emptyMap()
+    ): List<Trade> {
         val bundleCount = preTrades.size
 
         val tradeAllList = filterPreTrade(preTrades, condition)
@@ -45,14 +53,19 @@ class BacktestTradeService(
 
         tradeAllList.forEach { tradeItem ->
             if (tradeItem.tradeType == TradeType.BUY) {
-                // 매수 처리
-                val buyCash =
-                    ApplicationUtil.getBuyCash(
-                        buyStock.size,
-                        cash,
-                        bundleCount,
-                        condition.investRatio
-                    )
+                // 매수 가격 구하기
+                val buyCash = if (investmentRatioMap.isEmpty()) {
+                    ApplicationUtil.getBuyCash(buyStock.size, cash, bundleCount, condition.investRatio)
+                } else {
+                    val purchasedAllRatio = buyStock.entries.sumOf {
+                        val code = it.value.preTrade.stockCode.code
+                        Optional.ofNullable<Double>(investmentRatioMap[code]).orElseThrow { RuntimeException("${code}값 investmentRatioMap에 없음") }
+                    }
+
+                    val buyRatio = Optional.ofNullable(investmentRatioMap[tradeItem.stockCode.code])
+                        .orElseThrow { RuntimeException("${tradeItem.stockCode.code}값 investmentRatioMap에 없음") }
+                    ApplicationUtil.getBuyCash(purchasedAllRatio, cash, buyRatio, condition.investRatio)
+                }
 
                 val buyQty: Int = (buyCash / tradeItem.unitPrice).toInt()
                 val buyAmount = buyQty * tradeItem.unitPrice
