@@ -66,5 +66,11 @@ class VbsCondition(
     /**
      * 갭 상승 시 5분 마다 시세 체크, 직전 5분봉 하락 반전 시 매도
      */
-    val stayGapRise: Boolean
+    val stayGapRise: Boolean,
+
+    /**
+     * 전체금액에서 투자 비율
+     * 0 초과 1이하 값
+     */
+    val investmentRatio: Double,
 )

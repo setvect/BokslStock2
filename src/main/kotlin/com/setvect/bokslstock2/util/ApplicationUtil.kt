@@ -295,6 +295,29 @@ object ApplicationUtil {
     }
 
     /**
+     * 한 종목을 매수 할때 사용하는 금액 계산. 각종 변수값을 바탕으로 계산한다.
+     *
+     * [purchasedAllRatio] 현재 매수한 모든 종목의 매수 비율 함(0 ~ 1)
+     * [cash] 현재 보유 현금
+     * [buyRatio] 현재 매수할 종목 투자 비율(0 ~ 1)
+     * [investRatio] 전체 현금 대비 투자 비율. 1: 모든 현금을 투자, 0.5 현금의 50%만 매수에 사용
+     *
+     * @return 매수에 사용될 금액 반환
+     */
+    fun getBuyCash(
+        purchasedAllRatio: Double,
+        cash: Double,
+        buyRatio: Double,
+        investRatio: Double
+    ): Double {
+        // 현재현금과 매수 종목의 투자비율 합을 가지고 역산해 총 현금을 구함
+        // 현재현금 + (현재현금 * 매수한종목비율합계 / (1 - (매수한종목비율합계 - (1 / 사용비율 - 1))))
+        val startCash = cash + (cash * purchasedAllRatio / (1 - (purchasedAllRatio - (1 / investRatio - 1))))
+        // 매수에 사용할 현금 = 시작현금 역산 * 매매비율 * 사용비율
+        return startCash * buyRatio * investRatio
+    }
+
+    /**
      * [yieldList] 투자 비율
      * @return 사프 지수
      */
@@ -346,4 +369,5 @@ object ApplicationUtil {
         }
         return yieldHistory.toImmutableList()
     }
+
 }

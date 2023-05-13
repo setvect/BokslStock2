@@ -35,4 +35,8 @@ data class TradeCondition(
      * 밴치마크 종목코드
      */
     val benchmark: List<StockCode> = listOf()
-)
+) {
+    init {
+        require(0 < investRatio && investRatio <= 1) { "investRatio은 0초과 1 이하의 값을 입력하세요. 현재 입력값: $investRatio" }
+    }
+}
