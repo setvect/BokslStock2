@@ -27,13 +27,24 @@ class VbsBacktestService(
 
     @Transactional
     fun runTest(condition: VbsCondition): List<VbsTrade> {
-        val movingAverageCandle = movingAverageService.getMovingAverage(
-            condition.stock.convertStockCode(),
-            PeriodType.PERIOD_MINUTE_5,
-            condition.periodType,
-            listOf(condition.maPeriod),
-            condition.range
-        )
+        val movingAverageCandle =
+            if (condition.stayGapRise) {
+                movingAverageService.getMovingAverage(
+                    condition.stock.convertStockCode(),
+                    PeriodType.PERIOD_MINUTE_5,
+                    condition.periodType,
+                    listOf(condition.maPeriod),
+                    condition.range
+                )
+            } else {
+                movingAverageService.getMovingAverage(
+                    condition.stock.convertStockCode(),
+                    PeriodType.PERIOD_DAY,
+                    condition.periodType,
+                    listOf(condition.maPeriod),
+                    condition.range
+                )
+            }
 
         var lastBuyInfo: VbsTrade? = null
 

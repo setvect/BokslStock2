@@ -51,7 +51,11 @@ group by CODE;
 select *
 from CA_STOCK CA
          join CB_CANDLE CC on CA.STOCK_SEQ = CC.STOCK_SEQ
-where CA.CODE = '091170';
+where CA.CODE = '091170'
+  and PERIOD_TYPE = 'PERIOD_MINUTE_5'
+  and CANDLE_DATE_TIME between '2018-04-17' and '2018-04-18'
+order by CANDLE_DATE_TIME
+;
 
 select CB.*
 from CA_STOCK CA
@@ -135,8 +139,8 @@ group by CA.CODE, CB.PERIOD_TYPE;
 select CA.NAME, CA.CODE, CB.PERIOD_TYPE, CB.*
 from CA_STOCK CA
          join CB_CANDLE CB on CA.STOCK_SEQ = CB.STOCK_SEQ
-where CA.CODE IN ( '233740')
-and CB.PERIOD_TYPE = 'PERIOD_DAY'
+where CA.CODE IN ('233740')
+  and CB.PERIOD_TYPE = 'PERIOD_DAY'
 order by CB.CANDLE_DATE_TIME desc;
 
 

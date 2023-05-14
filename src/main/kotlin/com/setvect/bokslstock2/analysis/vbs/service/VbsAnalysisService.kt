@@ -102,7 +102,7 @@ class VbsAnalysisService(
             log.info("분석 진행 ${++i}/${conditionList.size}")
             VbsAnalysisConditionAndResult(vbsAnalysisCondition, analysisResult)
         }.toList()
-        return conditionResults;
+        return conditionResults
 
     }
 

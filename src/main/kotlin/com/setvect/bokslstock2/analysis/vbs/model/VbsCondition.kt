@@ -24,6 +24,7 @@ class VbsCondition(
 
     /**
      * 매매 주기
+     * TODO 필요 없을것 같음. 다 'PERIOD_DAY' 사용함 
      */
     val periodType: PeriodType,
 

@@ -21,7 +21,6 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.MockBeans
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -51,8 +50,9 @@ class VbsBacktest {
 //        val range = DateRange(LocalDateTime.of(2018, 1, 1, 0, 0), LocalDateTime.of(2023, 1, 6, 0, 0))
 //        val range = DateRange(LocalDateTime.of(2022, 8, 24, 0, 0), LocalDateTime.of(2022, 8, 31, 0, 0))
 
-//        val range = DateRange(DateUtil.getLocalDateTime("2018-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-03-18T00:00:00"))
-        val range = DateRange(DateUtil.getLocalDateTime("2018-01-01T00:00:00"), LocalDateTime.now())
+        val range = DateRange(DateUtil.getLocalDateTime("2018-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-03-18T00:00:00"))
+//        val range = DateRange(DateUtil.getLocalDateTime("2018-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-05-14T00:00:00"))
+//        val range = DateRange(DateUtil.getLocalDateTime("2018-01-01T00:00:00"), DateUtil.getLocalDateTime("2018-01-14T00:00:00"))
 
         val condition1 = makeCondition(StockCode.KODEX_KOSDAQ_2X_233740, range, 0.5, true, 0.5)
         condition1.tradeList = vbsBacktestService.runTest(condition1)
@@ -67,7 +67,7 @@ class VbsBacktest {
                 tradeConditionList = tradeConditionList,
                 basic = TradeCondition(
                     range = range,
-                    investRatio = 1.0,
+                    investRatio = 0.99,
                     cash = 20_000_000.0,
                     feeBuy = 0.0002,
                     feeSell = 0.0002,

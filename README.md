@@ -117,6 +117,17 @@ gradlew makeInstallFile
 - 매도 조건
     - 매수 다음날 시가 매도
 
+**주의사항**
+
+- 변동성 돌파전략은 5분봉 을 사용하고 있음 
+- 본 프로그램에서는 수정주가를 수집하고 있음 
+- 크레온에서는 5분봉 데이터는 5년치만 수집가능
+- 수집 시점마다 주가 데이터는 달라짐
+- 이 때문에 수집데이터 여부에 따라서 백테스는 결과가 달라짐
+  - 특히 MDD 계산이 달라지는데 이유는 종가 데이터를 기준으로 해당 일에 평가금액을 구함
+  - 그래서 `KODEX 은행` 같은 배당이 있는 종목은 매매 조건중 `stayGapRise` false로 하기 바람
+- 참고로 레버리지 종목은 애초에 배당이 없기 때문에 수정주가 이슈는 없음
+
 ### 6.3. 듀얼모멘텀
 
 - 메인 소스:[DmAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/analysis/dm/service/DmAnalysisService.kt)
