@@ -349,7 +349,6 @@ class VbsService(
             .sumOf { it.investmentRatio }
 
         val investmentRatio = vbsConfig.stock
-            .filter { buyCode.contains(buyStock.code) }
             .stream().findFirst().map { it.investmentRatio }
             .orElseThrow { RuntimeException("주문할 종목 '${buyStock.code}'의 매매 비율 설정이 없습니다.") }
 
