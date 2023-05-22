@@ -349,8 +349,12 @@ class VbsService(
             .sumOf { it.investmentRatio }
 
         val investmentRatio = vbsConfig.stock
-            .stream().findFirst().map { it.investmentRatio }
+            .stream()
+            .filter{ it.code == buyStock.code }
+            .findFirst().map { it.investmentRatio }
             .orElseThrow { RuntimeException("주문할 종목 '${buyStock.code}'의 매매 비율 설정이 없습니다.") }
+
+        log.info("purchasedAllRatio: $purchasedAllRatio, deposit: ${deposit.toDouble()}, investmentRatio: $investmentRatio, investRatio: ${vbsConfig.investRatio}")
 
         val buyCash = ApplicationUtil.getBuyCash(purchasedAllRatio, deposit.toDouble(), investmentRatio, vbsConfig.investRatio).toLong()
 
