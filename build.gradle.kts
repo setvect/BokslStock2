@@ -56,6 +56,15 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
     implementation("org.modelmapper:modelmapper:2.4.0")
     implementation("com.querydsl:querydsl-jpa:$querydslVersion")
+//    implementation("com.google.api-client:google-api-client:1.20.0")
+    implementation("com.google.api-client:google-api-client-jackson2:1.20.0")
+//    implementation("com.google.apis:google-api-services-youtube:v3-rev222-1.25.0")
+
+    implementation ("com.google.api-client:google-api-client:1.31.5")
+    implementation ("com.google.apis:google-api-services-youtube:v3-rev222-1.25.0")
+
+    implementation("com.fasterxml.jackson.core:jackson-core")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
     kapt("com.querydsl:querydsl-apt:$querydslVersion:jpa")
     kapt("org.springframework.boot:spring-boot-configuration-processor")
 
