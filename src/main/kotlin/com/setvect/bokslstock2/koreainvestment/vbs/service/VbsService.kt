@@ -128,12 +128,14 @@ class VbsService(
         var total = 0L
         val stockInfo = balanceResponse!!.holdings.map { stock ->
             total += stock.evluAmt
+            val stockPrice = getBidPrice(stock.code)
             return@map "- ${stock.prdtName}(${stock.code})\n" +
                     "  ㆍ수량: ${comma(stock.hldgQty)}\n" +
                     "  ㆍ수익률: ${percent(stock.evluPflsRt)}\n" +
                     "  ㆍ매입금액: ${comma(stock.pchsAmt)}\n" +
                     "  ㆍ평가금액: ${comma(stock.evluAmt)}\n" +
-                    "  ㆍ평가손익: ${comma(stock.evluPflsAmt)}\n"
+                    "  ㆍ평가손익: ${comma(stock.evluPflsAmt)}\n" +
+                    "  ㆍ현재가: ${comma(stockPrice)}\n"
         }.joinToString("\n")
 
         val deposit = balanceResponse!!.deposit[0].prvsRcdlExccAmt
