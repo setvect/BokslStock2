@@ -4,7 +4,6 @@ import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.StockRepository
-import com.setvect.bokslstock2.crawl.service.CrawlerStockPriceService
 import com.setvect.bokslstock2.index.service.CsvStoreService
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test

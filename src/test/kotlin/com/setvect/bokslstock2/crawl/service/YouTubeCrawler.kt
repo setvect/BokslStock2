@@ -127,11 +127,11 @@ class YouTubeCrawler {
         var i = 0
         while (i < input.length) {
             val lIndex = input[i].toInt() - LBase
-            if (0 <= lIndex && lIndex < LCount && i + 1 < input.length) {
+            if (lIndex in 0 until LCount && i + 1 < input.length) {
                 val vIndex = input[i + 1].toInt() - VBase
-                if (0 <= vIndex && vIndex < VCount) {
+                if (vIndex in 0 until VCount) {
                     val tIndex = if (i + 2 < input.length) input[i + 2].toInt() - TBase else -1
-                    if (0 <= tIndex && tIndex < TCount) {
+                    if (tIndex in 0 until TCount) {
                         result.append((SBase + (lIndex * NCount) + (vIndex * TCount) + tIndex).toChar())
                         i += 3
                     } else {

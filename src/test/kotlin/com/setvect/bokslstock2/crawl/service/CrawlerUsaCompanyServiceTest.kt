@@ -1,6 +1,5 @@
 package com.setvect.bokslstock2.crawl.service
 
-import com.setvect.bokslstock2.crawl.service.CrawlerUsaCompanyService
 import com.setvect.bokslstock2.util.DateUtil
 import org.apache.commons.io.FileUtils
 import org.junit.jupiter.api.Assertions.*

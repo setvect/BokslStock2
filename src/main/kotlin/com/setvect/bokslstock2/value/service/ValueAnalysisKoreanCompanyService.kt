@@ -3,7 +3,7 @@ package com.setvect.bokslstock2.value.service
 import com.google.gson.GsonBuilder
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.crawl.service.CrawlerKoreanCompanyProperties
-import com.setvect.bokslstock2.value.dto.CompanyDetail
+import com.setvect.bokslstock2.value.dto.KoreanCompanyDetail
 import com.setvect.bokslstock2.value.dto.Rank
 import org.apache.commons.io.FileUtils
 import org.apache.poi.common.usermodel.HyperlinkType
@@ -17,7 +17,7 @@ import java.io.FileOutputStream
 
 @Service
 /**
- * 가치 평가 전략
+ * 한국 기업 가치 평가 전략
  */
 class ValueAnalysisKoreanCompanyService(
     val crawlerKoreanCompanyProperties: CrawlerKoreanCompanyProperties
@@ -131,7 +131,7 @@ class ValueAnalysisKoreanCompanyService(
         }
     }
 
-    private fun filter(companyAllList: List<CompanyDetail>): List<CompanyDetail> {
+    private fun filter(companyAllList: List<KoreanCompanyDetail>): List<KoreanCompanyDetail> {
         println("전체 Size: " + companyAllList.size)
         val companyFilterList = companyAllList
             .filter { !excludeIndustry.contains(it.industry) }
@@ -146,13 +146,13 @@ class ValueAnalysisKoreanCompanyService(
         return companyFilterList.subList(fromIndex, toIndex)
     }
 
-    private fun loadCompanyDetails(): List<CompanyDetail> {
+    private fun loadCompanyDetails(): List<KoreanCompanyDetail> {
         val detailFile = crawlerKoreanCompanyProperties.getDetailListFile()
         val listJson = FileUtils.readFileToString(detailFile, "utf-8")
-        return gson.fromJson(listJson, Array<CompanyDetail>::class.java).asList()
+        return gson.fromJson(listJson, Array<KoreanCompanyDetail>::class.java).asList()
     }
 
-    private fun ranking(targetList: List<CompanyDetail>): List<Pair<CompanyDetail, Rank>> {
+    private fun ranking(targetList: List<KoreanCompanyDetail>): List<Pair<KoreanCompanyDetail, Rank>> {
         val targetByRank = targetList.map { Pair(it, Rank()) }
 
         targetByRank.sortedByDescending { 1 / it.first.currentIndicator.per!! }

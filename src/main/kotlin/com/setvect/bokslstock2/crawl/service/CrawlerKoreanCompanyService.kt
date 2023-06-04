@@ -1,8 +1,8 @@
 package com.setvect.bokslstock2.crawl.service
 
 import com.google.gson.GsonBuilder
-import com.setvect.bokslstock2.value.dto.CompanyDetail
-import com.setvect.bokslstock2.value.dto.CompanySummary
+import com.setvect.bokslstock2.value.dto.KoreanCompanyDetail
+import com.setvect.bokslstock2.value.dto.KoreanCompanySummary
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
 import org.jsoup.Jsoup
@@ -30,9 +30,9 @@ class CrawlerKoreanCompanyService(
     fun crawlDetailList() {
         val listFile = crawlerKoreanCompanyProperties.getSummaryListFile()
         val listJson = FileUtils.readFileToString(listFile, "utf-8")
-        val companyList = gson.fromJson(listJson, Array<CompanySummary>::class.java).asList()
+        val companyList = gson.fromJson(listJson, Array<KoreanCompanySummary>::class.java).asList()
 
-        val companyDetailList = mutableListOf<CompanyDetail>()
+        val koreanCompanyDetailList = mutableListOf<KoreanCompanyDetail>()
         var count = 0
         companyList.forEach { company ->
             val url = crawlerKoreanCompanyProperties.getDetailUrl(company.code)
@@ -47,14 +47,14 @@ class CrawlerKoreanCompanyService(
             }
 
             val companySummaryDto = parsingCompanyDetail(infoBox, document, company)
-            companyDetailList.add(companySummaryDto)
-            if (companyDetailList.size % 50 == 0) {
-                saveDetailList(companyDetailList)
+            koreanCompanyDetailList.add(companySummaryDto)
+            if (koreanCompanyDetailList.size % 50 == 0) {
+                saveDetailList(koreanCompanyDetailList)
             }
 
             sleep(1500, 1000)
         }
-        saveDetailList(companyDetailList)
+        saveDetailList(koreanCompanyDetailList)
         log.info("수집 종료")
     }
 
@@ -67,8 +67,8 @@ class CrawlerKoreanCompanyService(
     private fun parsingCompanyDetail(
         infoBox: Elements,
         document: Document,
-        company: CompanySummary
-    ): CompanyDetail {
+        company: KoreanCompanySummary
+    ): KoreanCompanyDetail {
         val currentIndicator = extractCurrentIndicator(infoBox)
         val industry = document.select(".sub_tit7 em a").text()
         val valueHistory = document.select(".tb_type1_ifrs")
@@ -77,7 +77,7 @@ class CrawlerKoreanCompanyService(
             if (StringUtils.isEmpty(date)) {
                 return@mapToObj null
             }
-            val historyData = CompanyDetail.HistoryData(
+            val historyData = KoreanCompanyDetail.HistoryData(
                 date = date,
                 sales = elementToIntOrNull(
                     valueHistory.select("tbody tr:eq(0)").select("td:eq(${colIdx + 1})")
@@ -111,9 +111,9 @@ class CrawlerKoreanCompanyService(
                 )
             )
             historyData
-        }.filter { it != null }.toList() as List<CompanyDetail.HistoryData>
+        }.filter { it != null }.toList() as List<KoreanCompanyDetail.HistoryData>
 
-        return CompanyDetail(
+        return KoreanCompanyDetail(
             summary = company,
             normalStock = true,
             industry = industry,
@@ -126,10 +126,10 @@ class CrawlerKoreanCompanyService(
     /**
      * 현재 지표
      */
-    private fun extractCurrentIndicator(infoBox: Elements): CompanyDetail.CurrentIndicator {
+    private fun extractCurrentIndicator(infoBox: Elements): KoreanCompanyDetail.CurrentIndicator {
         val select = infoBox.select("#tab_con1 > .first tbody tr")
         val shareText = select[2].select("td")[0].text()
-        return CompanyDetail.CurrentIndicator(
+        return KoreanCompanyDetail.CurrentIndicator(
             shareNumber = shareText.replace(",", "").toLong(),
             per = elementToDoubleOrNull(infoBox.select("#_per")),
             eps = elementToDoubleOrNull(infoBox.select("#_eps")),
@@ -149,8 +149,8 @@ class CrawlerKoreanCompanyService(
     /**
      * 종목 목록
      */
-    private fun crawlList(): List<CompanySummary> {
-        val companyList = mutableListOf<CompanySummary>()
+    private fun crawlList(): List<KoreanCompanySummary> {
+        val companyList = mutableListOf<KoreanCompanySummary>()
 
         KoreaMarket.values().forEach { stockType ->
             var page = 1
@@ -171,7 +171,7 @@ class CrawlerKoreanCompanyService(
                     val matchGroup = matchResult!!.groupValues
 
                     companyList.add(
-                        CompanySummary(
+                        KoreanCompanySummary(
                             code = matchGroup[1],
                             name = matchGroup[2],
                             market = stockType.name,
@@ -187,7 +187,7 @@ class CrawlerKoreanCompanyService(
         return companyList.toList()
     }
 
-    private fun saveDetailList(detailList: List<CompanyDetail>) {
+    private fun saveDetailList(detailList: List<KoreanCompanyDetail>) {
         val companyListJson = gson.toJson(detailList)
 
         val listFile = crawlerKoreanCompanyProperties.getDetailListFile()
@@ -198,7 +198,7 @@ class CrawlerKoreanCompanyService(
     /**
      * 종목 저장
      */
-    private fun saveSummaryList(crawCompanyList: List<CompanySummary>) {
+    private fun saveSummaryList(crawCompanyList: List<KoreanCompanySummary>) {
         val companyListJson = gson.toJson(crawCompanyList)
 
         val listFile = crawlerKoreanCompanyProperties.getSummaryListFile()
