@@ -1,0 +1,86 @@
+## finviz.com 용어
+
+| 영문 용어             | 영문 용어                            | 한글 용어                         | 설명                                                                                                  |
+| --------------------- | ------------------------------------ | --------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Ticker                | \-                                   | 티커                              | 주식종목의 식별코드로, 대개 주식의 약어로 사용된다.                                                   |
+| Company               | \-                                   | 회사                              | 회사 이름                                                                                             |
+| Sector                | \-                                   | 산업부문                          | 회사의 산업 부문                                                                                      |
+| Industry              | \-                                   | 산업군                            | 회사의 산업군                                                                                         |
+| Country               | \-                                   | 국가                              | 회사의 소재 나라                                                                                      |
+| Index                 | \-                                   | 지수                              | 일련의 주식들의 값으로 주식시장의 흐름을 나타낸다.                                                    |
+| Market Cap            | \-                                   | 시가총액                          | 회사의 모든 주식을 현재 시장가격으로 계산한 가치                                                      |
+| P/E                   | Price-to-Earnings                    | 주가수익비율                      | 주식 가격 대비 기업의 순이익 비율                                                                     |
+| Fwd P/E               | Forward Price-to-Earnings            | 선도 주가수익비율                 | 기업의 예상 이익을 기준으로 한 주가수익비율                                                           |
+| PEG                   | Price/Earnings-to-Growth             | 주가수익성장비율                  | 기업의 성장 가능성과 주가수익비율을 종합하여 계산한 비율                                              |
+| P/S                   | Price-to-S                           | 주가매출비율                      | 회사의 시가총액을 매출액으로 나눈 비율                                                                |
+| P/B                   | Price-to-Book                        | 주가순자산비율                    | 회사의 순자산 대비 시장가치 비율                                                                      |
+| P/C                   | Price-to-Cash flow                   | 주가현금흐름비율                  | 기업의 움직이는 자금 대비 시장 가치 비율                                                              |
+| P/FCF                 | Price-to-Free Cash Flow              | 주가자유현금흐름비율              | 기업의 운영 활동에서 발생하는 비용을 제외한 순현금흐름에 대한 주가비율                                |
+| Book/sh               | Book Value Per Share                 | 1주당 순자산                      | 1주당 회사의 순 자산 가치                                                                             |
+| Cash/sh               | Cash Per Share                       | 1주당 현금                        | 1주당 회사의 보유 현금 가치                                                                           |
+| Dividend              | \-                                   | 배당금                            | 기업이 주주들에게 발행하는 배당금                                                                     |
+| Dividend Payout Ratio | \-                                   | 배당금 지급 비율                  | 기업이 순이익에서 지급하는 배당금을 계산한 비율                                                       |
+| EPS                   | Earnings Per Share                   | 1주당 순익                        | 1주당 기업의 순이익                                                                                   |
+| EPS next Q            | Earnings Per Share Next Quarter      | 다음 분기 1주당 순익              | 다음 분기에 기대되는 1주당 기업의 순이익                                                              |
+| EPS this Y            | Earnings Per Share This Year         | 올해 1주당 순익                   | 올해 회계연도 내에 1주당 기업의 순이익                                                                |
+| EPS next Y            | Earnings Per Share Next Year         | 내년 1주당 순익                   | 내년에 기대되는 1주당 기업의 순이익                                                                   |
+| EPS past 5Y           | Earnings Per Share Past 5 Years      | 지난 5년간 연평균 1주당 순익      | 지난 5년 간 회계연도 내 연평균 1주당 기업의 순이익                                                    |
+| EPS next 5Y           | Earnings Per Share Next 5 Years      | 다음 5년간 예상 연평균 1주당 순익 | 다음 5년 간 예상 연평균 1주당 기업의 순이익                                                           |
+| Sales past 5Y         | Sales Growth Past 5 Years            | 지난 5년간 매출 증가율            | 지난 5년간 회계연도 내 매출액 증가율                                                                  |
+| Sales Q/Q             | Sales Growth Quarter-over-Quarter    | 분기 대비 매출 증가율             | 전 분기 대비 현재 분기 매출 증가율                                                                    |
+| EPS Q/Q               | Earnings Growth Quarter-over-Quarter | 분기 대비 순익 증가율             | 전 분기 대비 현재 분기 순익 증가율                                                                    |
+| Sales                 | \-                                   | 매출액                            | 회사가 제공하는 최근 분기 매출액                                                                      |
+| Income                | \-                                   | 순이익                            | 회사가 제공하는 최근 분기 순이익                                                                      |
+| Outstanding           | \-                                   | 유통주식수                        | 회사에서 발행한 모든 주식 중 실제로 유통되는 주식 수                                                  |
+| Float                 | \-                                   | 유동주식수                        | 유통 주식 중 회사 관계자들이 나머지 주주에게 보유하지 않은 주식 수                                    |
+| Insider Own           | \-                                   | 내부자 소유 비율                  | 회사 내 이사회나 관계자들이 보유 주식 비율                                                            |
+| Insider Trans         | \-                                   | 내부자 거래                       | 회사 내 이사회나 관계자들이 주식을 사거나 판매하는 거래                                               |
+| Inst Own              | \-                                   | 기관 투자자 소유 비율             | 기관 투자자들이 보유한 주 비율                                                                        |
+| Inst Trans            | \-                                   | 기관 거래                         | 기관 투자자들이 주식을 사거나 판매하는 거래                                                           |
+| Float Short           | \-                                   | 유동공매도                        | 유통 주식 중 거래소에서 공개적으로 매도 대기 중인 주식의 비율                                         |
+| Short Ratio           | \-                                   | 공매도 비율                       | 거래소에서 공개적으로 매도 대기중인 주식 수를 현재 주식의 거래량으로 나눈 비율                        |
+| Short Interest        | \-                                   | 공매도 대금                       | 거래소에서 유통되는 주식 중 거래소에서 공개적으로 매도 대기 중인 주식의 대금                          |
+| ROA                   | Return on Assets                     | 자산 이익률                       | 회사의 자산으로 얻은 수익 비율                                                                        |
+| ROE                   | Return on Equity                     | 자기자본 이익률                   | 자기자본으로 얻은 수익 비율                                                                           |
+| ROI                   | Return on Investment                 | 투자 이익률                       | 투자한 자금에서 얻은 이익 비율                                                                        |
+| Quick R               | Quick Ratio                          | 당좌비율                          | 중요한 단위 자산으로만 당좌자산을 나눈 비율                                                           |
+| LTDebt/Eq             | Long-term Debt-to-Equity             | 장기부채비율                      | 장기부채와 지분법에 의한 자본을 나눈 비율                                                             |
+| Debt/Eq               | Debt-to-Equity                       | 부채비율                          | 총 부채를 지분법에 의한 자본으로 나눈 비율                                                            |
+| Gross M               | Gross Margin                         | 매출총이익률                      | 출에서 제품의 생산 비용을 제외한 이익 비율                                                            |
+| Oper M                | Operating Margin                     | 영업이익률                        | 매출에서 운영 비용을 제외한 이익 비율                                                                 |
+| Profit M              | Profit Margin                        | 순이익률                          | 매출에서 모든 비용을 제외한 이익 비율                                                                 |
+| Perf Week             | (Week)                               | 지난 1주간 수익율                 | 지난 1주 동안의 주가 수익률 비율                                                                      |
+| Perf Month            | Performance (Month)                  | 지난 1개월간 수익율               | 지난 1개월 동안의 주가 수률 비율                                                                      |
+| Perf Quart            | Performance (Quarter)                | 지난 3개월간 수익율               | 지난 3개월 동안의 주가 수익률 비율                                                                    |
+| Perf Half             | Performance (Half Year)              | 지난 6개월간 수익율               | 지난 6개월 동안의 주가익률 비율                                                                       |
+| Perf Year             | Performance (Year)                   | 지난 1년간 수익율                 | 지난 1년 동안의 주가 수익률 비율                                                                      |
+| Perf YTD              | Performance (YTD)                    | 올해 수익율                       | 올해 입장하여 현재까지의 주가 수익률 비율                                                             |
+| Beta                  | Beta                                 | 베타                              | 증시 지수의 평균 보수율에 대한 회사의 주가 반응 비율을 나타내는 지수                                  |
+| ATR                   | Average True Range                   | 평균 진폭                         | 과거 주가 변동성을 기반으로 한 예상 변동성                                                            |
+| Volatility W          | Weekly Volatility                    | 주간 변동률                       | 난 1주간의 일일 종가 대비 주간 가격 변동 폭                                                           |
+| Volatility M          | Monthly Volatility                   | 월간 변동률                       | 지난 1개월간 최고가와 최저가의 가격대 차이                                                            |
+| SMA20                 | Simple Moving Average (20)           | 20 이동평균선                     | 일정 기간 동안의 종가를 산술 평균한 값                                                                |
+| SMA50                 | Simple Moving Average (50)           | 50일 이동평균선                   | 일정 기간 동안의 종가를 산술 평균한 값                                                                |
+| SMA200                | Simple Moving Average (200)          | 200일 이평균선                    | 일정 기간 동안의 종가를 산술 평균한 값                                                                |
+| 50D High              | 50-Day High                          | 50일 최고가                       | 최근 50일간의 최고가                                                                                  |
+| 50D Low               | 50-Day Low                           | 50일 최저가                       | 최근 50일간의 최저가                                                                                  |
+| 52W High              | 52-Week High                         | 52주 최고가                       | 최근 52주간의 최고가                                                                                  |
+| W Low                 | 52-Week Low                          | 52주 최저가                       | 최근 52주간의 최저가                                                                                  |
+| RSI                   | Relative Strength Index              | 상대강도지수                      | 상승기간과 하락간의 격차를 살펴서 주식의 상승장, 하락장을 판단한다.                                   |
+| Earnings              | \-                                   | EPS와 같음                        | 1당 기업의 순이익                                                                                     |
+| IPO Date              | \-                                   | 상장일                            | 주식회사 발행한 초록서에 기재된 상장일                                                                |
+| Optionable            | \-                                   | 콜옵션 가능                       | 콜옵션 거래가 가능 선물 컨트랙트                                                                      |
+| Shortable             | \-                                   | 공매도 가능                       | 공개적으로 매도 대기 중인 주식 상황에서 주식을 빌려 매도하고, 주가가 낮아질 때 주식을 살 수 있는 옵션 |
+| Employees             | \-                                   | 종업원 수                         | 회사 전체 종업원 수                                                                                   |
+| from Open             | \-                                   | 장 가격 대비 전일 대비 가격 차이  | 개장 가격 대비 전일 대비 가격 차이                                                                    |
+| Gap                   | \-                                   | 가격차이                          | 분기별 최적의 흐름보다 가격 비율이 상승 또는 하락한 것                                                |
+| Recom                 | \-                                   | 보유권장                          | 분석가의 추천도                                                                                       |
+| Avg Volume            | \-                                   | 평균 거래량                       | 연간 평균 거래량                                                                                      |
+| Rel Volume            | \-                                   | 거래량 대비 비율                  | 기준 거래량 대비 거래량 비율                                                                          |
+| Volume                | \-                                   | 거래량                            | 최근 실제 매매 거래량                                                                                 |
+| Target Price          | \-                                   | 목표가격                          | 분석가들의가 예측치                                                                                   |
+| Prev Close            | \-                                   | 전일 종가                         | 최근 거래일 종가                                                                                      |
+| Price                 | \-                                   | 현재 주가                         | 현재 거래일 가격                                                                                      |
+| Change                | \-                                   | 전일 대비 가격 변화               | 최근 거래일 종가 대비 현재 가격의 차이                                                                |
+| AH Close              | \-                                   | AH 종가                           | 간외 거래 중 일어난 종가                                                                              |
+| AH Change             | \-                                   | AH 종가 대비 변화                 | AH Close 대비 현재 AH 가격 차이                                                                       |

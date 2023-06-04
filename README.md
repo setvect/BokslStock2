@@ -85,13 +85,23 @@ gradlew makeInstallFile
     - 한국주식: https://finance.naver.com
     - 미국주식: https://query1.finance.yahoo.com
     - 원달러환율: https://spot.wooribank.com/pot/Dream?withyou=FXXRT0014
-- 메인 소스: [CrawlService.kt](src/main/kotlin/com/setvect/bokslstock2/index/service/CrawlStockPriceService.kt)
+- 메인 소스: [CrawlService.kt](src/main/kotlin/com/setvect/bokslstock2/index/service/crawl/CrawlStockPriceService.kt)
 - 실행 소스: [CrawlStockPriceTest.kt](src/test/kotlin/com/setvect/bokslstock2/crawl/CrawlStockPriceTest.kt)
 
 ### 5.2. 가치 평가 정보
 
 - 메인 소스: [CrawlerCompanyValueService.kt](src/main/kotlin/com/setvect/bokslstock2/value/service/CrawlerCompanyValueService.kt)
 - 실행 소스: [CrawlCompanyValueTest.kt](src/test/kotlin/com/setvect/bokslstock2/crawl/CrawlCompanyValueTest.kt)
+
+
+## 5.3. finviz.com 수집
+### 5.3.1. 수집 방법
+- [수집사이트 페이지](https://finviz.com/screener.ashx?v=152&ft=4&c=0,1,2,3,4,5,79,6,7,8,9,10,11,12,13,73,74,75,14,15,16,77,17,18,19,20,21,23,22,82,78,24,25,26,27,28,29,30,31,84,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,68,70,80,83,76,60,61,62,63,64,67,69,81,65,66,71,72)
+- 페이지 이동하면서 데이터 수집
+- 수집 결과는 `crawl/finviz.com`에 저장됨
+
+### 5.3.2. 수집 용어
+[finviz.com_수집항목_용어](docs/finviz.com_용어.md) 참고
 
 ## 6. 백테스트 전략
 
