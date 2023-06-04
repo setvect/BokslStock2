@@ -1,17 +1,22 @@
-package com.setvect.bokslstock2.value.service
+package com.setvect.bokslstock2.crawl.service
 
 import com.setvect.bokslstock2.config.BokslStockProperties
 import org.springframework.stereotype.Service
 import java.io.File
 
-private const val LIST_SUMMARY_JSON = "summary-list.json"
-private const val LIST_DETAIL_JSON = "detail-list.json"
-private const val RESULT = "value-result.xlsx"
 
+/**
+ * TODO 이름 참 맘에 안든다.
+ */
 @Service
-class ValueCommonService(
+class CrawlerKoreanCompanyProperties(
     val bokslStockProperties: BokslStockProperties
 ) {
+    companion object {
+        private const val LIST_SUMMARY_JSON = "summary-list.json"
+        private const val LIST_DETAIL_JSON = "detail-list.json"
+        private const val RESULT = "value-result.xlsx"
+    }
     fun getDetailListFile(): File {
         return File(bokslStockProperties.crawl.korea.savePath, LIST_DETAIL_JSON)
     }
@@ -26,5 +31,9 @@ class ValueCommonService(
 
     fun getDetailUrl(code: String): String {
         return bokslStockProperties.crawl.korea.url.info.replace("{code}", code)
+    }
+
+    fun getUrlList(): String {
+        return bokslStockProperties.crawl.korea.url.list
     }
 }

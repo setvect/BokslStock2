@@ -1,17 +1,21 @@
-package com.setvect.bokslstock2.index.service.crawl
+package com.setvect.bokslstock2.crawl.service
 
 import com.setvect.bokslstock2.util.JsonUtil
 import org.jsoup.Jsoup
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
-private const val URL =
-    "https://finviz.com/screener.ashx?v=152&ft=4" +
-            "&c=0,1,2,3,4,5,79,6,7,8,9,10,11,12,13,73,74,14,15,16,77,17,18,19,20,21,23,22,82,78,24,25,26,27,28,29,30,31,84,32,33" +
-            ",34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,68,70,80,83,76,60,61,62,63,64,67,69,81,65,66,71,72"
-
+/**
+ * 미국 기업 정보 크롤링
+ */
 @Service
-class CrawlFinvizService {
+class CrawlerUsaCompanyService {
+
+    private val URL =
+        "https://finviz.com/screener.ashx?v=152&ft=4" +
+                "&c=0,1,2,3,4,5,79,6,7,8,9,10,11,12,13,73,74,14,15,16,77,17,18,19,20,21,23,22,82,78,24,25,26,27,28,29,30,31,84,32,33" +
+                ",34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,68,70,80,83,76,60,61,62,63,64,67,69,81,65,66,71,72"
+
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun crawl(maxPages: Int = Int.MAX_VALUE): FinvizCrawlResult {
@@ -72,7 +76,6 @@ class CrawlFinvizService {
         }
         return JsonUtil.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json)
     }
-
 
 
     data class FinvizCrawlResult(

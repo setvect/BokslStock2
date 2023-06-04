@@ -1,7 +1,6 @@
-package com.setvect.bokslstock2.value.service
+package com.setvect.bokslstock2.crawl.service
 
 import com.google.gson.GsonBuilder
-import com.setvect.bokslstock2.config.BokslStockProperties
 import com.setvect.bokslstock2.value.dto.CompanyDetail
 import com.setvect.bokslstock2.value.dto.CompanySummary
 import org.apache.commons.io.FileUtils
@@ -13,13 +12,13 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 import java.util.stream.IntStream
-import kotlin.streams.toList
 
-
+/**
+ * 한국 기업 정보 크롤링
+ */
 @Service
-class CrawlerCompanyValueService(
-    val bokslStockProperties: BokslStockProperties,
-    val valueCommonService: ValueCommonService
+class CrawlerKoreanCompanyService(
+    val crawlerKoreanCompanyProperties: CrawlerKoreanCompanyProperties
 ) {
     private val regexCompanyLink = Regex("code=(\\w*).*>(.*)<")
     private val log = LoggerFactory.getLogger(javaClass)
@@ -29,14 +28,14 @@ class CrawlerCompanyValueService(
      * 상세 정보 크롤링
      */
     fun crawlDetailList() {
-        val listFile = valueCommonService.getSummaryListFile()
+        val listFile = crawlerKoreanCompanyProperties.getSummaryListFile()
         val listJson = FileUtils.readFileToString(listFile, "utf-8")
         val companyList = gson.fromJson(listJson, Array<CompanySummary>::class.java).asList()
 
         val companyDetailList = mutableListOf<CompanyDetail>()
         var count = 0
         companyList.forEach { company ->
-            val url = valueCommonService.getDetailUrl(company.code)
+            val url = crawlerKoreanCompanyProperties.getDetailUrl(company.code)
             log.info("${company.name} 조회, $url, [${count++}/${companyList.size}]")
 
             val document = Jsoup.connect(url).get()
@@ -156,7 +155,7 @@ class CrawlerCompanyValueService(
         KoreaMarket.values().forEach { stockType ->
             var page = 1
             while (true) {
-                val url = bokslStockProperties.crawl.korea.url.list
+                val url = crawlerKoreanCompanyProperties.getUrlList()
                     .replace("{marketSeq}", stockType.code.toString())
                     .replace("{page}", page.toString())
                 log.info("페이지: $url")
@@ -191,7 +190,7 @@ class CrawlerCompanyValueService(
     private fun saveDetailList(detailList: List<CompanyDetail>) {
         val companyListJson = gson.toJson(detailList)
 
-        val listFile = valueCommonService.getDetailListFile()
+        val listFile = crawlerKoreanCompanyProperties.getDetailListFile()
         FileUtils.writeStringToFile(listFile, companyListJson, "utf-8")
         log.info("상세 정보 저장. 건수: ${detailList.size}, 경로: ${listFile.absoluteFile}")
     }
@@ -202,7 +201,7 @@ class CrawlerCompanyValueService(
     private fun saveSummaryList(crawCompanyList: List<CompanySummary>) {
         val companyListJson = gson.toJson(crawCompanyList)
 
-        val listFile = valueCommonService.getSummaryListFile()
+        val listFile = crawlerKoreanCompanyProperties.getSummaryListFile()
         FileUtils.writeStringToFile(listFile, companyListJson, "utf-8")
         log.info("요약 정보 저장. 건수: ${crawCompanyList.size}, 경로: ${listFile.absoluteFile}")
     }
@@ -228,5 +227,7 @@ class CrawlerCompanyValueService(
 
     private fun elementToInt(element: Elements) = element.text().replace(",", "").toInt()
 
-
+    enum class KoreaMarket(val code: Int) {
+        KOSPI(0), KOSDAQ(1);
+    }
 }

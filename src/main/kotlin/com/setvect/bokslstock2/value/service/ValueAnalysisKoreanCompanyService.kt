@@ -2,6 +2,7 @@ package com.setvect.bokslstock2.value.service
 
 import com.google.gson.GsonBuilder
 import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
+import com.setvect.bokslstock2.crawl.service.CrawlerKoreanCompanyProperties
 import com.setvect.bokslstock2.value.dto.CompanyDetail
 import com.setvect.bokslstock2.value.dto.Rank
 import org.apache.commons.io.FileUtils
@@ -18,8 +19,8 @@ import java.io.FileOutputStream
 /**
  * 가치 평가 전략
  */
-class ValueAnalysisService(
-    val valueCommonService: ValueCommonService
+class ValueAnalysisKoreanCompanyService(
+    val crawlerKoreanCompanyProperties: CrawlerKoreanCompanyProperties
 ) {
     private val gson = GsonBuilder().setPrettyPrinting().create()
     private val log = LoggerFactory.getLogger(javaClass)
@@ -32,7 +33,7 @@ class ValueAnalysisService(
         val targetList = filter(companyAllList)
         val listByRanking = ranking(targetList)
 
-        val resultFile = valueCommonService.getResultFile()
+        val resultFile = crawlerKoreanCompanyProperties.getResultFile()
         XSSFWorkbook().use { workbook ->
             val sheet = workbook.createSheet()
 
@@ -63,9 +64,9 @@ class ValueAnalysisService(
 
                 createCell = row.createCell(cellIdx++)
                 val link = createHelper.createHyperlink(HyperlinkType.URL)
-                link.address = valueCommonService.getDetailUrl(it.first.summary.code)
+                link.address = crawlerKoreanCompanyProperties.getDetailUrl(it.first.summary.code)
                 createCell.setHyperlink(link)
-                createCell.setCellValue(valueCommonService.getDetailUrl(it.first.summary.code))
+                createCell.setCellValue(crawlerKoreanCompanyProperties.getDetailUrl(it.first.summary.code))
                 createCell.cellStyle = hyperlinkStyle
 
                 createCell = row.createCell(cellIdx++)
@@ -146,7 +147,7 @@ class ValueAnalysisService(
     }
 
     private fun loadCompanyDetails(): List<CompanyDetail> {
-        val detailFile = valueCommonService.getDetailListFile()
+        val detailFile = crawlerKoreanCompanyProperties.getDetailListFile()
         val listJson = FileUtils.readFileToString(detailFile, "utf-8")
         return gson.fromJson(listJson, Array<CompanyDetail>::class.java).asList()
     }
@@ -169,7 +170,6 @@ class ValueAnalysisService(
                 pair.second.dvr = index + 1
             }
 
-        val listByRanking = targetByRank.sortedBy { it.second.total() }
-        return listByRanking
+        return targetByRank.sortedBy { it.second.total() }
     }
 }

@@ -1,6 +1,5 @@
-package com.setvect.bokslstock2.crawl
+package com.setvect.bokslstock2.crawl.service
 
-import com.setvect.bokslstock2.value.service.CrawlerCompanyValueService
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -9,9 +8,9 @@ import org.springframework.test.context.ActiveProfiles
 
 @SpringBootTest
 @ActiveProfiles("test")
-class CrawlCompanyValueTest {
+class CrawlerKoreanCompanyServiceTest {
     @Autowired
-    private lateinit var crawlCompanyValueService: CrawlerCompanyValueService
+    private lateinit var crawlCompanyValueService: CrawlerKoreanCompanyService
 
     /**
      * 종목 크롤링

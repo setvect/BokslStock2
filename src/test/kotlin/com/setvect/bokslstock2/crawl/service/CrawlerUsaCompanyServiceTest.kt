@@ -1,6 +1,6 @@
-package com.setvect.bokslstock2.crawl
+package com.setvect.bokslstock2.crawl.service
 
-import com.setvect.bokslstock2.index.service.crawl.CrawlFinvizService
+import com.setvect.bokslstock2.crawl.service.CrawlerUsaCompanyService
 import com.setvect.bokslstock2.util.DateUtil
 import org.apache.commons.io.FileUtils
 import org.junit.jupiter.api.Assertions.*
@@ -13,19 +13,19 @@ import java.time.LocalDateTime
 
 @SpringBootTest
 @ActiveProfiles("test")
-class CrawlFinvizServiceTest {
+class CrawlerUsaCompanyServiceTest {
     @Autowired
-    private lateinit var crawlFinvizService: CrawlFinvizService
+    private lateinit var crawlerUsaCompanyService: CrawlerUsaCompanyService
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Test
     fun crawl() {
         try {
-            val result = crawlFinvizService.crawl(500)
+            val result = crawlerUsaCompanyService.crawl(500)
             log.info("header size: ${result.header.size}")
             log.info("data size: ${result.dataMatrix.size}")
 
-            val convertJson = crawlFinvizService.convertJson(result)
+            val convertJson = crawlerUsaCompanyService.convertJson(result)
             log.info("json: $convertJson")
             val date = DateUtil.format(LocalDateTime.now(), "yyyyMMdd_HHmmss")
 

@@ -1,10 +1,10 @@
-package com.setvect.bokslstock2.crawl
+package com.setvect.bokslstock2.crawl.service
 
 import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.StockRepository
-import com.setvect.bokslstock2.index.service.crawl.CrawlStockPriceService
+import com.setvect.bokslstock2.crawl.service.CrawlerStockPriceService
 import com.setvect.bokslstock2.index.service.CsvStoreService
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -17,11 +17,11 @@ import java.io.File
 
 @SpringBootTest
 @ActiveProfiles("test")
-class CrawlStockPriceTest {
+class CrawlerStockPriceServiceTest {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
     @Autowired
-    private lateinit var crawlStockPriceService: CrawlStockPriceService
+    private lateinit var crawlerStockPriceService: CrawlerStockPriceService
 
     @Autowired
     private lateinit var stockRepository: StockRepository
@@ -49,7 +49,7 @@ class CrawlStockPriceTest {
     @Test
     @Disabled
     fun crawBatch() {
-        crawlStockPriceService.crawlStockPriceAll()
+        crawlerStockPriceService.crawlStockPriceAll()
         println("끝.")
     }
 
@@ -58,18 +58,18 @@ class CrawlStockPriceTest {
      */
     @Test
     fun crawBatchStock() {
-        crawlStockPriceService.crawlStockPriceWithDelete(StockCode.KOSEF_TREASURY_BOND_10_148070)
-        crawlStockPriceService.crawlStockPriceWithDelete(StockCode.TIGER_SNP_360750)
-        crawlStockPriceService.crawlStockPriceWithDelete(StockCode.KOSEF_200TR_294400)
-        crawlStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_GLD_H_132030)
-        crawlStockPriceService.crawlStockPriceWithDelete(StockCode.TIGER_USA_TREASURY_BOND_305080)
-        crawlStockPriceService.crawlStockPriceWithDelete(StockCode.ACE_GLD_411060)
-        crawlStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_200_USD_BOND_284430)
-        crawlStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_KOSDAQ_2X_233740, PeriodType.PERIOD_DAY)
-        crawlStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_200_069500, PeriodType.PERIOD_DAY)
-        crawlStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_BANK_091170, PeriodType.PERIOD_DAY)
-        crawlStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_KOSDAQ_229200, PeriodType.PERIOD_DAY)
-        crawlStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_KOSDAQ_IV_251340, PeriodType.PERIOD_DAY)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KOSEF_TREASURY_BOND_10_148070)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.TIGER_SNP_360750)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KOSEF_200TR_294400)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_GLD_H_132030)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.TIGER_USA_TREASURY_BOND_305080)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.ACE_GLD_411060)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_200_USD_BOND_284430)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_KOSDAQ_2X_233740, PeriodType.PERIOD_DAY)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_200_069500, PeriodType.PERIOD_DAY)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_BANK_091170, PeriodType.PERIOD_DAY)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_KOSDAQ_229200, PeriodType.PERIOD_DAY)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_KOSDAQ_IV_251340, PeriodType.PERIOD_DAY)
         println("끝.")
     }
 
@@ -78,11 +78,11 @@ class CrawlStockPriceTest {
      */
     @Test
     fun crawBatchCash() {
-        crawlStockPriceService.crawlStockPriceWithDelete(StockCode.CASH_1)
-        crawlStockPriceService.crawlStockPriceWithDelete(StockCode.CASH_2)
-        crawlStockPriceService.crawlStockPriceWithDelete(StockCode.CASH_3)
-        crawlStockPriceService.crawlStockPriceWithDelete(StockCode.CASH_4)
-        crawlStockPriceService.crawlStockPriceWithDelete(StockCode.CASH_5)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.CASH_1)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.CASH_2)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.CASH_3)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.CASH_4)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.CASH_5)
         println("끝.")
     }
 
@@ -96,7 +96,7 @@ class CrawlStockPriceTest {
     @Disabled
     @Deprecated("그냥 매번 배치 수집하자")
     fun crawlIncremental() {
-        crawlStockPriceService.crawlStockPriceIncremental()
+        crawlerStockPriceService.crawlStockPriceIncremental()
 //        crawlStockPriceService.crawlStockPriceIncremental(setOf(StockCode.TIGER_USD_SHORT_BONDS_329750))
         println("끝.")
     }

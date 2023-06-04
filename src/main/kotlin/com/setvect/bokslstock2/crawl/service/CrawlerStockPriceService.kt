@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.index.service.crawl
+package com.setvect.bokslstock2.crawl.service
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -33,8 +33,11 @@ import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
 
+/**
+ * 각종 시세 데이터 수집
+ */
 @Service
-class CrawlStockPriceService(
+class CrawlerStockPriceService(
 
     private val bokslStockProperties: BokslStockProperties,
     private val stockRepository: StockRepository,

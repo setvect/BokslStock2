@@ -85,22 +85,22 @@ gradlew makeInstallFile
     - 한국주식: https://finance.naver.com
     - 미국주식: https://query1.finance.yahoo.com
     - 원달러환율: https://spot.wooribank.com/pot/Dream?withyou=FXXRT0014
-- 메인 소스: [CrawlService.kt](src/main/kotlin/com/setvect/bokslstock2/index/service/crawl/CrawlStockPriceService.kt)
-- 실행 소스: [CrawlStockPriceTest.kt](src/test/kotlin/com/setvect/bokslstock2/crawl/CrawlStockPriceTest.kt)
+- 메인 소스: [CrawlerStockPriceService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerStockPriceService.kt)
+- 실행 소스: [CrawlerStockPriceServiceTest.kt](src/test/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerStockPriceServiceTest.kt)
 
-### 5.2. 가치 평가 정보
+### 5.2. 한국주식 기업 가치 평가 정보
 
-- 메인 소스: [CrawlerCompanyValueService.kt](src/main/kotlin/com/setvect/bokslstock2/value/service/CrawlerCompanyValueService.kt)
-- 실행 소스: [CrawlCompanyValueTest.kt](src/test/kotlin/com/setvect/bokslstock2/crawl/CrawlCompanyValueTest.kt)
+- 메인 소스: [CrawlerKoreanCompanyService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerKoreanCompanyService.kt)
+- 실행 소스: [CrawlerKoreanCompanyServiceTest.kt](src/test/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerKoreanCompanyServiceTest.kt)
 
 ## 5.3. finviz.com 수집
 ### 5.3.1. 수집 방법
 
-- [수집사이트 페이지](https://finviz.com/screener.ashx?v=152&ft=4&c=0,1,2,3,4,5,6,7,67,65,66)
+- [https://finviz.com](https://finviz.com/screener.ashx?v=152&ft=4&c=0,1,2,3,4,5,6,7,67,65,66) 에서 수집
 - 페이지 이동하면서 데이터 수집
 - 수집 결과는 `crawl/finviz.com`에 저장됨
-- 메인 소스: [CrawlFinvizService.kt](src/main/kotlin/com/setvect/bokslstock2/index/service/crawl/CrawlFinvizService.kt)
-- 실행 소스: [CrawlFinvizTest.kt](src/test/kotlin/com/setvect/bokslstock2/crawl/CrawlFinvizServiceTest.kt)
+- 메인 소스: [CrawlerUsaCompanyService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerUsaCompanyService.kt)
+- 실행 소스: [CrawlerUsaCompanyServiceTest.kt](src/test/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerUsaCompanyServiceTest.kt)
 
 ### 5.3.2. 수집 용어
 [finviz.com_수집항목_용어](docs/finviz.com_용어.md) 참고
@@ -210,7 +210,7 @@ gradlew makeInstallFile
 
 ## 7. 전략
 
-### 7.1. 가치평가 전략
+### 7.1. 가치평가 전략(한국 주식)
 
 - 메인 소스: [ValueAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/value/service/ValueAnalysisService.kt)
 - 실행 소스:[ValueStrategyTest.kt](src/test/kotlin/com/setvect/bokslstock2/analysis/ValueStrategyTest.kt)
@@ -231,6 +231,8 @@ gradlew makeInstallFile
     - 상위 20개 기업 매수
 - 매도 조건
     - 1년에 한 번 또는 두 번 리벨런싱
+
+### 7.2. 가치평가 전략(미국 주식)
 
 ## 8. 기타
 ### 8.1. 인증서 연결
