@@ -8,6 +8,8 @@ class UsaCompanyDetail(
     val country: String,
     // DJIA, NDX, S&P 500
     val index: Set<String>,
+    // 현재 가격
+    val price: Double?,
     // 시가총액
     val marketCap: Double?,
     // 투자지표
