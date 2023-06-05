@@ -1,5 +1,5 @@
 # PTP 종목 리스트
-# 참고: https://www1.kiwoom.com/h/common/bbs/VBbsNoticeNWGCZDetailView?seqid=3902
+# 참고: https://www1.kiwoom.com/h/common/bbs/VBbsNoticeNMSGIDetailView?seqid=980
 
 AB
 AGQ

@@ -31,11 +31,8 @@ class ValueAnalysisUsaCompanyService(
     companion object {
         private val USA_COMPANY_VALUE_FILE = File("crawl/finviz.com/finviz.json")
         private val INCLUDE_COUNTRY = listOf("USA")
-        private val EXCLUDE_INDUSTRY = listOf(
-            "Banks - Regional", "REIT - Mortgage", "REIT - Office", "Asset Management",
-            "Closed-End Fund - Equity", "Credit Services", "REIT - Retail", "REIT - Diversified", "REIT - Healthcare Facilities", "REIT - Industrial",
-            "REIT - Hotel & Motel", "Closed-End Fund - Debt", "Insurance - Property & Casualty"
-        )
+        // Energy 항목 추가할까 말까 고민. 재수 없으면 PTP 종목에 들어갈 수도 있음
+        private val EXCLUDE_SECTOR = listOf("Real Estate", "Financial", "Energy")
         private val UPPER_RATIO = .7
         private val LOWER_RATIO = .9
         private val PTP_LIST_PATH = "assets/PTP.txt"
@@ -180,7 +177,7 @@ class ValueAnalysisUsaCompanyService(
         val companyFilterList = companyAllList
             .asSequence()
             .filter { INCLUDE_COUNTRY.contains(it.country) }
-            .filter { !EXCLUDE_INDUSTRY.contains(it.industry) }
+            .filter { !EXCLUDE_SECTOR.contains(it.sector) }
             .filter { it.currentIndicator.per != null && it.currentIndicator.pbr != null && it.currentIndicator.dvr != null }
             .filter {
                 val isPtp = ptp.contains(it.ticker)
