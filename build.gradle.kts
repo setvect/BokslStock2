@@ -96,7 +96,7 @@ sourceSets {
 }
 
 task<Test>("testDependency") {
-    description = "환경에 의존된 테스트. 항상 같은 결과를 보장하지 않음. 배포시 테스트로 사용하면 안됨"
+    description = "배포 전 검증 테스트 아님. 환경에 의존된 테스트. 항상 같은 결과를 보장하지 않음. 배포시 테스트로 사용하면 안됨"
     group = "verification"
 
     testClassesDirs = sourceSets["testDependency"].output.classesDirs

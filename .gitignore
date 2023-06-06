@@ -4,6 +4,7 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 src/test/resources/application.yml
+src/testDependency/resources/application.yml
 gradle.properties
 
 ### STS ###

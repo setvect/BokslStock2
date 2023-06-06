@@ -86,12 +86,12 @@ gradlew makeInstallFile
     - 미국주식: https://query1.finance.yahoo.com
     - 원달러환율: https://spot.wooribank.com/pot/Dream?withyou=FXXRT0014
 - 메인 소스: [CrawlerStockPriceService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerStockPriceService.kt)
-- 실행 소스: [CrawlerStockPriceServiceTest.kt](src/test/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerStockPriceServiceTest.kt)
+- 실행 소스: [CrawlerStockPriceServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerStockPriceServiceTest.kt)
 
 ### 5.2. 한국주식 기업 가치 평가 정보
 
 - 메인 소스: [CrawlerKoreanCompanyService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerKoreanCompanyService.kt)
-- 실행 소스: [CrawlerKoreanCompanyServiceTest.kt](src/test/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerKoreanCompanyServiceTest.kt)
+- 실행 소스: [CrawlerKoreanCompanyServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerKoreanCompanyServiceTest.kt)
 
 ## 5.3. finviz.com 수집
 ### 5.3.1. 수집 방법
@@ -100,7 +100,7 @@ gradlew makeInstallFile
 - 페이지 이동하면서 데이터 수집
 - 수집 결과는 `crawl/finviz.com`에 저장됨
 - 메인 소스: [CrawlerUsaCompanyService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerUsaCompanyService.kt)
-- 실행 소스: [CrawlerUsaCompanyServiceTest.kt](src/test/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerUsaCompanyServiceTest.kt)
+- 실행 소스: [CrawlerUsaCompanyServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerUsaCompanyServiceTest.kt)
 
 ### 5.3.2. 수집 용어
 [수집항목_용어](docs/주식_용어.md) 참고
@@ -143,7 +143,7 @@ gradlew makeInstallFile
 ### 6.3. 듀얼모멘텀
 
 - 메인 소스:[DmAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/analysis/dm/service/DmAnalysisService.kt)
-- 실행 소스:[DmBacktest.kt](src/test/kotlin/com/setvect/bokslstock2/analysis/DmBacktest.kt)
+- 실행 소스:[DmBacktest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/analysis/DmBacktest.kt)
 - 절대 모멘텀과 상대 모멘텀 결합
 - 매매 전략 전략
     - 직전월 종가 기준 n월 평균 종가보다 높은순으로 정렬
@@ -177,7 +177,7 @@ gradlew makeInstallFile
 ### 6.5. 리벨런싱
 
 - 메인 소스: [RebalanceAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/analysis/rebalance/service/RebalanceAnalysisService.kt)
-- 실행 소스:[RebalanceBacktest.kt](src/test/kotlin/com/setvect/bokslstock2/analysis/RebalanceBacktest.kt)
+- 실행 소스:[RebalanceBacktest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/analysis/RebalanceBacktest.kt)
 - 리밸런싱 매매 분석
 - 일정주기마다 리벨런싱 적용
 - 사용가능한 매매전략
@@ -208,12 +208,26 @@ gradlew makeInstallFile
 | tradingview.com | X             | '조정' 체크 안함            | 449.91          |
 | tradingview.com | O             | tradingview.com '조정' 체크 | 446.59          |
 
+
+#### 6.6.2. LAA 계산
+TODO 작업해야됨 
+
+### 6.7. 간단한 전략들
+내가 궁금해서, 인터넷에 떠돌아 다니는 전략들을 검증하기 위해 간단하게 만들어 보았음
+
+- [CandleAnalysisTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/analysis/price/CandleAnalysisTest.kt)
+- [LongShortAnalysisTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/analysis/price/LongShortAnalysisTest.kt)
+  - 11월~4월 매수, 5월~10월 매도
+- [TrendFollowingBacktest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/analysis/price/TrendFollowingBacktest.kt)
+  - 다양한 추세 추종 방법 테스트
+
 ## 7. 전략
 
 ### 7.1. 가치평가 전략(한국 주식)
 
-- 메인 소스: [ValueAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/value/service/ValueAnalysisService.kt)
-- 실행 소스:[ValueStrategyTest.kt](src/test/kotlin/com/setvect/bokslstock2/analysis/ValueStrategyTest.kt)
+- 메인 소스: [ValueAnalysisKoreanCompanyService.kt](src/main/kotlin/com/setvect/bokslstock2/value/service/ValueAnalysisKoreanCompanyService.kt)
+- 실행 소스: [ValueAnalysisKoreanCompanyServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/value/service/ValueAnalysisKoreanCompanyServiceTest.kt)
+- 
 - 매수조건
     - 필터
        1. 기타금융, 생명보험, 손해보험, 은행, 증권, 창업투자
