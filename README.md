@@ -103,7 +103,7 @@ gradlew makeInstallFile
 - 실행 소스: [CrawlerUsaCompanyServiceTest.kt](src/test/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerUsaCompanyServiceTest.kt)
 
 ### 5.3.2. 수집 용어
-[finviz.com_수집항목_용어](docs/finviz.com_용어.md) 참고
+[수집항목_용어](docs/주식_용어.md) 참고
 
 ## 6. 백테스트 전략
 
