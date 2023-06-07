@@ -23,6 +23,7 @@ data class Trade(
     val gains: Double,
     /**
      * 현재시점 주식평가금
+     * TODO 필요 없을것 같은데. 이유: 종목코드가 있고 수량이 있으면 데이터를 조회하여 구할 수 있음
      */
     val stockEvalPrice: Double
 ) {

@@ -32,7 +32,10 @@ class BacktestTradeService(
     }
 
     /**
-     * [investmentRatioMap] 종목별 매수
+     * [investmentRatioMap] 종목별 매수 비율
+     * 아래와 같은 이슈로 본 메소드는 범용적으로 사용 못함
+     * - 매수 비율 고정
+     * - 부분 매수 및 매도 안됨
      */
     fun tradeBundle(
         condition: TradeCondition,
@@ -149,6 +152,11 @@ class BacktestTradeService(
 
     /**
      * 매매 결과에 대한 통계적 분석을 함
+     * 
+     * 범용적으로 사용가능한 메소드
+     * 아니다
+     * 범용적으로 사용 불가능하다.
+     * 일부만 매도 하거나, 매수한 종목을 추가 매수하는걸 지원하지 않는다.
      */
     fun analysis(
         trades: List<Trade>, condition: TradeCondition, holdStockCodes: List<StockCode>
