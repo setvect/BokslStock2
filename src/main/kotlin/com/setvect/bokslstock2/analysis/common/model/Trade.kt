@@ -3,6 +3,7 @@ package com.setvect.bokslstock2.analysis.common.model
 /**
  * 거래 건별 내역
  */
+@Deprecated("삭제 예정")
 data class Trade(
     val preTrade: PreTrade,
     /**

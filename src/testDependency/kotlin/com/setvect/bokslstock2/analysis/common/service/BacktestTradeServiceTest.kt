@@ -23,6 +23,12 @@ class BacktestTradeServiceTest {
     @Autowired
     private lateinit var backtestTradeService: BacktestTradeService
 
+//    전체적으로 대대적으로 리팩토링이 필요함
+//    범용적인 매매을 할 수 있도록 변경
+//    - 복수개의 종목을 보유
+//    - 부분 매도, 추가 매수 가능하도록 함
+//    - 추상화를 고려해 다양한 전략에서 사용할 수 있도록 함
+
     @Test
     fun analysis() {
         val preTrade1 =
