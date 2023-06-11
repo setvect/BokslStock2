@@ -79,13 +79,7 @@ class AccountServiceTest {
         log.info(json)
 
         val reportFile = File("./temp", "테스트.xlsx")
-        XSSFWorkbook().use { workbook ->
-            val sheet = ReportMakerHelperService.createTradeReport(result, workbook)
-            workbook.setSheetName(workbook.getSheetIndex(sheet), "1. 매매이력")
-            FileOutputStream(reportFile).use { ous ->
-                workbook.write(ous)
-            }
-        }
+        accountService.makeReport(result, reportFile)
         log.info("보고서 생성: ${reportFile.absolutePath}")
     }
 }

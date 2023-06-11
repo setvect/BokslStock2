@@ -4,9 +4,12 @@ import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.analysis.common.model.TradeResult
 import com.setvect.bokslstock2.common.model.TradeType
 import com.setvect.bokslstock2.util.DateRange
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Service
+import java.io.File
+import java.io.FileOutputStream
 import java.time.LocalDateTime
 import java.time.LocalTime
 
@@ -113,6 +116,16 @@ class AccountService(
             list.sumOf { if (it.tradeType == TradeType.BUY) it.qty else -it.qty }
         }
         return map.filter { it.value > 0 }.map { it.key }
+    }
+
+    fun makeReport(result: List<TradeResult>, reportFile: File) {
+        XSSFWorkbook().use { workbook ->
+            val sheet = ReportMakerHelperService.createTradeReport(result, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "1. 매매이력")
+            FileOutputStream(reportFile).use { ous ->
+                workbook.write(ous)
+            }
+        }
     }
 
     // 초기 현금, 매매 수수료 정보
