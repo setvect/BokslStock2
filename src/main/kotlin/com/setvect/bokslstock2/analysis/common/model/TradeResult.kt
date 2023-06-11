@@ -38,6 +38,8 @@ data class TradeResult(
     val purchasePrice: Double,
     /** 해당 매매 완료 후 계좌 전체 주식 평가 금액 */
     val stockEvalPrice: Double,
+    /** 종목별 주식잔고 Key: StockCode, Value: StockAccount */
+    val stockAccount: Map<StockCode, StockAccount>,
     /** 수익비. 1일 기준 */
     val profitRate: Double,
     /** 거래 메모. 적용 조건 이름 등 저장 */

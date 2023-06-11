@@ -20,6 +20,7 @@ class StockByDateCandle(
             val list = candleRepository.findByRange(stockCode.code, PeriodType.PERIOD_DAY, dateRange.from, dateRange.to)
             list.associateBy { it.candleDateTime.toLocalDate() }
         }
+
     /**
      * @return 기간, 종목에 대한 일봉, 만약 해당 날짜에 시세가 없으면 가장 가까운 시세를 구함.
      */
@@ -34,5 +35,17 @@ class StockByDateCandle(
             return candleMap[localDate.minusDays(i.toLong())] ?: continue
         }
         throw IllegalArgumentException("종목 정보가 없음. 종목코드: ${stockCode.code}, 날짜: $localDate")
+    }
+
+    /**
+     * @return 기잔, 종목에 대한 일봉. 해당 기간에 시세가 없으면 null 반환
+     */
+    fun getCandle(
+        stockCode: StockCode,
+        localDate: LocalDate
+    ): CandleEntity? {
+        // 해당 종목, 날짜의 종가를 구함. 종목 정보가 없으면 예외 발생.
+        val candleMap = stockCandleMap[stockCode] ?: throw IllegalArgumentException("종목 정보가 없음. 종목코드: ${stockCode.code}")
+        return candleMap[localDate]
     }
 }

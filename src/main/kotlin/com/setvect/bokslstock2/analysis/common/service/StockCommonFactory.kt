@@ -8,9 +8,13 @@ import org.springframework.stereotype.Service
 
 @Service
 class StockCommonFactory(
-    private val candleRepository: CandleRepository
+    private val candleRepository: CandleRepository,
 ) {
     fun createStockByDateCandle(stockCodes: Set<StockCode>, dateRange: DateRange): StockByDateCandle {
         return StockByDateCandle(candleRepository, stockCodes, dateRange)
+    }
+
+    fun createStockCommonFactory(accountCondition: AccountService.AccountCondition): AccountService {
+        return AccountService(this, accountCondition)
     }
 }
