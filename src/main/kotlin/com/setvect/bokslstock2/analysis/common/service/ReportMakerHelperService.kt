@@ -21,6 +21,101 @@ object ReportMakerHelperService {
     /**
      * 매매 내역을 시트로 만듦
      */
+    fun createTradeReport(result: List<TradeResult>, workbook: XSSFWorkbook): XSSFSheet {
+        val sheet = workbook.createSheet()
+        val header =
+            "날짜,종목,매매 구분,매매 수량,매매 금액,체결 가격,실현 수익률,수수료,투자 수익(수수료포함)," +
+                    "보유 주식 평가금,매매후 보유 현금,평가금(주식+현금),수익비,메모"
+        applyHeader(sheet, header)
+        var rowIdx = 1
+
+        val defaultStyle = ExcelStyle.createDefault(workbook)
+        val dateStyle = ExcelStyle.createDate(workbook)
+        val commaStyle = ExcelStyle.createComma(workbook)
+        val percentStyle = ExcelStyle.createPercent(workbook)
+        val decimalStyle = ExcelStyle.createDecimal(workbook)
+
+        result.forEach { tradeItem ->
+            val row = sheet.createRow(rowIdx++)
+            var cellIdx = 0
+            var createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.tradeDate.toLocalDate())
+            createCell.cellStyle = dateStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue("${tradeItem.stockCode.name}(${tradeItem.stockCode.code})")
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.tradeType.name)
+            createCell.cellStyle = defaultStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.qty.toDouble())
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.price * tradeItem.qty)
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.price)
+            if (tradeItem.price > 1000) {
+                createCell.cellStyle = commaStyle
+            } else {
+                createCell.cellStyle = decimalStyle
+            }
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.yieldRate)
+            createCell.cellStyle = percentStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.feePrice)
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.gains)
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.stockEvalPrice)
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.cash)
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.getEvalPrice())
+            createCell.cellStyle = commaStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.profitRate)
+            createCell.cellStyle = decimalStyle
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.memo)
+            createCell.cellStyle = defaultStyle
+        }
+
+        sheet.createFreezePane(0, 1)
+        sheet.defaultColumnWidth = 12
+        sheet.setColumnWidth(0, 4000)
+        sheet.setColumnWidth(1, 4000)
+        sheet.setColumnWidth(12, 4000)
+        sheet.setColumnWidth(13, 4000)
+        sheet.setColumnWidth(14, 4000)
+        sheet.setColumnWidth(15, 4000)
+
+        ExcelStyle.applyAllBorder(sheet)
+        ExcelStyle.applyDefaultFont(sheet)
+        return sheet
+    }
+
+    /**
+     * 매매 내역을 시트로 만듦
+     */
+    @Deprecated("createTradeReport() 사용")
     fun createTradeReport(result: AnalysisResult, workbook: XSSFWorkbook): XSSFSheet {
         val sheet = workbook.createSheet()
         val header =
@@ -413,6 +508,7 @@ object ReportMakerHelperService {
     /**
      * @return 조건 정보가 담긴 리포트 파일명 suffix
      */
+    @Deprecated("사용안함")
     fun getReportFileSuffix(tradeCondition: TradeCondition, stockCodes: List<StockCode>, append: String = ""): String {
         return String.format(
             "%s~%s%s.xlsx",
@@ -503,16 +599,33 @@ object ReportMakerHelperService {
          */
         fun applyAllBorder(sheet: XSSFSheet) {
             val rowCount = sheet.physicalNumberOfRows
+
+            // 셀 스타일 캐시
+            val styleCache = mutableMapOf<Int, XSSFCellStyle>()
+
             for (rowIdx in 0 until rowCount) {
                 val row = sheet.getRow(rowIdx)
                 val cellCount = row.physicalNumberOfCells
                 for (cellIdx in 0 until cellCount) {
                     val cell = row.getCell(cellIdx)
-                    val cellStyle = cell.cellStyle
-                    cellStyle.borderBottom = BorderStyle.THIN
-                    cellStyle.borderTop = BorderStyle.THIN
-                    cellStyle.borderRight = BorderStyle.THIN
-                    cellStyle.borderLeft = BorderStyle.THIN
+                    val originCellStyle = cell.cellStyle
+                    val originStyleHashCode = originCellStyle.hashCode()
+
+                    // 기존 캐시에서 스타일 검색
+                    var newCellStyle = styleCache[originStyleHashCode]
+
+                    // 새 스타일이 캐시에 없을 경우 생성 및 저장
+                    if (newCellStyle == null) {
+                        newCellStyle = sheet.workbook.createCellStyle()
+                        newCellStyle.cloneStyleFrom(originCellStyle)
+                        newCellStyle.borderBottom = BorderStyle.THIN
+                        newCellStyle.borderTop = BorderStyle.THIN
+                        newCellStyle.borderRight = BorderStyle.THIN
+                        newCellStyle.borderLeft = BorderStyle.THIN
+                        styleCache[originStyleHashCode] = newCellStyle
+                    }
+
+                    cell.cellStyle = newCellStyle
                 }
             }
         }
