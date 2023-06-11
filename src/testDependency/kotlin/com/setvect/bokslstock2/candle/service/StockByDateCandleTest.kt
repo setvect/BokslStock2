@@ -7,7 +7,7 @@ import org.springframework.test.context.ActiveProfiles
 
 @SpringBootTest
 @ActiveProfiles("local")
-class CandleServiceTest {
+class StockByDateCandleTest {
     @Autowired
     private lateinit var candleRepository: CandleRepository
     @Test
