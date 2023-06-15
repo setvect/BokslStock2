@@ -3,8 +3,10 @@ package com.setvect.bokslstock2.analysis.common.service
 import com.setvect.bokslstock2.analysis.common.model.*
 import com.setvect.bokslstock2.analysis.common.util.StockByDateCandle
 import com.setvect.bokslstock2.common.model.TradeType
+import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import com.setvect.bokslstock2.util.deepCopyWithSerialization
+import okhttp3.internal.toImmutableList
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.File
 import java.io.FileOutputStream
@@ -18,6 +20,7 @@ class AccountService(
     private val stockCommonFactory: StockCommonFactory,
     private val accountCondition: AccountCondition
 ) {
+
     /**
      * 거래 내역
      * 매매 순서를 오름차순으로 기록
@@ -27,13 +30,18 @@ class AccountService(
     /**
      * 백테스트 매매 결과
      */
-    private var tradeResult = mutableListOf<TradeResult>()
+    private lateinit var tradeResult: MutableList<TradeResult>
+
+    /**
+     * 평가 금액 변동 내역
+     */
+    private lateinit var evaluationAmountHistory: List<EvaluationRateItem>
 
     /**
      * @return 매매 내역 바탕으로 건별 매매 결과 목록
      */
-    fun calculateTradeResult(): List<TradeResult> {
-        tradeResult.clear()
+    fun calcTradeResult(): List<TradeResult> {
+        tradeResult = mutableListOf()
         // 종목 잔고
         val averagePriceMap = mutableMapOf<StockCode, StockAccount>()
         var cash = accountCondition.cash
@@ -87,19 +95,24 @@ class AccountService(
                     purchasePrice = purchasePrice,
                     stockEvalPrice = stockEvalPrice,
                     profitRate = (stockEvalPrice + cash) / accountCondition.cash,
-                    stockAccount = averagePriceMap.deepCopyWithSerialization(),
+                    stockAccount = averagePriceMap.deepCopyWithSerialization(StockCode::class.java),
                     memo = tradeNeo.memo
                 )
             )
         }
-        return tradeResult
+        return tradeResult.toImmutableList()
+    }
+
+    fun calcEvaluationRate(backtestPeriod: DateRange, benchmarkStockCode: StockCode): List<EvaluationRateItem> {
+        evaluationAmountHistory = evaluationRateItems(backtestPeriod, getStockCodes(), benchmarkStockCode)
+        return evaluationAmountHistory.toImmutableList()
     }
 
     /**
      * @return 특정 기간을 기준으로 가장 최근 매매 상태
      */
-    private fun getNearTrade(date: LocalDate): TradeResult {
-        return tradeResult.last { it.tradeDate <= date.atTime(LocalTime.MAX) }
+    private fun getNearTrade(date: LocalDate): TradeResult? {
+        return tradeResult.lastOrNull { it.tradeDate <= date.atTime(LocalTime.MAX) }
     }
 
     /**
@@ -113,6 +126,85 @@ class AccountService(
         tradeHistory.add(tradeNeo)
     }
 
+    /**
+     * [backtestPeriod] 백테스트 기간
+     * [holdStockCodes] 보유 종목 - 동일비중으로 계산
+     * [benchmarkStockCode] 밴치마크
+     * @return 매매 전략, 동일 비중 종목 매매, 밴치마크 각 일자별 수익률
+     */
+    private fun evaluationRateItems(
+        backtestPeriod: DateRange,
+        holdStockCodes: Set<StockCode>,
+        benchmarkStockCode: StockCode
+    ): List<EvaluationRateItem> {
+        val evaluationAmountHistory = mutableListOf<EvaluationRateItem>()
+
+        val stockCodes = getStockCodes() union holdStockCodes union setOf(benchmarkStockCode)
+
+        val stockClosePriceHistory = getClosePriceByStockCodes(stockCodes, backtestPeriod)
+
+        var buyHoldLastRate = 1.0
+        var benchmarkLastRate = 1.0
+        var backtestLastRate = 1.0
+
+        // 시작 날짜부터 하루씩 증가 시켜 종료날짜 까지 루프
+        var date = backtestPeriod.from
+        while (date <= backtestPeriod.to) {
+
+            // 1. 벤치마크 평가금액 비율
+            val benchmarkBeforeRate = benchmarkLastRate
+            val beforeClosePrice = stockClosePriceHistory[benchmarkStockCode]!![date.toLocalDate().minusDays(1)]
+            val currentClosePrice = stockClosePriceHistory[benchmarkStockCode]!![date.toLocalDate()]
+            if (beforeClosePrice != null && currentClosePrice != null) {
+                benchmarkLastRate = currentClosePrice / beforeClosePrice
+            }
+            val benchmarkYield = ApplicationUtil.getYield(benchmarkBeforeRate, benchmarkLastRate)
+
+            // 2. buy & hold 평가금액 비율
+            val buyHoldBeforeRate = buyHoldLastRate
+            //  holdStockCodes 종목의 직전 종가와 현재 종가의 비율을 계산하여 평균을 구함
+            buyHoldLastRate = holdStockCodes.map {
+                val bClosePrice = stockClosePriceHistory[it]!![date.toLocalDate().minusDays(1)]
+                val cClosePrice = stockClosePriceHistory[it]!![date.toLocalDate()]
+                if (bClosePrice != null && cClosePrice != null) {
+                    cClosePrice / bClosePrice
+                } else {
+                    1.0
+                }
+            }.average()
+            val buyHoldYield = ApplicationUtil.getYield(buyHoldBeforeRate, buyHoldLastRate)
+
+            // 3. 백테스트 평가금액 비율
+            val nearTrade = getNearTrade(date.toLocalDate())
+            val backtestBeforeRate = backtestLastRate
+            var backtestYield = 0.0
+            if (nearTrade != null) {
+                // 종가 기준으로 보유 주식의 평가금액을 구함
+                val stockEvalPrice = nearTrade.stockAccount.entries.sumOf { (stockCode, stockAccount) ->
+                    stockAccount.qty * stockClosePriceHistory[stockCode]!![date.toLocalDate()]!!
+                }
+                val backtestCurrentRate = (stockEvalPrice + nearTrade.cash) / accountCondition.cash
+                backtestLastRate = backtestCurrentRate
+                backtestYield = ApplicationUtil.getYield(backtestBeforeRate, backtestLastRate)
+            }
+
+            evaluationAmountHistory.add(
+                EvaluationRateItem(
+                    baseDate = date,
+                    buyHoldRate = buyHoldLastRate,
+                    benchmarkRate = benchmarkLastRate,
+                    backtestRate = backtestLastRate,
+                    buyHoldYield = buyHoldYield,
+                    benchmarkYield = benchmarkYield,
+                    backtestYield = backtestYield
+                )
+            )
+
+            date = date.plusDays(1)
+        }
+        return evaluationAmountHistory
+    }
+
     fun makeReport(reportFile: File) {
         if (tradeResult.isEmpty()) {
             throw IllegalArgumentException("거래 내역이 없습니다.")
@@ -124,52 +216,40 @@ class AccountService(
                 workbook.write(ous)
             }
 
-//            val evaluationAmountHistory = evaluationRateItems()
-//            sheet = ReportMakerHelperService.createReportEvalAmount(evaluationAmountHistory, workbook)
-//            workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일자별 자산변화")
+            sheet = ReportMakerHelperService.createReportEvalAmount(evaluationAmountHistory, workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일자별 자산변화")
         }
     }
 
     /**
-     * [backtestPeriod] 백테스트 기간
-     * [holdStockCodes] 보유 종목 - 동일비중으로 계산
-     * [benchmark] 밴치마크
-     * @return 매매 전략, 동일 비중 종목 매매, 밴치마크 각 일자별 수익률
+     * @return 종목별 날짜별 종가 <종목, <날짜, 종가>>
      */
-    private fun evaluationRateItems(backtestPeriod: DateRange, holdStockCodes: Set<StockCode>, benchmark: StockCode): List<EvaluationRateItem> {
-        val evaluationAmountHistory = listOf<EvaluationRateItem>()
-
-        val stockCodes = getStockCodes() union holdStockCodes union setOf(benchmark)
+    private fun getClosePriceByStockCodes(
+        stockCodes: Set<StockCode>,
+        backtestPeriod: DateRange
+    ): MutableMap<StockCode, MutableMap<LocalDate, Double>> {
         val stockByDateCandle: StockByDateCandle = stockCommonFactory.createStockByDateCandle(stockCodes, backtestPeriod)
-        // 마지막 종가 가격
-        var closePriceByStockCode = mutableMapOf<StockCode, Double>()
 
+        // 시작 날짜부터 하루씩 증가 시켜 종료날짜 까지 루프, 각 종목을 기준으로 날짜별 종가를 구함
+        val stockClosePriceHistory: MutableMap<StockCode, MutableMap<LocalDate, Double>> = stockCodes.associateWith {
+            var date = backtestPeriod.from
 
-        var buyHoldLastRate = 1.0
-        var benchmarkLastRate = 1.0
-        var backtestLastRate = 1.0
-        // 백테스트 현금 기록
-        var backtestLastCash = accountCondition.cash
+            val stockClosePrice: MutableMap<LocalDate, Double> = mutableMapOf()
 
-        // 시작 날짜부터 하루씩 증가 시켜 종료날짜 까지 루프
-        var date = backtestPeriod.from
-        while (date <= backtestPeriod.to) {
-            val currentCandle = stockCodes.associateWith { stockCode ->
-                val candle = stockByDateCandle.getCandle(stockCode, date.toLocalDate())
-                candle
-            }
-
-            // 마지막 종가 계산
-            currentCandle.filter { it.value != null }
-                .forEach {
-                    closePriceByStockCode[it.key] = it.value!!.closePrice
+            // 해당 날짜에 시세가 없으면 직전 시세로 대체
+            while (date <= backtestPeriod.to) {
+                val candle = stockByDateCandle.getCandle(it, date.toLocalDate())
+                if (candle != null) {
+                    stockClosePrice[date.toLocalDate()] = candle.closePrice
+                } else if (stockClosePrice.keys.isNotEmpty()) {
+                    // 가장 마지막 종가로 대체
+                    stockClosePrice[date.toLocalDate()] = stockClosePrice[stockClosePrice.keys.last()]!!
                 }
-
-//            여기 작업해
-
-            date = date.plusDays(1)
-        }
-        return evaluationAmountHistory
+                date = date.plusDays(1)
+            }
+            stockClosePrice
+        }.toMutableMap()
+        return stockClosePriceHistory
     }
 
     // 초기 현금, 매매 수수료 정보

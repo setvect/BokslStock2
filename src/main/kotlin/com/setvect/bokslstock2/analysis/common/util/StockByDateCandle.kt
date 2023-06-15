@@ -48,4 +48,14 @@ class StockByDateCandle(
         val candleMap = stockCandleMap[stockCode] ?: throw IllegalArgumentException("종목 정보가 없음. 종목코드: ${stockCode.code}")
         return candleMap[localDate]
     }
+
+
+    /**
+     * return 가장 처음 시세
+      */
+    fun getCandleFirst(stockCode: StockCode): CandleEntity {
+        val candleMap = stockCandleMap[stockCode] ?: throw IllegalArgumentException("종목 정보가 없음. 종목코드: ${stockCode.code}")
+        val first = candleMap.keys.first()
+        return candleMap[first]!!
+    }
 }

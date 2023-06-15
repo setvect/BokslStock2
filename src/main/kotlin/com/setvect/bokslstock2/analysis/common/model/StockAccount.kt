@@ -1,5 +1,8 @@
 package com.setvect.bokslstock2.analysis.common.model
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class StockAccount(
     var qty: Int,
     var totalBuyPrice: Double,

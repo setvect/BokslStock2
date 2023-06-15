@@ -3,6 +3,7 @@ package com.setvect.bokslstock2.analysis.common.service
 import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.analysis.common.model.TradeNeo
 import com.setvect.bokslstock2.common.model.TradeType
+import com.setvect.bokslstock2.util.DateRange
 import com.setvect.bokslstock2.util.DateUtil
 import com.setvect.bokslstock2.util.JsonUtil
 import org.junit.jupiter.api.Assertions.*
@@ -29,7 +30,7 @@ class AccountServiceTest {
         val accountService: AccountService = stockCommonFactory.createStockCommonFactory(accountCondition)
         accountService.addTrade(
             TradeNeo(
-                stockCode = StockCode.KODEX_200_069500,
+                stockCode = StockCode.KODEX_2X_122630,
                 tradeType = TradeType.BUY,
                 price = 10_000.0,
                 qty = 10,
@@ -39,7 +40,7 @@ class AccountServiceTest {
         )
         accountService.addTrade(
             TradeNeo(
-                stockCode = StockCode.KODEX_200_069500,
+                stockCode = StockCode.KODEX_2X_122630,
                 tradeType = TradeType.SELL,
                 price = 11_000.0,
                 qty = 7,
@@ -49,7 +50,7 @@ class AccountServiceTest {
         )
         accountService.addTrade(
             TradeNeo(
-                stockCode = StockCode.KODEX_200_069500,
+                stockCode = StockCode.KODEX_2X_122630,
                 tradeType = TradeType.BUY,
                 price = 11_500.0,
                 qty = 2,
@@ -59,7 +60,7 @@ class AccountServiceTest {
         )
         accountService.addTrade(
             TradeNeo(
-                stockCode = StockCode.KODEX_200_069500,
+                stockCode = StockCode.KODEX_2X_122630,
                 tradeType = TradeType.SELL,
                 price = 12_000.0,
                 qty = 5,
@@ -69,11 +70,13 @@ class AccountServiceTest {
         )
 
         // when
-        val result = accountService.calculateTradeResult()
+        val tradeResults = accountService.calcTradeResult()
+        val backtestPeriod = DateRange(DateUtil.getLocalDateTime("2023-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-01-12T00:00:00"))
+        val calcEvaluationRate = accountService.calcEvaluationRate(backtestPeriod, StockCode.KODEX_200_069500)
 
         // then
-        val json = JsonUtil.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(result)
-        log.info(json)
+        log.info(JsonUtil.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(tradeResults))
+        log.info(JsonUtil.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(calcEvaluationRate))
 
         val reportFile = File("./temp", "테스트.xlsx")
         accountService.makeReport(reportFile)
