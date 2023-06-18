@@ -27,7 +27,10 @@ class AccountServiceTest {
     fun calculateTradeResult() {
         // given
         val accountCondition = AccountService.AccountCondition(1_000_000.0, 0.00015, 0.00015)
-        val accountService: AccountService = stockCommonFactory.createStockCommonFactory(accountCondition)
+        val backtestPeriod = DateRange(DateUtil.getLocalDateTime("2021-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-01-12T00:00:00"))
+        val benchmarkStockCode = StockCode.KODEX_200_069500
+        val backtestCondition = AccountService.BacktestCondition(backtestPeriod, benchmarkStockCode)
+        val accountService: AccountService = stockCommonFactory.createStockCommonFactory(accountCondition, backtestCondition)
         accountService.addTrade(
             TradeNeo(
                 stockCode = StockCode.KODEX_2X_122630,
@@ -71,12 +74,10 @@ class AccountServiceTest {
 
         // when
         val tradeResults = accountService.calcTradeResult()
-        val backtestPeriod = DateRange(DateUtil.getLocalDateTime("2023-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-01-12T00:00:00"))
-        val calcEvaluationRate = accountService.calcEvaluationRate(backtestPeriod, StockCode.KODEX_200_069500)
+        val calcEvaluationRate = accountService.calcEvaluationRate()
 
         // then
         log.info(JsonUtil.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(tradeResults))
-        log.info(JsonUtil.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(calcEvaluationRate))
 
         val reportFile = File("./temp", "테스트.xlsx")
         accountService.makeReport(reportFile)

@@ -14,7 +14,7 @@ class StockCommonFactory(
         return StockByDateCandle(candleRepository, stockCodes, dateRange)
     }
 
-    fun createStockCommonFactory(accountCondition: AccountService.AccountCondition): AccountService {
-        return AccountService(this, accountCondition)
+    fun createStockCommonFactory(accountCondition: AccountService.AccountCondition, backtestCondition: AccountService.BacktestCondition): AccountService {
+        return AccountService(this, accountCondition, backtestCondition)
     }
 }

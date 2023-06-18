@@ -48,6 +48,7 @@ data class CommonAnalysisReportResult(
     /**
      * @return 월별 buy&hold 수익률, 전략 수익률 정보
      */
+    @Deprecated("삭제해야됨")
     fun getMonthlyYield(): List<YieldRateItem> {
         val monthEval = evaluationAmountHistory.groupBy { it.baseDate.withDayOfMonth(1) }
         return groupByYield(monthEval)
@@ -56,11 +57,13 @@ data class CommonAnalysisReportResult(
     /**
      * @return 년별 buy&hold 수익률, 전략 수익률 정보
      */
+    @Deprecated("삭제해야됨")
     fun getYearlyYield(): List<YieldRateItem> {
         val yearEval = evaluationAmountHistory.groupBy { it.baseDate.withMonth(1).withDayOfMonth(1) }
         return groupByYield(yearEval)
     }
 
+    @Deprecated("삭제해야됨")
     private fun groupByYield(monthEval: Map<LocalDateTime, List<EvaluationRateItem>>): List<YieldRateItem> {
         return monthEval.entries.stream().map {
             YieldRateItem(

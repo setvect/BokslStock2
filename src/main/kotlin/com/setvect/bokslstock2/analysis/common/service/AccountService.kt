@@ -7,10 +7,14 @@ import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import com.setvect.bokslstock2.util.deepCopyWithSerialization
 import okhttp3.internal.toImmutableList
+import org.apache.poi.xssf.usermodel.XSSFSheet
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileOutputStream
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 
 /**
@@ -18,8 +22,10 @@ import java.time.LocalTime
  */
 class AccountService(
     private val stockCommonFactory: StockCommonFactory,
-    private val accountCondition: AccountCondition
+    private val accountCondition: AccountCondition,
+    private val backtestCondition: BacktestCondition
 ) {
+    val log: Logger = LoggerFactory.getLogger(javaClass)
 
     /**
      * 거래 내역
@@ -36,6 +42,11 @@ class AccountService(
      * 평가 금액 변동 내역
      */
     private lateinit var evaluationAmountHistory: List<EvaluationRateItem>
+
+    /**
+     * 종목별 종가 이력
+     */
+    private lateinit var stockClosePriceHistory: MutableMap<StockCode, MutableMap<LocalDate, Double>>
 
     /**
      * @return 매매 내역 바탕으로 건별 매매 결과 목록
@@ -103,8 +114,8 @@ class AccountService(
         return tradeResult.toImmutableList()
     }
 
-    fun calcEvaluationRate(backtestPeriod: DateRange, benchmarkStockCode: StockCode): List<EvaluationRateItem> {
-        evaluationAmountHistory = evaluationRateItems(backtestPeriod, getStockCodes(), benchmarkStockCode)
+    fun calcEvaluationRate(): List<EvaluationRateItem> {
+        evaluationAmountHistory = evaluationRateItems(getStockCodes(), backtestCondition.benchmarkStockCode)
         return evaluationAmountHistory.toImmutableList()
     }
 
@@ -127,13 +138,11 @@ class AccountService(
     }
 
     /**
-     * [backtestPeriod] 백테스트 기간
      * [holdStockCodes] 보유 종목 - 동일비중으로 계산
      * [benchmarkStockCode] 밴치마크
      * @return 매매 전략, 동일 비중 종목 매매, 밴치마크 각 일자별 수익률
      */
     private fun evaluationRateItems(
-        backtestPeriod: DateRange,
         holdStockCodes: Set<StockCode>,
         benchmarkStockCode: StockCode
     ): List<EvaluationRateItem> {
@@ -141,7 +150,9 @@ class AccountService(
 
         val stockCodes = getStockCodes() union holdStockCodes union setOf(benchmarkStockCode)
 
-        val stockClosePriceHistory = getClosePriceByStockCodes(stockCodes, backtestPeriod)
+        val backtestPeriod = backtestCondition.backtestPeriod
+
+        stockClosePriceHistory = getClosePriceByStockCodes(stockCodes, backtestPeriod)
 
         var buyHoldLastRate = 1.0
         var benchmarkLastRate = 1.0
@@ -203,21 +214,35 @@ class AccountService(
             date = date.plusDays(1)
         }
         return evaluationAmountHistory
+
     }
 
     fun makeReport(reportFile: File) {
         if (tradeResult.isEmpty()) {
             throw IllegalArgumentException("거래 내역이 없습니다.")
         }
+        if (evaluationAmountHistory.isEmpty()) {
+            throw IllegalArgumentException("자산변화 정보가 없습니다.")
+        }
         XSSFWorkbook().use { workbook ->
             var sheet = ReportMakerHelperService.createTradeReport(tradeResult, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "1. 매매이력")
-            FileOutputStream(reportFile).use { ous ->
-                workbook.write(ous)
-            }
 
             sheet = ReportMakerHelperService.createReportEvalAmount(evaluationAmountHistory, workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "2. 일자별 자산변화")
+
+            sheet = ReportMakerHelperService.createReportRangeReturn(getMonthlyYield(), workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "3. 월별 수익률")
+
+            sheet = ReportMakerHelperService.createReportRangeReturn(getYearlyYield(), workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "4. 년별 수익률")
+
+            sheet = createReportSummary(workbook)
+            workbook.setSheetName(workbook.getSheetIndex(sheet), "5. 매매 요약결과 및 조건")
+
+            FileOutputStream(reportFile).use { ous ->
+                workbook.write(ous)
+            }
         }
     }
 
@@ -252,6 +277,180 @@ class AccountService(
         return stockClosePriceHistory
     }
 
+    /**
+     * @return 월별 buy&hold 수익률, 전략 수익률 정보
+     */
+    fun getMonthlyYield(): List<YieldRateItem> {
+        val monthEval = evaluationAmountHistory.groupBy { it.baseDate.withDayOfMonth(1) }
+        return groupByYield(monthEval)
+    }
+
+    /**
+     * @return 년별 buy&hold 수익률, 전략 수익률 정보
+     */
+    fun getYearlyYield(): List<YieldRateItem> {
+        val yearEval = evaluationAmountHistory.groupBy { it.baseDate.withMonth(1).withDayOfMonth(1) }
+        return groupByYield(yearEval)
+    }
+
+    private fun groupByYield(monthEval: Map<LocalDateTime, List<EvaluationRateItem>>): List<YieldRateItem> {
+        return monthEval.entries.map {
+            YieldRateItem(
+                baseDate = it.key,
+                buyHoldYield = ApplicationUtil.getYield(it.value.first().buyHoldRate, it.value.last().buyHoldRate),
+                benchmarkYield = ApplicationUtil.getYield(
+                    it.value.first().benchmarkRate,
+                    it.value.last().benchmarkRate
+                ),
+                backtestYield = ApplicationUtil.getYield(it.value.first().backtestRate, it.value.last().backtestRate),
+            )
+        }.toList()
+    }
+
+    private fun createReportSummary(workbook: XSSFWorkbook): XSSFSheet {
+        val sheet = workbook.createSheet()
+        val summary = getSummary()
+        ReportMakerHelperService.textToSheet(summary, sheet)
+        log.info(summary)
+
+        sheet.defaultColumnWidth = 60
+        return sheet
+    }
+
+    private fun getSummary(): String {
+        val report = StringBuilder()
+        val compareTotalYield = calculateTotalCompareYield()
+
+        report.append("----------- Buy&Hold 결과 -----------\n")
+        val buyAndHoldSharpeRatio = ApplicationUtil.getSharpeRatio(evaluationAmountHistory.stream().map { it.buyHoldYield }.toList())
+        val stockCodes = getStockCodes()
+        val buyAndHoldYieldByCode: Map<StockCode, CommonAnalysisReportResult.YieldMdd> =
+            calculateBenchmarkYield(stockCodes)
+        val buyHoldText = ReportMakerHelperService.makeSummaryCompareStock(
+            compareTotalYield.buyHoldTotalYield,
+            buyAndHoldSharpeRatio,
+            buyAndHoldYieldByCode
+        )
+        report.append(buyHoldText)
+
+        report.append("----------- Benchmark 결과 -----------\n")
+        val benchmarkSharpeRatio = ApplicationUtil.getSharpeRatio(evaluationAmountHistory.stream().map { it.buyHoldYield }.toList())
+        val benchmarkYieldByCode: Map<StockCode, CommonAnalysisReportResult.YieldMdd> =
+            calculateBenchmarkYield(stockCodes)
+        val benchmarkText = ReportMakerHelperService.makeSummaryCompareStock(
+            compareTotalYield.benchmarkTotalYield,
+            benchmarkSharpeRatio,
+            benchmarkYieldByCode
+        )
+        report.append(benchmarkText)
+
+        report.append("----------- 전략 결과 -----------\n")
+        val totalYield: CommonAnalysisReportResult.TotalYield =
+            ReportMakerHelperService.calculateTotalYield(evaluationAmountHistory, backtestCondition.backtestPeriod)
+        val winningRate = calculateCoinInvestment()
+        val winningRateTotal = getWinningRateTotal(winningRate)
+        val backtestSharpeRatio = ApplicationUtil.getSharpeRatio(evaluationAmountHistory.stream().map { it.backtestYield }.toList())
+        report.append(String.format("합산 실현 수익\t %,.2f%%", totalYield.yield * 100)).append("\n")
+        report.append(String.format("합산 실현 MDD\t %,.2f%%", totalYield.mdd * 100)).append("\n")
+        report.append(String.format("합산 매매회수\t %d", winningRateTotal.getTradeCount())).append("\n")
+        report.append(String.format("합산 승률\t %,.2f%%", winningRateTotal.getWinRate() * 100)).append("\n")
+        report.append(String.format("합산 CAGR\t %,.2f%%", totalYield.getCagr() * 100)).append("\n")
+        report.append(String.format("샤프지수\t %,.2f", backtestSharpeRatio)).append("\n")
+
+        stockCodes.forEach { conditionName ->
+            val winningRateItem = winningRate[conditionName]
+            if (winningRateItem == null) {
+                log.warn("조건에 해당하는 결과가 없습니다. $conditionName")
+                return@forEach
+            }
+            report.append(String.format("${conditionName}. 실현 수익(수수료제외)\t %,.0f", winningRateItem.invest)).append("\n")
+            report.append(String.format("${conditionName}. 수수료\t %,.0f", winningRateItem.fee)).append("\n")
+            report.append(String.format("${conditionName}. 매매회수\t %d", winningRateItem.getTradeCount())).append("\n")
+            report.append(String.format("${conditionName}. 승률\t %,.2f%%", winningRateItem.getWinRate() * 100)).append("\n")
+        }
+
+        val range: DateRange = backtestCondition.backtestPeriod
+
+        report.append("----------- 백테스트 조건 -----------\n")
+        report.append(String.format("분석기간\t %s", range)).append("\n")
+        // TODO '투자비율' 넣기
+        report.append(String.format("최초 투자금액\t %,.0f", accountCondition.cash)).append("\n")
+        report.append(String.format("매수 수수료\t %,.2f%%", accountCondition.feeBuy * 100)).append("\n")
+        report.append(String.format("매도 수수료\t %,.2f%%", accountCondition.feeSell * 100)).append("\n")
+//        report.append(specialInfo)
+        return report.toString()
+    }
+
+    private fun calculateCoinInvestment(): Map<StockCode, CommonAnalysisReportResult.WinningRate> {
+        val sellList = tradeResult.filter { it.tradeType == TradeType.SELL }.toList()
+        // TODO 코드로 표현하지 말고, 별도 조건 아이디를 넣어 그룹핑
+        val groupBy = sellList.groupBy { it.stockCode }
+
+        // <종목코드, 수수료합>
+        val feeMap = tradeResult.groupBy { it.stockCode }.entries.associate { entity ->
+            entity.key to entity.value.sumOf { it -> it.feePrice }
+        }
+
+        return groupBy.entries.associate { entity ->
+            val totalInvest = entity.value.sumOf { it.gains }
+            val gainCount = entity.value.count { it.gains > 0 }
+            val winningRate = CommonAnalysisReportResult.WinningRate(
+                gainCount,
+                entity.value.size - gainCount,
+                totalInvest,
+                feeMap[entity.key]!!
+            )
+            entity.key to winningRate
+        }
+    }
+
+
+    /**
+     * @return <종목 아이디, 투자 종목에 대한 Buy & Hold시 수익 정보>
+     */
+    private fun calculateBenchmarkYield(stockCodes: Collection<StockCode>): Map<StockCode, CommonAnalysisReportResult.YieldMdd> {
+        return stockCodes.associateWith { stockCode ->
+            val closePriceHistory = stockClosePriceHistory[stockCode]
+
+            // closePriceHistory key 값 오름차순 값 리스트로 가져옴
+            val priceHistory = closePriceHistory?.entries?.sortedBy { it.key }?.map { it.value }?.toMutableList()
+
+            val yieldMdd = CommonAnalysisReportResult.YieldMdd(
+                ApplicationUtil.getYield(priceHistory!!),
+                ApplicationUtil.getMdd(priceHistory)
+            )
+            yieldMdd
+        }
+    }
+
+    private fun getWinningRateTotal(winningRateTarget: Map<StockCode, CommonAnalysisReportResult.WinningRate>): CommonAnalysisReportResult.WinningRate {
+        return CommonAnalysisReportResult.WinningRate(
+            gainCount = winningRateTarget.values.sumOf { it.gainCount },
+            lossCount = winningRateTarget.values.sumOf { it.lossCount },
+            invest = winningRateTarget.values.sumOf { it.invest },
+            fee = winningRateTarget.values.sumOf { it.fee },
+        )
+    }
+    /**
+     * 전체 투자 종목에 대한 수익 정보
+     * @return <buyAndHold 종목 수익, 밴치마크 종목 수익>
+     */
+    private fun calculateTotalCompareYield(): CompareTotalYield {
+        val buyHold = evaluationAmountHistory.map { it.buyHoldRate }.toList()
+        val buyHoldTotalYield = CommonAnalysisReportResult.TotalYield(
+            ApplicationUtil.getYield(buyHold),
+            ApplicationUtil.getMdd(buyHold),
+            backtestCondition.backtestPeriod.diffDays.toInt()
+        )
+        val benchmark = evaluationAmountHistory.map { it.benchmarkRate }.toList()
+        val benchmarkTotalYield = CommonAnalysisReportResult.TotalYield(
+            ApplicationUtil.getYield(benchmark),
+            ApplicationUtil.getMdd(benchmark),
+            backtestCondition.backtestPeriod.diffDays.toInt()
+        )
+        return CompareTotalYield(buyHoldTotalYield, benchmarkTotalYield)
+    }
+
     // 초기 현금, 매매 수수료 정보
     data class AccountCondition(
         /**  투자금액 */
@@ -262,5 +461,9 @@ class AccountService(
         val feeSell: Double,
     )
 
-
+    // 백테스트 조건
+    data class BacktestCondition(
+        val backtestPeriod: DateRange,
+        val benchmarkStockCode: StockCode,
+    )
 }

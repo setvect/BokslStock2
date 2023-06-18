@@ -399,6 +399,7 @@ class BacktestTradeService(
     /**
      * @return <조건이름, 투자 종목 수익 정보>
      */
+    @Deprecated("삭제하기")
     fun calculateCoinInvestment(
         tradeItemHistory: List<Trade>
     ): Map<String, CommonAnalysisReportResult.WinningRate> {

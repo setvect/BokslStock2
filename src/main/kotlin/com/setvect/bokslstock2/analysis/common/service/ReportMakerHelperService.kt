@@ -331,6 +331,7 @@ object ReportMakerHelperService {
     /**
      * [specialInfo]: 분석 조건별 특별한 정보
      */
+    @Deprecated("삭제할 예정")
     fun createSummary(
         commonAnalysisReportResult: CommonAnalysisReportResult,
         conditionNameList: List<String>,
@@ -401,7 +402,7 @@ object ReportMakerHelperService {
         return report.toString()
     }
 
-    private fun makeSummaryCompareStock(
+    fun makeSummaryCompareStock(
         totalYield: CommonAnalysisReportResult.TotalYield,
         sharpeRatio: Double,
         yieldByCode: Map<StockCode, CommonAnalysisReportResult.YieldMdd>
@@ -427,6 +428,7 @@ object ReportMakerHelperService {
      * 전체 투자 종목에 대한 수익 정보
      * @return <buyAndHold 종목 수익, 밴치마크 종목 수익>
      */
+    @Deprecated("삭제하기")
     fun calculateTotalBenchmarkYield(
         evaluationRateList: List<EvaluationRateItem>,
         range: DateRange
