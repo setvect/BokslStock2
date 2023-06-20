@@ -387,7 +387,7 @@ class AccountService(
         report.append(String.format("최초 투자금액\t %,.0f", accountCondition.cash)).append("\n")
         report.append(String.format("매수 수수료\t %,.2f%%", accountCondition.feeBuy * 100)).append("\n")
         report.append(String.format("매도 수수료\t %,.2f%%", accountCondition.feeSell * 100)).append("\n")
-//        report.append(specialInfo)
+        report.append(backtestCondition.specialInfo)
         return report.toString()
     }
 
@@ -443,6 +443,7 @@ class AccountService(
             fee = winningRateTarget.values.sumOf { it.fee },
         )
     }
+
     /**
      * 전체 투자 종목에 대한 수익 정보
      * @return <buyAndHold 종목 수익, 밴치마크 종목 수익>
@@ -477,5 +478,14 @@ class AccountService(
     data class BacktestCondition(
         val backtestPeriod: DateRange,
         val benchmarkStockCode: StockCode,
+        /**
+         * 백테스트에 대한 추가적인 조건을 넣는다.
+         * 보통 '항목'과 '값'을 나타낸다. 구분값을 탭과 개행으로 구분한다.
+         * ex)
+         * 최대 보유 종목 수\t10
+         * 최대 보유 일수\t30
+         * 분석주기\t1MONTH
+         */
+        val specialInfo: String? = null
     )
 }

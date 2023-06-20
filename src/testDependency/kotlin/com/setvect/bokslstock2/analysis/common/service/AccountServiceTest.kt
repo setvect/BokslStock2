@@ -3,6 +3,7 @@ package com.setvect.bokslstock2.analysis.common.service
 import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.analysis.common.model.TradeNeo
 import com.setvect.bokslstock2.common.model.TradeType
+import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.util.DateRange
 import com.setvect.bokslstock2.util.DateUtil
 import com.setvect.bokslstock2.util.JsonUtil
@@ -29,7 +30,7 @@ class AccountServiceTest {
         val accountCondition = AccountService.AccountCondition(1_000_000.0, 0.00015, 0.00015)
         val backtestPeriod = DateRange(DateUtil.getLocalDateTime("2021-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-01-12T00:00:00"))
         val benchmarkStockCode = StockCode.KODEX_200_069500
-        val backtestCondition = AccountService.BacktestCondition(backtestPeriod, benchmarkStockCode)
+        val backtestCondition = AccountService.BacktestCondition(backtestPeriod, benchmarkStockCode, "분석주기\t${PeriodType.PERIOD_MONTH}")
         val accountService: AccountService = stockCommonFactory.createStockCommonFactory(accountCondition, backtestCondition)
         accountService.addTrade(
             TradeNeo(
