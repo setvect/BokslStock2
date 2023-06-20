@@ -24,9 +24,14 @@ data class TradeNeo(
     val qty: Int,
     /**  거래시간 */
     val tradeDate: LocalDateTime,
+    /** 백테스트 조건 이름. 일반적인 경우는 stockCode 이름을 사용하면 됨*/
+    var backtestCondition: String? = null,
     /**
      * 거래 메모
-     * 적용 조건 이름 등 저장
      */
     val memo: String = ""
-)
+) {
+    fun getBacktestConditionName(): String {
+        return backtestCondition ?: "${stockCode.desc}(${stockCode.code})"
+    }
+}

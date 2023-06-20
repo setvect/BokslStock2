@@ -24,7 +24,7 @@ object ReportMakerHelperService {
     fun createTradeReport(result: List<TradeResult>, workbook: XSSFWorkbook): XSSFSheet {
         val sheet = workbook.createSheet()
         val header =
-            "날짜,종목,매매 구분,매매 수량,매매 금액,체결 가격,실현 수익률,수수료,투자 수익(수수료 제외)," +
+            "날짜,종목,백테스트 조건,매매 구분,매매 수량,매매 금액,체결 가격,실현 수익률,수수료,투자 수익(수수료 제외)," +
                     "보유 주식 평가금,매매후 보유 현금,평가금(주식+현금),수익비,메모"
         applyHeader(sheet, header)
         var rowIdx = 1
@@ -44,6 +44,9 @@ object ReportMakerHelperService {
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue("${tradeItem.stockCode.name}(${tradeItem.stockCode.code})")
+
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(tradeItem.backtestConditionName)
 
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(tradeItem.tradeType.name)

@@ -107,6 +107,7 @@ class AccountService(
                     stockEvalPrice = stockEvalPrice,
                     profitRate = (stockEvalPrice + cash) / accountCondition.cash,
                     stockAccount = averagePriceMap.deepCopyWithSerialization(StockCode::class.java),
+                    backtestConditionName = tradeNeo.getBacktestConditionName(),
                     memo = tradeNeo.memo
                 )
             )
@@ -131,6 +132,13 @@ class AccountService(
      */
     fun getStockCodes(): Set<StockCode> {
         return tradeHistory.map { it.stockCode }.toSet()
+    }
+
+    /**
+     * @return 모든 매매 백테스트 조건 이름
+     */
+    fun getBacktestNames(): Set<String> {
+        return tradeHistory.map { it.getBacktestConditionName() }.toSet()
     }
 
     fun addTrade(tradeNeo: TradeNeo) {
@@ -357,16 +365,18 @@ class AccountService(
         report.append(String.format("합산 CAGR\t %,.2f%%", totalYield.getCagr() * 100)).append("\n")
         report.append(String.format("샤프지수\t %,.2f", backtestSharpeRatio)).append("\n")
 
-        stockCodes.forEach { conditionName ->
-            val winningRateItem = winningRate[conditionName]
+        val backtestNames = getBacktestNames()
+
+        backtestNames.forEach { backtestName ->
+            val winningRateItem = winningRate[backtestName]
             if (winningRateItem == null) {
-                log.warn("조건에 해당하는 결과가 없습니다. $conditionName")
+                log.warn("조건에 해당하는 결과가 없습니다. $backtestName")
                 return@forEach
             }
-            report.append(String.format("${conditionName}. 실현 수익(수수료제외)\t %,.0f", winningRateItem.invest)).append("\n")
-            report.append(String.format("${conditionName}. 수수료\t %,.0f", winningRateItem.fee)).append("\n")
-            report.append(String.format("${conditionName}. 매매회수\t %d", winningRateItem.getTradeCount())).append("\n")
-            report.append(String.format("${conditionName}. 승률\t %,.2f%%", winningRateItem.getWinRate() * 100)).append("\n")
+            report.append(String.format("${backtestName}. 실현 수익(수수료제외)\t %,.0f", winningRateItem.invest)).append("\n")
+            report.append(String.format("${backtestName}. 수수료\t %,.0f", winningRateItem.fee)).append("\n")
+            report.append(String.format("${backtestName}. 매매회수\t %d", winningRateItem.getTradeCount())).append("\n")
+            report.append(String.format("${backtestName}. 승률\t %,.2f%%", winningRateItem.getWinRate() * 100)).append("\n")
         }
 
         val range: DateRange = backtestCondition.backtestPeriod
@@ -381,13 +391,15 @@ class AccountService(
         return report.toString()
     }
 
-    private fun calculateCoinInvestment(): Map<StockCode, CommonAnalysisReportResult.WinningRate> {
+    /**
+     * <조건이름, 단위 수익 정보>
+     */
+    private fun calculateCoinInvestment(): Map<String, CommonAnalysisReportResult.WinningRate> {
         val sellList = tradeResult.filter { it.tradeType == TradeType.SELL }.toList()
-        // TODO 코드로 표현하지 말고, 별도 조건 아이디를 넣어 그룹핑
-        val groupBy = sellList.groupBy { it.stockCode }
+        val groupBy = sellList.groupBy { it.backtestConditionName }
 
-        // <종목코드, 수수료합>
-        val feeMap = tradeResult.groupBy { it.stockCode }.entries.associate { entity ->
+        // <조건이름, 수수료합>
+        val feeMap = tradeResult.groupBy { it.backtestConditionName }.entries.associate { entity ->
             entity.key to entity.value.sumOf { it -> it.feePrice }
         }
 
@@ -423,7 +435,7 @@ class AccountService(
         }
     }
 
-    private fun getWinningRateTotal(winningRateTarget: Map<StockCode, CommonAnalysisReportResult.WinningRate>): CommonAnalysisReportResult.WinningRate {
+    private fun getWinningRateTotal(winningRateTarget: Map<String, CommonAnalysisReportResult.WinningRate>): CommonAnalysisReportResult.WinningRate {
         return CommonAnalysisReportResult.WinningRate(
             gainCount = winningRateTarget.values.sumOf { it.gainCount },
             lossCount = winningRateTarget.values.sumOf { it.lossCount },

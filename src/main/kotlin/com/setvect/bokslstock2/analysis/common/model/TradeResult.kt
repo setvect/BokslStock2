@@ -42,6 +42,8 @@ data class TradeResult(
     val stockAccount: Map<StockCode, StockAccount>,
     /** 수익비. 1일 기준 */
     val profitRate: Double,
+    /** 백테스트 조건 이름. 일반적인 경우는 stockCode 이름을 사용하면 됨*/
+    val backtestConditionName: String,
     /** 거래 메모. 적용 조건 이름 등 저장 */
     val memo: String = ""
 ) {
