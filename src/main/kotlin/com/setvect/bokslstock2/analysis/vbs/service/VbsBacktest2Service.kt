@@ -46,6 +46,7 @@ class VbsBacktest2Service(
                 val movingAverageByDate = conditionByMovingAverageCandle[conditionItem]
 
                 val currentCandle = movingAverageByDate!![currentDate] ?: return@forEach
+
                 // -1 영업일
                 val beforeCandle = movingAverageByDate.filterKeys { it.isBefore(currentDate) }
                     .maxByOrNull { it.key }?.value ?: return@forEach
@@ -61,7 +62,7 @@ class VbsBacktest2Service(
                     // 5분 마다 상승/하락 체크
                     if (conditionItem.stayGapRise) { // 이 방식이 더 좋음
                         val cancelMinute5List = candleRepository.findByRange(
-                            conditionItem.stock.code,
+                            conditionItem.stockCode.code,
                             PeriodType.PERIOD_MINUTE_5,
                             currentCandle.candleDateTimeStart,
                             currentCandle.candleDateTimeEnd.withHour(23).withMinute(59)
@@ -77,8 +78,6 @@ class VbsBacktest2Service(
                             // 분봉 종가가 시초가 대비 하락일 경우 여기서 끝냄
                             // TODO 실제 운영에서는 closePrice와 openPrice 값이 같은 경우도 매도를 하고 있음. 변경 해야됨.
                             if (it.closePrice - it.openPrice < 0) {
-                                log.info("[하락 매도] 매도가: $sellPrice, 오늘시가:${currentCandle.openPrice}, 차이: ${sellPrice - currentCandle.openPrice}, 날짜: ${it.candleDateTime}")
-                                currentCash += sellPrice * lastBuyInfo.qty
                                 break
                             }
                         }
@@ -98,6 +97,8 @@ class VbsBacktest2Service(
 
                     result.add(sellInfo)
                     lastBuyInfoByCondition.remove(conditionItem)
+                    log.info("[하락 매도] 매도가: $sellPrice, 오늘시가:${currentCandle.openPrice}, 차이: ${sellPrice - currentCandle.openPrice}")
+                    currentCash += sellPrice * lastBuyInfo.qty
                 }
 
                 // 매수 판단
@@ -107,7 +108,7 @@ class VbsBacktest2Service(
                 val isMa = maPrice <= targetPrice || maPrice == 0.0
                 if (isTarget && isMa) {
                     // 현재 매수한 종목의 비중을 계산
-                    val purchasedAllRatio = lastBuyInfoByCondition.entries.sumOf { conditionItem.investmentRatio }
+                    val purchasedAllRatio = lastBuyInfoByCondition.entries.sumOf { it.key.investmentRatio }
                     // 매수에 사용할 현금을 계산
                     val buyCash = ApplicationUtil.getBuyCash(purchasedAllRatio, currentCash, conditionItem.investmentRatio, condition.investRatio)
 
@@ -122,6 +123,8 @@ class VbsBacktest2Service(
                     result.add(sellInfo)
                     lastBuyInfoByCondition[conditionItem] = sellInfo
                     log.info("매수: ${sellInfo.stockCode}, 매수가: ${sellInfo.price}, 매수수량: ${sellInfo.qty}, 매수일: ${sellInfo.tradeDate}")
+
+                    currentCash -= targetPrice * sellInfo.qty
                 }
             }
             currentDate = currentDate.plusDays(1)
@@ -137,7 +140,7 @@ class VbsBacktest2Service(
             //  conditionItem.stayGapRise == true인 경우 5분봉 데이터를 기준으로 계산함, 데이터의 일관성을 맞추기 위함
             if (conditionItem.stayGapRise) {
                 val movingAverage = movingAverageService.getMovingAverage(
-                    conditionItem.stock.convertStockCode(),
+                    conditionItem.stockCode,
                     PeriodType.PERIOD_MINUTE_5,
                     PeriodType.PERIOD_DAY,
                     listOf(conditionItem.maPeriod),
@@ -146,7 +149,7 @@ class VbsBacktest2Service(
                 movingAverage.associateBy { it.candleDateTimeStart.toLocalDate() }
             } else {
                 val movingAverage = movingAverageService.getMovingAverage(
-                    conditionItem.stock.convertStockCode(),
+                    conditionItem.stockCode,
                     PeriodType.PERIOD_DAY,
                     PeriodType.PERIOD_DAY,
                     listOf(conditionItem.maPeriod),

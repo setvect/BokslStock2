@@ -1,13 +1,11 @@
 package com.setvect.bokslstock2.analysis
 
 import com.setvect.bokslstock2.analysis.common.model.StockCode
-import com.setvect.bokslstock2.analysis.common.model.TradeCondition
-import com.setvect.bokslstock2.analysis.vbs.model.VbsAnalysisCondition
-import com.setvect.bokslstock2.analysis.vbs.model.VbsCondition
-import com.setvect.bokslstock2.analysis.vbs.service.VbsAnalysisService
-import com.setvect.bokslstock2.analysis.vbs.service.VbsBacktestService
-import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
-import com.setvect.bokslstock2.index.repository.StockRepository
+import com.setvect.bokslstock2.analysis.common.service.AccountService
+import com.setvect.bokslstock2.analysis.common.service.StockCommonFactory
+import com.setvect.bokslstock2.analysis.vbs.model.VbsBacktestCondition
+import com.setvect.bokslstock2.analysis.vbs.model.VbsConditionItem
+import com.setvect.bokslstock2.analysis.vbs.service.VbsBacktest2Service
 import com.setvect.bokslstock2.koreainvestment.vbs.service.VbsEventHandler
 import com.setvect.bokslstock2.koreainvestment.vbs.service.VbsStockSchedule
 import com.setvect.bokslstock2.util.DateRange
@@ -21,6 +19,8 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.MockBeans
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
+import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -30,13 +30,10 @@ class VbsBacktest {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
     @Autowired
-    private lateinit var stockRepository: StockRepository
+    private lateinit var vbsBacktestService: VbsBacktest2Service
 
     @Autowired
-    private lateinit var vbsBacktestService: VbsBacktestService
-
-    @Autowired
-    private lateinit var analysisService: VbsAnalysisService
+    private lateinit var stockCommonFactory: StockCommonFactory
 
     /**
      * DB에 기록 남기지 않고 백테스팅하고 리포트 만듦
@@ -45,67 +42,61 @@ class VbsBacktest {
     @Transactional
     fun 일회성_백테스팅_리포트_만듦() {
         // 거래 조건
-//        val range = DateRange(LocalDateTime.of(2021, 8, 31, 0, 0), LocalDateTime.now())
-//        val range = DateRange(LocalDateTime.of(2021, 9, 20, 0, 0), LocalDateTime.of(2021, 10, 1, 0, 0))
-//        val range = DateRange(LocalDateTime.of(2018, 1, 1, 0, 0), LocalDateTime.of(2023, 1, 6, 0, 0))
-//        val range = DateRange(LocalDateTime.of(2022, 8, 24, 0, 0), LocalDateTime.of(2022, 8, 31, 0, 0))
+//        val range = DateRange(DateUtil.getLocalDateTime("2023-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-05-14T00:00:00"))
+//        val range = DateRange(DateUtil.getLocalDateTime("2023-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-02-14T00:00:00"))
+        val range = DateRange(DateUtil.getLocalDateTime("2018-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-05-12T00:00:00"))
 
-//        val range = DateRange(DateUtil.getLocalDateTime("2018-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-03-18T00:00:00"))
-        val range = DateRange(DateUtil.getLocalDateTime("2023-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-05-14T00:00:00"))
-//        val range = DateRange(DateUtil.getLocalDateTime("2018-01-01T00:00:00"), DateUtil.getLocalDateTime("2018-01-14T00:00:00"))
-
-        val condition1 = makeCondition(StockCode.KODEX_KOSDAQ_2X_233740, range, 0.5, true, 0.5)
-        condition1.tradeList = vbsBacktestService.runTest(condition1)
-
-        val condition2 = makeCondition(StockCode.KODEX_BANK_091170, range, 0.5, false, 0.25)
-        condition2.tradeList = vbsBacktestService.runTest(condition2)
-
-        val tradeConditionList = listOf(condition1, condition2)
-
-        val vbsAnalysisCondition = listOf(
-            VbsAnalysisCondition(
-                tradeConditionList = tradeConditionList,
-                basic = TradeCondition(
-                    range = range,
-                    investRatio = 0.99,
-                    cash = 20_000_000.0,
-                    feeBuy = 0.0002,
-                    feeSell = 0.0002,
-                    comment = "",
-                    benchmark = listOf(StockCode.KODEX_200_069500)
+        val condition = VbsBacktestCondition(
+            range = range,
+            investRatio = 0.99,
+            cash = 20_000_000.0,
+            conditionList = arrayListOf(
+                VbsConditionItem(
+                    stockCode = StockCode.KODEX_KOSDAQ_2X_233740,
+                    kRate = 0.5,
+                    stayGapRise = true,
+                    maPeriod = 0,
+                    unitAskPrice = 5.0,
+                    comment = null,
+                    investmentRatio = 0.5
+                ),
+                VbsConditionItem(
+                    stockCode = StockCode.KODEX_BANK_091170,
+                    kRate = 0.5,
+                    stayGapRise = false,
+                    maPeriod = 0,
+                    unitAskPrice = 5.0,
+                    comment = null,
+                    investmentRatio = 0.25
                 )
-            ),
+            )
         )
+        val tradeNeo = vbsBacktestService.runTest(condition)
+        val accountCondition = AccountService.AccountCondition(condition.cash, 0.0002, 0.0002)
+        val count = AtomicInteger(0)
+        val specialInfo = condition.conditionList.joinToString("\n") {
+            val idx = count.getAndIncrement()
+            """
+                $count. 대상 종목\t${it.stockCode.name}
+                $count. 변동성 비율\t${it.kRate}
+                $count. 투자 비율\t${it.investmentRatio}
+                $count. 이동평균 단위\t${it.maPeriod}
+                $count. 5분 마다 시세 체크\t${it.stayGapRise}
+                $count. 호가단위\t${it.unitAskPrice}
+                $count. 조건 설명\t${it.comment}
+            """.trimIndent().replace("\\t", "\t")
+        }
+
+        val backtestCondition = AccountService.BacktestCondition(range, StockCode.KODEX_200_069500, specialInfo)
+        val accountService = stockCommonFactory.createStockCommonFactory(accountCondition, backtestCondition)
 
         // 리포트 만듦
-        val vbsAnalysisConditionAndResults = analysisService.runAnalysis(vbsAnalysisCondition)
-        analysisService.makeTradeReport(vbsAnalysisConditionAndResults)
-        analysisService.makeSummaryReport(vbsAnalysisConditionAndResults)
-
+        accountService.addTrade(tradeNeo)
+        accountService.calcTradeResult()
+        accountService.calcEvaluationRate()
+        val reportFile = File("./backtest-result/vbs-trade-report", "vbs_trade_${range.fromDate}~${range.toDate}.xlsx")
+        accountService.makeReport(reportFile)
+        log.info(reportFile.absolutePath)
         log.info("끝.")
-    }
-
-    private fun makeCondition(
-        stockCode: StockCode,
-        range: DateRange,
-        kRate: Double,
-        stayGapRise: Boolean,
-        investmentRatio: Double
-    ): VbsCondition {
-        val stock = stockRepository.findByCode(stockCode.code).get()
-        return VbsCondition(
-            name = stock.name + " " + kRate,
-            stock = stock,
-            range = range,
-            periodType = PERIOD_DAY,
-            kRate = kRate,
-            maPeriod = 0,
-            unitAskPrice = 5.0,
-            gapRisenSkip = false,
-            onlyOneDayTrade = false,
-            comment = null,
-            stayGapRise = stayGapRise,
-            investmentRatio = investmentRatio
-        )
     }
 }

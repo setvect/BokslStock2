@@ -1,18 +1,21 @@
 package com.setvect.bokslstock2.analysis.vbs.model
 
-import com.setvect.bokslstock2.index.entity.StockEntity
+import com.setvect.bokslstock2.analysis.common.model.StockCode
 
 data class VbsConditionItem(
     /**
      * 주식 종목
      */
-    val stock: StockEntity,
+    val stockCode: StockCode,
 
     /**
      * 변동성 돌파 비율
      */
     val kRate: Double,
-
+    /**
+     * 갭 상승 시 5분 마다 시세 체크, 직전 5분봉 하락 반전 시 매도
+     */
+    val stayGapRise: Boolean,
     /**
      * 매매 이동평균 상단
      * 1 이하는 이동평균 의미 없음
@@ -29,11 +32,6 @@ data class VbsConditionItem(
      * 조건에 대한 설명. 리포트에서 사용하기 위함
      */
     val comment: String?,
-
-    /**
-     * 갭 상승 시 5분 마다 시세 체크, 직전 5분봉 하락 반전 시 매도
-     */
-    val stayGapRise: Boolean,
 
     /**
      * 매수가능 금액에서 투자 비율

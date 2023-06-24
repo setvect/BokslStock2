@@ -19,7 +19,7 @@ import java.time.LocalTime
 
 /**
  * 매매 계좌
- * 매매 내역을 추상화 시켜 다양한 백테스트의 결과를 파악할 때 활용할 수 있음 
+ * 매매 내역을 추상화 시켜 다양한 백테스트의 결과를 파악할 때 활용할 수 있음
  */
 class AccountService(
     private val stockCommonFactory: StockCommonFactory,
@@ -48,6 +48,14 @@ class AccountService(
      * 종목별 종가 이력
      */
     private lateinit var stockClosePriceHistory: MutableMap<StockCode, MutableMap<LocalDate, Double>>
+
+    fun addTrade(tradeNeo: TradeNeo) {
+        tradeHistory.add(tradeNeo)
+    }
+
+    fun addTrade(tradeNeo: List<TradeNeo>) {
+        tradeHistory.addAll(tradeNeo)
+    }
 
     /**
      * @return 매매 내역 바탕으로 건별 매매 결과 목록
@@ -131,20 +139,17 @@ class AccountService(
     /**
      * @return 모든 매매 종목을 반환
      */
-    fun getStockCodes(): Set<StockCode> {
+    private fun getStockCodes(): Set<StockCode> {
         return tradeHistory.map { it.stockCode }.toSet()
     }
 
     /**
      * @return 모든 매매 백테스트 조건 이름
      */
-    fun getBacktestNames(): Set<String> {
+    private fun getBacktestNames(): Set<String> {
         return tradeHistory.map { it.getBacktestConditionName() }.toSet()
     }
 
-    fun addTrade(tradeNeo: TradeNeo) {
-        tradeHistory.add(tradeNeo)
-    }
 
     /**
      * [holdStockCodes] 보유 종목 - 동일비중으로 계산
@@ -176,14 +181,14 @@ class AccountService(
             val beforeClosePrice = stockClosePriceHistory[benchmarkStockCode]!![date.toLocalDate().minusDays(1)]
             val currentClosePrice = stockClosePriceHistory[benchmarkStockCode]!![date.toLocalDate()]
             if (beforeClosePrice != null && currentClosePrice != null) {
-                benchmarkLastRate = currentClosePrice / beforeClosePrice
+                benchmarkLastRate = benchmarkLastRate * currentClosePrice / beforeClosePrice
             }
             val benchmarkYield = ApplicationUtil.getYield(benchmarkBeforeRate, benchmarkLastRate)
 
             // 2. buy & hold 평가금액 비율
             val buyHoldBeforeRate = buyHoldLastRate
             //  holdStockCodes 종목의 직전 종가와 현재 종가의 비율을 계산하여 평균을 구함
-            buyHoldLastRate = holdStockCodes.map {
+            buyHoldLastRate *= holdStockCodes.map {
                 val bClosePrice = stockClosePriceHistory[it]!![date.toLocalDate().minusDays(1)]
                 val cClosePrice = stockClosePriceHistory[it]!![date.toLocalDate()]
                 if (bClosePrice != null && cClosePrice != null) {
@@ -333,23 +338,18 @@ class AccountService(
         report.append("----------- Buy&Hold 결과 -----------\n")
         val buyAndHoldSharpeRatio = ApplicationUtil.getSharpeRatio(evaluationAmountHistory.stream().map { it.buyHoldYield }.toList())
         val stockCodes = getStockCodes()
-        val buyAndHoldYieldByCode: Map<StockCode, CommonAnalysisReportResult.YieldMdd> =
-            calculateBenchmarkYield(stockCodes)
+        val buyAndHoldYieldByCode: Map<StockCode, CommonAnalysisReportResult.YieldMdd> = calculateBenchmarkYield(stockCodes)
         val buyHoldText = ReportMakerHelperService.makeSummaryCompareStock(
-            compareTotalYield.buyHoldTotalYield,
-            buyAndHoldSharpeRatio,
-            buyAndHoldYieldByCode
+            compareTotalYield.buyHoldTotalYield, buyAndHoldSharpeRatio, buyAndHoldYieldByCode
         )
         report.append(buyHoldText)
 
         report.append("----------- Benchmark 결과 -----------\n")
-        val benchmarkSharpeRatio = ApplicationUtil.getSharpeRatio(evaluationAmountHistory.stream().map { it.buyHoldYield }.toList())
+        val benchmarkSharpeRatio = ApplicationUtil.getSharpeRatio(evaluationAmountHistory.stream().map { it.benchmarkYield }.toList())
         val benchmarkYieldByCode: Map<StockCode, CommonAnalysisReportResult.YieldMdd> =
-            calculateBenchmarkYield(stockCodes)
+            calculateBenchmarkYield(setOf(backtestCondition.benchmarkStockCode))
         val benchmarkText = ReportMakerHelperService.makeSummaryCompareStock(
-            compareTotalYield.benchmarkTotalYield,
-            benchmarkSharpeRatio,
-            benchmarkYieldByCode
+            compareTotalYield.benchmarkTotalYield, benchmarkSharpeRatio, benchmarkYieldByCode
         )
         report.append(benchmarkText)
 
@@ -464,6 +464,7 @@ class AccountService(
         )
         return CompareTotalYield(buyHoldTotalYield, benchmarkTotalYield)
     }
+
 
     // 초기 현금, 매매 수수료 정보
     data class AccountCondition(
