@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional
  * 변동성 돌파 전략
  */
 @Service
+@Deprecated("쓰지마, 삭제할거임. VbsBacktest2Service 사용")
 class VbsBacktestService(
     val movingAverageService: MovingAverageService,
     val candleRepository: CandleRepository

@@ -83,8 +83,6 @@ class VbsAnalysisService(
      */
     fun runAnalysis(conditionList: List<VbsAnalysisCondition>): List<VbsAnalysisConditionAndResult> {
         var i = 0
-        val list = listOf("apple", "banana", "orange")
-
         val conditionResults = conditionList.map { vbsAnalysisCondition ->
             val range = backtestTradeService.fitBacktestRange(
                 vbsAnalysisCondition.getStockCodes(),

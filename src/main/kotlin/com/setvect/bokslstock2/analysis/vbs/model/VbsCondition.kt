@@ -7,6 +7,7 @@ import com.setvect.bokslstock2.util.DateRange
 /**
  * 변동성돌파 전략 조건
  */
+@Deprecated("삭제하자")
 class VbsCondition(
     val name: String,
 

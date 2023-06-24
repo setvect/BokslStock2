@@ -51,10 +51,10 @@ class VbsBacktest {
 //        val range = DateRange(LocalDateTime.of(2022, 8, 24, 0, 0), LocalDateTime.of(2022, 8, 31, 0, 0))
 
 //        val range = DateRange(DateUtil.getLocalDateTime("2018-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-03-18T00:00:00"))
-        val range = DateRange(DateUtil.getLocalDateTime("2018-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-05-14T00:00:00"))
+        val range = DateRange(DateUtil.getLocalDateTime("2023-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-05-14T00:00:00"))
 //        val range = DateRange(DateUtil.getLocalDateTime("2018-01-01T00:00:00"), DateUtil.getLocalDateTime("2018-01-14T00:00:00"))
 
-        val condition1 = makeCondition(StockCode.KODEX_KOSDAQ_2X_233740, range, 0.5, false, 0.5)
+        val condition1 = makeCondition(StockCode.KODEX_KOSDAQ_2X_233740, range, 0.5, true, 0.5)
         condition1.tradeList = vbsBacktestService.runTest(condition1)
 
         val condition2 = makeCondition(StockCode.KODEX_BANK_091170, range, 0.5, false, 0.25)

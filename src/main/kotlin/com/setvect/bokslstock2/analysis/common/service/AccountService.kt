@@ -19,6 +19,7 @@ import java.time.LocalTime
 
 /**
  * 매매 계좌
+ * 매매 내역을 추상화 시켜 다양한 백테스트의 결과를 파악할 때 활용할 수 있음 
  */
 class AccountService(
     private val stockCommonFactory: StockCommonFactory,
