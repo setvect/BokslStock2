@@ -3,7 +3,7 @@ package com.setvect.bokslstock2.analysis
 import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.analysis.common.service.AccountService
 import com.setvect.bokslstock2.analysis.common.service.StockCommonFactory
-import com.setvect.bokslstock2.analysis.vbs.model.VbsBacktestCondition
+import com.setvect.bokslstock2.analysis.vbs.model.VbsCondition
 import com.setvect.bokslstock2.analysis.vbs.model.VbsConditionItem
 import com.setvect.bokslstock2.analysis.vbs.service.VbsBacktestService
 import com.setvect.bokslstock2.koreainvestment.vbs.service.VbsEventHandler
@@ -43,10 +43,10 @@ class VbsBacktest {
     fun 일회성_백테스팅_리포트_만듦() {
         // 거래 조건
 //        val range = DateRange(DateUtil.getLocalDateTime("2023-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-05-14T00:00:00"))
-//        val range = DateRange(DateUtil.getLocalDateTime("2023-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-02-14T00:00:00"))
-        val range = DateRange(DateUtil.getLocalDateTime("2018-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-05-12T00:00:00"))
+        val range = DateRange(DateUtil.getLocalDateTime("2023-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-02-14T00:00:00"))
+//        val range = DateRange(DateUtil.getLocalDateTime("2018-01-01T00:00:00"), DateUtil.getLocalDateTime("2023-05-12T00:00:00"))
 
-        val condition = VbsBacktestCondition(
+        val condition = VbsCondition(
             range = range,
             investRatio = 0.99,
             cash = 20_000_000.0,
@@ -75,7 +75,6 @@ class VbsBacktest {
         val accountCondition = AccountService.AccountCondition(condition.cash, 0.0002, 0.0002)
         val count = AtomicInteger(0)
         val specialInfo = condition.conditionList.joinToString("\n") {
-            val idx = count.getAndIncrement()
             """
                 $count. 대상 종목\t${it.stockCode.name}
                 $count. 변동성 비율\t${it.kRate}

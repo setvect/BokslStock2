@@ -1,78 +1,38 @@
 package com.setvect.bokslstock2.analysis.vbs.model
 
-import com.setvect.bokslstock2.index.entity.StockEntity
-import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.util.DateRange
 
 /**
  * 변동성돌파 전략 조건
  */
-@Deprecated("삭제하자")
 class VbsCondition(
-    val name: String,
-
-    /**
-     * 주식 종목
-     */
-    val stock: StockEntity,
-
-    var tradeList: List<VbsTrade> = ArrayList(),
-
     /**
      * 매매 기간
      */
     val range: DateRange,
+    /**
+     * 총 현금을 기준으로 투자 비율. 1은 전액, 0.5은 50% 투자
+     */
+    val investRatio: Double,
+
+    /**  투자금액 */
+    val cash: Double,
 
     /**
-     * 매매 주기
-     * TODO 필요 없을것 같음. 다 'PERIOD_DAY' 사용함 
+     * 조건들
      */
-    val periodType: PeriodType,
+    val conditionList: ArrayList<VbsConditionItem>
+) {
+    // 전체 투자비율 합
+    private fun getInvestRatioSum(): Double {
+        return conditionList.sumOf { it.investmentRatio }
+    }
 
-    /**
-     * 변동성 돌파 비율
-     */
-    val kRate: Double,
-
-    /**
-     * 매매 이동평균 상단
-     * 1 이하는 이동평균 의미 없음
-     * 현재 매도가가 이동평균 이상인경우 매도
-     */
-    val maPeriod: Int,
-
-    /**
-     * 호가 단위, ETF는 5임
-     */
-    val unitAskPrice: Double,
-
-    /**
-     * false: 매수 상태에서 다음날 시가 매도
-     * true: 매수 상태에서 오늘 시가가 전일 종가보다 높으면 매도하지 않고 다음날로 넘김
-     * TODO 의미 없는 조건 같다. 삭제 필요
-     */
-    @Deprecated("의미 없는 조건 같다. 삭제 필요")
-    val gapRisenSkip: Boolean,
-
-    /**
-     * false: 매도 일에 매수 조건이 되면 매수
-     * true: 오늘 매도 하면 조건이 만족해도 그날 매수 안함
-     */
-    val onlyOneDayTrade: Boolean,
-
-    /**
-     * 조건에 대한 설명. 리포트에서 사용하기 위함
-     */
-    val comment: String?,
-
-    /**
-     * 갭 상승 시 5분 마다 시세 체크, 직전 5분봉 하락 반전 시 매도
-     */
-    val stayGapRise: Boolean,
-
-    /**
-     * 전체금액에서 투자 비율
-     * 0 초과 1이하 값
-     */
-    val investmentRatio: Double,
-)
+    // 전체 투자비율이 1일 넘으면 예외 발생 함수
+    fun checkInvestRatioSum() {
+        val sum = getInvestRatioSum()
+        if (sum > 1) {
+            throw IllegalArgumentException("전체 투자 비율 합이 1을 넘습니다. 합: $sum")
+        }
+    }
+}
