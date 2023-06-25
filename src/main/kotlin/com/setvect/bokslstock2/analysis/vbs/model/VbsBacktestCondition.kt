@@ -4,7 +4,6 @@ import com.setvect.bokslstock2.util.DateRange
 
 /**
  * 변동성돌파 전략 조건
- * TODO VbsCondition 이걸로 바꾼다.
  */
 class VbsBacktestCondition(
     /**
@@ -23,7 +22,7 @@ class VbsBacktestCondition(
      * 조건들
      */
     val conditionList: ArrayList<VbsConditionItem>
-){
+) {
     // 전체 투자비율 합
     private fun getInvestRatioSum(): Double {
         return conditionList.sumOf { it.investmentRatio }

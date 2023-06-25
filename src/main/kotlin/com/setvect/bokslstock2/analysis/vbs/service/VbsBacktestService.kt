@@ -21,7 +21,6 @@ import java.time.LocalDate
  * 변동성 돌파 전략
  */
 @Service
-// TODO 이름변경 VbsBacktest2Service -> VbsBacktestService
 class VbsBacktestService(
     val movingAverageService: MovingAverageService,
     val candleRepository: CandleRepository
