@@ -335,24 +335,6 @@ class AccountService(
         val report = StringBuilder()
         val compareTotalYield = calculateTotalCompareYield()
 
-        report.append("----------- Buy&Hold 결과 -----------\n")
-        val buyAndHoldSharpeRatio = ApplicationUtil.getSharpeRatio(evaluationAmountHistory.stream().map { it.buyHoldYield }.toList())
-        val stockCodes = getStockCodes()
-        val buyAndHoldYieldByCode: Map<StockCode, CommonAnalysisReportResult.YieldMdd> = calculateBenchmarkYield(stockCodes)
-        val buyHoldText = ReportMakerHelperService.makeSummaryCompareStock(
-            compareTotalYield.buyHoldTotalYield, buyAndHoldSharpeRatio, buyAndHoldYieldByCode
-        )
-        report.append(buyHoldText)
-
-        report.append("----------- Benchmark 결과 -----------\n")
-        val benchmarkSharpeRatio = ApplicationUtil.getSharpeRatio(evaluationAmountHistory.stream().map { it.benchmarkYield }.toList())
-        val benchmarkYieldByCode: Map<StockCode, CommonAnalysisReportResult.YieldMdd> =
-            calculateBenchmarkYield(setOf(backtestCondition.benchmarkStockCode))
-        val benchmarkText = ReportMakerHelperService.makeSummaryCompareStock(
-            compareTotalYield.benchmarkTotalYield, benchmarkSharpeRatio, benchmarkYieldByCode
-        )
-        report.append(benchmarkText)
-
         report.append("----------- 전략 결과 -----------\n")
         val totalYield: CommonAnalysisReportResult.TotalYield =
             ReportMakerHelperService.calculateTotalYield(evaluationAmountHistory, backtestCondition.backtestPeriod)
@@ -380,9 +362,26 @@ class AccountService(
             report.append(String.format("${backtestName}. 승률\t %,.2f%%", winningRateItem.getWinRate() * 100)).append("\n")
         }
 
-        val range: DateRange = backtestCondition.backtestPeriod
+        report.append("----------- Buy&Hold 결과 -----------\n")
+        val buyAndHoldSharpeRatio = ApplicationUtil.getSharpeRatio(evaluationAmountHistory.stream().map { it.buyHoldYield }.toList())
+        val stockCodes = getStockCodes()
+        val buyAndHoldYieldByCode: Map<StockCode, CommonAnalysisReportResult.YieldMdd> = calculateBenchmarkYield(stockCodes)
+        val buyHoldText = ReportMakerHelperService.makeSummaryCompareStock(
+            compareTotalYield.buyHoldTotalYield, buyAndHoldSharpeRatio, buyAndHoldYieldByCode
+        )
+        report.append(buyHoldText)
+
+        report.append("----------- Benchmark 결과 -----------\n")
+        val benchmarkSharpeRatio = ApplicationUtil.getSharpeRatio(evaluationAmountHistory.stream().map { it.benchmarkYield }.toList())
+        val benchmarkYieldByCode: Map<StockCode, CommonAnalysisReportResult.YieldMdd> =
+            calculateBenchmarkYield(setOf(backtestCondition.benchmarkStockCode))
+        val benchmarkText = ReportMakerHelperService.makeSummaryCompareStock(
+            compareTotalYield.benchmarkTotalYield, benchmarkSharpeRatio, benchmarkYieldByCode
+        )
+        report.append(benchmarkText)
 
         report.append("----------- 백테스트 조건 -----------\n")
+        val range: DateRange = backtestCondition.backtestPeriod
         report.append(String.format("분석기간\t %s", range)).append("\n")
         // TODO '투자비율' 넣기
         report.append(String.format("최초 투자금액\t %,.0f", accountCondition.cash)).append("\n")

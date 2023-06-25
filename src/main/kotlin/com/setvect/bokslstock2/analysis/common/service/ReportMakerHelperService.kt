@@ -218,9 +218,10 @@ object ReportMakerHelperService {
         workbook: XSSFWorkbook
     ): XSSFSheet {
         val sheet = workbook.createSheet()
-        val header = "날짜,Buy&Hold 평가금,밴치마크 평가금,백테스트 평가금" +
-                ",Buy&Hold 일일 수익률,밴치마크 일일 수익률,백테스트 일일 수익률" +
-                ",Buy&Hold Maxdrawdown,밴치마크 Maxdrawdown,백테스트 Maxdrawdown"
+        val header = "날짜," +
+                "백테스트 평가금,Buy&Hold 평가금,밴치마크 평가금," +
+                "백테스트 일일 수익률,Buy&Hold 일일 수익률,밴치마크 일일 수익률," +
+                "백테스트 Maxdrawdown,Buy&Hold Maxdrawdown,밴치마크 Maxdrawdown"
         applyHeader(sheet, header)
         var rowIdx = 1
 
@@ -239,11 +240,14 @@ object ReportMakerHelperService {
             buyAndHoldMax = buyAndHoldMax.coerceAtLeast(evalItem.buyHoldRate)
             benchmarkMax = benchmarkMax.coerceAtLeast(evalItem.benchmarkRate)
             backtestMax = backtestMax.coerceAtLeast(evalItem.backtestRate)
-
             createCell.setCellValue(evalItem.baseDate)
             createCell.cellStyle = dateStyle
 
             // 변화량
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(evalItem.backtestRate)
+            createCell.cellStyle = commaStyle
+
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(evalItem.buyHoldRate)
             createCell.cellStyle = commaStyle
@@ -252,11 +256,11 @@ object ReportMakerHelperService {
             createCell.setCellValue(evalItem.benchmarkRate)
             createCell.cellStyle = commaStyle
 
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(evalItem.backtestRate)
-            createCell.cellStyle = commaStyle
-
             // 일일 수익률
+            createCell = row.createCell(cellIdx++)
+            createCell.setCellValue(evalItem.backtestYield)
+            createCell.cellStyle = percentStyle
+
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue(evalItem.buyHoldYield)
             createCell.cellStyle = percentStyle
@@ -265,27 +269,24 @@ object ReportMakerHelperService {
             createCell.setCellValue(evalItem.benchmarkYield)
             createCell.cellStyle = percentStyle
 
+            // Maxdrawdown
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(evalItem.backtestYield)
+            createCell.setCellValue((evalItem.backtestRate - backtestMax) / backtestMax)
             createCell.cellStyle = percentStyle
 
-            // Maxdrawdown
             createCell = row.createCell(cellIdx++)
             createCell.setCellValue((evalItem.buyHoldRate - buyAndHoldMax) / buyAndHoldMax)
             createCell.cellStyle = percentStyle
 
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue((evalItem.benchmarkRate - benchmarkMax) / benchmarkMax)
-            createCell.cellStyle = percentStyle
-
             createCell = row.createCell(cellIdx)
-            createCell.setCellValue((evalItem.backtestRate - backtestMax) / backtestMax)
+            createCell.setCellValue((evalItem.benchmarkRate - benchmarkMax) / benchmarkMax)
             createCell.cellStyle = percentStyle
         }
         sheet.createFreezePane(0, 1)
         sheet.defaultColumnWidth = 20
         ExcelStyle.applyAllBorder(sheet)
         ExcelStyle.applyDefaultFont(sheet)
+        applyEmphasisHeader(sheet, 1, 4, 7)
         return sheet
     }
 
@@ -297,7 +298,7 @@ object ReportMakerHelperService {
         workbook: XSSFWorkbook
     ): XSSFSheet {
         val sheet = workbook.createSheet()
-        val header = "날짜,Buy&Hold 수익률,밴치마크 수익률,백테스트 수익률"
+        val header = "날짜,백테스트 수익률,Buy&Hold 수익률,밴치마크 수익률"
         applyHeader(sheet, header)
         var rowIdx = 1
 
@@ -312,21 +313,24 @@ object ReportMakerHelperService {
             createCell.cellStyle = dateStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(monthYield.buyHoldYield)
+            createCell.setCellValue(monthYield.backtestYield)
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(monthYield.benchmarkYield)
+            createCell.setCellValue(monthYield.buyHoldYield)
             createCell.cellStyle = percentStyle
 
             createCell = row.createCell(cellIdx)
-            createCell.setCellValue(monthYield.backtestYield)
+            createCell.setCellValue(monthYield.benchmarkYield)
             createCell.cellStyle = percentStyle
+
         }
         sheet.createFreezePane(0, 1)
         sheet.defaultColumnWidth = 20
         ExcelStyle.applyAllBorder(sheet)
         ExcelStyle.applyDefaultFont(sheet)
+        applyEmphasisHeader(sheet, 1)
+
         return sheet
     }
 
@@ -508,6 +512,14 @@ object ReportMakerHelperService {
     ) {
         val headerTxt = header.split(",")
         applyHeader(sheet, headerTxt)
+    }
+
+    private fun applyEmphasisHeader(sheet: XSSFSheet, vararg colIdx: Int) {
+        colIdx.forEach { col ->
+            val cell = sheet.getRow(0).getCell(col)
+            val style = cell.cellStyle
+            style.fillForegroundColor = IndexedColors.LIGHT_ORANGE.index
+        }
     }
 
     /**
