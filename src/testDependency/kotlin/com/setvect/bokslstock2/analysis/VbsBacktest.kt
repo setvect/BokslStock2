@@ -5,7 +5,7 @@ import com.setvect.bokslstock2.analysis.common.service.AccountService
 import com.setvect.bokslstock2.analysis.common.service.StockCommonFactory
 import com.setvect.bokslstock2.analysis.vbs.model.VbsBacktestCondition
 import com.setvect.bokslstock2.analysis.vbs.model.VbsConditionItem
-import com.setvect.bokslstock2.analysis.vbs.service.VbsBacktest2Service
+import com.setvect.bokslstock2.analysis.vbs.service.VbsBacktestService
 import com.setvect.bokslstock2.koreainvestment.vbs.service.VbsEventHandler
 import com.setvect.bokslstock2.koreainvestment.vbs.service.VbsStockSchedule
 import com.setvect.bokslstock2.util.DateRange
@@ -30,7 +30,7 @@ class VbsBacktest {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
     @Autowired
-    private lateinit var vbsBacktestService: VbsBacktest2Service
+    private lateinit var vbsBacktestService: VbsBacktestService
 
     @Autowired
     private lateinit var stockCommonFactory: StockCommonFactory
