@@ -71,12 +71,13 @@ class VbsBacktest {
                 )
             )
         )
-        val tradeNeo = vbsBacktestService.runTest(condition)
+        val tradeNeoList = vbsBacktestService.runTest(condition)
         val accountCondition = AccountService.AccountCondition(condition.cash, 0.0002, 0.0002)
         val count = AtomicInteger(0)
-        val specialInfo = condition.conditionList.joinToString("\n") {
+        var specialInfo = String.format("투자 비율\t %,.2f%%", condition.investRatio * 100) + "\n"
+        specialInfo += condition.conditionList.joinToString("\n") {
             """
-                $count. 대상 종목\t${it.stockCode.name}
+                ${count.incrementAndGet()}. 대상 종목\t${it.stockCode.name}
                 $count. 변동성 비율\t${it.kRate}
                 $count. 투자 비율\t${it.investmentRatio}
                 $count. 이동평균 단위\t${it.maPeriod}
@@ -90,7 +91,7 @@ class VbsBacktest {
         val accountService = stockCommonFactory.createStockCommonFactory(accountCondition, backtestCondition)
 
         // 리포트 만듦
-        accountService.addTrade(tradeNeo)
+        accountService.addTrade(tradeNeoList)
         accountService.calcTradeResult()
         accountService.calcEvaluationRate()
         val reportFile = File("./backtest-result/vbs-trade-report", "vbs_trade_${range.fromDate}~${range.toDate}.xlsx")

@@ -34,4 +34,11 @@ data class TradeNeo(
     fun getBacktestConditionName(): String {
         return backtestCondition ?: "${stockCode.desc}(${stockCode.code})"
     }
+
+    /**
+     * @return 주식 평가금
+     */
+    fun getAmount(): Double {
+        return price * qty
+    }
 }

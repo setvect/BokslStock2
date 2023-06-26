@@ -1,19 +1,21 @@
 package com.setvect.bokslstock2.analysis
 
 import com.setvect.bokslstock2.analysis.common.model.StockCode
-import com.setvect.bokslstock2.analysis.common.model.TradeCondition
+import com.setvect.bokslstock2.analysis.common.service.AccountService
+import com.setvect.bokslstock2.analysis.common.service.StockCommonFactory
 import com.setvect.bokslstock2.analysis.dm.model.DmBacktestCondition
 import com.setvect.bokslstock2.analysis.dm.service.DmAnalysisService
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.util.DateRange
+import com.setvect.bokslstock2.util.DateUtil
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
+import java.io.File
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -23,117 +25,50 @@ class DmBacktest {
     @Autowired
     private lateinit var dmAnalysisService: DmAnalysisService
 
+    @Autowired
+    private lateinit var stockCommonFactory: StockCommonFactory
+
     @Test
     fun 일회성_백테스팅_리포트_만듦() {
-//        val from = LocalDateTime.of(2022, 7, 1, 0, 0)
-        val from = LocalDateTime.of(2018, 1, 1, 0, 0)
-//        val from = LocalDateTime.of(2022, 4, 1, 0, 0)
-        val to = LocalDateTime.of(2022, 10, 1, 0, 0)
-//        val to = LocalDateTime.now()
-        val realRange = DateRange(from, to)
+        val range = DateRange(DateUtil.getLocalDateTime("2018-01-01T00:00:00"), DateUtil.getLocalDateTime("2022-10-01T00:00:00"))
 
-        val basic = TradeCondition(
-            range = realRange,
+        val timeWeight = hashMapOf(
+            1 to 0.33,
+            3 to 0.33,
+            6 to 0.34
+        )
+
+        val condition = DmBacktestCondition(
+            range = range,
             investRatio = 0.999,
             cash = 10_000_000.0,
-            feeBuy = 0.001,
-            feeSell = 0.001,
-            comment = "",
-            benchmark = listOf(StockCode.OS_CODE_SPY)
+            stockCodes = listOf(StockCode.OS_CODE_SPY, StockCode.OS_CODE_SCZ),
+            holdCode = StockCode.OS_CODE_TLT,
+            periodType = PeriodType.PERIOD_MONTH,
+            timeWeight = timeWeight,
+            endSell = true
         )
+        val tradeNeoList = dmAnalysisService.runTest(condition)
+        val accountCondition = AccountService.AccountCondition(condition.cash, 0.0002, 0.0002)
 
-        val timeWeights = listOf(
-//            hashMapOf(
-//                1 to 1.0
-//            ),
-//            hashMapOf(
-//                2 to 1.0
-//            ),
-//            hashMapOf(
-//                3 to 1.0
-//            ),
-//            hashMapOf(
-//                5 to 1.0
-//            ),
-//            hashMapOf(
-//                6 to 1.0
-//            ),
-//            hashMapOf(
-//                7 to 1.0
-//            ),
-//            hashMapOf(
-//                8 to 1.0
-//            ),
-//            hashMapOf(
-//                9 to 1.0
-//            ),
-//            hashMapOf(
-//                10 to 1.0
-//            ),
-//            hashMapOf(
-//                11 to 1.0
-//            ),
-//            hashMapOf(
-//                12 to 1.0
-//            ),
-            hashMapOf(
-                1 to 0.33,
-                3 to 0.33,
-                6 to 0.34
-            ),
-//            hashMapOf(
-//                2 to 0.33,
-//                4 to 0.33,
-//                7 to 0.34
-//            ),
-//            hashMapOf(
-//                3 to 0.33,
-//                5 to 0.33,
-//                8 to 0.34
-//            ),
-//            hashMapOf(
-//                4 to 0.33,
-//                6 to 0.33,
-//                9 to 0.34
-//            ),
-//            hashMapOf(
-//                1 to 0.5,
-//                3 to 0.5,
-//            ),
-//            hashMapOf(
-//                2 to 0.5,
-//                4 to 0.5,
-//            ),
-//            hashMapOf(
-//                3 to 0.5,
-//                5 to 0.5,
-//            ),
-//            hashMapOf(
-//                4 to 0.5,
-//                6 to 0.5,
-//            ),
-//            hashMapOf(
-//                5 to 0.5,
-//                7 to 0.5,
-//            ),
-        )
-
-        val conditions = timeWeights.map {
-            DmBacktestCondition(
-                tradeCondition = basic,
-                stockCodes = listOf(StockCode.OS_CODE_SPY, StockCode.OS_CODE_SCZ),
-                holdCode = StockCode.OS_CODE_TLT,
-                periodType = PeriodType.PERIOD_MONTH,
-                timeWeight = it,
-                endSell = true
-            )
-        }
-        conditions.forEach {
-            dmAnalysisService.runTest(it)
-        }
-//        dmAnalysisService.makeSummaryReport(conditions)
+        val specialInfo = "${String.format("매도 수수료\t %,.2f%%", condition.investRatio * 100)}\n" +
+                "모멘텀 대상종목\t${condition.stockCodes.joinToString(", ") { it.name }}\n" +
+                "홀드 종목\t${condition.holdCode?.name ?: "현금"}\n" +
+                "거래 주기\t${condition.periodType.name}\n" +
+                "기간 가중치\t${condition.timeWeight.map { "${it.key}개월: ${it.value}%" }.joinToString(", ")}\n" +
+                "종료 시 매도\t${condition.endSell}\n"
 
 
+        val backtestCondition = AccountService.BacktestCondition(range, StockCode.OS_CODE_SPY, specialInfo)
+        val accountService = stockCommonFactory.createStockCommonFactory(accountCondition, backtestCondition)
+
+        // 리포트 만듦
+        accountService.addTrade(tradeNeoList)
+        accountService.calcTradeResult()
+        accountService.calcEvaluationRate()
+        val reportFile = File("./backtest-result/dm-trade-report", "dm_trade_${range.fromDate}~${range.toDate}.xlsx")
+        accountService.makeReport(reportFile)
+        log.info(reportFile.absolutePath)
         log.info("끝.")
     }
 

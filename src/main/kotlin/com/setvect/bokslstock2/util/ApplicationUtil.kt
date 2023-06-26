@@ -111,6 +111,13 @@ object ApplicationUtil {
     }
 
     /**
+     * @return 수익금
+     */
+    fun getYieldPrice(base: Double, delta: Double, qty: Int): Double {
+        return (delta - base) * qty
+    }
+
+    /**
      * 연 복리
      * CAGR = (EV / BV) ^ (1 / dayCount) - 1
      *
@@ -369,5 +376,6 @@ object ApplicationUtil {
         }
         return yieldHistory.toImmutableList()
     }
+
 
 }

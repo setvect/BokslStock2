@@ -1,18 +1,25 @@
 package com.setvect.bokslstock2.analysis.dm.model
 
 import com.setvect.bokslstock2.analysis.common.model.StockCode
-import com.setvect.bokslstock2.analysis.common.model.TradeCondition
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
+import com.setvect.bokslstock2.util.DateRange
 
 /**
  * 듀얼모멘텀 백테스트 조건
  */
 data class DmBacktestCondition(
     /**
-     * 매매 기본 조건
+     * 매매 기간
      */
-    val tradeCondition: TradeCondition,
+    val range: DateRange,
+    /**
+     * 총 현금을 기준으로 투자 비율. 1은 전액, 0.5은 50% 투자
+     */
+    val investRatio: Double,
+
+    /**  투자금액 */
+    val cash: Double,
 
     /**
      * 듀얼 모멘텀 대상 종목 코드

@@ -383,7 +383,6 @@ class AccountService(
         report.append("----------- 백테스트 조건 -----------\n")
         val range: DateRange = backtestCondition.backtestPeriod
         report.append(String.format("분석기간\t %s", range)).append("\n")
-        // TODO '투자비율' 넣기
         report.append(String.format("최초 투자금액\t %,.0f", accountCondition.cash)).append("\n")
         report.append(String.format("매수 수수료\t %,.2f%%", accountCondition.feeBuy * 100)).append("\n")
         report.append(String.format("매도 수수료\t %,.2f%%", accountCondition.feeSell * 100)).append("\n")

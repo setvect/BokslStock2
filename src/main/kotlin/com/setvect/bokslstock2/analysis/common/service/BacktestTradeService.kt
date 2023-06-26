@@ -26,6 +26,7 @@ class BacktestTradeService(
     /**
      * @return 수수료등 각종 조건을 적용시킨 매매 내역
      */
+    @Deprecated("삭제...")
     fun trade(condition: TradeCondition, preTrades: List<PreTrade>): List<Trade> {
         val investmentRatioMap = preTrades.associate { it.stockCode.code to condition.investRatio }
         return tradeBundle(condition, listOf(preTrades), investmentRatioMap)
