@@ -231,7 +231,7 @@ class AccountService(
 
     }
 
-    fun makeReport(reportFile: File) {
+    fun makeReport(reportFile: File, sheetAppendMaker: SheetAppendMaker = SheetAppendMaker.nothing()) {
         if (tradeResult.isEmpty()) {
             throw IllegalArgumentException("거래 내역이 없습니다.")
         }
@@ -253,6 +253,8 @@ class AccountService(
 
             sheet = createReportSummary(workbook)
             workbook.setSheetName(workbook.getSheetIndex(sheet), "5. 매매 요약결과 및 조건")
+
+            sheetAppendMaker.appendSheet(workbook)
 
             FileOutputStream(reportFile).use { ous ->
                 workbook.write(ous)

@@ -2,12 +2,15 @@ package com.setvect.bokslstock2.analysis
 
 import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.analysis.common.service.AccountService
+import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
+import com.setvect.bokslstock2.analysis.common.service.SheetAppendMaker
 import com.setvect.bokslstock2.analysis.common.service.StockCommonFactory
 import com.setvect.bokslstock2.analysis.dm.model.DmBacktestCondition
 import com.setvect.bokslstock2.analysis.dm.service.DmAnalysisService
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.util.DateRange
 import com.setvect.bokslstock2.util.DateUtil
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import java.io.File
 import java.time.LocalDate
+import java.util.*
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -38,7 +42,7 @@ class DmBacktest {
             6 to 0.34
         )
 
-        val condition = DmBacktestCondition(
+        val dmBacktestCondition = DmBacktestCondition(
             range = range,
             investRatio = 0.999,
             cash = 10_000_000.0,
@@ -48,15 +52,16 @@ class DmBacktest {
             timeWeight = timeWeight,
             endSell = true
         )
-        val tradeNeoList = dmAnalysisService.runTest(condition)
-        val accountCondition = AccountService.AccountCondition(condition.cash, 0.0002, 0.0002)
+        val dualMomentumResult = dmAnalysisService.runTest(dmBacktestCondition)
+        val tradeNeoList = dualMomentumResult.tradeList
+        val accountCondition = AccountService.AccountCondition(dmBacktestCondition.cash, 0.0002, 0.0002)
 
-        val specialInfo = "${String.format("매도 수수료\t %,.2f%%", condition.investRatio * 100)}\n" +
-                "모멘텀 대상종목\t${condition.stockCodes.joinToString(", ") { it.name }}\n" +
-                "홀드 종목\t${condition.holdCode?.name ?: "현금"}\n" +
-                "거래 주기\t${condition.periodType.name}\n" +
-                "기간 가중치\t${condition.timeWeight.map { "${it.key}개월: ${it.value}%" }.joinToString(", ")}\n" +
-                "종료 시 매도\t${condition.endSell}\n"
+        val specialInfo = "${String.format("매도 수수료\t %,.2f%%", dmBacktestCondition.investRatio * 100)}\n" +
+                "모멘텀 대상종목\t${dmBacktestCondition.stockCodes.joinToString(", ") { it.name }}\n" +
+                "홀드 종목\t${dmBacktestCondition.holdCode?.name ?: "현금"}\n" +
+                "거래 주기\t${dmBacktestCondition.periodType.name}\n" +
+                "기간 가중치\t${dmBacktestCondition.timeWeight.map { "${it.key}개월: ${it.value}%" }.joinToString(", ")}\n" +
+                "종료 시 매도\t${dmBacktestCondition.endSell}\n"
 
 
         val backtestCondition = AccountService.BacktestCondition(range, StockCode.OS_CODE_SPY, specialInfo)
@@ -67,7 +72,8 @@ class DmBacktest {
         accountService.calcTradeResult()
         accountService.calcEvaluationRate()
         val reportFile = File("./backtest-result/dm-trade-report", "dm_trade_${range.fromDate}~${range.toDate}.xlsx")
-        accountService.makeReport(reportFile)
+
+        accountService.makeReport(reportFile, DmAnalysisService.MomentumScoreSheetMaker(dualMomentumResult.momentumScoreList, dmBacktestCondition))
         log.info(reportFile.absolutePath)
         log.info("끝.")
     }

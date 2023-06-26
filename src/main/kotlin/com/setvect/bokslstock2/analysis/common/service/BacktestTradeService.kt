@@ -5,7 +5,6 @@ import com.setvect.bokslstock2.common.model.TradeType
 import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.CandleRepository
-import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.DateRange
 import org.springframework.stereotype.Service
@@ -21,17 +20,7 @@ import java.util.*
 @Service
 class BacktestTradeService(
     val candleRepository: CandleRepository,
-    val stockRepository: StockRepository,
 ) {
-    /**
-     * @return 수수료등 각종 조건을 적용시킨 매매 내역
-     */
-    @Deprecated("삭제...")
-    fun trade(condition: TradeCondition, preTrades: List<PreTrade>): List<Trade> {
-        val investmentRatioMap = preTrades.associate { it.stockCode.code to condition.investRatio }
-        return tradeBundle(condition, listOf(preTrades), investmentRatioMap)
-    }
-
     /**
      * [investmentRatioMap] 종목별 매수 비율
      * 아래와 같은 이슈로 본 메소드는 범용적으로 사용 못함
