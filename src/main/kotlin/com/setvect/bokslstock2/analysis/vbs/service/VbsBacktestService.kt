@@ -1,7 +1,7 @@
 package com.setvect.bokslstock2.analysis.vbs.service
 
 import com.setvect.bokslstock2.analysis.common.model.TradeNeo
-import com.setvect.bokslstock2.analysis.vbs.model.VbsCondition
+import com.setvect.bokslstock2.analysis.vbs.model.VbsBacktestCondition
 import com.setvect.bokslstock2.analysis.vbs.model.VbsConditionItem
 import com.setvect.bokslstock2.common.model.TradeType.BUY
 import com.setvect.bokslstock2.common.model.TradeType.SELL
@@ -28,7 +28,7 @@ class VbsBacktestService(
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
     @Transactional
-    fun runTest(condition: VbsCondition): List<TradeNeo> {
+    fun runTest(condition: VbsBacktestCondition): List<TradeNeo> {
         val conditionByMovingAverageCandle = getConditionByMovingAverageCandle(condition)
 
         val result = mutableListOf<TradeNeo>()
@@ -134,7 +134,7 @@ class VbsBacktestService(
     /**
      * @return <조건, <날짜, 해당 날짜 캔들정보>>
      */
-    private fun getConditionByMovingAverageCandle(condition: VbsCondition): Map<VbsConditionItem, Map<LocalDate, CandleDto>> {
+    private fun getConditionByMovingAverageCandle(condition: VbsBacktestCondition): Map<VbsConditionItem, Map<LocalDate, CandleDto>> {
         val conditionByMovingAverageCandle = condition.conditionList.associateWith { conditionItem ->
             //  conditionItem.stayGapRise == true인 경우 5분봉 데이터를 기준으로 계산함, 데이터의 일관성을 맞추기 위함
             if (conditionItem.stayGapRise) {
