@@ -1,7 +1,7 @@
 package com.setvect.bokslstock2.analysis.mabs.service
 
-import com.setvect.bokslstock2.analysis.mabs.model.MabsCondition
-import com.setvect.bokslstock2.analysis.mabs.model.MabsTrade
+import com.setvect.bokslstock2.analysis.common.model.TradeNeo
+import com.setvect.bokslstock2.analysis.mabs.model.MabsBacktestCondition
 import com.setvect.bokslstock2.common.model.TradeType.BUY
 import com.setvect.bokslstock2.common.model.TradeType.SELL
 import com.setvect.bokslstock2.index.dto.CandleDto
@@ -24,22 +24,29 @@ class MabsBacktestService(
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
     @Transactional
-    fun runTest(condition: MabsCondition): List<MabsTrade> {
+    fun runTest(condition: MabsBacktestCondition): List<TradeNeo> {
         val movingAverageCandle = movingAverageService.getMovingAverage(
-            condition.stock.convertStockCode(),
+            condition.stockCode,
             PeriodType.PERIOD_DAY,
             condition.periodType,
             listOf(condition.shortPeriod, condition.longPeriod)
         )
 
         var lastStatus = SELL
-        var highYield = 0.0
-        var lowYield = 0.0
-        var lastBuyInfo: MabsTrade? = null
-        val rtnValue: MutableList<MabsTrade> = mutableListOf()
+        var lastBuyInfo: TradeNeo? = null
+        val rtnValue: MutableList<TradeNeo> = mutableListOf()
+
+        var currentCash = condition.cash
 
         for (idx in 2 until movingAverageCandle.size) {
             val currentCandle = movingAverageCandle[idx]
+
+            // 매매기간이 지나면 종료
+            if (currentCandle.candleDateTimeStart > condition.range.to) {
+                log.info("매매기간이 지나면 종료: ${currentCandle.candleDateTimeStart} > ${condition.range.to}")
+                break
+            }
+
             // -1 영업일
             val yesterdayCandle = movingAverageCandle[idx - 1]
 
@@ -52,44 +59,33 @@ class MabsBacktestService(
                     continue
                 }
                 if (buyCheck(currentCandle, condition)) {
-                    lastBuyInfo = MabsTrade(
-                        mabsCondition = condition,
+                    val buyCash = currentCash * condition.investRatio
+                    lastBuyInfo = TradeNeo(
+                        stockCode = condition.stockCode,
                         tradeType = BUY,
-                        highYield = 0.0,
-                        lowYield = 0.0,
-                        maShort = currentCandle.average[condition.shortPeriod] ?: 0.0,
-                        maLong = currentCandle.average[condition.longPeriod] ?: 0.0,
-                        yield = 0.0,
-                        unitPrice = currentCandle.openPrice,
+                        price = currentCandle.openPrice,
+                        qty = (buyCash / currentCandle.openPrice).toInt(),
                         tradeDate = currentCandle.candleDateTimeStart
                     )
+                    currentCash -= lastBuyInfo.price * lastBuyInfo.qty
                     rtnValue.add(lastBuyInfo)
                     lastStatus = BUY
-                    // 매도 판단
-                    val currentCloseYield = ApplicationUtil.getYield(lastBuyInfo.unitPrice, currentCandle.closePrice)
-                    highYield = 0.0.coerceAtLeast(currentCloseYield)
-                    lowYield = 0.0.coerceAtMost(currentCloseYield)
                 }
             } else {
+                // 매도 판단
                 if (sellCheck(currentCandle, condition)) {
-                    val sellInfo = MabsTrade(
-                        mabsCondition = condition,
+                    val sellInfo = TradeNeo(
+                        stockCode = condition.stockCode,
                         tradeType = SELL,
-                        highYield = highYield,
-                        lowYield = lowYield,
-                        maShort = currentCandle.average[condition.shortPeriod] ?: 0.0,
-                        maLong = currentCandle.average[condition.longPeriod] ?: 0.0,
-                        yield = ApplicationUtil.getYield(lastBuyInfo!!.unitPrice, currentCandle.openPrice),
-                        unitPrice = currentCandle.openPrice,
+                        price = currentCandle.openPrice,
+                        qty = lastBuyInfo!!.qty,
                         tradeDate = currentCandle.candleDateTimeStart
                     )
+                    currentCash += sellInfo.price * sellInfo.qty
                     rtnValue.add(sellInfo)
                     lastStatus = SELL
                     continue
                 }
-                val currentCloseYield = ApplicationUtil.getYield(lastBuyInfo!!.unitPrice, currentCandle.closePrice)
-                highYield = highYield.coerceAtLeast(currentCloseYield)
-                lowYield = lowYield.coerceAtMost(currentCloseYield)
             }
         }
         return rtnValue.toImmutableList()
@@ -98,7 +94,7 @@ class MabsBacktestService(
     /**
      * @return [candle]이 매수 조건이면 true
      */
-    private fun buyCheck(candle: CandleDto, condition: MabsCondition): Boolean {
+    private fun buyCheck(candle: CandleDto, condition: MabsBacktestCondition): Boolean {
         val shortValue = candle.average[condition.shortPeriod]
         val longValue = candle.average[condition.longPeriod]
         if (shortValue == null || longValue == null) {
@@ -111,7 +107,7 @@ class MabsBacktestService(
     /**
      * @return [candle]이 매도 조건이면 true
      */
-    private fun sellCheck(candle: CandleDto, condition: MabsCondition): Boolean {
+    private fun sellCheck(candle: CandleDto, condition: MabsBacktestCondition): Boolean {
         val shortValue = candle.average[condition.shortPeriod]
         val longValue = candle.average[condition.longPeriod]
         if (shortValue == null || longValue == null) {

@@ -6,13 +6,10 @@ import com.setvect.bokslstock2.util.DateRange
  * 변동성돌파 전략 조건
  */
 class VbsBacktestCondition(
-    /**
-     * 매매 기간
-     */
+    /** 매매 기간 */
     val range: DateRange,
-    /**
-     * 총 현금을 기준으로 투자 비율. 1은 전액, 0.5은 50% 투자
-     */
+
+    /** 총 현금을 기준으로 투자 비율. 1은 전액, 0.5은 50% 투자 */
     val investRatio: Double,
 
     /**  투자금액 */

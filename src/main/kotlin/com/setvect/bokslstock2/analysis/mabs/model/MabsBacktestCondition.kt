@@ -1,19 +1,26 @@
 package com.setvect.bokslstock2.analysis.mabs.model
 
-import com.setvect.bokslstock2.index.entity.StockEntity
+import com.setvect.bokslstock2.analysis.common.model.StockCode
 import com.setvect.bokslstock2.index.model.PeriodType
+import com.setvect.bokslstock2.util.DateRange
 
 /**
  * 이평선 돌파 백테스트 조건
  */
-class MabsCondition(
-    val name: String,
+class MabsBacktestCondition(
+    /** 매매 기간 */
+    val range: DateRange,
+
+    /** 총 현금을 기준으로 투자 비율. 1은 전액, 0.5은 50% 투자 */
+    val investRatio: Double,
+
+    /**  투자금액 */
+    val cash: Double,
+
     /**
      * 주식 종목
      */
-    val stock: StockEntity,
-
-    var tradeList: List<MabsTrade> = ArrayList(),
+    val stockCode: StockCode,
 
     /**
      * 매매 주기
@@ -44,10 +51,4 @@ class MabsCondition(
      * 조건에 대한 설명. 리포트에서 사용하기 위함
      */
     val comment: String,
-
-    /**
-     * 전체금액에서 투자 비율
-     * 0 초과 1이하 값
-     */
-    val investmentRatio: Double,
 )
