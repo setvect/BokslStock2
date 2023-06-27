@@ -227,7 +227,6 @@ TODO 작업해야됨
 
 - 메인 소스: [ValueAnalysisKoreanCompanyService.kt](src/main/kotlin/com/setvect/bokslstock2/value/service/ValueAnalysisKoreanCompanyService.kt)
 - 실행 소스: [ValueAnalysisKoreanCompanyServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/value/service/ValueAnalysisKoreanCompanyServiceTest.kt)
-- 
 - 매수조건
     - 필터
        1. 기타금융, 생명보험, 손해보험, 은행, 증권, 창업투자
@@ -247,6 +246,22 @@ TODO 작업해야됨
     - 1년에 한 번 또는 두 번 리벨런싱
 
 ### 7.2. 가치평가 전략(미국 주식)
+- 메인 소스: [ValueAnalysisUsaCompanyService.kt](src/main/kotlin/com/setvect/bokslstock2/value/service/ValueAnalysisUsaCompanyService.kt)
+- 실행 소스: [ValueAnalysisUsaCompanyServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/value/service/ValueAnalysisUsaCompanyServiceTest.kt)
+- 매수조건
+  - 필터
+    1. 시총 순위 70% ~ 90% 사이 기업
+    1. 국가: USA
+    1. 제외 색터: Real Estate, Financial, Energy
+    1. PTP 종목 제외 [PTP.txt](src/main/resources/assets/PTP.txt) 참고
+  - 순위 매김
+      - 1/PER
+      - 1/PBR
+      - 배당수익률
+  - 각각의 등수를 더해 오름차순 정렬
+  - 후처리(수동)
+      - ...
+  - 상위 20개 기업 매수
 
 ## 8. 기타
 ### 8.1. 인증서 연결

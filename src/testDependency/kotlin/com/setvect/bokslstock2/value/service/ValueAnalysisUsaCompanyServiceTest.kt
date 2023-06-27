@@ -8,7 +8,6 @@ import org.springframework.test.context.ActiveProfiles
 
 @SpringBootTest
 @ActiveProfiles("test")
-
 class ValueAnalysisUsaCompanyServiceTest {
     @Autowired
     private lateinit var valueAnalysisUsaCompanyService: ValueAnalysisUsaCompanyService
