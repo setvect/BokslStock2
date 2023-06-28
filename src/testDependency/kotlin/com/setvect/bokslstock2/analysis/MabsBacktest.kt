@@ -50,7 +50,7 @@ class MabsBacktest {
         )
         val tradeNeoList = mabsBacktestService.runTest(mabsBacktestCondition)
 
-        val specialInfo = "${String.format("매도 수수료\t %,.2f%%", mabsBacktestCondition.investRatio * 100)}\n" +
+        val specialInfo = "${String.format("투자 비율\t %,.2f%%", mabsBacktestCondition.investRatio * 100)}\n" +
                 "${String.format("상승 매수률\t %,.2f%%", mabsBacktestCondition.upBuyRate * 100)}\n" +
                 "${String.format("하락 매도률\t %,.2f%%", mabsBacktestCondition.downSellRate * 100)}\n" +
                 "단기 이동평균 기간\t${mabsBacktestCondition.shortPeriod}\n" +
