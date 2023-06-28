@@ -116,101 +116,6 @@ object ReportMakerHelperService {
     }
 
     /**
-     * 매매 내역을 시트로 만듦
-     */
-    @Deprecated("createTradeReport() 사용")
-    fun createTradeReport(result: AnalysisResult, workbook: XSSFWorkbook): XSSFSheet {
-        val sheet = workbook.createSheet()
-        val header =
-            "날짜,매매 조건명,매매 구분,매수 수량,매매 금액,체결 가격,실현 수익률,수수료,투자 수익(수수료포함),보유 주식 평가금,매매후 보유 현금,평가금(주식+현금),수익비"
-        applyHeader(sheet, header)
-        var rowIdx = 1
-
-        val defaultStyle = ExcelStyle.createDefault(workbook)
-        val dateStyle = ExcelStyle.createDate(workbook)
-        val commaStyle = ExcelStyle.createComma(workbook)
-        val percentStyle = ExcelStyle.createPercent(workbook)
-        val decimalStyle = ExcelStyle.createDecimal(workbook)
-
-        result.tradeHistory.forEach { tradeItem ->
-            val preTrade = tradeItem.preTrade
-//            val vbsConditionEntity: VbsConditionEntity = vbsTradeEntity.vbsConditionEntity
-            val tradeDate: LocalDateTime = preTrade.tradeDate
-
-            val row = sheet.createRow(rowIdx++)
-            var cellIdx = 0
-            var createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeDate)
-            createCell.cellStyle = dateStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(preTrade.getTradeName())
-            createCell.cellStyle = defaultStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(preTrade.tradeType.name)
-            createCell.cellStyle = defaultStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.qty.toDouble())
-            createCell.cellStyle = commaStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.getBuyAmount())
-            createCell.cellStyle = commaStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(preTrade.unitPrice)
-            if (preTrade.unitPrice > 1000) {
-                createCell.cellStyle = commaStyle
-            } else {
-                createCell.cellStyle = decimalStyle
-            }
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(preTrade.yield)
-            createCell.cellStyle = percentStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.feePrice)
-            createCell.cellStyle = commaStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.gains)
-            createCell.cellStyle = commaStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.stockEvalPrice)
-            createCell.cellStyle = commaStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.cash)
-            createCell.cellStyle = commaStyle
-
-            createCell = row.createCell(cellIdx++)
-            createCell.setCellValue(tradeItem.getEvalPrice())
-            createCell.cellStyle = commaStyle
-
-            createCell = row.createCell(cellIdx)
-            createCell.setCellValue(tradeItem.getEvalPrice() / result.analysisCondition.cash)
-            createCell.cellStyle = decimalStyle
-        }
-
-        sheet.createFreezePane(0, 1)
-        sheet.defaultColumnWidth = 12
-        sheet.setColumnWidth(0, 4000)
-        sheet.setColumnWidth(1, 4000)
-        sheet.setColumnWidth(12, 4000)
-        sheet.setColumnWidth(13, 4000)
-        sheet.setColumnWidth(14, 4000)
-        sheet.setColumnWidth(15, 4000)
-
-        ExcelStyle.applyAllBorder(sheet)
-        ExcelStyle.applyDefaultFont(sheet)
-        return sheet
-    }
-
-    /**
      * 날짜에 따른 평가금액(Buy&Hold, 밴치마크, 벡테스트) 변화 시트 만듦
      */
     fun createReportEvalAmount(
@@ -334,81 +239,6 @@ object ReportMakerHelperService {
         return sheet
     }
 
-
-    /**
-     * [specialInfo]: 분석 조건별 특별한 정보
-     */
-    @Deprecated("삭제할 예정")
-    fun createSummary(
-        commonAnalysisReportResult: CommonAnalysisReportResult,
-        conditionNameList: List<String>,
-        tradeCondition: TradeCondition,
-        specialInfo: String
-    ): String {
-        val report = StringBuilder()
-        report.append("----------- Buy&Hold 결과 -----------\n")
-        val buyHoldText = makeSummaryCompareStock(
-            commonAnalysisReportResult.benchmarkTotalYield.buyHoldTotalYield,
-            commonAnalysisReportResult.getBuyHoldSharpeRatio(),
-            commonAnalysisReportResult.baseStockYieldCode.buyHoldYieldByCode
-        )
-        report.append(buyHoldText)
-
-        report.append("----------- Benchmark 결과 -----------\n")
-        val benchmarkText = makeSummaryCompareStock(
-            commonAnalysisReportResult.benchmarkTotalYield.benchmarkTotalYield,
-            commonAnalysisReportResult.getBenchmarkSharpeRatio(),
-            commonAnalysisReportResult.baseStockYieldCode.benchmarkYieldByCode
-        )
-        report.append(benchmarkText)
-
-        val totalYield: CommonAnalysisReportResult.TotalYield = commonAnalysisReportResult.yieldTotal
-        report.append("----------- 전략 결과 -----------\n")
-        report.append(String.format("합산 실현 수익\t %,.2f%%", totalYield.yield * 100)).append("\n")
-        report.append(String.format("합산 실현 MDD\t %,.2f%%", totalYield.mdd * 100)).append("\n")
-        report.append(
-            String.format(
-                "합산 매매회수\t %d",
-                commonAnalysisReportResult.getWinningRateTotal().getTradeCount()
-            )
-        ).append("\n")
-        report.append(
-            String.format(
-                "합산 승률\t %,.2f%%",
-                commonAnalysisReportResult.getWinningRateTotal().getWinRate() * 100
-            )
-        )
-            .append("\n")
-        report.append(String.format("합산 CAGR\t %,.2f%%", totalYield.getCagr() * 100)).append("\n")
-        report.append(String.format("샤프지수\t %,.2f", commonAnalysisReportResult.getBacktestSharpeRatio()))
-            .append("\n")
-
-        for (i in 1..conditionNameList.size) {
-            val conditionName = conditionNameList[i - 1]
-
-            val winningRate = commonAnalysisReportResult.winningRateTarget[conditionName]
-            if (winningRate == null) {
-                log.warn("조건에 해당하는 결과가 없습니다. ${conditionName}")
-                break
-            }
-            report.append(String.format("${i}. 실현 수익(수수료제외)\t %,.0f", winningRate.invest)).append("\n")
-            report.append(String.format("${i}. 수수료\t %,.0f", winningRate.fee)).append("\n")
-            report.append(String.format("${i}. 매매회수\t %d", winningRate.getTradeCount())).append("\n")
-            report.append(String.format("${i}. 승률\t %,.2f%%", winningRate.getWinRate() * 100)).append("\n")
-        }
-
-        val range: DateRange = tradeCondition.range
-
-        report.append("----------- 백테스트 조건 -----------\n")
-        report.append(String.format("분석기간\t %s", range)).append("\n")
-        report.append(String.format("투자비율\t %,.2f%%", tradeCondition.investRatio * 100)).append("\n")
-        report.append(String.format("최초 투자금액\t %,.0f", tradeCondition.cash)).append("\n")
-        report.append(String.format("매수 수수료\t %,.2f%%", tradeCondition.feeBuy * 100)).append("\n")
-        report.append(String.format("매도 수수료\t %,.2f%%", tradeCondition.feeSell * 100)).append("\n")
-        report.append(specialInfo)
-        return report.toString()
-    }
-
     fun makeSummaryCompareStock(
         totalYield: CommonAnalysisReportResult.TotalYield,
         sharpeRatio: Double,
@@ -429,30 +259,6 @@ object ReportMakerHelperService {
             report.append(String.format("$i. 동일비중 MDD\t %,.2f%%", sumYield.mdd * 100)).append("\n")
         }
         return report
-    }
-
-    /**
-     * 전체 투자 종목에 대한 수익 정보
-     * @return <buyAndHold 종목 수익, 밴치마크 종목 수익>
-     */
-    @Deprecated("삭제하기")
-    fun calculateTotalBenchmarkYield(
-        evaluationRateList: List<EvaluationRateItem>,
-        range: DateRange
-    ): CompareTotalYield {
-        val buyHold = evaluationRateList.map { it.buyHoldRate }.toList()
-        val buyHoldTotalYield = CommonAnalysisReportResult.TotalYield(
-            ApplicationUtil.getYield(buyHold),
-            ApplicationUtil.getMdd(buyHold),
-            range.diffDays.toInt()
-        )
-        val benchmark = evaluationRateList.map { it.benchmarkRate }.toList()
-        val benchmarkTotalYield = CommonAnalysisReportResult.TotalYield(
-            ApplicationUtil.getYield(benchmark),
-            ApplicationUtil.getMdd(benchmark),
-            range.diffDays.toInt()
-        )
-        return CompareTotalYield(buyHoldTotalYield, benchmarkTotalYield)
     }
 
     /**
@@ -520,20 +326,6 @@ object ReportMakerHelperService {
             val style = cell.cellStyle
             style.fillForegroundColor = IndexedColors.LIGHT_ORANGE.index
         }
-    }
-
-    /**
-     * @return 조건 정보가 담긴 리포트 파일명 suffix
-     */
-    @Deprecated("사용안함")
-    fun getReportFileSuffix(tradeCondition: TradeCondition, stockCodes: List<StockCode>, append: String = ""): String {
-        return String.format(
-            "%s~%s%s.xlsx",
-            tradeCondition.range.fromDateFormat,
-            tradeCondition.range.toDateFormat,
-            append,
-            stockCodes.joinToString(",") { "${it.code}(${it.desc})" },
-        )
     }
 
     /**

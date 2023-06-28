@@ -139,6 +139,7 @@ class RebalanceBacktestService(
                 val candle: CandleDto = rebalStock.candle
                 val stock = codeByStock[candle.stockCode]!!
 
+                // TODO 사용하지 않음
                 val preTrade = PreTrade(
                     stockCode = StockCode.findByCode(stock.code),
                     tradeType = TradeType.BUY,

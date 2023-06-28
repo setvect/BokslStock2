@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 /**
  * 매매 내역
  */
+@Deprecated("TradeNeo로 대체, 사용하지 않도록 함")
 data class PreTrade(
     /**
      * ConditionEntity.name
