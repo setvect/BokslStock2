@@ -1,7 +1,7 @@
 package com.setvect.bokslstock2.analysis.price
 
-import com.setvect.bokslstock2.analysis.common.model.StockCode
-import com.setvect.bokslstock2.analysis.common.model.StockCode.*
+import com.setvect.bokslstock2.backtest.common.model.StockCode
+import com.setvect.bokslstock2.backtest.common.model.StockCode.*
 import com.setvect.bokslstock2.common.model.TradeType
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType

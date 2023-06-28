@@ -2,7 +2,7 @@ package com.setvect.bokslstock2.crawl.service
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.setvect.bokslstock2.analysis.common.model.StockCode
+import com.setvect.bokslstock2.backtest.common.model.StockCode
 import com.setvect.bokslstock2.config.BokslStockProperties
 import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.entity.StockEntity

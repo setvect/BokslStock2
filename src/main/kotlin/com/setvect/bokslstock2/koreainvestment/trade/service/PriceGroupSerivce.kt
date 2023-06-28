@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2.koreainvestment.trade.service
 
-import com.setvect.bokslstock2.analysis.common.model.StockCode
+import com.setvect.bokslstock2.backtest.common.model.StockCode
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.koreainvestment.trade.model.response.MinutePriceResponse

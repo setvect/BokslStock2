@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2.analysis.price
 
-import com.setvect.bokslstock2.analysis.common.model.StockCode
+import com.setvect.bokslstock2.backtest.common.model.StockCode
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService

@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2.crawl.service
 
-import com.setvect.bokslstock2.analysis.common.model.StockCode
+import com.setvect.bokslstock2.backtest.common.model.StockCode
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.StockRepository

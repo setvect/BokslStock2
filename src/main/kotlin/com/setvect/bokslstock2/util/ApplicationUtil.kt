@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2.util
 
-import com.setvect.bokslstock2.analysis.common.model.CommonAnalysisReportResult
+import com.setvect.bokslstock2.backtest.common.model.CommonAnalysisReportResult
 import com.setvect.bokslstock2.index.model.PeriodType
 import okhttp3.internal.toImmutableList
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics

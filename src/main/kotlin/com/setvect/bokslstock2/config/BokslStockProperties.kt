@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2.config
 
-import com.setvect.bokslstock2.analysis.common.model.StockCode
+import com.setvect.bokslstock2.backtest.common.model.StockCode
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.ConstructorBinding
 

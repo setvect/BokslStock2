@@ -1,7 +1,7 @@
 package com.setvect.bokslstock2.index.entity
 
-import com.setvect.bokslstock2.analysis.common.entity.BaseTimeEntity
-import com.setvect.bokslstock2.analysis.common.model.StockCode
+import com.setvect.bokslstock2.backtest.common.entity.BaseTimeEntity
+import com.setvect.bokslstock2.backtest.common.model.StockCode
 import javax.persistence.*
 import javax.persistence.GenerationType.SEQUENCE
 

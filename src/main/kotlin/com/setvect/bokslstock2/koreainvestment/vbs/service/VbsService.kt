@@ -1,6 +1,6 @@
 package com.setvect.bokslstock2.koreainvestment.vbs.service
 
-import com.setvect.bokslstock2.analysis.common.model.StockCode
+import com.setvect.bokslstock2.backtest.common.model.StockCode
 import com.setvect.bokslstock2.common.model.TradeType
 import com.setvect.bokslstock2.config.BokslStockProperties
 import com.setvect.bokslstock2.koreainvestment.trade.entity.AssetHistoryEntity

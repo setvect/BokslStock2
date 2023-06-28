@@ -1,7 +1,7 @@
 package com.setvect.bokslstock2.value.service
 
 import com.google.gson.GsonBuilder
-import com.setvect.bokslstock2.analysis.common.service.ReportMakerHelperService
+import com.setvect.bokslstock2.backtest.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.util.NumberUtil
 import com.setvect.bokslstock2.value.dto.Rank
 import com.setvect.bokslstock2.value.dto.UsaCompanyDetail
