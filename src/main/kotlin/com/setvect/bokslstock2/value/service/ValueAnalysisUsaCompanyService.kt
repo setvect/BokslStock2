@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.charset.StandardCharsets
+import java.util.stream.Collectors
 
 
 @Service
@@ -29,13 +30,13 @@ class ValueAnalysisUsaCompanyService(
     private val gson = GsonBuilder().setPrettyPrinting().create()
 
     companion object {
-        private val USA_COMPANY_VALUE_FILE = File("crawl/finviz.com/finviz.json")
+        private val USA_COMPANY_VALUE_FILE = File("crawl/finviz.com/<선택하세요>.json")
         private val INCLUDE_COUNTRY = listOf("USA")
         // Energy 항목 추가할까 말까 고민. 재수 없으면 PTP 종목에 들어갈 수도 있음
         private val EXCLUDE_SECTOR = listOf("Real Estate", "Financial", "Energy")
         private val UPPER_RATIO = .7
         private val LOWER_RATIO = .9
-        private val PTP_LIST_PATH = "assets/PTP.txt"
+        private val PTP_LIST_PATH = listOf("assets/PTP1.txt", "assets/PTP2.txt")
     }
 
     /**
@@ -168,12 +169,13 @@ class ValueAnalysisUsaCompanyService(
     }
 
     private fun getDetailUrl2(ticker: String): String {
-        return "https://alphasquare.co.kr/home/trading/trading-order?code=$ticker"
+        return "https://alphasquare.co.kr/home/stock/financial-information?code=$ticker"
     }
 
     private fun filter(companyAllList: List<UsaCompanyDetail>): List<UsaCompanyDetail> {
         log.info("전체 Size: " + companyAllList.size)
         val ptp = loadPtpTicker()
+        log.info("PTP 종목: " + ptp.size)
         val companyFilterList = companyAllList
             .asSequence()
             .filter { INCLUDE_COUNTRY.contains(it.country) }
@@ -266,8 +268,12 @@ class ValueAnalysisUsaCompanyService(
      * PTP 종목 리스트
      */
     private fun loadPtpTicker(): Set<String> {
-        val inputStream = {}.javaClass.classLoader.getResourceAsStream(PTP_LIST_PATH)
-        val content = IOUtils.toString(inputStream, StandardCharsets.UTF_8)
+        // PTP_LIST_PATH 파일을 읽어서 Set으로 반환
+        val content = PTP_LIST_PATH.stream().map {
+            val inputStream = {}.javaClass.classLoader.getResourceAsStream(it)
+            return@map IOUtils.toString(inputStream, StandardCharsets.UTF_8)
+        }.collect(Collectors.joining("\n"))
+
         return content.split("\n")
             .filter { it.isNotBlank() }
             .filter { !it.startsWith("#") }
