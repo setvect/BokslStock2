@@ -253,7 +253,7 @@ TODO 작업해야됨
     1. 시총 순위 70% ~ 90% 사이 기업
     1. 국가: USA
     1. 제외 색터: Real Estate, Financial, Energy
-    1. PTP 종목 제외 [PTP.txt](src/main/resources/assets/PTP.txt) 참고
+    1. PTP 종목 제외 [PTP.txt](src/main/resources/assets) 참고
   - 순위 매김
       - 1/PER
       - 1/PBR
