@@ -164,17 +164,7 @@ gradlew makeInstallFile
 - [포트폴리오 비주얼라이저](https://www.portfoliovisualizer.com/)
 - [예시](https://www.portfoliovisualizer.com/test-market-timing-model?s=y&coreSatellite=false&timingModel=6&timePeriod=4&startYear=2018&firstMonth=1&endYear=2019&lastMonth=12&calendarAligned=true&includeYTD=false&initialAmount=10000&periodicAdjustment=0&adjustmentAmount=0&inflationAdjusted=true&adjustmentPercentage=0.0&adjustmentFrequency=4&symbols=SPY&singleAbsoluteMomentum=false&volatilityTarget=9.0&downsideVolatility=false&outOfMarketStartMonth=5&outOfMarketEndMonth=10&outOfMarketAssetType=2&outOfMarketAsset=TLT&movingAverageSignal=1&movingAverageType=1&multipleTimingPeriods=true&periodWeighting=2&windowSize=1&windowSizeInDays=105&movingAverageType2=1&windowSize2=10&windowSizeInDays2=105&excludePreviousMonth=false&normalizeReturns=false&volatilityWindowSize=0&volatilityWindowSizeInDays=0&assetsToHold=1&allocationWeights=1&riskControlType=0&riskWindowSize=10&riskWindowSizeInDays=0&stopLossMode=0&stopLossThreshold=2.0&stopLossAssetType=1&rebalancePeriod=1&separateSignalAsset=false&tradeExecution=0&leverageType=0&leverageRatio=0.0&debtAmount=0&debtInterest=0.0&maintenanceMargin=25.0&leveragedBenchmark=false&comparedAllocation=0&benchmark=VFINX&timingPeriods%5B0%5D=1&timingUnits%5B0%5D=2&timingWeights%5B0%5D=100&timingUnits%5B1%5D=2&timingUnits%5B2%5D=2&timingUnits%5B3%5D=2&timingWeights%5B3%5D=0&timingUnits%5B4%5D=2&timingWeights%5B4%5D=0&volatilityPeriodUnit=2&volatilityPeriodWeight=0)
 
-### 6.4. ~~RB~~ 사용안함 삭제예정
-
-- 메인 소스:[RbAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/analysis/rb/setvice/RbAnalysisService.kt)
-- 리밸런싱 매매 분석
-- 일정주기마다 리벨런싱 적용
-- 사용가능한 매매전략
-    - 영구포트폴리오
-    - 올웨더포트폴리오
-    - 등...
-
-### 6.5. 리벨런싱
+### 6.4. 리벨런싱
 
 - 메인 소스: [RebalanceAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/analysis/rebalance/service/RebalanceAnalysisService.kt)
 - 실행 소스:[RebalanceBacktest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/analysis/RebalanceBacktest.kt)
@@ -184,6 +174,17 @@ gradlew makeInstallFile
     - 영구포트폴리오
     - 올웨더포트폴리오
     - 등...
+
+
+### 6.5. 하방변동설 돌파 전략 
+- 메인소스: [IvbsBacktestService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/ivbs/service/IvbsBacktestService.kt)
+- 실행 소스: [IvbsBacktest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/backtest/IvbsBacktest.kt)
+- 매수 조건
+    - 목표가 >= 오늘 종가
+    - 목표가 산출 방법: 목표가 = 오늘 시가 - (어제 고가 - 어제 저가) * k
+- 매도 조건
+    - 매수 다음날 시가 매도
+- 결과: **쓰지마**
 
 ### 6.6. LAA
 
