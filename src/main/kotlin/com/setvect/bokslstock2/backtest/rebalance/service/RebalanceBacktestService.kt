@@ -1,6 +1,5 @@
 package com.setvect.bokslstock2.backtest.rebalance.service
 
-import com.setvect.bokslstock2.backtest.common.model.PreTrade
 import com.setvect.bokslstock2.backtest.common.model.StockCode
 import com.setvect.bokslstock2.backtest.common.model.TradeNeo
 import com.setvect.bokslstock2.backtest.common.service.BacktestTradeService
@@ -139,17 +138,6 @@ class RebalanceBacktestService(
                 val candle: CandleDto = rebalStock.candle
                 val stock = codeByStock[candle.stockCode]!!
 
-                // TODO 사용하지 않음
-                val preTrade = PreTrade(
-                    stockCode = StockCode.findByCode(stock.code),
-                    tradeType = TradeType.BUY,
-                    yield = 0.0,
-                    unitPrice = candle.openPrice,
-                    tradeDate = candle.candleDateTimeStart,
-                )
-                // 매수 금액
-                val buyAmount = rebalStock.getEvalPriceOpen()
-
                 // 매수후 현금
                 val tradeReportItem = TradeNeo(
                     stockCode = stock.convertStockCode(),
@@ -159,7 +147,7 @@ class RebalanceBacktestService(
                     tradeDate = candle.candleDateTimeStart,
                 )
                 tradeItemHistory.add(tradeReportItem)
-                buyStock[StockCode.findByCode(preTrade.stockCode.code)] = tradeReportItem
+                buyStock[StockCode.findByCode(stock.code)] = tradeReportItem
             }
         }
         return tradeItemHistory.toImmutableList()

@@ -30,7 +30,6 @@ import java.util.*
 @Service
 class DmBacktestService(
     private val stockRepository: StockRepository,
-    private val backtestTradeService: BacktestTradeService,
     private val candleRepository: CandleRepository,
     private val movingAverageService: MovingAverageService
 ) {
@@ -236,14 +235,6 @@ class DmBacktestService(
         val stockCodes = condition.listStock()
         // <종목코드, <날짜, 캔들>>
         val stockPriceIndex = getStockPriceIndex(stockCodes)
-
-        val range = backtestTradeService.fitBacktestRange(
-            condition.stockCodes,
-            condition.range,
-            condition.maxWeightMonth() + 1
-        )
-//        log.info("범위 조건 변경: ${condition.tradeCondition.range} -> $range")
-//        condition.tradeCondition.range = range
 
         var current =
             DateUtil.fitMonth(
