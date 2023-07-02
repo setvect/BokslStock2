@@ -20,6 +20,7 @@ data class BokslStockProperties(
         val korea: Korea,
         val global: Global,
         val exchangeRate: ExchangeRate,
+        val unemploymentRate: UnemploymentRate,
     ) {
         data class Korea(
             val url: UrlCollection,
@@ -39,6 +40,9 @@ data class BokslStockProperties(
         )
         data class ExchangeRate(
             val url: String
+        )
+        data class UnemploymentRate(
+            val key: String
         )
     }
 

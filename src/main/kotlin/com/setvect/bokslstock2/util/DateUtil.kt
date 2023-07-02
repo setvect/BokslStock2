@@ -62,9 +62,9 @@ object DateUtil {
         return format(localDateTime, yyyy_MM_dd_HH_mm_ss)
     }
 
-    fun format(localTime: LocalDate, pattern: String): String {
+    fun format(localDate: LocalDate, pattern: String = yyyy_MM_dd): String {
         val formatter = DateTimeFormatter.ofPattern(pattern)
-        return localTime.format(formatter)
+        return localDate.format(formatter)
     }
 
     fun format(localTime: LocalTime, pattern: String): String {

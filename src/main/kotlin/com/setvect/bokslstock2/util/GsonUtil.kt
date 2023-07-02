@@ -1,6 +1,8 @@
 package com.setvect.bokslstock2.util
 
 import com.google.gson.*
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonWriter
 import java.lang.reflect.Field
 import java.lang.reflect.Type
 import java.time.LocalDate
@@ -62,7 +64,21 @@ object GsonUtil {
                 JsonPrimitive(DateUtil.format(localDateTime!!, DateUtil.yyyy_MM_ddTHH_mm_ss))
             })
 
-        GSON = gsonBuilder.create()
+        gsonBuilder.registerTypeAdapter(LocalDate::class.java, object : TypeAdapter<LocalDate>() {
+            override fun write(out: JsonWriter, date: LocalDate?) {
+                if (date == null) {
+                    out.nullValue()
+                } else {
+                    out.value(DateUtil.format(date))
+                }
+            }
+
+            override fun read(`in`: JsonReader): LocalDate? {
+                return `in`.nextString()?.let { DateUtil.getLocalDate(it) }
+            }
+        })
+
+        GSON = gsonBuilder.setPrettyPrinting().create()
     }
 
     private fun separateCamelCase(name: String, separator: String): String {

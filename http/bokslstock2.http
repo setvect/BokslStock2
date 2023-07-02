@@ -11,3 +11,15 @@ content-type: application/json
 ### 웹소켓 닫기
 POST http://127.0.0.1:8083/trade/close HTTP/1.1
 content-type: application/json
+
+### 미국 실업률 통계
+POST https://kr.investing.com/economic-calendar/more-history
+user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36
+x-requested-with: XMLHttpRequest
+Content-Type: application/x-www-form-urlencoded
+
+eventID=379991&event_attr_ID=300&event_timestamp=2023-07-01&is_speech=0
+
+### 미국 실업률 통계
+GET https://api.stlouisfed.org/fred/series/observations?series_id=UNRATE&api_key=<Key>&file_type=json HTTP/1.1
+Content-Type: application/json

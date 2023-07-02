@@ -105,6 +105,11 @@ gradlew makeInstallFile
 ### 5.3.2. 수집 용어
 [수집항목_용어](docs/주식_용어.md) 참고
 
+### 5.4. 미국 실업률 통계
+- LAA 전략 구현을 위한 데이터 
+- 메인 소스: [CrawlerUnemploymentRateService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerUnemploymentRateService.kt)
+- 실행 소스: [CrawlerUnemploymentRateServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerUnemploymentRateServiceTest.kt)
+
 ## 6. 백테스트 전략
 
 ### 6.1. 이동평균돌파 전략

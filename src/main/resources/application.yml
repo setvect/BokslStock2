@@ -47,6 +47,8 @@ com:
           url: https://query1.finance.yahoo.com/v7/finance/download/{code}?period1={from}&period2={to}
         exchangeRate:
           url: https://spot.wooribank.com/pot/jcc?withyou=FXXRT0014&__ID=c008217
+        unemploymentRate:
+          key: <key 입력>
       koreainvestment:
         # 엑세스 키: 환경 변수 또는 직접 입력
         appkey: ${APPKEY}

@@ -1,10 +1,11 @@
 # 복슬스톡 TODO
 
 ## 진행예정
-- NEW-20230701: 하방 변동성 돌파 전략
+- NEW-20230702: LAA 백테스트
 - NEW-20220423: 샤프지수 계산 제대로 하기
 
 ## 완료
+- NEW-20230701: 하방 변동성 돌파 전략
 - NEW-20220806(20220807): 필드명 변경, CA_STOCK.STOCK_ID -> STOCK_SEQ
 - NEW-20220731(20220801): 외국 주가 수집 출처 변경
   - stooq -> https://finance.yahoo.com/quote/SPY/history?p=SPY
