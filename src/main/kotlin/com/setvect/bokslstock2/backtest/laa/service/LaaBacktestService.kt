@@ -3,14 +3,18 @@ package com.setvect.bokslstock2.backtest.laa.service
 import com.setvect.bokslstock2.backtest.common.model.StockCode
 import com.setvect.bokslstock2.backtest.common.model.TradeNeo
 import com.setvect.bokslstock2.backtest.common.service.BacktestTradeService
-import com.setvect.bokslstock2.backtest.rebalance.model.RebalanceBacktestCondition
+import com.setvect.bokslstock2.backtest.laa.model.LaaBacktestCondition
 import com.setvect.bokslstock2.common.model.TradeType
+import com.setvect.bokslstock2.crawl.model.UnemploymentData
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
+import com.setvect.bokslstock2.util.DateRange
+import com.setvect.bokslstock2.util.GsonUtil
 import okhttp3.internal.toImmutableList
+import org.apache.commons.io.FileUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -29,13 +33,13 @@ class LaaBacktestService(
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
-    fun runTest(condition: RebalanceBacktestCondition): List<TradeNeo> {
+    fun runTest(condition: LaaBacktestCondition): List<TradeNeo> {
         val rebalanceTradeHistory = makeRebalance(condition)
         return makeTrades(condition, rebalanceTradeHistory)
     }
 
-    private fun makeRebalance(condition: RebalanceBacktestCondition): MutableList<TradeInfo> {
-        val stockCodes = condition.listStock()
+    private fun makeRebalance(condition: LaaBacktestCondition): MutableList<TradeInfo> {
+        val stockCodes = condition.listStock().toMutableList()
 
         val range = backtestTradeService.fitBacktestRange(
             condition.stockCodes.map { it.stockCode }, condition.range
@@ -57,12 +61,20 @@ class LaaBacktestService(
 
         val rebalanceTradeHistory = mutableListOf<TradeInfo>()
 
+        var beforeOffense = false
+
+        // TODO 고정 종목으로 리벨러싱 하도록 만들어졌음. 변동 종목 리벨러싱은 고려해지 않았기 때문에 rebalance backtest를 먼저 수정
+        
         while (current.isBefore(condition.range.toDate) || current.isEqual(condition.range.to.toLocalDate())) {
             val changeDeviation = beforeTrade.deviation() >= condition.rebalanceFacter.threshold
+            val offense = isOffense(current, condition.testStockCode, condition.testMa)
+            log.info("$current 공격자산 여부: $offense")
+
+            val isChangeStock = beforeOffense != offense
             // 편차가 기준치 이상 리벨런싱
-            if (beforeTrade.buyStocks.isEmpty() || changeDeviation) {
+            if (beforeTrade.buyStocks.isEmpty() || changeDeviation || isChangeStock) {
                 // 원래는 부분적으로 샀다 팔아야 되는데 개발하기 귄찮아 전체 매도후 매수하는 방법으로 함
-                val (buyStocks, afterCash) = rebalance(beforeTrade, condition, stockPriceIndex, current)
+                val (buyStocks, afterCash) = rebalance(beforeTrade, condition, stockPriceIndex, current, offense)
 
                 rebalanceTradeHistory.add(TradeInfo(current, buyStocks, afterCash, true))
             }
@@ -76,6 +88,7 @@ class LaaBacktestService(
             }
             current = incrementDate(periodType, current)
             beforeTrade = rebalanceTradeHistory.last()
+            beforeOffense = offense
         }
 
         rebalanceTradeHistory.forEach { trade ->
@@ -99,11 +112,10 @@ class LaaBacktestService(
         return rebalanceTradeHistory
     }
 
-    private fun makeTrades(condition: RebalanceBacktestCondition, rebalanceTradeHistory: List<TradeInfo>): List<TradeNeo> {
+    private fun makeTrades(condition: LaaBacktestCondition, rebalanceTradeHistory: List<TradeInfo>): List<TradeNeo> {
         val tradeItemHistory = mutableListOf<TradeNeo>()
         // <종목코드, 종목정보>
-        val codeByStock =
-            condition.stockCodes.map { it.stockCode }.associateWith { stockRepository.findByCode(it.code).get() }
+        val codeByStock = condition.listStock().associateWith { stockRepository.findByCode(it.code).get() }
         // <종목코드, 직전 preTrade>
         val buyStock = HashMap<StockCode, TradeNeo>()
 
@@ -117,7 +129,10 @@ class LaaBacktestService(
                 rebalanceItem.buyStocks.forEach { rebalStock ->
                     val candle: CandleDto = rebalStock.candle
                     val stock = codeByStock[candle.stockCode]!!
-                    val buyTrade = buyStock[candle.stockCode] ?: throw RuntimeException("${candle.stockCode} 매수 내역이 없습니다.")
+                    val buyTrade = buyStock[candle.stockCode]
+                    if (buyTrade == null){
+                        throw RuntimeException("${candle.stockCode} 매수 내역이 없습니다.")
+                    }
 
                     buyStock.remove(rebalStock.candle.stockCode)
 
@@ -155,22 +170,27 @@ class LaaBacktestService(
 
     /**
      * 전체 종목을 일괄 매도후 비중에 맞게 다시 매수
+     * @return <매수종목, 매수후 현금>
      */
     private fun rebalance(
         beforeTrade: TradeInfo,
-        condition: RebalanceBacktestCondition,
+        condition: LaaBacktestCondition,
         stockPriceIndex: Map<StockCode, Map<LocalDate, CandleDto>>,
-        current: LocalDate
+        current: LocalDate,
+        offense: Boolean
     ): Pair<List<BuyStock>, Double> {
+        val stockCodes = condition.stockCodes.toMutableList()
+        val buyStockCode = if (offense) condition.offenseCode else condition.defenseCode
+        stockCodes.add(LaaBacktestCondition.TradeStock(buyStockCode, condition.laaWeight))
+
         // 시작 지점 시가 기준 매도
-        val sellAmount =
-            beforeTrade.buyStocks.sumOf {
-                val candleDto: CandleDto = stockPriceIndex[it.candle.stockCode]!![current]!!
-                it.qty * candleDto.openPrice
-            }
+        val sellAmount = beforeTrade.buyStocks.sumOf {
+            val candleDto: CandleDto = stockPriceIndex[it.candle.stockCode]!![current]!!
+            it.qty * candleDto.openPrice
+        }
         val currentCash = sellAmount + beforeTrade.cash
 
-        val buyStocks = condition.stockCodes.map { stock ->
+        val buyStocks = stockCodes.map { stock ->
             val candleDto: CandleDto = stockPriceIndex[stock.stockCode]!![current]!!
 
             val buyPrice = currentCash * (stock.weight / 100.0)
@@ -179,6 +199,50 @@ class LaaBacktestService(
         }
         val afterCash = currentCash - buyStocks.sumOf { it.getEvalPriceOpen() }
         return Pair(buyStocks, afterCash)
+    }
+
+    /**
+     * 공격자산 수비자산 판단 기준
+     */
+    private fun isOffense(current: LocalDate, testStockCode: StockCode, testMa: Int): Boolean {
+        val movingAverage = movingAverageService.getMovingAverage(
+            testStockCode,
+            PeriodType.PERIOD_DAY,
+            PeriodType.PERIOD_DAY,
+            listOf(testMa),
+            DateRange(current.minusMonths(13), current)
+        )
+
+        val maPrice = movingAverage.last().average[testMa]!!
+        // 공격자산 판단 지수가 이동평균보다 높으면 공격자산 선택
+        if (maPrice < movingAverage.last().openPrice) {
+            return true
+        }
+
+        // 실업률 통계
+        val unemploymentData: UnemploymentData = getUnemploymentData()
+        val observations = unemploymentData.observations
+        // 현재 날짜보다 1개월 이전 실업률 데이터
+        val currentRate = observations.last { it.date.isBefore(current.minusMonths(1)) }.value.toDouble()
+
+        // 현재 날짜보다 1개월 이전 부터 13개월 이전 사이의 실업률 평균
+        val averageRate = observations.filter {
+            it.date.isAfter(current.minusMonths(13)) && it.date.isBefore(current.minusMonths(1))
+        }.map { it.value.toDouble() }.average()
+
+        // 최근 실업률이 12개월 평균 실업률보다 낮으면 공격자산 선택
+        return currentRate < averageRate
+    }
+
+    companion object {
+        /**
+         * @return 미국 실업률 통계
+         */
+        private fun getUnemploymentData(): UnemploymentData {
+            val file = FileUtils.getFile("crawl/미국실업률통계", "/unemployment_rate.json")
+            val json = FileUtils.readFileToString(file, "UTF-8");
+            return GsonUtil.GSON.fromJson(json, UnemploymentData::class.java)
+        }
     }
 
     private fun incrementDate(
@@ -192,14 +256,6 @@ class LaaBacktestService(
             PeriodType.PERIOD_HALF -> current.plusMonths(6)
             PeriodType.PERIOD_YEAR -> current.plusYears(1)
             else -> current
-        }
-    }
-
-
-    private fun checkValidate(rebalanceBacktestCondition: RebalanceBacktestCondition) {
-        val sumWeight = rebalanceBacktestCondition.stockCodes.sumOf { it.weight }
-        if (sumWeight != 100) {
-            throw RuntimeException("비중 합계는 100이여야 됩니다.")
         }
     }
 

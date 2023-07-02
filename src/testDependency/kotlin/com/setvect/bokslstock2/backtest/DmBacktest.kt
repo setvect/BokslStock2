@@ -68,7 +68,9 @@ class DmBacktest {
         accountService.addTrade(tradeNeoList)
         accountService.calcTradeResult()
         accountService.calcEvaluationRate()
-        val reportFile = File("./backtest-result/dm-trade-report", "dm_trade_${range.fromDate}~${range.toDate}.xlsx")
+        val dir = File("./backtest-result/dm-trade-report")
+        dir.mkdirs()
+        val reportFile = File(dir, "dm_trade_${range.fromDate}~${range.toDate}.xlsx")
 
         accountService.makeReport(reportFile, DmBacktestService.MomentumScoreSheetMaker(dualMomentumResult.momentumScoreList, dmBacktestCondition))
         log.info(reportFile.absolutePath)

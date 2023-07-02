@@ -73,6 +73,7 @@ class CrawlerStockPriceServiceTest {
         crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.OS_CODE_SHY, PeriodType.PERIOD_DAY)
         crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.OS_CODE_GLD, PeriodType.PERIOD_DAY)
         crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.OS_CODE_IEF, PeriodType.PERIOD_DAY)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.OS_CODE_IWD, PeriodType.PERIOD_DAY)
         println("끝.")
     }
 

@@ -82,8 +82,9 @@ class MovingAverageTest {
         ExcelStyle.applyAllBorder(sheet)
         ExcelStyle.applyDefaultFont(sheet)
 
-        val reportFile =
-            File("./temp", "주가정보_${stockCode.desc}(${stockCode})_${periodType}.xlsx")
+        val dir = File("./temp")
+        dir.mkdirs()
+        val reportFile = File(dir, "주가정보_${stockCode.desc}(${stockCode})_${periodType}.xlsx")
         FileOutputStream(reportFile).use { ous ->
             workbook.write(ous)
         }

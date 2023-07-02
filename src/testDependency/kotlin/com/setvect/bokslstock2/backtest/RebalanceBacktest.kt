@@ -88,10 +88,8 @@ class RebalanceBacktest {
         accountService.addTrade(tradeNeoList)
         accountService.calcTradeResult()
         accountService.calcEvaluationRate()
-        val reportFile = File(
-            "./backtest-result/rebalance-trade-report",
-            "rebalance_trade_${rebalanceBacktestCondition.range.fromDate}~${rebalanceBacktestCondition.range.toDate}.xlsx"
-        )
+        val dir = File( "./backtest-result/rebalance-trade-report")
+        val reportFile = File(dir, "rebalance_trade_${rebalanceBacktestCondition.range.fromDate}~${rebalanceBacktestCondition.range.toDate}.xlsx")
         accountService.makeReport(reportFile)
         log.info(reportFile.absolutePath)
         log.info("끝.")

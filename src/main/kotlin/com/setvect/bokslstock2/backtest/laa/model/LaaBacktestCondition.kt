@@ -1,7 +1,6 @@
 package com.setvect.bokslstock2.backtest.laa.model
 
 import com.setvect.bokslstock2.backtest.common.model.StockCode
-import com.setvect.bokslstock2.backtest.rebalance.model.RebalanceBacktestCondition
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.util.DateRange
@@ -19,17 +18,27 @@ data class LaaBacktestCondition(
     /**
      * 고정자산 종류
      */
-    val stockCodes: List<RebalanceBacktestCondition.TradeStock>,
+    val stockCodes: List<TradeStock>,
 
     /**
      * 고정자산 리벨리싱
      */
-    val rebalanceFacter: RebalanceBacktestCondition.RebalanceFacter,
+    val rebalanceFacter: RebalanceFacter,
 
     /**
      * LAA 변경 자산 비중 0.25 == 25%
      */
-    val laaWeight: Double,
+    val laaWeight: Int,
+
+    /**
+     * 공경자산/방어자산 평가를 위한 테스트 종목 테스트 기준
+     */
+    val testStockCode: StockCode,
+
+    /**
+     * 공경자산/방어자산 평가를 위한 테스트 종목 이동평균 기간
+     */
+    val testMa: Int,
 
     /**
      * LAA 공격자산 종목
@@ -70,8 +79,14 @@ data class LaaBacktestCondition(
         val threshold: Double
     )
 
+    /**
+     * @return 사용하는 전체 종목 코드
+     */
     fun listStock(): List<StockCode> {
-        return stockCodes.map { it.stockCode }
+        val codes = stockCodes.map { it.stockCode }.toMutableList()
+        codes.add(offenseCode)
+        codes.add(defenseCode)
+        return codes
     }
 
     fun sumWeight(): Int {
