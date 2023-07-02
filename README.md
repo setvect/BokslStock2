@@ -109,6 +109,7 @@ gradlew makeInstallFile
 - LAA 전략 구현을 위한 데이터 
 - 메인 소스: [CrawlerUnemploymentRateService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerUnemploymentRateService.kt)
 - 실행 소스: [CrawlerUnemploymentRateServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerUnemploymentRateServiceTest.kt)
+- [여기](https://fred.stlouisfed.org/)서 API Key 신청을 해야됨
 
 ## 6. 백테스트 전략
 
@@ -192,6 +193,18 @@ gradlew makeInstallFile
 - 결과: **쓰지마**
 
 ### 6.6. LAA
+
+- 매수 조건
+  - IWD(미국 중소형) / GLD(IAU) / IEF 각 25%는 고정
+  - 나머지 25%는아래 두 조건 모두 만족시 SHY(단기채권) 매수
+    - 현재 미국 SPY 지수가 200일 평균보다 낮은가
+    - 수정주가 이용
+    - 현재 미국 실업률이 12개월 평균 보다 낮은가?
+  - 그렇지 않은 경우 QQQ 매수
+- 매도 조건
+  - 3개월 마다 혹은 차이가 너무 벌어지면 리밸러싱
+  - 여기서 너무 벌어진다는 조건은 무엇일까?
+
 
 #### 6.6.1. 수정 주가 (adjusted stock price)
 

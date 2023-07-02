@@ -124,7 +124,7 @@ class DmBacktestService(
 
             // 듀얼 모멘텀 매수 대상 종목이 없으면, hold 종목 매수 또는 현금 보유
             if (momentTargetRate.isEmpty()) {
-                // TODO condition.holdCode == null 이면 오류 남. 확인해 볼것
+                // TODO condition.offenseCode == null 이면 오류 남. 확인해 볼것
                 val changeBuyStock = beforeBuyTrade != null && beforeBuyTrade.stockCode.code != condition.holdCode!!.code
                 val existHoldCode = condition.holdCode != null
 

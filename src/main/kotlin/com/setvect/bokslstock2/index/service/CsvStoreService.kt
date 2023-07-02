@@ -70,6 +70,9 @@ class CsvStoreService(
         log.info("시세 데이터 입력: ${stock.name}(${stock.code} - ${periodType}), ${candleList.first().candleDateTime} ~ ${candleList.last().candleDateTime}, ${String.format("%,d", candleList.size)}건")
     }
 
+    /**
+     * 수정주가로 저장
+     */
     private fun loadCandle(
         csvStock: File,
         stock: StockEntity,
