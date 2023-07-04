@@ -4,14 +4,11 @@ import com.setvect.bokslstock2.backtest.common.model.StockCode
 import com.setvect.bokslstock2.backtest.common.model.TradeNeo
 import com.setvect.bokslstock2.backtest.common.service.BacktestTradeService
 import com.setvect.bokslstock2.backtest.rebalance.model.RebalanceBacktestCondition
-import com.setvect.bokslstock2.backtest.rebalance.model.RebalanceTrade
 import com.setvect.bokslstock2.common.model.TradeType
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType
-import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.index.service.MovingAverageService
 import com.setvect.bokslstock2.util.ApplicationUtil
-import okhttp3.internal.toImmutableList
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -24,7 +21,6 @@ import kotlin.math.abs
  */
 @Service
 class RebalanceBacktestService(
-    private val stockRepository: StockRepository,
     private val backtestTradeService: BacktestTradeService,
     private val movingAverageService: MovingAverageService,
 ) {
@@ -141,71 +137,6 @@ class RebalanceBacktestService(
         it: TradeNeo,
         current: LocalDate
     ) = stockPriceIndex[it.stockCode]!![current]!!.closePrice * it.qty
-
-    private fun makeTrades(condition: RebalanceBacktestCondition, rebalanceTradeHistory: List<RebalanceTrade>): List<TradeNeo> {
-        val tradeItemHistory = mutableListOf<TradeNeo>()
-        // <종목코드, 종목정보>
-        val codeByStock =
-            condition.stockByWeight.map { it.stockCode }.associateWith { stockRepository.findByCode(it.code).get() }
-        // <종목코드, 직전 preTrade>
-        val buyStock = HashMap<StockCode, TradeNeo>()
-
-        rebalanceTradeHistory.forEach { rebalanceItem ->
-            // 리벨런싱 됐을 때만 매매
-            if (!rebalanceItem.rebalance) {
-                return@forEach
-            }
-            if (buyStock.isNotEmpty()) {
-                // ---------- 매도
-                rebalanceItem.rebalanceBuyStocks.forEach { rebalStock ->
-                    val candle: CandleDto = rebalStock.candle
-                    val stock = codeByStock[candle.stockCode]!!
-                    val buyTrade = buyStock[candle.stockCode] ?: throw RuntimeException("${candle.stockCode} 매수 내역이 없습니다.")
-
-                    buyStock.remove(rebalStock.candle.stockCode)
-
-                    val tradeReportItem = TradeNeo(
-                        stockCode = StockCode.findByCode(stock.code),
-                        tradeType = TradeType.SELL,
-                        price = candle.openPrice,
-                        qty = buyTrade.qty,
-                        tradeDate = candle.candleDateTimeStart,
-                    )
-                    tradeItemHistory.add(tradeReportItem)
-
-                }
-            }
-
-            // ---------- 매수
-            rebalanceItem.rebalanceBuyStocks.forEach { rebalStock ->
-                val candle: CandleDto = rebalStock.candle
-                val stock = codeByStock[candle.stockCode]!!
-
-                // 매수후 현금
-                val tradeReportItem = TradeNeo(
-                    stockCode = stock.convertStockCode(),
-                    tradeType = TradeType.BUY,
-                    price = candle.openPrice,
-                    qty = rebalStock.qty,
-                    tradeDate = candle.candleDateTimeStart,
-                )
-                tradeItemHistory.add(tradeReportItem)
-                buyStock[StockCode.findByCode(stock.code)] = tradeReportItem
-            }
-        }
-        return tradeItemHistory.toImmutableList()
-    }
-
-    /**
-     * 전체 종목을 일괄 매도후 비중에 맞게 다시 매수
-     */
-
-    private fun checkValidate(rebalanceBacktestCondition: RebalanceBacktestCondition) {
-        val sumWeight = rebalanceBacktestCondition.stockByWeight.sumOf { it.weight }
-        if (sumWeight != 100) {
-            throw RuntimeException("비중 합계는 100이여야 됩니다.")
-        }
-    }
 
     /**
      * @return <종목코드, <날짜, 캔들>>
