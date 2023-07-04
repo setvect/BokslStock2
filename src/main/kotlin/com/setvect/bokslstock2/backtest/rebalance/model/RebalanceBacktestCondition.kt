@@ -18,7 +18,7 @@ data class RebalanceBacktestCondition(
     /**
      * 대상 종목 코드
      */
-    val stockCodes: List<TradeStock>,
+    val stockByWeight: List<StockByWeight>,
 
     /**
      * 리벨런싱 조건
@@ -26,7 +26,7 @@ data class RebalanceBacktestCondition(
     val rebalanceFacter: RebalanceFacter
 
 ) {
-    data class TradeStock(
+    data class StockByWeight(
         /**
          * 매매 코드
          * @see StockEntity
@@ -55,10 +55,10 @@ data class RebalanceBacktestCondition(
     )
 
     fun listStock(): List<StockCode> {
-        return stockCodes.map { it.stockCode }
+        return stockByWeight.map { it.stockCode }
     }
 
     fun sumWeight(): Int {
-        return stockCodes.sumOf { it.weight }
+        return stockByWeight.sumOf { it.weight }
     }
 }

@@ -34,7 +34,7 @@ class StockByDateCandle(
         for (i in 0..10) {
             return candleMap[localDate.minusDays(i.toLong())] ?: continue
         }
-        throw IllegalArgumentException("종목 정보가 없음. 종목코드: ${stockCode.code}, 날짜: $localDate")
+        throw IllegalArgumentException("종목 정보가 없음. 종목코드: ${stockCode.name}(${stockCode.code}), 날짜: $localDate")
     }
 
     /**

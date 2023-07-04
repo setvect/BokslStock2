@@ -3,7 +3,6 @@ package com.setvect.bokslstock2.backtest.rebalance.service
 import com.setvect.bokslstock2.backtest.common.model.StockCode
 import com.setvect.bokslstock2.backtest.common.model.TradeNeo
 import com.setvect.bokslstock2.backtest.common.service.BacktestTradeService
-import com.setvect.bokslstock2.backtest.rebalance.model.RebalanceBuyStock
 import com.setvect.bokslstock2.backtest.rebalance.model.RebalanceBacktestCondition
 import com.setvect.bokslstock2.backtest.rebalance.model.RebalanceTrade
 import com.setvect.bokslstock2.common.model.TradeType
@@ -18,6 +17,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.util.*
+import kotlin.math.abs
 
 /**
  * 리벨런싱 백테스트
@@ -31,15 +31,10 @@ class RebalanceBacktestService(
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
     fun runTest(condition: RebalanceBacktestCondition): List<TradeNeo> {
-        val rebalanceTradeHistory = makeRebalance(condition)
-        return makeTrades(condition, rebalanceTradeHistory)
-    }
-
-    private fun makeRebalance(condition: RebalanceBacktestCondition): MutableList<RebalanceTrade> {
         val stockCodes = condition.listStock()
 
         val range = backtestTradeService.fitBacktestRange(
-            condition.stockCodes.map { it.stockCode }, condition.range
+            condition.stockByWeight.map { it.stockCode }, condition.range
         )
         log.info("범위 조건 변경: ${condition.range} -> $range")
         condition.range = range
@@ -53,58 +48,105 @@ class RebalanceBacktestService(
         if (current.isBefore(condition.range.fromDate)) {
             current = ApplicationUtil.fitEndDate(condition.rebalanceFacter.periodType, condition.range.fromDate).plusDays(1)
         }
+        var currentCash = condition.cash
+        var beforeTradeList = mutableListOf<TradeNeo>()
+        val tradeList = mutableListOf<TradeNeo>()
 
-        var beforeTrade = RebalanceTrade(date = current, rebalanceBuyStocks = listOf(), cash = condition.cash, false)
-
-        val rebalanceTradeHistory = mutableListOf<RebalanceTrade>()
-
+        var deviation = 0.0
         while (current.isBefore(condition.range.toDate) || current.isEqual(condition.range.to.toLocalDate())) {
-            val changeDeviation = beforeTrade.deviation() >= condition.rebalanceFacter.threshold
+            val stockByWeight = condition.stockByWeight.associate { it.stockCode to it.weight }
+
+            val changeDeviation = deviation >= condition.rebalanceFacter.threshold
             // 편차가 기준치 이상 리벨런싱
-            if (beforeTrade.rebalanceBuyStocks.isEmpty() || changeDeviation) {
+            if (beforeTradeList.isEmpty() || changeDeviation) {
                 // 원래는 부분적으로 샀다 팔아야 되는데 개발하기 귄찮아 전체 매도후 매수하는 방법으로 함
-                val (buyStocks, afterCash) = rebalance(beforeTrade, condition, stockPriceIndex, current)
 
-                rebalanceTradeHistory.add(RebalanceTrade(current, buyStocks, afterCash, true))
-            }
-            // 편차가 기준이 미만이면 종목 가격만 교체
-            else {
-                val rebalanceBuyStocks = beforeTrade.rebalanceBuyStocks.map {
-                    val candleDto: CandleDto = stockPriceIndex[it.candle.stockCode]!![current]!!
-                    RebalanceBuyStock(candleDto, it.qty, it.weight)
+                // 시작 지점 시가 기준 매도
+                val totalEvalPrice = beforeTradeList.sumOf {
+                    val openPrice = stockPriceIndex[it.stockCode]!![current]!!.openPrice
+                    it.qty * openPrice
                 }
-                rebalanceTradeHistory.add(RebalanceTrade(current, rebalanceBuyStocks, beforeTrade.cash, false))
-            }
-            current = incrementDate(periodType, current)
-            beforeTrade = rebalanceTradeHistory.last()
-        }
+                beforeTradeList.forEach {
+                    val candleDto = stockPriceIndex[it.stockCode]!![current]!!
+                    val openPrice = candleDto.openPrice
+                    val currentRate = ApplicationUtil.truncateDecimal(it.qty * openPrice / totalEvalPrice * 100.0, 2)
+                    tradeList.add(
+                        TradeNeo(
+                            stockCode = it.stockCode,
+                            tradeType = TradeType.SELL,
+                            price = openPrice,
+                            qty = it.qty,
+                            tradeDate = candleDto.candleDateTimeStart,
+                            memo = "요구비율: ${stockByWeight[it.stockCode]}%, 현재 비율: $currentRate%"
+                        )
+                    )
+                    currentCash += it.qty * openPrice
+                }
 
-        rebalanceTradeHistory.forEach { trade ->
-            log.info(
-                "날짜: ${trade.date}, " +
-                        "종가 평가가격: ${trade.getEvalPriceClose()}, " +
-                        "편차: ${String.format("%,.4f", trade.deviation())}, " +
-                        "리벨런싱: ${trade.rebalance}"
-            )
-            trade.rebalanceBuyStocks.forEach { stock ->
-                log.info(
-                    "\t종목:${stock.candle.stockCode}, " +
-                            "수량: ${stock.qty}, " +
-                            "종가: ${stock.candle.closePrice}, " +
-                            "평가금액: ${stock.getEvalPriceClose()}, " +
-                            "설정비중: ${stock.weight}%, " +
-                            "현재비중: ${String.format("%,.3f%%", stock.realWeight(trade.getEvalPriceCloseWithoutCash()))}",
-                )
+                // 매수 하기
+                beforeTradeList = condition.stockByWeight.map { stock ->
+                    val candleDto: CandleDto = stockPriceIndex[stock.stockCode]!![current]!!
+                    val buyPrice = currentCash * (stock.weight / 100.0)
+                    val quantify = (buyPrice / candleDto.openPrice).toInt()
+                    val currentRate = ApplicationUtil.truncateDecimal(quantify * candleDto.openPrice / currentCash * 100.0, 2)
+                    TradeNeo(
+                        stockCode = stock.stockCode,
+                        tradeType = TradeType.BUY,
+                        price = candleDto.openPrice,
+                        qty = quantify,
+                        tradeDate = candleDto.candleDateTimeStart,
+                        // currentCash으로 나눠서 계산하면 정확한 비율이 나오지는 않음. 그래도 오차가 별로 없기 때문에 그냥 적용하기로 함
+                        memo = "요구비율: ${stockByWeight[stock.stockCode]}%, 현재 비율: $currentRate%"
+                    )
+                }.toMutableList()
+                tradeList.addAll(beforeTradeList)
+                currentCash -= beforeTradeList.sumOf { it.qty * it.price }
             }
+
+            // 날짜 증가시키기 전 종가 기준 편차 계산
+            deviation = deviation(beforeTradeList, stockPriceIndex, stockByWeight, current)
+            current = ApplicationUtil.incrementDate(periodType, current)
         }
-        return rebalanceTradeHistory
+        return tradeList
     }
+
+    /**
+     * [currentBuyTrade] 매수하고 있는 거래 내역
+     * [stockPriceIndex] <종목코드, <날짜, 캔들>> 가격
+     * [stockByWeight] 종목별 보유 가중치
+     * [current] 현재 날짜
+     * @return 종가 기준 편차 계산
+     */
+    private fun deviation(
+        currentBuyTrade: MutableList<TradeNeo>,
+        stockPriceIndex: Map<StockCode, Map<LocalDate, CandleDto>>,
+        stockByWeight: Map<StockCode, Int>,
+        current: LocalDate
+    ): Double {
+        // 현재 평가 가격을 모두 더함
+        val sum = currentBuyTrade.sumOf { getEvalPrice(stockPriceIndex, it, current) }
+
+        return currentBuyTrade.sumOf {
+            val d = stockByWeight[it.stockCode]!! / 100.0
+            val evalPrice = getEvalPrice(stockPriceIndex, it, current)
+            abs(d - (evalPrice / sum))
+        }
+    }
+
+    /**
+     * @return 평가금액
+     */
+    private fun getEvalPrice(
+        stockPriceIndex: Map<StockCode, Map<LocalDate, CandleDto>>,
+        it: TradeNeo,
+        current: LocalDate
+    ) = stockPriceIndex[it.stockCode]!![current]!!.closePrice * it.qty
 
     private fun makeTrades(condition: RebalanceBacktestCondition, rebalanceTradeHistory: List<RebalanceTrade>): List<TradeNeo> {
         val tradeItemHistory = mutableListOf<TradeNeo>()
         // <종목코드, 종목정보>
         val codeByStock =
-            condition.stockCodes.map { it.stockCode }.associateWith { stockRepository.findByCode(it.code).get() }
+            condition.stockByWeight.map { it.stockCode }.associateWith { stockRepository.findByCode(it.code).get() }
         // <종목코드, 직전 preTrade>
         val buyStock = HashMap<StockCode, TradeNeo>()
 
@@ -157,48 +199,9 @@ class RebalanceBacktestService(
     /**
      * 전체 종목을 일괄 매도후 비중에 맞게 다시 매수
      */
-    private fun rebalance(
-        beforeTrade: RebalanceTrade,
-        condition: RebalanceBacktestCondition,
-        stockPriceIndex: Map<StockCode, Map<LocalDate, CandleDto>>,
-        current: LocalDate
-    ): Pair<List<RebalanceBuyStock>, Double> {
-        // 시작 지점 시가 기준 매도
-        val sellAmount =
-            beforeTrade.rebalanceBuyStocks.sumOf {
-                val candleDto: CandleDto = stockPriceIndex[it.candle.stockCode]!![current]!!
-                it.qty * candleDto.openPrice
-            }
-        val currentCash = sellAmount + beforeTrade.cash
-
-        val rebalanceBuyStocks = condition.stockCodes.map { stock ->
-            val candleDto: CandleDto = stockPriceIndex[stock.stockCode]!![current]!!
-
-            val buyPrice = currentCash * (stock.weight / 100.0)
-            val quantify = (buyPrice / candleDto.openPrice).toInt()
-            RebalanceBuyStock(candleDto, quantify, stock.weight)
-        }
-        val afterCash = currentCash - rebalanceBuyStocks.sumOf { it.getEvalPriceOpen() }
-        return Pair(rebalanceBuyStocks, afterCash)
-    }
-
-    private fun incrementDate(
-        periodType: PeriodType,
-        current: LocalDate
-    ): LocalDate {
-        return when (periodType) {
-            PeriodType.PERIOD_WEEK -> current.plusWeeks(1)
-            PeriodType.PERIOD_MONTH -> current.plusMonths(1)
-            PeriodType.PERIOD_QUARTER -> current.plusMonths(3)
-            PeriodType.PERIOD_HALF -> current.plusMonths(6)
-            PeriodType.PERIOD_YEAR -> current.plusYears(1)
-            else -> current
-        }
-    }
-
 
     private fun checkValidate(rebalanceBacktestCondition: RebalanceBacktestCondition) {
-        val sumWeight = rebalanceBacktestCondition.stockCodes.sumOf { it.weight }
+        val sumWeight = rebalanceBacktestCondition.stockByWeight.sumOf { it.weight }
         if (sumWeight != 100) {
             throw RuntimeException("비중 합계는 100이여야 됩니다.")
         }

@@ -33,7 +33,7 @@ class RebalanceBacktest {
         val rebalanceBacktestCondition = RebalanceBacktestCondition(
             range = range,
             cash = 20_000_000.0,
-            stockCodes = listOf(
+            stockByWeight = listOf(
 
 //                    RebalanceBacktestCondition.TradeStock(StockCode.TIGER_NASDAQ_133690, 100),
 //                    RebalanceBacktestCondition.TradeStock(StockCode.EXCHANGE_DOLLAR, 50),
@@ -63,11 +63,11 @@ class RebalanceBacktest {
 //                    RebalanceBacktestCondition.TradeStock(StockCode.KOSEF_TREASURY_BOND_10_148070, 25),
 //                    RebalanceBacktestCondition.TradeStock(StockCode.KODEX_200_USD_BOND_284430, 42),
 
-                RebalanceBacktestCondition.TradeStock(StockCode.TIGER_NASDAQ_133690, 17),
-                RebalanceBacktestCondition.TradeStock(StockCode.KODEX_200_069500, 18),
-                RebalanceBacktestCondition.TradeStock(StockCode.KODEX_GLD_H_132030, 15),
-                RebalanceBacktestCondition.TradeStock(StockCode.KOSEF_TREASURY_BOND_10_148070, 25),
-                RebalanceBacktestCondition.TradeStock(StockCode.EXCHANGE_DOLLAR, 25),
+                RebalanceBacktestCondition.StockByWeight(StockCode.TIGER_NASDAQ_133690, 17),
+                RebalanceBacktestCondition.StockByWeight(StockCode.KODEX_200_069500, 18),
+                RebalanceBacktestCondition.StockByWeight(StockCode.KODEX_GLD_H_132030, 15),
+                RebalanceBacktestCondition.StockByWeight(StockCode.KOSEF_TREASURY_BOND_10_148070, 25),
+                RebalanceBacktestCondition.StockByWeight(StockCode.EXCHANGE_DOLLAR, 25),
             ),
             rebalanceFacter = RebalanceBacktestCondition.RebalanceFacter(PeriodType.PERIOD_HALF, 0.05),
         )
@@ -75,7 +75,7 @@ class RebalanceBacktest {
         val tradeNeoList = rebalanceBacktestService.runTest(rebalanceBacktestCondition)
         val accountCondition = AccountService.AccountCondition(rebalanceBacktestCondition.cash, 0.001, 0.001)
 
-        val stockInfo = rebalanceBacktestCondition.stockCodes.joinToString("\n") { stock ->
+        val stockInfo = rebalanceBacktestCondition.stockByWeight.joinToString("\n") { stock ->
             "\t${stock.stockCode.code}[${stock.stockCode.desc}]\t비율: ${stock.weight}%"
         }
         val specialInfo = "대상종목${stockInfo}\n" +

@@ -377,5 +377,26 @@ object ApplicationUtil {
         return yieldHistory.toImmutableList()
     }
 
+    /**
+     * @return 현제 날짜를 주기에 맞게 증가시킨 날짜 반환
+     */
+    fun incrementDate(
+        periodType: PeriodType,
+        current: LocalDate
+    ): LocalDate {
+        return when (periodType) {
+            PeriodType.PERIOD_WEEK -> current.plusWeeks(1)
+            PeriodType.PERIOD_MONTH -> current.plusMonths(1)
+            PeriodType.PERIOD_QUARTER -> current.plusMonths(3)
+            PeriodType.PERIOD_HALF -> current.plusMonths(6)
+            PeriodType.PERIOD_YEAR -> current.plusYears(1)
+            else -> current
+        }
+    }
+
+    fun truncateDecimal(number: Double, decimalPoints: Int): Double {
+        val powerOfTen = 10.0.pow(decimalPoints.toDouble())
+        return (number * powerOfTen).toLong() / powerOfTen
+    }
 
 }
