@@ -2,7 +2,7 @@ package com.setvect.bokslstock2.koreainvestment.trade.model.web
 
 import java.time.LocalDateTime
 
-data class TradeSearchForm(
+data class  TradeSearchForm(
     override val from: LocalDateTime? = null,
 
     override val to: LocalDateTime? = null,

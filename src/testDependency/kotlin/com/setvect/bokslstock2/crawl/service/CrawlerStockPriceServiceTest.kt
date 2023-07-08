@@ -69,6 +69,7 @@ class CrawlerStockPriceServiceTest {
 //        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_BANK_091170, PeriodType.PERIOD_DAY)
 //        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_KOSDAQ_229200, PeriodType.PERIOD_DAY)
 //        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_KOSDAQ_IV_251340, PeriodType.PERIOD_DAY)
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.OS_CODE_SPY, PeriodType.PERIOD_DAY)
         crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.OS_CODE_QQQ, PeriodType.PERIOD_DAY)
         crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.OS_CODE_SHY, PeriodType.PERIOD_DAY)
         crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.OS_CODE_GLD, PeriodType.PERIOD_DAY)

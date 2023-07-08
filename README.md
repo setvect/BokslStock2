@@ -88,6 +88,27 @@ gradlew makeInstallFile
 - 메인 소스: [CrawlerStockPriceService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerStockPriceService.kt)
 - 실행 소스: [CrawlerStockPriceServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerStockPriceServiceTest.kt)
 
+#### 5.1.1 수정 주가 (adjusted stock price)
+
+- 영어로된 설명
+    - Close price adjusted for splits
+    - Adjusted close price adjusted for splits and dividend and/or capital gain distributions
+- 서로 값이 조금씩 달라 뭐가 맞는지 모르겠다 ㅡㅡ;
+    - https://stooq.com/q/d/?s=spy.us&c=0&i=m
+    - 야후 파이낸스: https://finance.yahoo.com/quote/SPY/history?period1=1627731136&period2=1659267136&interval=1mo&filter=history&frequency=1mo&includeAdjustedClose=true
+        - 다운로드 예시: https://query1.finance.yahoo.com/v7/finance/download/SPY?period1=757382400&period2=1659267136
+    - https://kr.tradingview.com/chart/Y75mi3ck/?symbol=SPY
+- 상황: 2022년 7월 31일 기준 SPY 2022년 1월 종가
+
+| 사이트          | 수정주가 여부 | 추가 설명                   | 주가            |
+| --------------- | ------------- | --------------------------- | --------------- |
+| stooq           | X             | 'Skip dividends' 체크       | 449.90744983156 |
+| stooq           | O             | 'Skip dividends' 체크 안함  | 448.51          |
+| yahoo finance   | X             | 'close' 값                  | 449.91          |
+| yahoo finance   | O             | 'Adj Close' 값              | 446.59          |
+| tradingview.com | X             | '조정' 체크 안함            | 449.91          |
+| tradingview.com | O             | tradingview.com '조정' 체크 | 446.59          |
+
 ### 5.2. 한국주식 기업 가치 평가 정보
 
 - 메인 소스: [CrawlerKoreanCompanyService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerKoreanCompanyService.kt)
@@ -110,6 +131,7 @@ gradlew makeInstallFile
 - 메인 소스: [CrawlerUnemploymentRateService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerUnemploymentRateService.kt)
 - 실행 소스: [CrawlerUnemploymentRateServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerUnemploymentRateServiceTest.kt)
 - [여기](https://fred.stlouisfed.org/)서 API Key 신청을 해야됨
+- 간단하게 보려면 [여기](https://kr.investing.com/economic-calendar/unemployment-rate-300)서 보면 됨
 
 ## 6. 백테스트 전략
 
@@ -193,7 +215,8 @@ gradlew makeInstallFile
 - 결과: **쓰지마**
 
 ### 6.6. LAA
-
+- 메인소스: [LaaBacktestService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/laa/service/LaaBacktestService.kt)
+- 실행소스: [LaaBacktest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/backtest/LaaBacktest.kt)
 - 매수 조건
   - IWD(미국 중소형) / GLD(IAU) / IEF 각 25%는 고정
   - 나머지 25%는아래 두 조건 모두 만족시 SHY(단기채권) 매수
@@ -205,30 +228,6 @@ gradlew makeInstallFile
   - 여기서 너무 벌어진다는 조건은 무엇일까?
 
 
-#### 6.6.1. 수정 주가 (adjusted stock price)
-
-- 영어로된 설명
-    - Close price adjusted for splits
-    - Adjusted close price adjusted for splits and dividend and/or capital gain distributions
-- 서로 값이 조금씩 달라 뭐가 맞는지 모르겠다 ㅡㅡ;
-    - https://stooq.com/q/d/?s=spy.us&c=0&i=m
-    - 야후 파이낸스: https://finance.yahoo.com/quote/SPY/history?period1=1627731136&period2=1659267136&interval=1mo&filter=history&frequency=1mo&includeAdjustedClose=true
-        - 다운로드 예시: https://query1.finance.yahoo.com/v7/finance/download/SPY?period1=757382400&period2=1659267136
-    - https://kr.tradingview.com/chart/Y75mi3ck/?symbol=SPY
-- 상황: 2022년 7월 31일 기준 SPY 2022년 1월 종가
-
-| 사이트          | 수정주가 여부 | 추가 설명                   | 주가            |
-| --------------- | ------------- | --------------------------- | --------------- |
-| stooq           | X             | 'Skip dividends' 체크       | 449.90744983156 |
-| stooq           | O             | 'Skip dividends' 체크 안함  | 448.51          |
-| yahoo finance   | X             | 'close' 값                  | 449.91          |
-| yahoo finance   | O             | 'Adj Close' 값              | 446.59          |
-| tradingview.com | X             | '조정' 체크 안함            | 449.91          |
-| tradingview.com | O             | tradingview.com '조정' 체크 | 446.59          |
-
-
-#### 6.6.2. LAA 계산
-TODO 작업해야됨 
 
 ### 6.7. 간단한 전략들
 내가 궁금해서, 인터넷에 떠돌아 다니는 전략들을 검증하기 위해 간단하게 만들어 보았음

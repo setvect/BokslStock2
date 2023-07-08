@@ -29,7 +29,7 @@ class LaaBacktestServiceTest {
     @Test
     fun 일회성_백테스팅_리포트_만듦() {
 //        val range = DateRange("2005-01-01T00:00:00", "2023-07-01T00:00:00")
-        val range = DateRange("2007-10-01T00:00:00", "2008-07-01T00:00:00")
+        val range = DateRange("2007-01-01T00:00:00", "2023-06-01T00:00:00")
 
         val laaBacktestCondition = LaaBacktestCondition(
             range = range,
@@ -57,7 +57,7 @@ class LaaBacktestServiceTest {
                 "리벨런싱 주기\t${laaBacktestCondition.rebalanceFacter.periodType}\n" +
                 "리벨런싱 입계치\t${laaBacktestCondition.rebalanceFacter.threshold}"
 
-        val backtestCondition = AccountService.BacktestCondition(laaBacktestCondition.range, StockCode.KODEX_200_069500, specialInfo)
+        val backtestCondition = AccountService.BacktestCondition(laaBacktestCondition.range, StockCode.OS_CODE_SPY, specialInfo)
         val accountService = stockCommonFactory.createStockCommonFactory(accountCondition, backtestCondition)
 
         accountService.addTrade(tradeNeoList)

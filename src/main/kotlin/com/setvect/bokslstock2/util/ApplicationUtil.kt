@@ -394,6 +394,9 @@ object ApplicationUtil {
         }
     }
 
+    /**
+     * @return 소수점 [decimalPoints]까지 표시
+     */
     fun truncateDecimal(number: Double, decimalPoints: Int): Double {
         val powerOfTen = 10.0.pow(decimalPoints.toDouble())
         return (number * powerOfTen).toLong() / powerOfTen
