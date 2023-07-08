@@ -227,9 +227,21 @@ gradlew makeInstallFile
   - 3개월 마다 혹은 차이가 너무 벌어지면 리밸러싱
   - 여기서 너무 벌어진다는 조건은 무엇일까?
 
+### 6.7. 손절매 전략
+- 메인소스: [LaaBacktestService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/laa/service/LaaBacktestService.kt)
+- 실행소스: [LaaBacktest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/backtest/LaaBacktest.kt)
+- 매월 첫 거래일 시가에 코스피 ETF(종목은 선택할 수 있음) 매수
+- 매일 주가 구간 * 배수를 손절선으로 계산하고 아래 사항 확인
+  - 월초 매수한 ETF가 손절선에 걸리지 않는 경우: 지수 보유
+  - 월초 매수한 ETF가 손절선에 걸리는 경우: 손절매, 현금보유
+  - 손절매했을 경우 다음 달 첫날 코스피 ETF 매수
+- 손절선 계산법
+  - 최근 6개월 주가 구간 계산
+    - 주가 구간 계산법: (전월 고가 - 전월 저가)/(전월 시가)
+    - 최근 6개월간 주가 구간의 평균을 계산
+  - 이 평균 구간에 선택한 배수를 곱함(배수 = 0 ~ 1)
 
-
-### 6.7. 간단한 전략들
+### 6.8. 간단한 전략들
 내가 궁금해서, 인터넷에 떠돌아 다니는 전략들을 검증하기 위해 간단하게 만들어 보았음
 
 - [CandleAnalysisTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/analysis/price/CandleAnalysisTest.kt)

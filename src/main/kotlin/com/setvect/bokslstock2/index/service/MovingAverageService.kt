@@ -29,7 +29,7 @@ class MovingAverageService(
         stockCode: StockCode,
         selectPeriod: PeriodType,
         groupPeriod: PeriodType,
-        avgCountList: List<Int>,
+        avgCountList: List<Int> = listOf(),
         dateRange: DateRange = DateRange.maxRange
     ): List<CandleDto> {
         val stockOptional = stockRepository.findByCode(stockCode.code)

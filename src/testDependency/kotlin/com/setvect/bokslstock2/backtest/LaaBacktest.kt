@@ -17,7 +17,7 @@ import java.io.File
 
 @SpringBootTest
 @ActiveProfiles("test")
-class LaaBacktestServiceTest {
+class LaaBacktest {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
     @Autowired
