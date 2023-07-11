@@ -23,3 +23,11 @@ eventID=379991&event_attr_ID=300&event_timestamp=2023-07-01&is_speech=0
 ### 미국 실업률 통계
 GET https://api.stlouisfed.org/fred/series/observations?series_id=UNRATE&api_key=<Key>&file_type=json HTTP/1.1
 Content-Type: application/json
+
+##################
+# DART API
+##################
+
+### 고유번호 조회(압축파일 깨져서 받음, 쓰지마)
+GET https://opendart.fss.or.kr/api/corpCode.xml?crtfc_key={{dart_key}}	HTTP/1.1
+Content-Type: application/octet-stream

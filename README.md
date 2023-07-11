@@ -133,6 +133,10 @@ gradlew makeInstallFile
 - [여기](https://fred.stlouisfed.org/)서 API Key 신청을 해야됨
 - 간단하게 보려면 [여기](https://kr.investing.com/economic-calendar/unemployment-rate-300)서 보면 됨
 
+### 5.5. DART 공시 정보
+- 기업 재무재표 정보 수집
+- [OPEN DART](https://opendart.fss.or.kr) 참고
+
 ## 6. 백테스트 전략
 
 ### 6.1. 이동평균돌파 전략
@@ -202,7 +206,6 @@ gradlew makeInstallFile
     - 영구포트폴리오
     - 올웨더포트폴리오
     - 등...
-
 
 ### 6.5. 하방변동설 돌파 전략 
 - 메인소스: [IvbsBacktestService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/ivbs/service/IvbsBacktestService.kt)

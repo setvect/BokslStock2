@@ -21,6 +21,7 @@ data class BokslStockProperties(
         val global: Global,
         val exchangeRate: ExchangeRate,
         val fred: Fred,
+        val dart: Dart,
     ) {
         data class Korea(
             val url: UrlCollection,
@@ -42,6 +43,9 @@ data class BokslStockProperties(
             val url: String
         )
         data class Fred(
+            val key: String
+        )
+        data class Dart(
             val key: String
         )
     }

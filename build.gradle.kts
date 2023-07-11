@@ -59,6 +59,7 @@ dependencies {
 //    implementation("com.google.api-client:google-api-client:1.20.0")
     implementation("com.google.api-client:google-api-client-jackson2:1.20.0")
 //    implementation("com.google.apis:google-api-services-youtube:v3-rev222-1.25.0")
+    implementation ("org.apache.commons:commons-compress")
 
     implementation ("com.google.api-client:google-api-client:1.31.5")
     implementation ("com.google.apis:google-api-services-youtube:v3-rev222-1.25.0")
