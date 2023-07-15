@@ -5,7 +5,7 @@ import com.setvect.bokslstock2.backtest.common.model.TradeNeo
 import com.setvect.bokslstock2.backtest.common.service.BacktestTradeService
 import com.setvect.bokslstock2.backtest.laa.model.LaaBacktestCondition
 import com.setvect.bokslstock2.common.model.TradeType
-import com.setvect.bokslstock2.crawl.model.UnemploymentData
+import com.setvect.bokslstock2.crawl.unemployment.model.UnemploymentData
 import com.setvect.bokslstock2.index.dto.CandleDto
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.service.MovingAverageService

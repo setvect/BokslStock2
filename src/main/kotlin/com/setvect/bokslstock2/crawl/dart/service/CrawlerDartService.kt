@@ -1,7 +1,7 @@
-package com.setvect.bokslstock2.crawl.service
+package com.setvect.bokslstock2.crawl.dart.service
 
 import com.setvect.bokslstock2.config.BokslStockProperties
-import com.setvect.bokslstock2.crawl.model.CompanyCode
+import com.setvect.bokslstock2.crawl.dart.model.CompanyCode
 import org.apache.commons.compress.archivers.zip.ZipFile
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document

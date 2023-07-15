@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.crawl.service
+package com.setvect.bokslstock2.crawl.finviz.service
 
 import com.setvect.bokslstock2.util.JsonUtil
 import org.jsoup.Jsoup
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service
  * 미국 기업 정보 크롤링
  */
 @Service
-class CrawlerUsaCompanyService {
+class CrawlerFinvizCompanyService {
 
     private val URL =
         "https://finviz.com/screener.ashx?v=152&ft=4" +

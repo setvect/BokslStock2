@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.crawl.service
+package com.setvect.bokslstock2.crawl.dart.service
 
 import org.apache.commons.lang3.StringUtils
 import org.junit.jupiter.api.Assertions.*
@@ -33,12 +33,12 @@ class CrawlerDartServiceTest {
         val companyCodeList = companyAll.filter { StringUtils.isNotBlank(it.stockCode) }
         log.info("상장 회사수: {}", companyCodeList.size)
 
-        companyCodeList.forEach {
-            println("${it.corpCode} ${it.corpName} ${it.stockCode} ${it.modifyDate}")
-        }
+//        companyCodeList.forEach {
+//            println("${it.corpCode} ${it.corpName} ${it.stockCode} ${it.modifyDate}")
+//        }
 
-//        val joinToString: String = companyCodeList.filter {it.modifyDate  > "2023" }. take(100).joinToString(",") { it.corpCode }
-//        println(joinToString)
+        val joinToString: String = companyCodeList.filter {it.modifyDate  < "2018" }. take(100).joinToString(",") { it.corpCode }
+        println(joinToString)
 
 
 //        crawlerDartService.crawlCompanyFinanceInfo(companyCodeList)

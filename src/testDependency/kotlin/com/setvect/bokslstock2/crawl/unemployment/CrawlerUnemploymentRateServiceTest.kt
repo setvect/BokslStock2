@@ -1,8 +1,8 @@
-package com.setvect.bokslstock2.crawl.service
+package com.setvect.bokslstock2.crawl.unemployment
 
+import com.setvect.bokslstock2.crawl.unemployment.service.CrawlerUnemploymentRateService
 import com.setvect.bokslstock2.util.GsonUtil
 import org.apache.commons.io.FileUtils
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
