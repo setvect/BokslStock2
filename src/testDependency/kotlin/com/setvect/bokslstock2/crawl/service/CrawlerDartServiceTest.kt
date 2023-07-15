@@ -1,8 +1,8 @@
 package com.setvect.bokslstock2.crawl.service
 
-import org.junit.jupiter.api.Test
-
+import org.apache.commons.lang3.StringUtils
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -26,9 +26,23 @@ class CrawlerDartServiceTest {
     }
 
     @Test
-    fun parsingCorporationList() {
-        val corporationList = crawlerDartService.parsingCorporationList(File("crawl/dart/CORPCODE.xml"))
-        log.info("기업수: {}", corporationList.size)
+    fun crawlCompanyFinanceInfo() {
+        val companyAll = crawlerDartService.parsingCompanyList(File("crawl/dart/CORPCODE.xml"))
+        log.info("기업수: {}", companyAll.size)
+
+        val companyCodeList = companyAll.filter { StringUtils.isNotBlank(it.stockCode) }
+        log.info("상장 회사수: {}", companyCodeList.size)
+
+        companyCodeList.forEach {
+            println("${it.corpCode} ${it.corpName} ${it.stockCode} ${it.modifyDate}")
+        }
+
+//        val joinToString: String = companyCodeList.filter {it.modifyDate  > "2023" }. take(100).joinToString(",") { it.corpCode }
+//        println(joinToString)
+
+
+//        crawlerDartService.crawlCompanyFinanceInfo(companyCodeList)
+
         log.info("끝.")
     }
 }

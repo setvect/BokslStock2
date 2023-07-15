@@ -136,6 +136,14 @@ gradlew makeInstallFile
 ### 5.5. DART 공시 정보
 - 기업 재무재표 정보 수집
 - [OPEN DART](https://opendart.fss.or.kr) 참고
+- 메인 소스: [CrawlerDartService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerDartService.kt)
+- 실행 소스: [CrawlerDartServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerDartServiceTest.kt)
+- 상식: 사업보고서 제출 기한
+    | 구분        | 제출기한                   |
+    | ----------- | -------------------------- |
+    | 사업 보고서 | 사업연도 경과 후 90일 이내 |
+    | 반기 보고서 | 반기 경과 후 45일 이내     |
+ 
 
 ## 6. 백테스트 전략
 
@@ -321,7 +329,7 @@ $ ls -la
 ```shell 
 $ mkdir .ssh
 $ chmod 700 .ssh/                                            <== 꼭 700 퍼미션 가져야됨.
-$ vi ./ssh/id_rsa.pub                                        <== 공개키 복사
+$ vi ./ssh/authorized_keys                                   <== 공개키 복사
 $ chmod 644 .ssh/authorized_keys                             <== 꼭 644 퍼미션 가져야됨.
 ```
 

@@ -47,7 +47,7 @@ class CrawlerDartService(
      * 기업코드 정보를 가지고 있는 XML을 파싱함
      * @return 기업(코드)목록
      */
-    fun parsingCorporationList(file: File): List<CompanyCode> {
+    fun parsingCompanyList(file: File): List<CompanyCode> {
         val doc: Document = Jsoup.parse(file, "UTF-8", "")
         val lists = doc.select("result > list")
         return lists.map { element: Element ->
@@ -57,6 +57,15 @@ class CrawlerDartService(
             val modifyDate = element.select("modify_date").text()
             CompanyCode(corpCode, corpName, stockCode, modifyDate)
         }
+    }
+
+    /**
+     * @param companyCodeList 기업코드 목록
+     */
+    fun crawlCompanyFinanceInfo(companyCodeList: List<CompanyCode>) {
+        val url = "https://opendart.fss.or.kr/api/corpCode.xml?crtfc_key=" + bokslStockProperties.crawl.dart.key
+        val responseEntity: ResponseEntity<ByteArray> = crawlRestTemplate.exchange(url, HttpMethod.GET, null, ByteArray::class.java)
+
     }
 
 
