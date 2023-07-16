@@ -144,7 +144,11 @@ gradlew makeInstallFile
     | ----------- | -------------------------- |
     | 사업 보고서 | 사업연도 경과 후 90일 이내 |
     | 반기 보고서 | 반기 경과 후 45일 이내     |
- 
+
+- 수집에 이용하는 API
+  - [다중회사 주요계정](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS003&apiId=2019017)
+  - [주식의 총수 현황 개발가이드](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS002&apiId=2020002)
+  - [배당에 관한 사항](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS002&apiId=2019005)
 
 ## 6. 백테스트 전략
 

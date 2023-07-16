@@ -1,9 +1,12 @@
 package com.setvect.bokslstock2.crawl.dart.service
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.type.TypeFactory
 import com.setvect.bokslstock2.config.BokslStockProperties
 import com.setvect.bokslstock2.crawl.dart.model.CompanyCode
-import com.setvect.bokslstock2.crawl.dart.model.CompanyFinancial
+import com.setvect.bokslstock2.crawl.dart.model.ResDart
 import com.setvect.bokslstock2.crawl.dart.model.ReportCode
+import com.setvect.bokslstock2.crawl.dart.model.ResFinancialStatement
 import com.setvect.bokslstock2.util.JsonUtil
 import org.apache.commons.compress.archivers.zip.ZipFile
 import org.apache.commons.lang3.StringUtils
@@ -80,7 +83,7 @@ class CrawlerDartService(
             .chunked(100)
 
         val apiCallCount = AtomicInteger(0)
-        for (year in 2021..LocalDate.now().year) {
+        for (year in 2015..LocalDate.now().year) {
             ReportCode.values().forEach { reportCode ->
                 chunkedCompany.forEach inner@ { companyList ->
                     val saveDir = File(saveBaseDir, "$year/${reportCode}")
@@ -112,7 +115,9 @@ class CrawlerDartService(
                         return@inner
                     }
 
-                    val parsedResponse: CompanyFinancial = JsonUtil.mapper.readValue(body, CompanyFinancial::class.java)
+                    val typeRef = object: TypeReference<ResDart<ResFinancialStatement>>() {}
+
+                    val parsedResponse: ResDart<ResFinancialStatement> = JsonUtil.mapper.readValue(body, typeRef)
                     val financialResult = parsedResponse.list
                     financialResult.groupBy { it.corpCode }.forEach { (corpCode, financialList) ->
                         val company = companyCodeMap[corpCode]!!
@@ -126,6 +131,13 @@ class CrawlerDartService(
             }
         }
         println("끝.")
+    }
+
+    /**
+     * 주식 보유 현황 수집
+     */
+    fun crawlCompanyStockQuantity(companyAll: List<CompanyCode>) {
+
     }
 
     companion object {
