@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.crawl.service
+package com.setvect.bokslstock2.crawl.stockprice.service
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -7,7 +7,6 @@ import com.setvect.bokslstock2.config.BokslStockProperties
 import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
-import com.setvect.bokslstock2.index.model.PeriodType.PERIOD_DAY
 import com.setvect.bokslstock2.index.repository.CandleRepository
 import com.setvect.bokslstock2.index.repository.StockRepository
 import com.setvect.bokslstock2.index.service.CsvStoreService
@@ -21,7 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.http.HttpEntity
-import org.springframework.http.HttpMethod.GET
+import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.RestTemplate
@@ -31,7 +30,6 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
-
 
 /**
  * 각종 시세 데이터 수집
@@ -214,7 +212,7 @@ class CrawlerStockPriceService(
 
             CandleEntity(
                 stock = stockEntity,
-                periodType = PERIOD_DAY,
+                periodType = PeriodType.PERIOD_DAY,
                 candleDateTime = localDate.atTime(0, 0),
                 openPrice = price,
                 highPrice = price,
@@ -238,7 +236,7 @@ class CrawlerStockPriceService(
         parameter["User-Agent"] = bokslStockProperties.crawl.korea.userAgent
         val httpEntity = HttpEntity<Map<String, Any>>(parameter)
 
-        val result = crawlRestTemplate.exchange(url, GET, httpEntity, String::class.java)
+        val result = crawlRestTemplate.exchange(url, HttpMethod.GET, httpEntity, String::class.java)
         val body = result.body ?: throw RuntimeException("JSON 결과 없음")
 
         // json format 맞추기
@@ -248,7 +246,7 @@ class CrawlerStockPriceService(
         val candleList = priceList.stream().skip(1).map { row ->
             CandleEntity(
                 stock = stockEntity,
-                periodType = PERIOD_DAY,
+                periodType = PeriodType.PERIOD_DAY,
                 candleDateTime = DateUtil.getLocalDateTime(row[0] + "000000", "yyyyMMddHHmmss"),
                 openPrice = row[1].toDouble(),
                 highPrice = row[2].toDouble(),
@@ -284,7 +282,7 @@ class CrawlerStockPriceService(
                 candleList.add(
                     CandleEntity(
                         stock = stockEntity,
-                        periodType = PERIOD_DAY,
+                        periodType = PeriodType.PERIOD_DAY,
                         candleDateTime = current.atStartOfDay(),
                         openPrice = currentPrice,
                         highPrice = currentPrice,

@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.crawl.service
+package com.setvect.bokslstock2.crawl.stockprice.service
 
 import com.setvect.bokslstock2.backtest.common.model.StockCode
 import com.setvect.bokslstock2.index.entity.StockEntity

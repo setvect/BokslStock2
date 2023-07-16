@@ -85,8 +85,8 @@ gradlew makeInstallFile
     - 한국주식: https://finance.naver.com
     - 미국주식: https://query1.finance.yahoo.com
     - 원달러환율: https://spot.wooribank.com/pot/Dream?withyou=FXXRT0014
-- 메인 소스: [CrawlerStockPriceService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerStockPriceService.kt)
-- 실행 소스: [CrawlerStockPriceServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerStockPriceServiceTest.kt)
+- 메인 소스: [CrawlerStockPriceService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/stockprice/service/CrawlerStockPriceService.kt)
+- 실행 소스: [CrawlerStockPriceServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/stockprice/service/CrawlerStockPriceServiceTest.kt)
 
 #### 5.1.1 수정 주가 (adjusted stock price)
 
@@ -111,8 +111,8 @@ gradlew makeInstallFile
 
 ### 5.2. 한국주식 기업 가치 평가 정보
 
-- 메인 소스: [CrawlerKoreanCompanyService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerKoreanCompanyService.kt)
-- 실행 소스: [CrawlerKoreanCompanyServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerKoreanCompanyServiceTest.kt)
+- 메인 소스: [CrawlerKoreanCompanyService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/koreacompany/service/CrawlerKoreanCompanyService.kt)
+- 실행 소스: [CrawlerKoreanCompanyServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/koreacompany/service/CrawlerKoreanCompanyServiceTest.kt)
 
 ## 5.3. finviz.com 수집
 ### 5.3.1. 수집 방법
@@ -120,18 +120,31 @@ gradlew makeInstallFile
 - [https://finviz.com](https://finviz.com/screener.ashx?v=152&ft=4&c=0,1,2,3,4,5,6,7,67,65,66) 에서 수집
 - 페이지 이동하면서 데이터 수집
 - 수집 결과는 `crawl/finviz.com`에 저장됨
-- 메인 소스: [CrawlerUsaCompanyService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerUsaCompanyService.kt)
-- 실행 소스: [CrawlerUsaCompanyServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerUsaCompanyServiceTest.kt)
+- 메인 소스: [CrawlerFinvizCompanyService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/finviz/service/CrawlerFinvizCompanyService.kt)
+- 실행 소스: [CrawlerFinvizCompanyServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/finviz/service/CrawlerFinvizCompanyServiceTest.kt)
 
 ### 5.3.2. 수집 용어
 [수집항목_용어](docs/주식_용어.md) 참고
 
 ### 5.4. 미국 실업률 통계
 - LAA 전략 구현을 위한 데이터 
-- 메인 소스: [CrawlerUnemploymentRateService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerUnemploymentRateService.kt)
-- 실행 소스: [CrawlerUnemploymentRateServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/service/CrawlerUnemploymentRateServiceTest.kt)
+- 메인 소스: [CrawlerUnemploymentRateService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/unemployment/service/CrawlerUnemploymentRateService.kt)
+- 실행 소스: [CrawlerUnemploymentRateServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/unemployment/CrawlerUnemploymentRateServiceTest.kt)
 - [여기](https://fred.stlouisfed.org/)서 API Key 신청을 해야됨
 - 간단하게 보려면 [여기](https://kr.investing.com/economic-calendar/unemployment-rate-300)서 보면 됨
+
+### 5.5. DART 공시 정보
+- 기업 재무재표 정보 수집
+- [OPEN DART](https://opendart.fss.or.kr) 참고
+- 메인 소스: [CrawlerDartService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/dart/service/CrawlerDartService.kt)
+- 실행 소스: [CrawlerDartServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/dart/service/CrawlerDartServiceTest.kt)
+- 상식: 사업보고서 제출 기한
+
+    | 구분        | 제출기한                   |
+    | ----------- | -------------------------- |
+    | 사업 보고서 | 사업연도 경과 후 90일 이내 |
+    | 반기 보고서 | 반기 경과 후 45일 이내     |
+ 
 
 ## 6. 백테스트 전략
 
@@ -202,7 +215,6 @@ gradlew makeInstallFile
     - 영구포트폴리오
     - 올웨더포트폴리오
     - 등...
-
 
 ### 6.5. 하방변동설 돌파 전략 
 - 메인소스: [IvbsBacktestService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/ivbs/service/IvbsBacktestService.kt)
@@ -332,7 +344,7 @@ $ ls -la
 ```shell 
 $ mkdir .ssh
 $ chmod 700 .ssh/                                            <== 꼭 700 퍼미션 가져야됨.
-$ vi ./ssh/id_rsa.pub                                        <== 공개키 복사
+$ vi ./ssh/authorized_keys                                   <== 공개키 복사
 $ chmod 644 .ssh/authorized_keys                             <== 꼭 644 퍼미션 가져야됨.
 ```
 

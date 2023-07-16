@@ -46,3 +46,4 @@ temp/
 /backtest-result/
 /data_source/
 /crawl/
+/http/http-client.private.env.json

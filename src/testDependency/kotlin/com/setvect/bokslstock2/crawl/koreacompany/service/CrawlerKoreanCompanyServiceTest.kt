@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.crawl.service
+package com.setvect.bokslstock2.crawl.koreacompany.service
 
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test

@@ -1,9 +1,8 @@
-package com.setvect.bokslstock2.crawl.service
+package com.setvect.bokslstock2.crawl.koreacompany.service
 
 import com.setvect.bokslstock2.config.BokslStockProperties
 import org.springframework.stereotype.Service
 import java.io.File
-
 
 /**
  * TODO 이름 참 맘에 안든다.

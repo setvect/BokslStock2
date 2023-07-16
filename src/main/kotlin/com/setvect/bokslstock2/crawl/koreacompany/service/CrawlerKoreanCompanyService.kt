@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.crawl.service
+package com.setvect.bokslstock2.crawl.koreacompany.service
 
 import com.google.gson.GsonBuilder
 import com.setvect.bokslstock2.value.dto.KoreanCompanyDetail

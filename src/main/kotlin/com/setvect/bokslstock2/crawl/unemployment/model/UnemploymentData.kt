@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.crawl.model
+package com.setvect.bokslstock2.crawl.unemployment.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDate
