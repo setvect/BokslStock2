@@ -30,18 +30,7 @@ class CrawlerDartServiceTest {
         val companyAll = crawlerDartService.parsingCompanyList(File("crawl/dart/CORPCODE.xml"))
         log.info("기업수: {}", companyAll.size)
 
-        val companyCodeList = companyAll.filter { StringUtils.isNotBlank(it.stockCode) }
-        log.info("상장 회사수: {}", companyCodeList.size)
-
-//        companyCodeList.forEach {
-//            println("${it.corpCode} ${it.corpName} ${it.stockCode} ${it.modifyDate}")
-//        }
-
-        val joinToString: String = companyCodeList.filter {it.modifyDate  < "2018" }. take(100).joinToString(",") { it.corpCode }
-        println(joinToString)
-
-
-//        crawlerDartService.crawlCompanyFinanceInfo(companyCodeList)
+        crawlerDartService.crawlCompanyFinancialInfo(companyAll)
 
         log.info("끝.")
     }
