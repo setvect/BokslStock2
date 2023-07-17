@@ -41,7 +41,8 @@ gradlew makeInstallFile
 
 1. 서버시간 동기화
    ```sh
-   $ rdate -s time.bora.net
+   $ sudo timedatectl set-timezone Asia/Seoul
+   $ sudo rdate -s time.bora.net
    ```
 1. `BokslStock2.yml` 설정 변경
     - appkey, appsecret, accountNo 값 등록

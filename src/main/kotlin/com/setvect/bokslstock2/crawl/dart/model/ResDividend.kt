@@ -23,6 +23,10 @@ data class ResDividend(
     // 유상증자(주주배정), 전환권행사 등
     val se: String,
 
+    @JsonProperty("stock_knd")
+    // 주식 종류 : 보통주, 우선주
+    val stockKnd: String?,
+
     @JsonProperty("thstrm") 
     // 당기, 9,999,999,999
     val thstrm: String,
