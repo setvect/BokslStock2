@@ -1,6 +1,5 @@
 package com.setvect.bokslstock2.crawl.dart.service
 
-import org.apache.commons.lang3.StringUtils
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
@@ -19,18 +18,47 @@ class CrawlerDartServiceTest {
 
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
+    /**
+     * 기업 코드 수집
+     */
     @Test
     fun downloadCorporationList() {
         crawlerDartService.downloadCorporationList()
         log.info("끝.")
     }
 
+    /**
+     * 재무 정보 수집
+     */
     @Test
     fun crawlCompanyFinanceInfo() {
         val companyAll = crawlerDartService.parsingCompanyList(File("crawl/dart/CORPCODE.xml"))
         log.info("기업수: {}", companyAll.size)
-
         crawlerDartService.crawlCompanyFinancialInfo(companyAll)
+
+        log.info("끝.")
+    }
+
+    /**
+     * 주식 총수 수집
+     */
+    @Test
+    fun crawlStockQuantity() {
+        val companyAll = crawlerDartService.parsingCompanyList(File("crawl/dart/CORPCODE.xml"))
+        log.info("기업수: {}", companyAll.size)
+        crawlerDartService.crawlStockQuantity(companyAll)
+
+        log.info("끝.")
+    }
+
+    /**
+     * 배당 내역 수집
+     */
+    @Test
+    fun crawlDividend() {
+        val companyAll = crawlerDartService.parsingCompanyList(File("crawl/dart/CORPCODE.xml"))
+        log.info("기업수: {}", companyAll.size)
+        crawlerDartService.crawlDividend(companyAll)
 
         log.info("끝.")
     }

@@ -2,7 +2,7 @@ package com.setvect.bokslstock2.crawl.dart.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-data class FinancialStatement(
+data class ResFinancialStatement(
     @JsonProperty("rcept_no")
     val rceptNo: String,   // 접수번호(14자리)
 
