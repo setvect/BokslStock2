@@ -249,7 +249,6 @@ object ApplicationUtil {
                 date.withDayOfMonth(1),
                 periodType.getDeviceMonth()
             ).plusMonths(periodType.getDeviceMonth().toLong()).minusDays(1)
-
             else -> {
                 throw RuntimeException("$periodType 잘못 사용했다.")
             }
@@ -402,4 +401,9 @@ object ApplicationUtil {
         return (number * powerOfTen).toLong() / powerOfTen
     }
 
+    fun convertToLong(str: String?): Long? {
+        if (str.isNullOrBlank()) return null
+        val noCommas = str.replace(",", "")
+        return noCommas.toLongOrNull()
+    }
 }

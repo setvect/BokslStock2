@@ -85,7 +85,7 @@ startNotRunning() {
     echoGreen "[$(date +"%F %T")] BokslStock2 Application is running"
   else
     echoRed "[$(date +"%F %T")] BokslStock2 Application is not running. start"
-    start
+    restart
   fi
 }
 

@@ -3,39 +3,30 @@ package com.setvect.bokslstock2.crawl.dart.model
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class ResDividend(
-    @JsonProperty("rcept_no") 
-    // 접수번호(14자리)
-    val rceptNo: String,
+    @JsonProperty("rcept_no")
+    val rceptNo: String, // 접수번호(14자리)
 
-    @JsonProperty("corp_cls") 
-    // 법인구분 : Y(유가), K(코스닥), N(코넥스), E(기타)
-    val corpCls: String,
+    @JsonProperty("corp_cls")
+    val corpCls: String, // 법인구분 : Y(유가), K(코스닥), N(코넥스), E(기타)
 
-    @JsonProperty("corp_code") 
-    // 공시대상회사의 고유번호(8자리)
-    val corpCode: String,
+    @JsonProperty("corp_code")
+    val corpCode: String, // 공시대상회사의 고유번호(8자리)
 
-    @JsonProperty("corp_name") 
-    // 법인명
-    val corpName: String,
+    @JsonProperty("corp_name")
+    val corpName: String, // 법인명
 
-    @JsonProperty("se") 
-    // 유상증자(주주배정), 전환권행사 등
-    val se: String,
+    @JsonProperty("se")
+    val se: String, // 유상증자(주주배정), 전환권행사 등
 
     @JsonProperty("stock_knd")
-    // 주식 종류 : 보통주, 우선주
-    val stockKnd: String?,
+    val stockKnd: String?, // 주식 종류 : 보통주, 우선주
 
-    @JsonProperty("thstrm") 
-    // 당기, 9,999,999,999
-    val thstrm: String,
+    @JsonProperty("thstrm")
+    val thstrm: String, // 당기, 9,999,999,999
 
-    @JsonProperty("frmtrm") 
-    // 전기, 9,999,999,999
-    val frmtrm: String,
+    @JsonProperty("frmtrm")
+    val frmtrm: String, // 전기, 9,999,999,999
 
-    @JsonProperty("lwfr") 
-    // 전전기, 9,999,999,999
-    val lwfr: String
+    @JsonProperty("lwfr")
+    val lwfr: String // 전전기, 9,999,999,999
 )

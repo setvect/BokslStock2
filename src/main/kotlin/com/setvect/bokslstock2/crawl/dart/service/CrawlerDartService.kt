@@ -2,6 +2,7 @@ package com.setvect.bokslstock2.crawl.dart.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.setvect.bokslstock2.config.BokslStockProperties
+import com.setvect.bokslstock2.crawl.dart.DartConstants
 import com.setvect.bokslstock2.crawl.dart.model.*
 import com.setvect.bokslstock2.util.JsonUtil
 import org.apache.commons.compress.archivers.zip.ZipFile
@@ -71,7 +72,7 @@ class CrawlerDartService(
     fun crawlCompanyFinancialInfo(companyAll: List<CompanyCode>) {
         val financialInfoToSave = object : DartMakerJson {
             override fun save(body: String, companyCodeMap: Map<String, CompanyCode>, year: Int, reportCode: ReportCode) {
-                val saveBaseDir = File("crawl/dart/financial")
+                val saveBaseDir = DartConstants.FINANCIAL_PATH
                 val saveDir = File(saveBaseDir, "$year/${reportCode}")
                 saveDir.mkdirs()
                 val typeRef = object : TypeReference<ResDart<ResFinancialStatement>>() {}
@@ -99,7 +100,7 @@ class CrawlerDartService(
     fun crawlStockQuantity(companyAll: List<CompanyCode>) {
         val stockQuantity = object : DartMakerJson {
             override fun save(body: String, companyCodeMap: Map<String, CompanyCode>, year: Int, reportCode: ReportCode) {
-                val saveBaseDir = File("crawl/dart/quantity")
+                val saveBaseDir = DartConstants.QUANTITY_PATH
                 val saveDir = File(saveBaseDir, "$year/${reportCode}")
                 saveDir.mkdirs()
                 val typeRef = object : TypeReference<ResDart<ResStockQuantity>>() {}
@@ -127,7 +128,7 @@ class CrawlerDartService(
     fun crawlDividend(companyAll: List<CompanyCode>) {
         val stockQuantity = object : DartMakerJson {
             override fun save(body: String, companyCodeMap: Map<String, CompanyCode>, year: Int, reportCode: ReportCode) {
-                val saveBaseDir = File("crawl/dart/dividend")
+                val saveBaseDir = DartConstants.DIVIDEND_PATH
                 val saveDir = File(saveBaseDir, "$year/${reportCode}")
                 saveDir.mkdirs()
                 val typeRef = object : TypeReference<ResDart<ResDividend>>() {}
