@@ -11,7 +11,7 @@ import java.io.File
 import java.time.LocalDate
 
 data class FinancialStatement(
-    val commonStatement: CommonStatement, // 사업연도(4자리)
+    val commonStatement: CommonStatement,
 
     val rceptNo: String,   // 접수번호(14자리)
     val bsnsYear: String,  // 사업연도(4자리)
@@ -81,7 +81,7 @@ data class FinancialStatement(
                     currency = "",
                 )
             } catch (e: Exception) {
-                log.info("error: ${e.message}\n------ json ------\n ${JsonUtil.mapper.writeValueAsString(resFinancialStatement)}");
+                log.info("error: ${e.message}\n------ json ------\n ${JsonUtil.mapper.writeValueAsString(resFinancialStatement)}")
                 throw e
             }
         }
@@ -108,12 +108,12 @@ data class FinancialStatement(
             return if (dateStr.contains("~")) 2 else 1
         }
 
-        fun convertToDateType1(dateStr: String): LocalDate {
+        private fun convertToDateType1(dateStr: String): LocalDate {
             val cleanedStr = dateStr.replace(" 현재", "")
             return DateUtil.getLocalDate(cleanedStr, "yyyy.MM.dd")
         }
 
-        fun convertToDateType2(dateStr: String): Pair<LocalDate, LocalDate> {
+        private fun convertToDateType2(dateStr: String): Pair<LocalDate, LocalDate> {
             val splitStr = dateStr.split(" ~ ")
             val start = DateUtil.getLocalDate(splitStr[0], "yyyy.MM.dd")
             val end = DateUtil.getLocalDate(splitStr[1], "yyyy.MM.dd")

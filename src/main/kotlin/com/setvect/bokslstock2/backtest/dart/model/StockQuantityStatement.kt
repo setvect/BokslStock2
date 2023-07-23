@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 
 data class StockQuantityStatement(
-    val commonStatement: CommonStatement, // 사업연도(4자리)
+    val commonStatement: CommonStatement,
 
     val rceptNo: String, // 접수번호(14자리)
     val corpCls: CorpCls, // 법인구분 : Y(유가), K(코스닥), N(코넥스), E(기타)

@@ -1,9 +1,10 @@
 package com.setvect.bokslstock2.backtest.dart.service
 
-import com.setvect.bokslstock2.backtest.dart.model.FilterCondition
+import com.setvect.bokslstock2.backtest.dart.model.DartFilter
 import com.setvect.bokslstock2.crawl.dart.model.ReportCode
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -13,7 +14,10 @@ import org.springframework.test.context.ActiveProfiles
 class DartStructuringServiceTest {
 
     @Autowired
-    lateinit var dartStructuringService: DartStructuringService
+    private lateinit var dartStructuringService: DartStructuringService
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
 
     @Test
     fun load() {
@@ -22,7 +26,7 @@ class DartStructuringServiceTest {
         println("1. Max memory: " + runtime.maxMemory() / (1024 * 1024) + "MB")
         println("1. Used memory: " + (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024) + "MB")
 
-        val filter = FilterCondition(
+        val filter = DartFilter(
             year = setOf(2019, 2020, 2021, 2022, 2023),
             quarter = setOf(ReportCode.QUARTER1, ReportCode.ANNUAL),
             stockCodes = setOf()
@@ -38,5 +42,23 @@ class DartStructuringServiceTest {
         dartStructuringService.loadDividend(filter)
         println("4. Max memory: " + runtime.maxMemory() / (1024 * 1024) + "MB")
         println("4. Used memory: " + (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024) + "MB")
+    }
+
+    @Test
+    fun searchFinancial() {
+        val filter = DartFilter(
+            year = setOf(2022),
+            quarter = setOf(ReportCode.ANNUAL),
+            stockCodes = setOf()
+        )
+        dartStructuringService.loadFinancial(filter)
+        val aaa = dartStructuringService.searchFinancial(
+            mapOf(
+                "accountNm" to "자본총계",
+                "commonStatement.stockCode" to "005930"
+            )
+        )
+
+        log.info(aaa.toString())
     }
 }

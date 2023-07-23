@@ -1,12 +1,13 @@
 package com.setvect.bokslstock2.backtest.dart.service
 
+import com.setvect.bokslstock2.backtest.dart.model.DartFilter
 import com.setvect.bokslstock2.backtest.dart.model.DividendStatement
-import com.setvect.bokslstock2.backtest.dart.model.FilterCondition
 import com.setvect.bokslstock2.backtest.dart.model.FinancialStatement
 import com.setvect.bokslstock2.backtest.dart.model.StockQuantityStatement
 import com.setvect.bokslstock2.crawl.dart.DartConstants
 import com.setvect.bokslstock2.crawl.dart.model.ReportCode
 import com.setvect.bokslstock2.util.NumberUtil.comma
+import okhttp3.internal.toImmutableList
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
+import kotlin.reflect.full.memberProperties
 
 /**
  * DART 통해서 수집한 자료 구조화
@@ -23,38 +25,37 @@ import java.util.regex.Pattern
 @Service
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class DartStructuringService {
+    private val financialStatementList = mutableListOf<FinancialStatement>()
+    private val stockQuantityStatementList = mutableListOf<StockQuantityStatement>()
+    private val dividendStatementList = mutableListOf<DividendStatement>()
 
-    val financialStatementList = mutableListOf<FinancialStatement>()
-    val stockQuantityStatementList = mutableListOf<StockQuantityStatement>()
-    val dividendStatementList = mutableListOf<DividendStatement>()
-
-    val log = LoggerFactory.getLogger(javaClass)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     /**
      * DART에서 수집한 데이터를 메모리에 올려 놓음
      */
-    fun loadFinancial(filter: FilterCondition) {
+    fun loadFinancial(filter: DartFilter) {
         val r = loader(DartConstants.FINANCIAL_PATH, filter, FinancialStatement::loader)
         financialStatementList.addAll(r)
     }
 
-    fun loadStockQuantity(filter: FilterCondition) {
+    fun loadStockQuantity(filter: DartFilter) {
         val r = loader(DartConstants.QUANTITY_PATH, filter, StockQuantityStatement::loader)
         stockQuantityStatementList.addAll(r)
     }
 
-    fun loadDividend(filter: FilterCondition) {
+    fun loadDividend(filter: DartFilter) {
         val r = loader(DartConstants.DIVIDEND_PATH, filter, DividendStatement::loader)
         dividendStatementList.addAll(r)
     }
 
     private fun <T> loader(
         jsonSaveDir: File,
-        filter: FilterCondition,
+        filter: DartFilter,
         loader: (jsonFile: File, year: Int, reportCode: ReportCode, stockCode: String) -> List<T>
     ): List<T> {
         val countAtom = AtomicInteger()
-        val r =jsonSaveDir.walk()
+        val r = jsonSaveDir.walk()
             .filter { it.isFile && it.extension == "json" }
             .mapNotNull { financialFile ->
                 val matcher = PATTERN.matcher(financialFile.name)
@@ -85,6 +86,33 @@ class DartStructuringService {
 
         log.info("loadFinancial size: ${comma(r.size)}")
         return r
+    }
+
+    fun searchFinancial(filter: Map<String, Any>): List<FinancialStatement> {
+        return financialStatementList.filter { filter(it, filter) }.toImmutableList()
+
+    }
+
+    private fun filter(target: Any, filter: Map<String, Any>): Boolean {
+        return filter.entries.all { it ->
+            val fieldNames = it.key.split(".")
+            var currentObj: Any? = target
+
+            fieldNames.let { names ->
+                var result = true
+                for (name in names) {
+                    val prop = currentObj?.javaClass?.kotlin?.memberProperties?.find { it.name == name }
+                        ?: throw IllegalArgumentException("No such field: $name in the class ${currentObj?.javaClass?.kotlin}")
+
+                    currentObj = prop.get(currentObj!!)
+
+                    if (name == names.last()) {
+                        result = currentObj == it.value
+                    }
+                }
+                result
+            }
+        }
     }
 
     companion object {
