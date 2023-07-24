@@ -78,7 +78,7 @@ data class FinancialStatement(
                     bfefrmtrmDtEnd = bfefrmtrmDt.second,
                     bfefrmtrmAmount = convertToLong(resFinancialStatement.bfefrmtrmAmount),
                     ord = resFinancialStatement.ord.toInt(),
-                    currency = "",
+                    currency = resFinancialStatement.currency
                 )
             } catch (e: Exception) {
                 log.info("error: ${e.message}\n------ json ------\n ${JsonUtil.mapper.writeValueAsString(resFinancialStatement)}")

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
+import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 
 /**
@@ -35,18 +36,21 @@ class DartStructuringService {
      * DART에서 수집한 데이터를 메모리에 올려 놓음
      */
     fun loadFinancial(filter: DartFilter) {
-        val r = loader(DartConstants.FINANCIAL_PATH, filter, FinancialStatement::loader)
-        financialStatementList.addAll(r)
+        financialStatementList.clear()
+        val result = loader(DartConstants.FINANCIAL_PATH, filter, FinancialStatement::loader)
+        financialStatementList.addAll(result)
     }
 
     fun loadStockQuantity(filter: DartFilter) {
-        val r = loader(DartConstants.QUANTITY_PATH, filter, StockQuantityStatement::loader)
-        stockQuantityStatementList.addAll(r)
+        stockQuantityStatementList.clear()
+        val result = loader(DartConstants.QUANTITY_PATH, filter, StockQuantityStatement::loader)
+        stockQuantityStatementList.addAll(result)
     }
 
     fun loadDividend(filter: DartFilter) {
-        val r = loader(DartConstants.DIVIDEND_PATH, filter, DividendStatement::loader)
-        dividendStatementList.addAll(r)
+        dividendStatementList.clear()
+        val result = loader(DartConstants.DIVIDEND_PATH, filter, DividendStatement::loader)
+        dividendStatementList.addAll(result)
     }
 
     private fun <T> loader(
@@ -101,7 +105,7 @@ class DartStructuringService {
             fieldNames.let { names ->
                 var result = true
                 for (name in names) {
-                    val prop = currentObj?.javaClass?.kotlin?.memberProperties?.find { it.name == name }
+                    val prop: KProperty1<Any, *> = currentObj?.javaClass?.kotlin?.memberProperties?.find { it.name == name }
                         ?: throw IllegalArgumentException("No such field: $name in the class ${currentObj?.javaClass?.kotlin}")
 
                     currentObj = prop.get(currentObj!!)

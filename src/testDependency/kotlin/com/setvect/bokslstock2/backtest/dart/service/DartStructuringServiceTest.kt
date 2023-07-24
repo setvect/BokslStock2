@@ -1,7 +1,9 @@
 package com.setvect.bokslstock2.backtest.dart.service
 
 import com.setvect.bokslstock2.backtest.dart.model.DartFilter
+import com.setvect.bokslstock2.backtest.dart.model.FinancialStatement
 import com.setvect.bokslstock2.crawl.dart.model.ReportCode
+import com.setvect.bokslstock2.util.JsonUtil
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
@@ -46,19 +48,34 @@ class DartStructuringServiceTest {
 
     @Test
     fun searchFinancial() {
+//        findAndPrint("자본총계")
+//        findAndPrint("당기순이익")
+//        findAndPrint("영업이익")
+        findAndPrint("매출액")
+    }
+
+    private fun findAndPrint(name: String) {
         val filter = DartFilter(
-            year = setOf(2022),
-            quarter = setOf(ReportCode.ANNUAL),
-            stockCodes = setOf()
+            year = setOf(2022, 2023),
+            quarter = ReportCode.values().toSet(),
+//            stockCodes = setOf("008110"), // 1분기 마감
+//            stockCodes = setOf("005390"), // 2분기 마감
+//            stockCodes = setOf("003610"), // 3분기 마감
+            stockCodes = setOf("005930"), // 4분기 마감
         )
-        dartStructuringService.loadFinancial(filter)
-        val aaa = dartStructuringService.searchFinancial(
-            mapOf(
-                "accountNm" to "자본총계",
-                "commonStatement.stockCode" to "005930"
-            )
+        val condition: Map<String, Any> = mapOf(
+            "accountNm" to name,
+            "fsDiv" to FinancialStatement.FinancialStatementFs.CFS,
         )
 
-        log.info(aaa.toString())
+        dartStructuringService.loadFinancial(filter)
+        val result = dartStructuringService.searchFinancial(condition)
+
+        println("\n------- $name, size: ${result.size} -------")
+
+        result.forEach {
+            println("\n----------------------------\n")
+            println(JsonUtil.mapper.writeValueAsString(it))
+        }
     }
 }
