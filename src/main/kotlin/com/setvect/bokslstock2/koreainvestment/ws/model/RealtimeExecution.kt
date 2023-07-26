@@ -114,6 +114,22 @@ data class RealtimeExecution(
                 viStndPrc = dataArray[45].toLong(),
             )
         }
+
+        /**
+         * @return 모든 값을 파싱함
+         */
+        fun parsingMulti(rawText: String): List<RealtimeExecution> {
+            return try {
+                val tokens = StringUtils.splitByWholeSeparatorPreserveAllTokens(rawText, "^")
+                tokens.toList().chunked(46).map {
+                    val checkText = it.joinToString("^")
+                    parsing(checkText)
+                }
+            } catch (e: Exception) {
+                println("파싱 실패: $rawText")
+                emptyList()
+            }
+        }
     }
 }
 
