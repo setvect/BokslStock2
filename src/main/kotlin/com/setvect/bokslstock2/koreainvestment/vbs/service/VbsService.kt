@@ -270,9 +270,10 @@ class VbsService(
         }
 
         val realtimeExecution = RealtimeExecution.parsing(wsResponse.responseData)
-        val vbsStock =
-            bokslStockProperties.koreainvestment.vbs.stock.stream().filter { it.code == realtimeExecution.code }
-                .findAny().orElse(null)
+        val realtimeExecutionList = RealtimeExecution.parsingMulti(wsResponse.responseData)
+        val vbsStock = bokslStockProperties.koreainvestment.vbs.stock.stream()
+            .filter { it.code == realtimeExecution.code }
+            .findAny().orElse(null)
         if (vbsStock == null) {
             log.warn("매수 대상종목이 아닌데 실시간 체결 이벤트 수신. 종목 코드: ${realtimeExecution.code}")
             return
@@ -290,9 +291,16 @@ class VbsService(
             return
         }
 
+        // 매도호가1들
+        val askp1 = realtimeExecutionList.map { it.askp1 }
         log.debug("${wsResponse.trId} = $realtimeExecution")
+        val executionPriceOver = targetPrice <= realtimeExecution.stckPrpr
+        val askPriceOver = askp1.any { targetPrice <= it }
 
-        val targetPriceExceeded = targetPrice <= realtimeExecution.stckPrpr
+        log.debug("채결가 돌파: $executionPriceOver, 현제가 : ${realtimeExecution.stckPrpr}")
+        log.debug("매도호가 돌파: $askPriceOver, 매도호가1 : $askp1")
+
+        val targetPriceExceeded = executionPriceOver || askPriceOver
 
         if (targetPriceExceeded) {
             val errorWait = Optional.ofNullable(errorOccursTime[vbsStock.code])
@@ -562,6 +570,7 @@ class VbsService(
                     log.info("[${it.prdtName}-${it.code}] 매수 대기 - $it")
                     buyCode.add(it.code)
                 }
+
                 "01" -> log.info("[${it.prdtName}-${it.code}] 매도 대기 - $it")
                 else -> log.warn("[${it.prdtName}-${it.code}] 없는 코드 - $it")
             }

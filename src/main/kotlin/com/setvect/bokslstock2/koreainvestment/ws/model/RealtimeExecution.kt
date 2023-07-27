@@ -2,6 +2,8 @@ package com.setvect.bokslstock2.koreainvestment.ws.model
 
 import com.setvect.bokslstock2.util.DateUtil
 import org.apache.commons.lang3.StringUtils
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -57,7 +59,7 @@ data class RealtimeExecution(
     val viStndPrc: Long, // 정적VI발동기준가
 ) {
     companion object {
-
+        private val log: Logger = LoggerFactory.getLogger(RealtimeExecution::class.java)
 
         /**
          * 예시값
@@ -126,7 +128,7 @@ data class RealtimeExecution(
                     parsing(checkText)
                 }
             } catch (e: Exception) {
-                println("파싱 실패: $rawText")
+                log.warn("파싱 실패: $rawText")
                 emptyList()
             }
         }

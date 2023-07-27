@@ -2,10 +2,13 @@ package com.setvect.bokslstock2.koreainvestment.ws.model
 
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalTime
 
 internal class RealtimeExecutionTest {
+    private val log: Logger = LoggerFactory.getLogger(javaClass)
     @Test
     fun parsing() {
         val rawText =
@@ -40,6 +43,7 @@ internal class RealtimeExecutionTest {
         println("사이즈: ${realtimeExecutionList.size}")
         // 매도호가1
         val askp1 = realtimeExecutionList.map { it.askp1 }
+        log.debug("$askp1")
 
         val targetPrice = 14610
         if (askp1.any { targetPrice <= it }) {
