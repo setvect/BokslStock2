@@ -67,7 +67,8 @@ gradlew makeInstallFile
 
 - 메인소스: [VbsService.kt](src/main/kotlin/com/setvect/bokslstock2/koreainvestment/vbs/service/VbsService.kt)
 - 매수 조건
-    - 목표가 < 오늘 주가
+    - 목표가 <= 오늘 주가
+      - 여기서 주가는 현재가 또는 매도1호가를 기준으로 목표가 돌파 여부를 판단함
     - 목표가 산출 방법: 목표가 = 오늘 시가 + (어제 고가 - 어제 저가) * k
 - 매도 조건
     - 매수 다음 영업일 매도
