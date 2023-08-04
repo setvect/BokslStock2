@@ -125,6 +125,18 @@ class VbsService(
             return
         }
 
+        val message = getBalanceMessage()
+        log.info(message)
+        slackMessageService.sendMessage(message)
+
+        saveAssetStatus()
+    }
+
+    private fun getBalanceMessage(): String {
+        if (this.balanceResponse == null) {
+            return "잔고 정보 없음"
+        }
+
         var total = 0L
         val stockInfo = balanceResponse!!.holdings.map { stock ->
             total += stock.evluAmt
@@ -140,11 +152,7 @@ class VbsService(
 
         val deposit = balanceResponse!!.deposit[0].prvsRcdlExccAmt
         total += deposit
-        val message = "<장 종료 리포트>\n- 전체금액: ${comma(total)}\n- 예수금: ${comma(deposit)}\n$stockInfo"
-        log.info(message)
-        slackMessageService.sendMessage(message)
-
-        saveAssetStatus()
+        return "<장 종료 리포트>\n- 전체금액: ${comma(total)}\n- 예수금: ${comma(deposit)}\n$stockInfo"
     }
 
     /**
@@ -348,7 +356,8 @@ class VbsService(
      * 매수 주문
      */
     private fun buyOrder(buyStock: BokslStockProperties.Vbs.VbsStock, targetPrice: Int) {
-        loadBalance()
+        // TODO 잔고 조회 안하는 걸로 생각해 보기
+//        loadBalance()
 
         val deposit = balanceResponse!!.deposit[0].prvsRcdlExccAmt
         val vbsConfig = bokslStockProperties.koreainvestment.vbs
@@ -404,6 +413,8 @@ class VbsService(
             )
             tradeRepository.save(tradeEntity)
             TimeUnit.SECONDS.sleep(2)
+            // 주문 완료 이후 잔고 조회
+            loadBalance()
         }
         slackMessageService.sendMessage(message)
     }
@@ -548,6 +559,7 @@ class VbsService(
     private fun loadBalance() {
         val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
         balanceResponse = stockClientService.requestBalance(BalanceRequest(accountNo), tokenService.getAccessToken())
+        log.info("잔고 조회: ${getBalanceMessage()}")
     }
 
     /**
@@ -616,7 +628,7 @@ class VbsService(
                 MinutePriceRequest(it.code, now), tokenService.getAccessToken()
             )
             val groupingCandleList = PriceGroupService.groupByMinute5(minutePrice, StockCode.findByCode(it.code))
-            // 09:05, 09:10, 09:15, ... 이런식으로 호출 
+            // 09:05, 09:10, 09:15, ... 이런식으로 호출
             // 끝에서 2번째가 직전 5분봉
             val beforeCandle = groupingCandleList[groupingCandleList.size - 2]
             log.info("호출 시간: $now")
