@@ -99,6 +99,21 @@ class DartStructuringServiceTest {
         }
     }
 
+    @Test
+    fun getIndustryType() {
+        val filter = DartFilter(
+            year = setOf(2021, 2022),
+            quarter = ReportCode.values().toSet(),
+            stockCodes = setOf("008110", "005930", "304100")
+        )
+        dartStructuringService.loadFinancial(filter)
+
+        filter.stockCodes.forEach { stockCode ->
+            val industryType = dartStructuringService.getIndustryType(stockCode)
+            println("industryType: $stockCode, $industryType")
+        }
+    }
+
     /**
      * 분기별 손익 계산서
      */

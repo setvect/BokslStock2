@@ -156,6 +156,27 @@ class DartStructuringService {
     }
 
     /**
+     * @return 손익계산서에 '매출액' 항목이 없다면 서비스업, 있다면 제조업
+     */
+    fun getIndustryType(stockCode: String): IndustryType {
+        if (financialStatementList.isEmpty()) {
+            throw IllegalStateException("loadFinancial() 호출 후 사용")
+        }
+        val condition: Map<String, Any> = mapOf(
+            "commonStatement.stockCode" to stockCode,
+            "accountNm" to "매출액",
+        )
+
+        val financialList = searchFinancial(condition)
+        // 매출액 정보가 없다면 서비스업으로 간주
+        return if (financialList.isEmpty()) {
+            IndustryType.SERVICES
+        } else {
+            IndustryType.MFG
+        }
+    }
+
+    /**
      * 손익계산서 항목을 분기별로 변환
      * - 기업 회계 마감 분기를 우리가 흔히 사용하고 있는 분기 기준으로 변환
      *
