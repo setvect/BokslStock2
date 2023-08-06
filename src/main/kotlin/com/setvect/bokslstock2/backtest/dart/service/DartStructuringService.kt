@@ -213,6 +213,21 @@ class DartStructuringService {
             // ReportCode.QUARTER1: 7 ~ 9월
             // ReportCode.HALF_ANNUAL: 7 ~ 12월
             AccountClose.Q2 -> {
+                val q1FS = findFinancialStatement(financialList, ReportCode.QUARTER3, year) ?: return currentIncomeStatement
+                currentIncomeStatement = currentIncomeStatement.copy(q1Value = q1FS.thstrmAmount!!)
+
+                val beforeH = findFinancialStatement(financialList, ReportCode.HALF_ANNUAL, year - 1) ?: return currentIncomeStatement
+
+                val q2FS = findFinancialStatement(financialList, ReportCode.ANNUAL, year) ?: return currentIncomeStatement
+                currentIncomeStatement =
+                    currentIncomeStatement.copy(q2Value = q2FS.thstrmAmount!! - beforeH.thstrmAddAmount!! - currentIncomeStatement.q1Value)
+
+                val q3FS = findFinancialStatement(financialList, ReportCode.QUARTER1, year) ?: return currentIncomeStatement
+                currentIncomeStatement = currentIncomeStatement.copy(q3Value = q3FS.thstrmAmount!!)
+
+                val q4FS = findFinancialStatement(financialList, ReportCode.HALF_ANNUAL, year) ?: return currentIncomeStatement
+                currentIncomeStatement = currentIncomeStatement.copy(q4Value = q4FS.thstrmAmount!!)
+
                 return currentIncomeStatement
             }
 
@@ -221,6 +236,17 @@ class DartStructuringService {
             // ReportCode.ANNUAL: 작년10 ~ 9월
             // ReportCode.QUARTER1: 10 ~ 12월
             AccountClose.Q3 -> {
+                val q1FS = findFinancialStatement(financialList, ReportCode.HALF_ANNUAL, year) ?: return currentIncomeStatement
+                currentIncomeStatement = currentIncomeStatement.copy(q1Value = q1FS.thstrmAmount!!)
+
+                val q2FS = findFinancialStatement(financialList, ReportCode.QUARTER3, year) ?: return currentIncomeStatement
+                currentIncomeStatement = currentIncomeStatement.copy(q2Value = q2FS.thstrmAmount ?: 0)
+
+                val q3FS = findFinancialStatement(financialList, ReportCode.ANNUAL, year) ?: return currentIncomeStatement
+                currentIncomeStatement = currentIncomeStatement.copy(q3Value = q3FS.thstrmAmount!! - q1FS.thstrmAddAmount!! - q2FS.thstrmAmount!!)
+
+                val q4FS = findFinancialStatement(financialList, ReportCode.QUARTER1, year) ?: return currentIncomeStatement
+                currentIncomeStatement = currentIncomeStatement.copy(q4Value = q4FS.thstrmAmount!!)
                 return currentIncomeStatement
             }
 
