@@ -98,4 +98,23 @@ class DartStructuringServiceTest {
             println("accountClose: $it, ${result}")
         }
     }
+
+    /**
+     * 분기별 손익 계산서
+     */
+    @Test
+    fun getIncomeStatement() {
+        val filter = DartFilter(
+            year = setOf(2021, 2022),
+            quarter = ReportCode.values().toSet(),
+            stockCodes = setOf("008110", "005390", "003610", "005930")
+        )
+        dartStructuringService.loadFinancial(filter)
+        var incomeStatement = dartStructuringService.getIncomeStatement("008110", 2022, "매출액")
+        println("2022년 매출액: ${incomeStatement}")
+
+        incomeStatement = dartStructuringService.getIncomeStatement("005930", 2022, "매출액")
+        println("2022년 매출액: ${incomeStatement}")
+
+    }
 }
