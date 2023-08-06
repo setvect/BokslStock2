@@ -1,9 +1,6 @@
 package com.setvect.bokslstock2.backtest.dart.service
 
-import com.setvect.bokslstock2.backtest.dart.model.DartFilter
-import com.setvect.bokslstock2.backtest.dart.model.DividendStatement
-import com.setvect.bokslstock2.backtest.dart.model.FinancialStatement
-import com.setvect.bokslstock2.backtest.dart.model.StockQuantityStatement
+import com.setvect.bokslstock2.backtest.dart.model.*
 import com.setvect.bokslstock2.crawl.dart.DartConstants
 import com.setvect.bokslstock2.crawl.dart.model.ReportCode
 import com.setvect.bokslstock2.util.NumberUtil.comma
@@ -116,6 +113,40 @@ class DartStructuringService {
                 }
                 result
             }
+        }
+    }
+
+
+    /**
+     * 데이터를 로드한 상태에서 본 메소드 사용
+     * - loadFinancial() 호출 후 사용
+     * @param stockCode 종목코드
+     * @return 회사의 회계 마감 기준 제공
+     */
+    fun getAccountClose(stockCode: String): AccountClose {
+        if (financialStatementList.isEmpty()) {
+            throw IllegalStateException("loadFinancial() 호출 후 사용")
+        }
+
+        val condition: Map<String, Any> = mapOf(
+            "commonStatement.reportCode" to ReportCode.ANNUAL,
+            "commonStatement.stockCode" to stockCode,
+            "accountNm" to "매출액", // 고정값
+            "fsDiv" to FinancialStatement.FinancialStatementFs.CFS, // TODO 연결재무가 없는 회사가 있음, OFS 사용
+        )
+
+        val result = searchFinancial(condition)
+        if (result.isEmpty()) {
+            throw IllegalArgumentException("매출액정보가 없는 회사")
+        }
+        val financialStatement = result[0]
+
+        return when (financialStatement.thstrmDtEnd!!.month.value) {
+            3 -> AccountClose.Q1
+            6 -> AccountClose.Q2
+            9 -> AccountClose.Q3
+            12 -> AccountClose.Q4
+            else -> throw IllegalArgumentException("매출액정보가 없는 회사")
         }
     }
 

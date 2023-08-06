@@ -123,7 +123,7 @@ data class FinancialStatement(
 
     enum class FinancialStatementFs(val code: String) {
         CFS("CFS"), // 연결재무제표
-        OFS("OFS")  // 재무제표
+        OFS("OFS")  // 재무제표, 단일법인이면 CFS는 없고, OFS만 있음
     }
 
     enum class FinancialStatementSj(val code: String) {

@@ -63,12 +63,12 @@ class DartStructuringServiceTest {
 //            stockCodes = setOf("003610"), // 3분기 마감
             stockCodes = setOf("005930"), // 4분기 마감
         )
+        dartStructuringService.loadFinancial(filter)
+
         val condition: Map<String, Any> = mapOf(
             "accountNm" to name,
             "fsDiv" to FinancialStatement.FinancialStatementFs.CFS,
         )
-
-        dartStructuringService.loadFinancial(filter)
         val result = dartStructuringService.searchFinancial(condition)
 
         println("\n------- $name, size: ${result.size} -------")
@@ -76,6 +76,26 @@ class DartStructuringServiceTest {
         result.forEach {
             println("\n----------------------------\n")
             println(JsonUtil.mapper.writeValueAsString(it))
+        }
+    }
+
+    @Test
+    fun getAccountClose() {
+        // 008110  1분기 마감
+        // 005390  2분기 마감
+        // 003610  3분기 마감
+        // 005930  4분기 마감
+
+        val filter = DartFilter(
+            year = setOf(2022, 2023),
+            quarter = ReportCode.values().toSet(),
+            stockCodes = setOf("008110", "005390", "003610", "005930")
+        )
+        dartStructuringService.loadFinancial(filter)
+
+        filter.stockCodes.forEach {
+            val result = dartStructuringService.getAccountClose(it)
+            println("accountClose: $it, ${result}")
         }
     }
 }
