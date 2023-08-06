@@ -136,13 +136,13 @@ class DartStructuringService {
         val condition: Map<String, Any> = mapOf(
             "commonStatement.reportCode" to ReportCode.ANNUAL,
             "commonStatement.stockCode" to stockCode,
-            "accountNm" to "매출액", // 고정값
+            "accountNm" to "영업이익", // 고정값
             "fsDiv" to FinancialStatement.FinancialStatementFs.CFS, // TODO 연결재무가 없는 회사가 있음, OFS 사용
         )
 
         val financialList = searchFinancial(condition)
         if (financialList.isEmpty()) {
-            throw IllegalArgumentException("매출액정보가 없는 회사")
+            throw IllegalArgumentException("매출액정보가 없는 회사 $stockCode")
         }
         val financialStatement = financialList[0]
 
@@ -151,7 +151,7 @@ class DartStructuringService {
             6 -> AccountClose.Q2
             9 -> AccountClose.Q3
             12 -> AccountClose.Q4
-            else -> throw IllegalArgumentException("매출액정보가 없는 회사")
+            else -> throw IllegalArgumentException("매출액정보가 없는 회사 $stockCode")
         }
     }
 
@@ -184,8 +184,7 @@ class DartStructuringService {
             q4Value = 0,
         )
 
-
-        return when (accountClose) {
+        when (accountClose) {
             // ReportCode.ANNUAL: 작년4 ~ 3월
             // ReportCode.QUARTER1: 4 ~ 6월
             // ReportCode.HALF_ANNUAL: 4 ~ 9월

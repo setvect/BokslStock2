@@ -107,24 +107,23 @@ class DartStructuringServiceTest {
         val filter = DartFilter(
             year = setOf(2021, 2022),
             quarter = ReportCode.values().toSet(),
-            stockCodes = setOf("008110", "005390", "003610", "005930")
+            stockCodes = setOf("008110", "005390", "003610", "005930", "304100")
         )
 
         // 검증은 아래 링크에서
         // https://finance.naver.com/item/coinfo.naver?code=005930
 
         dartStructuringService.loadFinancial(filter)
-        var incomeStatement = dartStructuringService.getIncomeStatement("008110", 2022, "매출액")
-        println("2022년 매출액: ${incomeStatement}")
+        var incomeStatement = dartStructuringService.getIncomeStatement("008110", 2022, "영업이익")
+        println("2022년 영업이익: ${incomeStatement}")
 
-        incomeStatement = dartStructuringService.getIncomeStatement("005390", 2022, "매출액")
-        println("2022년 매출액: ${incomeStatement}")
+        incomeStatement = dartStructuringService.getIncomeStatement("005390", 2022, "영업이익")
+        println("2022년 영업이익: ${incomeStatement}")
 
-        incomeStatement = dartStructuringService.getIncomeStatement("003610", 2022, "매출액")
-        println("2022년 매출액: ${incomeStatement}")
+        incomeStatement = dartStructuringService.getIncomeStatement("003610", 2022, "영업이익")
+        println("2022년 영업이익: ${incomeStatement}")
 
-        incomeStatement = dartStructuringService.getIncomeStatement("005930", 2022, "매출액")
-        println("2022년 매출액: ${incomeStatement}")
-
+        incomeStatement = dartStructuringService.getIncomeStatement("005930", 2022, "영업이익")
+        println("2022년 영업이익: ${incomeStatement}")
     }
 }
