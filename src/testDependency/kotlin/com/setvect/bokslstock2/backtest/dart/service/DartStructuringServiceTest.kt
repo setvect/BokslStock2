@@ -20,13 +20,14 @@ class DartStructuringServiceTest {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-
     @Test
     fun load() {
         val runtime = Runtime.getRuntime()
 
         println("1. Max memory: " + runtime.maxMemory() / (1024 * 1024) + "MB")
         println("1. Used memory: " + (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024) + "MB")
+
+//        val filter = DartFilter(year = emptySet(), quarter = emptySet(), stockCodes = emptySet())
 
         val filter = DartFilter(
             year = setOf(2019, 2020, 2021, 2022, 2023),
@@ -104,7 +105,7 @@ class DartStructuringServiceTest {
         val filter = DartFilter(
             year = setOf(2021, 2022),
             quarter = ReportCode.values().toSet(),
-            stockCodes = setOf("008110", "005930", "304100")
+            stockCodes = setOf("008110", "005930", "304100","377300","352820")
         )
         dartStructuringService.loadFinancial(filter)
 

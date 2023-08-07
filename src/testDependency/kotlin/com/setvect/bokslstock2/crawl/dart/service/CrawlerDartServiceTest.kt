@@ -28,13 +28,25 @@ class CrawlerDartServiceTest {
     }
 
     /**
-     * 재무 정보 수집
+     * 주요 재무 정보 수집
      */
     @Test
     fun crawlCompanyFinanceInfo() {
         val companyAll = crawlerDartService.parsingCompanyList(File("crawl/dart/CORPCODE.xml"))
         log.info("기업수: {}", companyAll.size)
         crawlerDartService.crawlCompanyFinancialInfo(companyAll)
+
+        log.info("끝.")
+    }
+
+    /**
+     * 전체 재무재표 정보 수집
+     */
+    @Test
+    fun crawlCompanyFinanceInfoDetail() {
+        val companyAll = crawlerDartService.parsingCompanyList(File("crawl/dart/CORPCODE.xml"))
+        log.info("기업수: {}", companyAll.size)
+        crawlerDartService.crawlCompanyFinancialInfoDetail(companyAll)
 
         log.info("끝.")
     }

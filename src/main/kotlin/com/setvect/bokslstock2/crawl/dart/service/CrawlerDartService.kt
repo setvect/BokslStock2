@@ -1,6 +1,9 @@
 package com.setvect.bokslstock2.crawl.dart.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.setvect.bokslstock2.backtest.dart.model.CommonStatement
+import com.setvect.bokslstock2.backtest.dart.model.FinancialStatement
+import com.setvect.bokslstock2.backtest.dart.service.DartStructuringService
 import com.setvect.bokslstock2.config.BokslStockProperties
 import com.setvect.bokslstock2.crawl.dart.DartConstants
 import com.setvect.bokslstock2.crawl.dart.model.*
@@ -67,6 +70,7 @@ class CrawlerDartService(
     }
 
     /**
+     * 주요 기업 재무 재표 수집
      * @param companyCodeList 기업코드 목록
      */
     fun crawlCompanyFinancialInfo(companyAll: List<CompanyCode>) {
@@ -90,7 +94,59 @@ class CrawlerDartService(
             }
         }
 
-        crawl(companyAll, financialInfoToSave, "https://opendart.fss.or.kr/api/fnlttMultiAcnt.json")
+        crawl(companyAll, financialInfoToSave, "https://opendart.fss.or.kr/api/fnlttMultiAcnt.json", 100)
+        println("끝.")
+    }
+
+    /**
+     * 전체 기업 재무재표 수집
+     * 전체 기업 재무제표는 하나씩 조회 해야됨
+     * 존재하는 데이터를 조회 하기 위해서 주요 재무제표에 수집된 내용이 존재하는지 확인한 후 수집 실행
+     * @param companyCodeList 기업코드 목록
+     */
+    fun crawlCompanyFinancialInfoDetail(companyAll: List<CompanyCode>) {
+        val financialInfoToSave = object : DartMakerJson {
+            override fun save(body: String, companyCodeMap: Map<String, CompanyCode>, year: Int, reportCode: ReportCode) {
+                val saveBaseDir = DartConstants.FINANCIAL_DETAIL_PATH
+                val saveDir = File(saveBaseDir, "$year/${reportCode}")
+                saveDir.mkdirs()
+                val typeRef = object : TypeReference<ResDart<ResFinancialDetailStatement>>() {}
+
+                val parsedResponse = JsonUtil.mapper.readValue(body, typeRef)
+                val financialResult = parsedResponse.list
+                financialResult.groupBy { it.corpCode }.forEach { (corpCode, financialList) ->
+                    val company = companyCodeMap[corpCode]!!
+                    val stockCode = company.stockCode
+                    val fileName = "${year}_${reportCode}_${stockCode}_${company.corpName}.json"
+                    val file = File(saveDir, fileName)
+                    JsonUtil.mapper.writeValue(file, financialList)
+                    log.info("저장: {}", file)
+                }
+            }
+        }
+
+        val existFinancialInfo = DartConstants.FINANCIAL_PATH.walk()
+            .filter { it.isFile && it.extension == "json" }
+            .mapNotNull { financialFile ->
+                val matcher = DartStructuringService.PATTERN.matcher(financialFile.name)
+                if (!matcher.find()) {
+                    return@mapNotNull null
+                }
+                val year = matcher.group(1).toInt()
+                val reportCode = ReportCode.valueOf(matcher.group(2))
+                val stockCode = matcher.group(3)
+
+                CommonStatement(year, reportCode, stockCode)
+            }
+            .toSet()
+
+        val crawlChecker = object : CrawlDartChecker {
+            override fun check(commonStatement: CommonStatement): Boolean {
+                return existFinancialInfo.contains(commonStatement)
+            }
+        }
+
+        crawl(companyAll, financialInfoToSave, "https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json", 1, crawlChecker)
         println("끝.")
     }
 
@@ -118,7 +174,7 @@ class CrawlerDartService(
             }
         }
 
-        crawl(companyAll, stockQuantity, "https://opendart.fss.or.kr/api/stockTotqySttus.json")
+        crawl(companyAll, stockQuantity, "https://opendart.fss.or.kr/api/stockTotqySttus.json", 100)
         println("끝.")
     }
 
@@ -146,22 +202,34 @@ class CrawlerDartService(
             }
         }
 
-        crawl(companyAll, stockQuantity, "https://opendart.fss.or.kr/api/alotMatter.json")
+        crawl(companyAll, stockQuantity, "https://opendart.fss.or.kr/api/alotMatter.json", 100)
         println("끝.")
     }
 
-    private fun crawl(companyAll: List<CompanyCode>, toSave: DartMakerJson, endpointUrl: String) {
+    private fun crawl(
+        companyAll: List<CompanyCode>,
+        toSave: DartMakerJson,
+        endpointUrl: String,
+        chunkSize: Int,
+        crawlChecker: CrawlDartChecker = CrawlDartChecker.DEFAULT_CHECKER
+    ) {
         val companyCodeList = companyAll.filter { StringUtils.isNotBlank(it.stockCode) }
         log.info("상장 회사수: {}", companyCodeList.size)
         val companyCodeMap = companyCodeList.associateBy { it.corpCode }
 
-        val chunkedCompany = companyCodeList
-            .chunked(100)
+        val chunkedCompany = companyCodeList.chunked(chunkSize)
         val apiCallCount = AtomicInteger(0)
         for (year in 2015..LocalDate.now().year) {
             ReportCode.values().forEach { reportCode ->
                 chunkedCompany.forEach inner@{ companyList ->
-                    val corpCodes = companyList.joinToString(",") { it.corpCode }
+                    val corpCodes = companyList
+                        .filter { crawlChecker.check(CommonStatement(year, reportCode, it.stockCode)) }
+                        .joinToString(",") { it.corpCode }
+
+                    if (corpCodes.isEmpty()) {
+                        log.info("수집 대상 없음 ${year}년, reportCode: ${reportCode}, corpCodes: ${companyList.map { it.stockCode }}")
+                        return@inner
+                    }
 
                     val uri = UriComponentsBuilder
                         .fromHttpUrl(endpointUrl)
@@ -169,6 +237,7 @@ class CrawlerDartService(
                         .queryParam("corp_code", corpCodes)
                         .queryParam("bsns_year", year.toString())
                         .queryParam("reprt_code", reportCode.code)
+                        .queryParam("fs_div", FinancialStatement.FinancialStatementFs.CFS.name) // CFS가 아닌 종목이 있는것 같음
                         .build()
                         .encode()
                         .toUri()
@@ -178,8 +247,10 @@ class CrawlerDartService(
                     for (retry in 1..3) {
                         try {
                             response = crawlRestTemplate.exchange(uri, HttpMethod.GET, null, Any::class.java)
+                            break
                         } catch (e: Exception) {
                             log.info("Exception: {}, retry: $retry", e.message)
+                            Thread.sleep(1000)
                             if (retry == 3) {
                                 throw e
                             }
@@ -187,12 +258,6 @@ class CrawlerDartService(
                     }
 
                     log.info("API 호출수: ${apiCallCount.incrementAndGet()}")
-
-                    // 100건 마다 1초 정지
-                    if (apiCallCount.get() % 100 == 0) {
-                        log.info("100건 호출 후 1초 정지")
-                        Thread.sleep(1000)
-                    }
 
                     if (!response!!.statusCode.is2xxSuccessful) {
                         log.info("Response without list: {}", response.statusCode)
@@ -202,7 +267,7 @@ class CrawlerDartService(
                     val body = JsonUtil.mapper.writeValueAsString(response.body)!!
                     val status = JsonUtil.mapper.readTree(body).get("status").asText()
                     if (status != "000") {
-                        log.info("Response without list: $body")
+                        log.info("수집 대상 없음 ${year}년, reportCode: ${reportCode}, corpCodes: ${companyList.map { it.stockCode }}, Response without list: $body")
                         return@inner
                     }
                     toSave.save(body, companyCodeMap, year, reportCode)

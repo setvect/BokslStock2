@@ -1,5 +1,11 @@
 ## DART_제무제표 데이터와 네이버 기업평가자료 비교
 
+## DART API 설명
+- [다중회사 주요 계정](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS003&apiId=2019017)
+- [단일회사 전체 재무제표](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS003&apiId=2019020)
+- [배당에 관한 사항](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS002&apiId=2019005)
+- [주식의 총수 현황](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS002&apiId=2020002)
+
 DART에서 수집하는 데이터 유형은 매우 많다. 네이버 주식 사이트에서 등에서 제공하는 기업재무 정보와 매팽이 되는 DART 필드를 찾는다.
 
 - [네이버 주식 삼성](https://finance.naver.com/item/coinfo.naver?code=005930)를 중심으로 비교한다.

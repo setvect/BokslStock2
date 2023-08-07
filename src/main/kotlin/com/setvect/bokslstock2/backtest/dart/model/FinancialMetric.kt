@@ -3,12 +3,12 @@ package com.setvect.bokslstock2.backtest.dart.model
 /**
  * 재무제표 항목
  *
- * 여기서 요약 재무제포, 상세 제무재표 의미는
- * - 요약 재무제표: CrawlerDartService.crawlCompanyFinancialInfo() 수집한 결과
+ * 여기서 주요 재무제포, 상세 제무재표 의미는
+ * - 주요 재무제표: CrawlerDartService.crawlCompanyFinancialInfo() 수집한 결과
  * - 상세 재무제표: CrawlerDartService.??() 수집한 결과
  *
- * @param summaryMfg 재조업 경우 요약 재무제표 항목 이름
- * @param summaryService 서비스업 경우 요약 재무제표 항목 이름
+ * @param summaryMfg 재조업 경우 주요 재무제표 항목 이름
+ * @param summaryService 서비스업 경우 주요 재무제표 항목 이름
  * @param detailMfg 재조업 경우 상세 재무제표 항목 이름
  * @param detailService 서비스업 경우 상세 재무제표 항목 이름
  */

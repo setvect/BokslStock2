@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.backtest.dart.model;
+package com.setvect.bokslstock2.backtest.dart.model
 
 enum class IndustryType {
     MFG, // 제조업
