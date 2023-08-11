@@ -266,7 +266,7 @@ class CrawlerDartService(
                         // 100건 마다 1초 정지
                         if (apiCallCount.get() % 100 == 0) {
                             log.info("100건 호출 후 1초 정지")
-                            Thread.sleep(1000)
+                            Thread.sleep(5000)
                         }
 
                         if (!response!!.statusCode.is2xxSuccessful) {
