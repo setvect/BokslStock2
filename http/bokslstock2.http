@@ -58,3 +58,12 @@ https://opendart.fss.or.kr/api/stockTotqySttus.json?crtfc_key={{dart_key}}&corp_
 
 ### 배당 내역
 https://opendart.fss.or.kr/api/alotMatter.json?crtfc_key={{dart_key}}&corp_code=01050738&bsns_year=2022&reprt_code=11011
+
+
+###
+
+# curl -X GET -H "Accept: application/json, application/*+json" -H "Content-Length: 0"  https://opendart.fss.or.kr/api/fnlttMultiAcnt.json?crtfc_key=f29fcabe0243b555ead0d6b8fbe9e64fb41078f6&corp_code=00956028&bsns_year=2022&reprt_code=11013&fs_div=CFS
+GET https://opendart.fss.or.kr/api/fnlttMultiAcnt.json?crtfc_key=f29fcabe0243b555ead0d6b8fbe9e64fb41078f6&
+    corp_code=00956028&bsns_year=2022&reprt_code=11013&fs_div=CFS
+Accept: application/json, application/*+json
+Content-Length: 0

@@ -47,7 +47,6 @@ class CrawlerDartServiceTest {
         val companyAll = crawlerDartService.parsingCompanyList(File("crawl/dart/CORPCODE.xml"))
         log.info("기업수: {}", companyAll.size)
         crawlerDartService.crawlCompanyFinancialInfoDetail(companyAll)
-
         log.info("끝.")
     }
 

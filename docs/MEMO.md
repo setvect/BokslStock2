@@ -62,4 +62,9 @@ dependencies {
 ## 잊어 먹지 말기
 - 네이버 증시차트는 수정주가다
   - https://finance.naver.com/item/fchart.naver?code=091170
-  - 
+
+
+### 
+GET https://opendart.fss.or.kr/api/fnlttMultiAcnt.json?crtfc_key=f29fcabe0243b555ead0d6b8fbe9e64fb41078f6&corp_code=01050738&bsns_year=2022&reprt_code=11011
+
+org.apache.http.NoHttpResponseException: opendart.fss.or.kr:443 failed to respond
