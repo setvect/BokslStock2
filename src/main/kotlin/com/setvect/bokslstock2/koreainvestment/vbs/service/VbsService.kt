@@ -241,6 +241,8 @@ class VbsService(
                 continue
             }
 
+            loadBalance()
+
             val targetPriceMessage = StringBuilder()
             val targetPrice = vbsStocks.associate { stock ->
                 val dayPriceCandle = stockClientService.requestDatePrice(
