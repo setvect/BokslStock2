@@ -75,6 +75,9 @@ data class ResFinancialDetailStatement(
     @JsonProperty("bfefrmtrm_nm")
     val bfefrmtrmNm: String?,  // 전전기명
 
+    @JsonProperty("bfefrmtrm_dt")
+    val bfefrmtrmDt: String?,  // 전전기일자
+
     // TODO 있는지 확인
     @JsonProperty("bfefrmtrm_amount")
     val bfefrmtrmAmount: String?,  // 전전기금액

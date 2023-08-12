@@ -25,6 +25,7 @@ import kotlin.reflect.full.memberProperties
 class DartStructuringService {
     companion object {
         val PATTERN: Pattern = Pattern.compile("(\\d{4})_(QUARTER\\d|HALF_ANNUAL|ANNUAL)_(\\d{6})_.+\\.json")
+        val PATTERN_DETAIL: Pattern = Pattern.compile("(\\d{4})_(QUARTER\\d|HALF_ANNUAL|ANNUAL)_(\\d{6})_(OBS|CFS)_.+\\.json")
     }
 
     private val financialStatementList = mutableListOf<FinancialStatement>()

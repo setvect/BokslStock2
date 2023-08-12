@@ -2,6 +2,7 @@ package com.setvect.bokslstock2.crawl.dart.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.setvect.bokslstock2.backtest.dart.model.CommonStatement
+import com.setvect.bokslstock2.backtest.dart.model.DetailStatement
 import com.setvect.bokslstock2.backtest.dart.model.FinancialStatement
 import com.setvect.bokslstock2.backtest.dart.service.DartStructuringService
 import com.setvect.bokslstock2.config.BokslStockProperties
@@ -195,8 +196,9 @@ class CrawlerDartService(
 
                     // 100건 마다 1초 정지
                     if (apiCallCount.get() % 100 == 0) {
-                        log.info("100건 호출 후 1초 정지")
-                        Thread.sleep(1000)
+                        // 분당 호출 건수가 1,000건으로 제한됨
+                        log.info("100건 호출 후 6.1초 정지")
+                        Thread.sleep(6100)
                     }
 
                     if (!response!!.statusCode.is2xxSuccessful) {
@@ -223,8 +225,9 @@ class CrawlerDartService(
      * @param companyCodeList 기업코드 목록
      */
     fun crawlCompanyFinancialInfoDetail(companyAll: List<CompanyCode>) {
-        val existFinancialInfo = makeExistFinancialInfo()
-        log.info("존재하는 재무제표 수: {}", existFinancialInfo.size)
+        val existFinancialInfo = makeExistFinancialInfo(DartConstants.FINANCIAL_PATH)
+        val existFinancialDetailInfo = makeExistFinancialDetailInfo(DartConstants.FINANCIAL_DETAIL_PATH)
+        log.info("존재하는 재무제표 수: {}, 이미수집된 재무재표 수: {}", existFinancialInfo.size, existFinancialDetailInfo.size)
 
         val companyCodeList = companyAll.filter { StringUtils.isNotBlank(it.stockCode) }
         log.info("상장 회사수: {}", companyCodeList.size)
@@ -232,64 +235,69 @@ class CrawlerDartService(
         val apiCallCount = AtomicInteger(0)
         for (year in 2022..LocalDate.now().year) {
             ReportCode.values().forEach { reportCode ->
-                companyCodeList
-                    .filter { existFinancialInfo.contains(CommonStatement(year, reportCode, it.stockCode)) }
-                    .forEach inner@{ company ->
-                        val uri = UriComponentsBuilder
-                            .fromHttpUrl("https://opendart.fss.or.kr/api/fnlttMultiAcnt.json")
-                            .queryParam("crtfc_key", bokslStockProperties.crawl.dart.key)
-                            .queryParam("corp_code", company.corpCode)
-                            .queryParam("bsns_year", year.toString())
-                            .queryParam("reprt_code", reportCode.code)
-                            .queryParam("fs_div", FinancialStatement.FinancialStatementFs.CFS.name) // CFS가 아닌 종목이 있는것 같음
-                            .build()
-                            .encode()
-                            .toUri()
+                for (fs in FinancialStatement.FinancialStatementFs.values()) {
+                    companyCodeList
+                        .filter { existFinancialInfo.contains(CommonStatement(year, reportCode, it.stockCode)) }
+                        // 이미 수집한 재무제표는 수집하지 않음
+                        .filter { !existFinancialDetailInfo.contains(DetailStatement(year, reportCode, it.stockCode, fs)) }
+                        .forEach inner@{ company ->
+                            val uri = UriComponentsBuilder
+                                .fromHttpUrl("https://opendart.fss.or.kr/api/fnlttMultiAcnt.json")
+                                .queryParam("crtfc_key", bokslStockProperties.crawl.dart.key)
+                                .queryParam("corp_code", company.corpCode)
+                                .queryParam("bsns_year", year.toString())
+                                .queryParam("reprt_code", reportCode.code)
+                                .queryParam("fs_div", fs)
+                                .build()
+                                .encode()
+                                .toUri()
 
-                        var response: ResponseEntity<Any>? = null
-                        // 3번까지 재시도
-                        for (retry in 1..3) {
-                            try {
-                                response = crawlRestTemplate.exchange(uri, HttpMethod.GET, null, Any::class.java)
-                                break
-                            } catch (e: Exception) {
-                                log.info("Exception: {}, retry: $retry", e.message)
-                                Thread.sleep(1000)
-                                if (retry == 3) {
-                                    throw e
+                            var response: ResponseEntity<Any>? = null
+                            // 3번까지 재시도
+                            for (retry in 1..3) {
+                                try {
+                                    response = crawlRestTemplate.exchange(uri, HttpMethod.GET, null, Any::class.java)
+                                    break
+                                } catch (e: Exception) {
+                                    log.info("Exception: {}, retry: $retry", e.message)
+                                    Thread.sleep(1000)
+                                    if (retry == 3) {
+                                        throw e
+                                    }
                                 }
                             }
+
+                            log.info("API 호출수: ${apiCallCount.incrementAndGet()}")
+
+                            // 100건 마다 1초 정지
+                            if (apiCallCount.get() % 100 == 0) {
+                                // 분당 호출 건수가 1,000건으로 제한됨
+                                log.info("100건 호출 후 6.1초 정지")
+                                Thread.sleep(6100)
+                            }
+
+                            if (!response!!.statusCode.is2xxSuccessful) {
+                                log.info("Response without list: {}", response.statusCode)
+                                return@inner
+                            }
+
+                            val body = JsonUtil.mapper.writeValueAsString(response.body)!!
+                            val status = JsonUtil.mapper.readTree(body).get("status").asText()
+                            if (status != "000") {
+                                log.info("수집 대상 없음 ${year}년, reportCode: ${reportCode}, corpCodes: ${company.stockCode}, Response without list: $body")
+                                return@inner
+                            }
+
+                            saveDetail(body, companyCodeMap, year, reportCode, fs)
                         }
-
-                        log.info("API 호출수: ${apiCallCount.incrementAndGet()}")
-
-                        // 100건 마다 1초 정지
-                        if (apiCallCount.get() % 100 == 0) {
-                            log.info("100건 호출 후 1초 정지")
-                            Thread.sleep(5000)
-                        }
-
-                        if (!response!!.statusCode.is2xxSuccessful) {
-                            log.info("Response without list: {}", response.statusCode)
-                            return@inner
-                        }
-
-                        val body = JsonUtil.mapper.writeValueAsString(response.body)!!
-                        val status = JsonUtil.mapper.readTree(body).get("status").asText()
-                        if (status != "000") {
-                            log.info("수집 대상 없음 ${year}년, reportCode: ${reportCode}, corpCodes: ${company.stockCode}, Response without list: $body")
-                            return@inner
-                        }
-
-                        saveDetail(body, companyCodeMap, year, reportCode)
-                    }
+                }
             }
         }
         println("끝.")
     }
 
-    private fun makeExistFinancialInfo(): Set<CommonStatement> {
-        val existFinancialInfo = DartConstants.FINANCIAL_PATH.walk()
+    private fun makeExistFinancialInfo(file: File): Set<CommonStatement> {
+        val existFinancialInfo = file.walk()
             .filter { it.isFile && it.extension == "json" }
             .mapNotNull { financialFile ->
                 val matcher = DartStructuringService.PATTERN.matcher(financialFile.name)
@@ -306,7 +314,32 @@ class CrawlerDartService(
         return existFinancialInfo
     }
 
-    private fun saveDetail(body: String, companyCodeMap: Map<String, CompanyCode>, year: Int, reportCode: ReportCode) {
+    private fun makeExistFinancialDetailInfo(file: File): Set<DetailStatement> {
+        val existFinancialInfo = file.walk()
+            .filter { it.isFile && it.extension == "json" }
+            .mapNotNull { financialDetailFile ->
+                val matcher = DartStructuringService.PATTERN_DETAIL.matcher(financialDetailFile.name)
+                if (!matcher.find()) {
+                    return@mapNotNull null
+                }
+                val year = matcher.group(1).toInt()
+                val reportCode = ReportCode.valueOf(matcher.group(2))
+                val stockCode = matcher.group(3)
+                val fs = matcher.group(4)
+
+                DetailStatement(year, reportCode, stockCode, FinancialStatement.FinancialStatementFs.valueOf(fs))
+            }
+            .toSet()
+        return existFinancialInfo
+    }
+
+    private fun saveDetail(
+        body: String,
+        companyCodeMap: Map<String, CompanyCode>,
+        year: Int,
+        reportCode: ReportCode,
+        fs: FinancialStatement.FinancialStatementFs
+    ) {
         val saveBaseDir = DartConstants.FINANCIAL_DETAIL_PATH
         val saveDir = File(saveBaseDir, "$year/${reportCode}")
         saveDir.mkdirs()
@@ -317,7 +350,7 @@ class CrawlerDartService(
         financialResult.groupBy { it.corpCode }.forEach { (corpCode, financialList) ->
             val company = companyCodeMap[corpCode]!!
             val stockCode = company.stockCode
-            val fileName = "${year}_${reportCode}_${stockCode}_${company.corpName}.json"
+            val fileName = "${year}_${reportCode}_${stockCode}_${fs}_${company.corpName}.json"
             val file = File(saveDir, fileName)
             JsonUtil.mapper.writeValue(file, financialList)
             log.info("저장: {}", file)

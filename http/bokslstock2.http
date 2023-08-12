@@ -50,7 +50,7 @@ GET https://opendart.fss.or.kr/api/fnlttMultiAcnt.json?crtfc_key={{dart_key}}&co
 Content-Type: application/json
 
 ### 단일회사 전체 재무제표, https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS003&apiId=2019020
-GET https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json?crtfc_key={{dart_key}}&corp_code=01050738&bsns_year=2022&reprt_code=11011&fs_div=CFS HTTP/1.1
+GET https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json?crtfc_key={{dart_key}}&corp_code=00126380&bsns_year=2022&reprt_code=11011&fs_div=OFS HTTP/1.1
 Content-Type: application/json
 
 ### 주식의 총수
