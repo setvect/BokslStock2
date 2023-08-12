@@ -208,7 +208,10 @@ class CrawlerDartService(
 
                     val body = JsonUtil.mapper.writeValueAsString(response.body)!!
                     val status = JsonUtil.mapper.readTree(body).get("status").asText()
-                    if (status != "000") {
+                    if (status == "020") {
+                        log.info("API 사용한도 초과했음, Response without list: $body")
+                        return
+                    } else if (status != "000") {
                         log.info("수집 대상 없음 ${year}년, reportCode: ${reportCode}, corpCodes: ${companyList.map { it.stockCode }}, Response without list: $body")
                         return@inner
                     }
@@ -233,7 +236,7 @@ class CrawlerDartService(
         log.info("상장 회사수: {}", companyCodeList.size)
         val companyCodeMap = companyCodeList.associateBy { it.corpCode }
         val apiCallCount = AtomicInteger(0)
-        for (year in 2022..LocalDate.now().year) {
+        for (year in 2015..LocalDate.now().year) {
             ReportCode.values().forEach { reportCode ->
                 for (fs in FinancialStatement.FinancialStatementFs.values()) {
                     companyCodeList
@@ -283,8 +286,11 @@ class CrawlerDartService(
 
                             val body = JsonUtil.mapper.writeValueAsString(response.body)!!
                             val status = JsonUtil.mapper.readTree(body).get("status").asText()
-                            if (status != "000") {
-                                log.info("수집 대상 없음 ${year}년, reportCode: ${reportCode}, corpCodes: ${company.stockCode}, Response without list: $body")
+                            if (status == "020") {
+                                log.info("API 사용한도 초과했음, Response without list: $body")
+                                return
+                            } else if (status != "000") {
+                                log.info("수집 대상 없음 ${year}년, reportCode: ${reportCode}, corpCodes: ${company.stockCode}, fs: ${fs}, Response without list: $body")
                                 return@inner
                             }
 
