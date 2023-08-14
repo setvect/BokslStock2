@@ -60,27 +60,23 @@ data class ResFinancialDetailStatement(
     @JsonProperty("frmtrm_amount")
     val frmtrmAmount: String?,  // 전기금액
 
-    // TODO 있는지 확인
     @JsonProperty("frmtrm_q_nm")
-    val frmtrmQNm: String?,  // 전기명(분/반기)
+    val frmtrmQNm: String?,  // 전기명(분/반기), 있는 데이터는 모두 null 되어 있음
 
-    // TODO 있는지 확인
     @JsonProperty("frmtrm_q_amount")
-    val frmtrmQAmount: String?,  // 전기금액(분/반기)
+    val frmtrmQAmount: String?,  // 전기금액(분/반기), 있는 데이터는 모두 null 되어 있음
 
     @JsonProperty("frmtrm_add_amount")
     val frmtrmAddAmount: String?,  // 전기누적금액
 
-    // TODO 있는지 확인
     @JsonProperty("bfefrmtrm_nm")
     val bfefrmtrmNm: String?,  // 전전기명
 
     @JsonProperty("bfefrmtrm_dt")
     val bfefrmtrmDt: String?,  // 전전기일자
 
-    // TODO 있는지 확인
     @JsonProperty("bfefrmtrm_amount")
-    val bfefrmtrmAmount: String?,  // 전전기금액
+    val bfefrmtrmAmount: String?,  // 전전기금액, 있는 데이터는 모두 null 되어 있음
 
     val ord: String,  // 계정과목 정렬순서
 

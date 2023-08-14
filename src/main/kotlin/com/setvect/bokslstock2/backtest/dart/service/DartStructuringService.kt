@@ -25,10 +25,11 @@ import kotlin.reflect.full.memberProperties
 class DartStructuringService {
     companion object {
         val PATTERN: Pattern = Pattern.compile("(\\d{4})_(QUARTER\\d|HALF_ANNUAL|ANNUAL)_(\\d{6})_.+\\.json")
-        val PATTERN_DETAIL: Pattern = Pattern.compile("(\\d{4})_(QUARTER\\d|HALF_ANNUAL|ANNUAL)_(\\d{6})_(OBS|CFS)_.+\\.json")
+        val PATTERN_DETAIL: Pattern = Pattern.compile("(\\d{4})_(QUARTER\\d|HALF_ANNUAL|ANNUAL)_(\\d{6})_(OFS|CFS)_.+\\.json")
     }
 
     private val financialStatementList = mutableListOf<FinancialStatement>()
+    private val financialDetailStatementList = mutableListOf<FinancialDetailStatement>()
     private val stockQuantityStatementList = mutableListOf<StockQuantityStatement>()
 
     private val dividendStatementList = mutableListOf<DividendStatement>()
@@ -42,6 +43,12 @@ class DartStructuringService {
         financialStatementList.clear()
         val result = loader(DartConstants.FINANCIAL_PATH, filter, FinancialStatement::loader)
         financialStatementList.addAll(result)
+    }
+
+    fun loadFinancialDetail(filter: DartFilter) {
+        financialDetailStatementList.clear()
+        val result = loader(DartConstants.FINANCIAL_DETAIL_PATH, filter, FinancialDetailStatement::loader)
+        financialDetailStatementList.addAll(result)
     }
 
     fun loadStockQuantity(filter: DartFilter) {
@@ -138,7 +145,7 @@ class DartStructuringService {
             "commonStatement.reportCode" to ReportCode.ANNUAL,
             "commonStatement.stockCode" to stockCode,
             "accountNm" to "영업이익", // 고정값
-            "fsDiv" to FinancialStatement.FinancialStatementFs.CFS, // TODO 연결재무가 없는 회사가 있음, OFS 사용
+            "fsDiv" to FinancialStatementFs.CFS, // TODO 연결재무가 없는 회사가 있음, OFS 사용
         )
 
         val financialList = searchFinancial(condition)
@@ -184,27 +191,29 @@ class DartStructuringService {
      * 데이터를 로드한 상태에서 본 메소드 사용
      * @param stockCode 종목코드
      * @param year 연도
-     * @param accountNm 재무제표 항목명
+     * @param financialMetric 재무제표 항목명
      */
-    fun getIncomeStatement(stockCode: String, year: Int, accountNm: String): IncomeStatement {
+    fun getIncomeStatement(stockCode: String, year: Int, financialMetric: FinancialMetric): IncomeStatement {
         val accountClose = getAccountClose(stockCode)
 
         val condition: Map<String, Any> = mapOf(
             "commonStatement.stockCode" to stockCode,
-            "accountNm" to accountNm,
-            "fsDiv" to FinancialStatement.FinancialStatementFs.CFS,
+            "accountNm" to financialMetric.summaryMfg,
+            "fsDiv" to FinancialStatementFs.CFS,
         )
 
         val financialList = searchFinancial(condition)
         var currentIncomeStatement = IncomeStatement(
             stockCode = stockCode,
             year = year,
-            itemName = accountNm,
+            itemName = financialMetric.summaryMfg,
             q1Value = 0,
             q2Value = 0,
             q3Value = 0,
             q4Value = 0,
         )
+
+        val industryType = getIndustryType(stockCode)
 
         when (accountClose) {
             // ReportCode.ANNUAL: 작년4 ~ 3월

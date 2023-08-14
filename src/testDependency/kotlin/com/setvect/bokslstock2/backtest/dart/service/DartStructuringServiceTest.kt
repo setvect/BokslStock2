@@ -1,7 +1,8 @@
 package com.setvect.bokslstock2.backtest.dart.service
 
 import com.setvect.bokslstock2.backtest.dart.model.DartFilter
-import com.setvect.bokslstock2.backtest.dart.model.FinancialStatement
+import com.setvect.bokslstock2.backtest.dart.model.FinancialMetric
+import com.setvect.bokslstock2.backtest.dart.model.FinancialStatementFs
 import com.setvect.bokslstock2.crawl.dart.model.ReportCode
 import com.setvect.bokslstock2.util.JsonUtil
 import org.junit.jupiter.api.Assertions.*
@@ -68,7 +69,7 @@ class DartStructuringServiceTest {
 
         val condition: Map<String, Any> = mapOf(
             "accountNm" to name,
-            "fsDiv" to FinancialStatement.FinancialStatementFs.CFS,
+            "fsDiv" to FinancialStatementFs.CFS,
         )
         val result = dartStructuringService.searchFinancial(condition)
 
@@ -130,16 +131,19 @@ class DartStructuringServiceTest {
         // https://finance.naver.com/item/coinfo.naver?code=005930
 
         dartStructuringService.loadFinancial(filter)
-        var incomeStatement = dartStructuringService.getIncomeStatement("008110", 2022, "영업이익")
-        println("2022년 영업이익: ${incomeStatement}")
+        var incomeStatement = dartStructuringService.getIncomeStatement("008110", 2022, FinancialMetric.SALES_REVENUE)
+        println("2022년 매출액: ${incomeStatement}")
 
-        incomeStatement = dartStructuringService.getIncomeStatement("005390", 2022, "영업이익")
-        println("2022년 영업이익: ${incomeStatement}")
+        incomeStatement = dartStructuringService.getIncomeStatement("005390", 2022, FinancialMetric.SALES_REVENUE)
+        println("2022년 매출액: ${incomeStatement}")
 
-        incomeStatement = dartStructuringService.getIncomeStatement("003610", 2022, "영업이익")
-        println("2022년 영업이익: ${incomeStatement}")
+        incomeStatement = dartStructuringService.getIncomeStatement("003610", 2022, FinancialMetric.SALES_REVENUE)
+        println("2022년 매출액: ${incomeStatement}")
 
-        incomeStatement = dartStructuringService.getIncomeStatement("005930", 2022, "영업이익")
-        println("2022년 영업이익: ${incomeStatement}")
+        incomeStatement = dartStructuringService.getIncomeStatement("005930", 2022, FinancialMetric.SALES_REVENUE)
+        println("2022년 매출액: ${incomeStatement}")
+
+        incomeStatement = dartStructuringService.getIncomeStatement("304100", 2022, FinancialMetric.SALES_REVENUE)
+        println("2022년 매출액: ${incomeStatement}")
     }
 }

@@ -1,10 +1,10 @@
 package com.setvect.bokslstock2.backtest.dart.model
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.setvect.bokslstock2.backtest.dart.common.DartUtil
 import com.setvect.bokslstock2.crawl.dart.model.ReportCode
 import com.setvect.bokslstock2.crawl.dart.model.ResFinancialStatement
 import com.setvect.bokslstock2.util.ApplicationUtil.convertToLong
-import com.setvect.bokslstock2.util.DateUtil
 import com.setvect.bokslstock2.util.JsonUtil
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -48,9 +48,9 @@ data class FinancialStatement(
         }
 
         private fun create(year: Int, reportCode: ReportCode, stockCode: String, resFinancialStatement: ResFinancialStatement): FinancialStatement {
-            val thstrmDt = parsingDate(resFinancialStatement.thstrmDt)
-            val frmtrmDt = parsingDate(resFinancialStatement.frmtrmDt)
-            val bfefrmtrmDt = parsingDate(resFinancialStatement.bfefrmtrmDt)
+            val thstrmDt = DartUtil.parsingDate(resFinancialStatement.thstrmDt)
+            val frmtrmDt = DartUtil.parsingDate(resFinancialStatement.frmtrmDt)
+            val bfefrmtrmDt = DartUtil.parsingDate(resFinancialStatement.bfefrmtrmDt)
 
             try {
                 return FinancialStatement(
@@ -85,49 +85,5 @@ data class FinancialStatement(
                 throw e
             }
         }
-
-        private fun parsingDate(dateStr: String?): Pair<LocalDate?, LocalDate?> {
-            if (dateStr.isNullOrBlank()) {
-                return Pair(null, null)
-            }
-
-            var start: LocalDate? = null
-            var end: LocalDate? = null
-            if (determineType(dateStr) == 1) {
-                start = convertToDateType1(dateStr)
-            }
-            if (determineType(dateStr) == 2) {
-                val (s, e) = convertToDateType2(dateStr)
-                start = s
-                end = e
-            }
-            return Pair(start, end)
-        }
-
-        fun determineType(dateStr: String): Int {
-            return if (dateStr.contains("~")) 2 else 1
-        }
-
-        private fun convertToDateType1(dateStr: String): LocalDate {
-            val cleanedStr = dateStr.replace(" 현재", "")
-            return DateUtil.getLocalDate(cleanedStr, "yyyy.MM.dd")
-        }
-
-        private fun convertToDateType2(dateStr: String): Pair<LocalDate, LocalDate> {
-            val splitStr = dateStr.split(" ~ ")
-            val start = DateUtil.getLocalDate(splitStr[0], "yyyy.MM.dd")
-            val end = DateUtil.getLocalDate(splitStr[1], "yyyy.MM.dd")
-            return Pair(start, end)
-        }
-    }
-
-    enum class FinancialStatementFs(val code: String) {
-        CFS("CFS"), // 연결재무제표
-        OFS("OFS")  // 재무제표, 단일법인이면 CFS는 없고, OFS만 있음
-    }
-
-    enum class FinancialStatementSj(val code: String) {
-        BS("BS"), // 재무상태표
-        IS("IS")  // 손익계산서
     }
 }
