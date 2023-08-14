@@ -45,8 +45,9 @@ class CrawlerDartServiceTest {
     @Test
     fun crawlCompanyFinanceInfoDetail() {
         val companyAll = crawlerDartService.parsingCompanyList(File("crawl/dart/CORPCODE.xml"))
+        val stockCodes = setOf("008110", "005390", "003610", "005930", "304100")
         log.info("기업수: {}", companyAll.size)
-        crawlerDartService.crawlCompanyFinancialInfoDetail(companyAll)
+        crawlerDartService.crawlCompanyFinancialInfoDetail(companyAll.filter { stockCodes.contains(it.stockCode) })
         log.info("끝.")
     }
 

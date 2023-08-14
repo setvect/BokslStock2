@@ -222,7 +222,7 @@ class CrawlerDartService(
     }
 
     /**
-     * 전체 기업 재무재표 수집
+     * 단일회사 전체 기업 재무재표 수집
      * 전체 기업 재무제표는 하나씩 조회 해야됨
      * 존재하는 데이터를 조회 하기 위해서 주요 재무제표에 수집된 내용이 존재하는지 확인한 후 수집 실행
      * @param companyCodeList 기업코드 목록
@@ -236,7 +236,7 @@ class CrawlerDartService(
         log.info("상장 회사수: {}", companyCodeList.size)
         val companyCodeMap = companyCodeList.associateBy { it.corpCode }
         val apiCallCount = AtomicInteger(0)
-        for (year in 2015..LocalDate.now().year) {
+        for (year in 2021..LocalDate.now().year) {
             ReportCode.values().forEach { reportCode ->
                 for (fs in FinancialStatementFs.values()) {
                     companyCodeList
@@ -245,7 +245,7 @@ class CrawlerDartService(
                         .filter { !existFinancialDetailInfo.contains(DetailStatement(year, reportCode, it.stockCode, fs)) }
                         .forEach inner@{ company ->
                             val uri = UriComponentsBuilder
-                                .fromHttpUrl("https://opendart.fss.or.kr/api/fnlttMultiAcnt.json")
+                                .fromHttpUrl("https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json")
                                 .queryParam("crtfc_key", bokslStockProperties.crawl.dart.key)
                                 .queryParam("corp_code", company.corpCode)
                                 .queryParam("bsns_year", year.toString())
@@ -284,17 +284,17 @@ class CrawlerDartService(
                                 return@inner
                             }
 
-                            val body = JsonUtil.mapper.writeValueAsString(response.body)!!
-                            val status = JsonUtil.mapper.readTree(body).get("status").asText()
+                            val resBodyJson = JsonUtil.mapper.writeValueAsString(response.body)!!
+                            val status = JsonUtil.mapper.readTree(resBodyJson).get("status").asText()
                             if (status == "020") {
-                                log.info("API 사용한도 초과했음, Response without list: $body")
+                                log.info("API 사용한도 초과했음, Response without list: $resBodyJson")
                                 return
                             } else if (status != "000") {
-                                log.info("수집 대상 없음 ${year}년, reportCode: ${reportCode}, corpCodes: ${company.stockCode}, fs: ${fs}, Response without list: $body")
+                                log.info("수집 대상 없음 ${year}년, reportCode: ${reportCode}, corpCodes: ${company.stockCode}, fs: ${fs}, Response without list: $resBodyJson")
                                 return@inner
                             }
 
-                            saveDetail(body, companyCodeMap, year, reportCode, fs)
+                            saveDetail(resBodyJson, companyCodeMap, year, reportCode, fs)
                         }
                 }
             }
@@ -340,7 +340,7 @@ class CrawlerDartService(
     }
 
     private fun saveDetail(
-        body: String,
+        resBodyJson: String,
         companyCodeMap: Map<String, CompanyCode>,
         year: Int,
         reportCode: ReportCode,
@@ -351,13 +351,20 @@ class CrawlerDartService(
         saveDir.mkdirs()
         val typeRef = object : TypeReference<ResDart<ResFinancialDetailStatement>>() {}
 
-        val parsedResponse = JsonUtil.mapper.readValue(body, typeRef)
+        val parsedResponse = JsonUtil.mapper.readValue(resBodyJson, typeRef)
         val financialResult = parsedResponse.list
         financialResult.groupBy { it.corpCode }.forEach { (corpCode, financialList) ->
             val company = companyCodeMap[corpCode]!!
             val stockCode = company.stockCode
             val fileName = "${year}_${reportCode}_${stockCode}_${fs}_${company.corpName}.json"
             val file = File(saveDir, fileName)
+
+            // 수집 안되는 항목 수동으로 넣기
+            financialList.forEach {
+                it.stockCode = stockCode
+                it.fsDiv = fs.code
+            }
+
             JsonUtil.mapper.writeValue(file, financialList)
             log.info("저장: {}", file)
         }

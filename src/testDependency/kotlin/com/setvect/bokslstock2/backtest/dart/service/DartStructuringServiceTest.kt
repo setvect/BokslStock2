@@ -3,6 +3,7 @@ package com.setvect.bokslstock2.backtest.dart.service
 import com.setvect.bokslstock2.backtest.dart.model.DartFilter
 import com.setvect.bokslstock2.backtest.dart.model.FinancialMetric
 import com.setvect.bokslstock2.backtest.dart.model.FinancialStatementFs
+import com.setvect.bokslstock2.backtest.dart.model.IncomeStatement
 import com.setvect.bokslstock2.crawl.dart.model.ReportCode
 import com.setvect.bokslstock2.util.JsonUtil
 import org.junit.jupiter.api.Assertions.*
@@ -106,7 +107,7 @@ class DartStructuringServiceTest {
         val filter = DartFilter(
             year = setOf(2021, 2022),
             quarter = ReportCode.values().toSet(),
-            stockCodes = setOf("008110", "005930", "304100","377300","352820")
+            stockCodes = setOf("008110", "005930", "304100", "377300", "352820")
         )
         dartStructuringService.loadFinancial(filter)
 
@@ -131,7 +132,9 @@ class DartStructuringServiceTest {
         // https://finance.naver.com/item/coinfo.naver?code=005930
 
         dartStructuringService.loadFinancial(filter)
-        var incomeStatement = dartStructuringService.getIncomeStatement("008110", 2022, FinancialMetric.SALES_REVENUE)
+        dartStructuringService.loadFinancialDetail(filter)
+        var incomeStatement: IncomeStatement
+        incomeStatement = dartStructuringService.getIncomeStatement("008110", 2022, FinancialMetric.SALES_REVENUE)
         println("2022년 매출액: ${incomeStatement}")
 
         incomeStatement = dartStructuringService.getIncomeStatement("005390", 2022, FinancialMetric.SALES_REVENUE)

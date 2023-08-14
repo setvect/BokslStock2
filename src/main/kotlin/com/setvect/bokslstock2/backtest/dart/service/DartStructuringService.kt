@@ -104,24 +104,34 @@ class DartStructuringService {
 
     fun searchFinancial(filter: Map<String, Any>): List<FinancialStatement> {
         return financialStatementList.filter { filter(it, filter) }.toImmutableList()
-
     }
 
+    fun searchFinancialDetail(filter: Map<String, Any>): List<FinancialDetailStatement> {
+        return financialDetailStatementList.filter { filter(it, filter) }.toImmutableList()
+    }
 
     private fun filter(target: Any, filter: Map<String, Any>): Boolean {
         return filter.entries.all { it ->
             val fieldNames = it.key.split(".")
             var currentObj: Any? = target
-
             fieldNames.let { names ->
-                var result = true
+                var result = false
                 for (name in names) {
                     val prop: KProperty1<Any, *> = currentObj?.javaClass?.kotlin?.memberProperties?.find { it.name == name }
                         ?: throw IllegalArgumentException("No such field: $name in the class ${currentObj?.javaClass?.kotlin}")
 
                     currentObj = prop.get(currentObj!!)
 
-                    if (name == names.last()) {
+                    if (name != names.last()) {
+                        continue
+                    }
+
+                    if (it.value is Collection<*>) {
+                        val values = it.value as Collection<String>
+                        if (values.contains(currentObj)) {
+                            result = true
+                        }
+                    } else {
                         result = currentObj == it.value
                     }
                 }
@@ -150,7 +160,7 @@ class DartStructuringService {
 
         val financialList = searchFinancial(condition)
         if (financialList.isEmpty()) {
-            throw IllegalArgumentException("매출액정보가 없는 회사 $stockCode")
+            throw IllegalArgumentException("영업이익 정보가 없는 회사 $stockCode")
         }
         val financialStatement = financialList[0]
 
@@ -159,7 +169,7 @@ class DartStructuringService {
             6 -> AccountClose.Q2
             9 -> AccountClose.Q3
             12 -> AccountClose.Q4
-            else -> throw IllegalArgumentException("매출액정보가 없는 회사 $stockCode")
+            else -> throw IllegalArgumentException("영업이익 정보가 없는 회사 $stockCode")
         }
     }
 
@@ -198,22 +208,21 @@ class DartStructuringService {
 
         val condition: Map<String, Any> = mapOf(
             "commonStatement.stockCode" to stockCode,
-            "accountNm" to financialMetric.summaryMfg,
+            "accountNm" to financialMetric.itemName,
             "fsDiv" to FinancialStatementFs.CFS,
         )
+        val financialDetailList = searchFinancialDetail(condition)
+        var currentIncomeStatement: IncomeStatement
 
-        val financialList = searchFinancial(condition)
-        var currentIncomeStatement = IncomeStatement(
+        currentIncomeStatement = IncomeStatement(
             stockCode = stockCode,
             year = year,
-            itemName = financialMetric.summaryMfg,
+            itemName = financialMetric.itemName[0],
             q1Value = 0,
             q2Value = 0,
             q3Value = 0,
             q4Value = 0,
         )
-
-        val industryType = getIndustryType(stockCode)
 
         when (accountClose) {
             // ReportCode.ANNUAL: 작년4 ~ 3월
@@ -221,18 +230,18 @@ class DartStructuringService {
             // ReportCode.HALF_ANNUAL: 4 ~ 9월
             // ReportCode.QUARTER3: 10 ~ 12월
             AccountClose.Q1 -> {
-                val beforeQ4FS = findFinancialStatement(financialList, ReportCode.QUARTER3, year - 1) ?: return currentIncomeStatement
+                val beforeQ4FS = findFinancialStatement(financialDetailList, ReportCode.QUARTER3, year - 1) ?: return currentIncomeStatement
 
-                val q1FS = findFinancialStatement(financialList, ReportCode.ANNUAL, year) ?: return currentIncomeStatement
+                val q1FS = findFinancialStatement(financialDetailList, ReportCode.ANNUAL, year) ?: return currentIncomeStatement
                 currentIncomeStatement = currentIncomeStatement.copy(q1Value = q1FS.thstrmAmount!! - beforeQ4FS.thstrmAddAmount!!)
 
-                val q2FS = findFinancialStatement(financialList, ReportCode.QUARTER1, year) ?: return currentIncomeStatement
+                val q2FS = findFinancialStatement(financialDetailList, ReportCode.QUARTER1, year) ?: return currentIncomeStatement
                 currentIncomeStatement = currentIncomeStatement.copy(q2Value = q2FS.thstrmAmount ?: 0)
 
-                val q3FS = findFinancialStatement(financialList, ReportCode.HALF_ANNUAL, year) ?: return currentIncomeStatement
+                val q3FS = findFinancialStatement(financialDetailList, ReportCode.HALF_ANNUAL, year) ?: return currentIncomeStatement
                 currentIncomeStatement = currentIncomeStatement.copy(q3Value = q3FS.thstrmAmount!!)
 
-                val q4FS = findFinancialStatement(financialList, ReportCode.QUARTER3, year) ?: return currentIncomeStatement
+                val q4FS = findFinancialStatement(financialDetailList, ReportCode.QUARTER3, year) ?: return currentIncomeStatement
                 currentIncomeStatement = currentIncomeStatement.copy(q4Value = q4FS.thstrmAmount!!)
 
                 return currentIncomeStatement
@@ -243,19 +252,19 @@ class DartStructuringService {
             // ReportCode.QUARTER1: 7 ~ 9월
             // ReportCode.HALF_ANNUAL: 7 ~ 12월
             AccountClose.Q2 -> {
-                val q1FS = findFinancialStatement(financialList, ReportCode.QUARTER3, year) ?: return currentIncomeStatement
+                val q1FS = findFinancialStatement(financialDetailList, ReportCode.QUARTER3, year) ?: return currentIncomeStatement
                 currentIncomeStatement = currentIncomeStatement.copy(q1Value = q1FS.thstrmAmount!!)
 
-                val beforeH = findFinancialStatement(financialList, ReportCode.HALF_ANNUAL, year - 1) ?: return currentIncomeStatement
+                val beforeH = findFinancialStatement(financialDetailList, ReportCode.HALF_ANNUAL, year - 1) ?: return currentIncomeStatement
 
-                val q2FS = findFinancialStatement(financialList, ReportCode.ANNUAL, year) ?: return currentIncomeStatement
+                val q2FS = findFinancialStatement(financialDetailList, ReportCode.ANNUAL, year) ?: return currentIncomeStatement
                 currentIncomeStatement =
                     currentIncomeStatement.copy(q2Value = q2FS.thstrmAmount!! - beforeH.thstrmAddAmount!! - currentIncomeStatement.q1Value)
 
-                val q3FS = findFinancialStatement(financialList, ReportCode.QUARTER1, year) ?: return currentIncomeStatement
+                val q3FS = findFinancialStatement(financialDetailList, ReportCode.QUARTER1, year) ?: return currentIncomeStatement
                 currentIncomeStatement = currentIncomeStatement.copy(q3Value = q3FS.thstrmAmount!!)
 
-                val q4FS = findFinancialStatement(financialList, ReportCode.HALF_ANNUAL, year) ?: return currentIncomeStatement
+                val q4FS = findFinancialStatement(financialDetailList, ReportCode.HALF_ANNUAL, year) ?: return currentIncomeStatement
                 currentIncomeStatement = currentIncomeStatement.copy(q4Value = q4FS.thstrmAmount!!)
 
                 return currentIncomeStatement
@@ -266,16 +275,16 @@ class DartStructuringService {
             // ReportCode.ANNUAL: 작년10 ~ 9월
             // ReportCode.QUARTER1: 10 ~ 12월
             AccountClose.Q3 -> {
-                val q1FS = findFinancialStatement(financialList, ReportCode.HALF_ANNUAL, year) ?: return currentIncomeStatement
+                val q1FS = findFinancialStatement(financialDetailList, ReportCode.HALF_ANNUAL, year) ?: return currentIncomeStatement
                 currentIncomeStatement = currentIncomeStatement.copy(q1Value = q1FS.thstrmAmount!!)
 
-                val q2FS = findFinancialStatement(financialList, ReportCode.QUARTER3, year) ?: return currentIncomeStatement
+                val q2FS = findFinancialStatement(financialDetailList, ReportCode.QUARTER3, year) ?: return currentIncomeStatement
                 currentIncomeStatement = currentIncomeStatement.copy(q2Value = q2FS.thstrmAmount ?: 0)
 
-                val q3FS = findFinancialStatement(financialList, ReportCode.ANNUAL, year) ?: return currentIncomeStatement
+                val q3FS = findFinancialStatement(financialDetailList, ReportCode.ANNUAL, year) ?: return currentIncomeStatement
                 currentIncomeStatement = currentIncomeStatement.copy(q3Value = q3FS.thstrmAmount!! - q1FS.thstrmAddAmount!! - q2FS.thstrmAmount!!)
 
-                val q4FS = findFinancialStatement(financialList, ReportCode.QUARTER1, year) ?: return currentIncomeStatement
+                val q4FS = findFinancialStatement(financialDetailList, ReportCode.QUARTER1, year) ?: return currentIncomeStatement
                 currentIncomeStatement = currentIncomeStatement.copy(q4Value = q4FS.thstrmAmount!!)
                 return currentIncomeStatement
             }
@@ -285,16 +294,16 @@ class DartStructuringService {
             // ReportCode.QUARTER3: 7 ~ 9월
             // ReportCode.ANNUAL: 1 ~ 12월
             AccountClose.Q4 -> {
-                val q1FS = findFinancialStatement(financialList, ReportCode.QUARTER1, year) ?: return currentIncomeStatement
+                val q1FS = findFinancialStatement(financialDetailList, ReportCode.QUARTER1, year) ?: return currentIncomeStatement
                 currentIncomeStatement = currentIncomeStatement.copy(q1Value = q1FS.thstrmAmount ?: 0)
 
-                val q2FS = findFinancialStatement(financialList, ReportCode.HALF_ANNUAL, year) ?: return currentIncomeStatement
+                val q2FS = findFinancialStatement(financialDetailList, ReportCode.HALF_ANNUAL, year) ?: return currentIncomeStatement
                 currentIncomeStatement = currentIncomeStatement.copy(q2Value = q2FS.thstrmAmount!!)
 
-                val q3FS = findFinancialStatement(financialList, ReportCode.QUARTER3, year) ?: return currentIncomeStatement
+                val q3FS = findFinancialStatement(financialDetailList, ReportCode.QUARTER3, year) ?: return currentIncomeStatement
                 currentIncomeStatement = currentIncomeStatement.copy(q3Value = q3FS.thstrmAmount!!)
 
-                val q4FS = findFinancialStatement(financialList, ReportCode.ANNUAL, year) ?: return currentIncomeStatement
+                val q4FS = findFinancialStatement(financialDetailList, ReportCode.ANNUAL, year) ?: return currentIncomeStatement
                 currentIncomeStatement =
                     currentIncomeStatement.copy(q4Value = q4FS.thstrmAmount!! - currentIncomeStatement.q1Value - currentIncomeStatement.q2Value - currentIncomeStatement.q3Value)
 
@@ -306,7 +315,11 @@ class DartStructuringService {
     /**
      * @param reportCode 분기보고서
      */
-    private fun findFinancialStatement(financialList: List<FinancialStatement>, reportCode: ReportCode, year: Int): FinancialStatement? {
-        return financialList.find { it.commonStatement.reportCode == reportCode && it.commonStatement.year == year }
+    private fun findFinancialStatement(
+        financialDetailStatementList: List<FinancialDetailStatement>,
+        reportCode: ReportCode,
+        year: Int
+    ): FinancialDetailStatement? {
+        return financialDetailStatementList.find { it.commonStatement.reportCode == reportCode && it.commonStatement.year == year }
     }
 }
