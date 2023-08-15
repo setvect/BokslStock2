@@ -27,3 +27,9 @@ DART에서 수집하는 데이터 유형은 매우 많다. 네이버 주식 사�
   - 이 경우 `단일회사 전체 재무제표` 에서 `영업수익` 정보를 가져옴
   - 일반 제조업과 서비스업 손익 계산서가 다르구나 
     - 참고: https://m.blog.naver.com/donghm/201651215
+
+## 비교
+추출한 값이 맞는지 비교  
+
+- [단일회사 주요계정 조회](https://opendart.fss.or.kr/disclosureinfo/fnltt/singlacnt/main.do)
+- [네이버 주식](https://finance.naver.com/item/coinfo.naver?code=005930)

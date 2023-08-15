@@ -1,9 +1,6 @@
 package com.setvect.bokslstock2.backtest.dart.service
 
-import com.setvect.bokslstock2.backtest.dart.model.DartFilter
-import com.setvect.bokslstock2.backtest.dart.model.FinancialMetric
-import com.setvect.bokslstock2.backtest.dart.model.FinancialStatementFs
-import com.setvect.bokslstock2.backtest.dart.model.IncomeStatement
+import com.setvect.bokslstock2.backtest.dart.model.*
 import com.setvect.bokslstock2.crawl.dart.model.ReportCode
 import com.setvect.bokslstock2.util.JsonUtil
 import org.junit.jupiter.api.Assertions.*
@@ -70,7 +67,7 @@ class DartStructuringServiceTest {
 
         val condition: Map<String, Any> = mapOf(
             "accountNm" to name,
-            "fsDiv" to FinancialStatementFs.CFS,
+            "fsDiv" to FinancialFs.CFS,
         )
         val result = dartStructuringService.searchFinancial(condition)
 
@@ -133,20 +130,28 @@ class DartStructuringServiceTest {
 
         dartStructuringService.loadFinancial(filter)
         dartStructuringService.loadFinancialDetail(filter)
-        var incomeStatement: IncomeStatement
-        incomeStatement = dartStructuringService.getIncomeStatement("008110", 2022, FinancialMetric.SALES_REVENUE)
-        println("2022년 매출액: ${incomeStatement}")
 
-        incomeStatement = dartStructuringService.getIncomeStatement("005390", 2022, FinancialMetric.SALES_REVENUE)
-        println("2022년 매출액: ${incomeStatement}")
+//        var incomeStatement = dartStructuringService.getIncomeStatement("008110", 2022, FinancialMetric.TOTAL_ASSETS)
+//        println("2022년 ${FinancialMetric.SALES_REVENUE.accountName[0]}: ${incomeStatement}")
 
-        incomeStatement = dartStructuringService.getIncomeStatement("003610", 2022, FinancialMetric.SALES_REVENUE)
-        println("2022년 매출액: ${incomeStatement}")
+        FinancialMetric.values()
+            .filter { it.financialSj.contains(FinancialSj.IS) }
+            .forEach {
+                var incomeStatement = dartStructuringService.getIncomeStatement("008110", 2022, it)
+                println("2022년 ${it.accountName[0]}: ${incomeStatement}")
 
-        incomeStatement = dartStructuringService.getIncomeStatement("005930", 2022, FinancialMetric.SALES_REVENUE)
-        println("2022년 매출액: ${incomeStatement}")
+                incomeStatement = dartStructuringService.getIncomeStatement("005390", 2022, it)
+                println("2022년 ${it.accountName[0]}: ${incomeStatement}")
 
-        incomeStatement = dartStructuringService.getIncomeStatement("304100", 2022, FinancialMetric.SALES_REVENUE)
-        println("2022년 매출액: ${incomeStatement}")
+                incomeStatement = dartStructuringService.getIncomeStatement("003610", 2022, it)
+                println("2022년 ${it.accountName[0]}: ${incomeStatement}")
+
+                incomeStatement = dartStructuringService.getIncomeStatement("005930", 2022, it)
+                println("2022년 ${it.accountName[0]}: ${incomeStatement}")
+
+                incomeStatement = dartStructuringService.getIncomeStatement("304100", 2022, it)
+                println("2022년 ${it.accountName[0]}: ${incomeStatement}")
+                log.info("-------------")
+            }
     }
 }

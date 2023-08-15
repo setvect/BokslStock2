@@ -1,16 +1,12 @@
 package com.setvect.bokslstock2.backtest.dart.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
-import com.setvect.bokslstock2.backtest.dart.common.DartUtil
 import com.setvect.bokslstock2.crawl.dart.model.ReportCode
 import com.setvect.bokslstock2.crawl.dart.model.ResFinancialDetailStatement
 import com.setvect.bokslstock2.util.ApplicationUtil.convertToLong
-import com.setvect.bokslstock2.util.DateUtil
 import com.setvect.bokslstock2.util.JsonUtil
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.time.LocalDate
 
 data class FinancialDetailStatement(
     val commonStatement: CommonStatement,
@@ -19,8 +15,8 @@ data class FinancialDetailStatement(
     val bsnsYear: String,  // 사업연도(4자리)
     val corpCode: String,  // 상장회사의 종목코드(6자리)
     val stockCode: String,  // 주식종목코드
-    val fsDiv: FinancialStatementFs,  // CFS:연결재무제표, OFS:재무제표
-    val sjDiv: FinancialStatementSj,  // BS:재무상태표, IS:손익계산서
+    val fsDiv: FinancialFs,  // CFS:연결재무제표, OFS:재무제표
+    val sjDiv: FinancialSj,  // BS:재무상태표, IS:손익계산서
     val sjNm: String,  // 재무상태표 또는 손익계산서 출력
     val accountId: String,  // 계정ID
     val accountNm: String,  // 유동자산, 비유동자산
@@ -58,8 +54,8 @@ data class FinancialDetailStatement(
                     bsnsYear = resFinancialDetailStatement.bsnsYear,
                     corpCode = resFinancialDetailStatement.corpCode,
                     stockCode = resFinancialDetailStatement.stockCode!!,
-                    fsDiv = FinancialStatementFs.valueOf(resFinancialDetailStatement.fsDiv!!),
-                    sjDiv = FinancialStatementSj.valueOf(resFinancialDetailStatement.sjDiv),
+                    fsDiv = FinancialFs.valueOf(resFinancialDetailStatement.fsDiv!!),
+                    sjDiv = FinancialSj.valueOf(resFinancialDetailStatement.sjDiv),
                     sjNm = resFinancialDetailStatement.sjNm,
                     accountId = resFinancialDetailStatement.accountId,
                     accountNm = resFinancialDetailStatement.accountNm,

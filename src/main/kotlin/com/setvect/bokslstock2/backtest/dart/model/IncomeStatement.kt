@@ -18,7 +18,7 @@ data class IncomeStatement(
     val q4Value: Long // 4분기 값
 ){
     override fun toString(): String {
-        return "IncomeStatement(stockCode='$stockCode', year=$year, itemName='$itemName', " +
+        return "IncomeStatement(stockCode='$stockCode', year=$year, accountName='$itemName', " +
                 "q1Value=${NumberUtil.comma(q1Value)}, q2Value=${NumberUtil.comma(q2Value)}, q3Value=${NumberUtil.comma(q3Value)}, q4Value=${NumberUtil.comma(q4Value)})"
     }
 }

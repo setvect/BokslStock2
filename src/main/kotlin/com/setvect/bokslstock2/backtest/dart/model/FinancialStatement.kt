@@ -16,9 +16,9 @@ data class FinancialStatement(
     val rceptNo: String,   // 접수번호(14자리)
     val bsnsYear: String,  // 사업연도(4자리)
     val corpCode: String,  // 상장회사의 종목코드(6자리)
-    val fsDiv: FinancialStatementFs,  // CFS:연결재무제표, OFS:재무제표
+    val fsDiv: FinancialFs,  // CFS:연결재무제표, OFS:재무제표
     val fsNm: String,  // 연결재무제표 또는 재무제표 출력
-    val sjDiv: FinancialStatementSj,  // BS:재무상태표, IS:손익계산서
+    val sjDiv: FinancialSj,  // BS:재무상태표, IS:손익계산서
     val sjNm: String,  // 재무상태표 또는 손익계산서 출력
     val accountNm: String,  // 유동자산, 비유동자산
     val thstrmNm: String,  // 당기명
@@ -58,9 +58,9 @@ data class FinancialStatement(
                     rceptNo = resFinancialStatement.rceptNo,
                     bsnsYear = resFinancialStatement.bsnsYear,
                     corpCode = resFinancialStatement.corpCode,
-                    fsDiv = FinancialStatementFs.valueOf(resFinancialStatement.fsDiv),
+                    fsDiv = FinancialFs.valueOf(resFinancialStatement.fsDiv),
                     fsNm = resFinancialStatement.fsNm,
-                    sjDiv = FinancialStatementSj.valueOf(resFinancialStatement.sjDiv),
+                    sjDiv = FinancialSj.valueOf(resFinancialStatement.sjDiv),
                     sjNm = resFinancialStatement.sjNm,
                     accountNm = resFinancialStatement.accountNm,
                     thstrmNm = resFinancialStatement.thstrmNm,

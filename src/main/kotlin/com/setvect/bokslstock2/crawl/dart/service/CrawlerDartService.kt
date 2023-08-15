@@ -3,7 +3,7 @@ package com.setvect.bokslstock2.crawl.dart.service
 import com.fasterxml.jackson.core.type.TypeReference
 import com.setvect.bokslstock2.backtest.dart.model.CommonStatement
 import com.setvect.bokslstock2.backtest.dart.model.DetailStatement
-import com.setvect.bokslstock2.backtest.dart.model.FinancialStatementFs
+import com.setvect.bokslstock2.backtest.dart.model.FinancialFs
 import com.setvect.bokslstock2.backtest.dart.service.DartStructuringService
 import com.setvect.bokslstock2.config.BokslStockProperties
 import com.setvect.bokslstock2.crawl.dart.DartConstants
@@ -238,7 +238,7 @@ class CrawlerDartService(
         val apiCallCount = AtomicInteger(0)
         for (year in 2021..LocalDate.now().year) {
             ReportCode.values().forEach { reportCode ->
-                for (fs in FinancialStatementFs.values()) {
+                for (fs in FinancialFs.values()) {
                     companyCodeList
                         .filter { existFinancialInfo.contains(CommonStatement(year, reportCode, it.stockCode)) }
                         // 이미 수집한 재무제표는 수집하지 않음
@@ -333,7 +333,7 @@ class CrawlerDartService(
                 val stockCode = matcher.group(3)
                 val fs = matcher.group(4)
 
-                DetailStatement(year, reportCode, stockCode, FinancialStatementFs.valueOf(fs))
+                DetailStatement(year, reportCode, stockCode, FinancialFs.valueOf(fs))
             }
             .toSet()
         return existFinancialInfo
@@ -344,7 +344,7 @@ class CrawlerDartService(
         companyCodeMap: Map<String, CompanyCode>,
         year: Int,
         reportCode: ReportCode,
-        fs: FinancialStatementFs
+        fs: FinancialFs
     ) {
         val saveBaseDir = DartConstants.FINANCIAL_DETAIL_PATH
         val saveDir = File(saveBaseDir, "$year/${reportCode}")
