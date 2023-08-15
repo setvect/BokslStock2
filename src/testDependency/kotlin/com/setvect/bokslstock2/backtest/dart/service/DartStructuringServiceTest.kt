@@ -120,9 +120,9 @@ class DartStructuringServiceTest {
     @Test
     fun getIncomeStatement() {
         val filter = DartFilter(
-            year = setOf(2021, 2022),
+            year = linkedSetOf(2021, 2022),
             quarter = ReportCode.values().toSet(),
-            stockCodes = setOf("008110", "005390", "003610", "005930", "304100")
+            stockCodes = linkedSetOf("008110", "005390", "003610", "005930", "304100")
         )
 
         // 검증은 아래 링크에서
@@ -131,27 +131,12 @@ class DartStructuringServiceTest {
         dartStructuringService.loadFinancial(filter)
         dartStructuringService.loadFinancialDetail(filter)
 
-//        var incomeStatement = dartStructuringService.getIncomeStatement("008110", 2022, FinancialMetric.TOTAL_ASSETS)
-//        println("2022년 ${FinancialMetric.SALES_REVENUE.accountName[0]}: ${incomeStatement}")
-
-        FinancialMetric.values()
-            .filter { it.financialSj.contains(FinancialSj.IS) }
-            .forEach {
-                var incomeStatement = dartStructuringService.getIncomeStatement("008110", 2022, it)
+        FinancialMetric.values().forEach {
+            filter.stockCodes.forEach { stockCode ->
+                val incomeStatement = dartStructuringService.getFinancialItemValue(stockCode, 2022, it)
                 println("2022년 ${it.accountName[0]}: ${incomeStatement}")
-
-                incomeStatement = dartStructuringService.getIncomeStatement("005390", 2022, it)
-                println("2022년 ${it.accountName[0]}: ${incomeStatement}")
-
-                incomeStatement = dartStructuringService.getIncomeStatement("003610", 2022, it)
-                println("2022년 ${it.accountName[0]}: ${incomeStatement}")
-
-                incomeStatement = dartStructuringService.getIncomeStatement("005930", 2022, it)
-                println("2022년 ${it.accountName[0]}: ${incomeStatement}")
-
-                incomeStatement = dartStructuringService.getIncomeStatement("304100", 2022, it)
-                println("2022년 ${it.accountName[0]}: ${incomeStatement}")
-                log.info("-------------")
             }
+            log.info("-------------")
+        }
     }
 }
