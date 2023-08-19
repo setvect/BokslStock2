@@ -7,6 +7,9 @@ import com.setvect.bokslstock2.util.JsonUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 
+/**
+ * 배당 관련 재무제표
+ */
 data class DividendStatement(
     val commonStatement: CommonStatement,
 
@@ -14,7 +17,7 @@ data class DividendStatement(
     val corpCls: CorpCls, // 법인구분 : Y(유가), K(코스닥), N(코넥스), E(기타)
     val corpCode: String, // 공시대상회사의 고유번호(8자리)
     val corpName: String, // 법인명
-    val se: String, // 유상증자(주주배정), 전환권행사 등
+    val se: String, // 유상증자(주주배정), 전환권행사, 현금배당수익률(%) 등
     val stockKnd: DividendStatementStockKnd?, // 주식 종류 : 보통주, 우선주
     val thstrm: String, // 당기, 9,999,999,999
     val frmtrm: String, // 전기, 9,999,999,999

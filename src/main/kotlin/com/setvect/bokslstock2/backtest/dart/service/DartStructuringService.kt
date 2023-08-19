@@ -102,11 +102,35 @@ class DartStructuringService {
         return r
     }
 
-    fun searchFinancial(filter: Map<String, Any>): List<FinancialStatement> {
-        return financialStatementList.filter { filter(it, filter) }.toImmutableList()
+    fun searchFinancial(condition: FinancialSearchCondition): List<FinancialStatement> {
+        return financialStatementList
+            .filter {
+                if (!condition.stockCode.isNullOrEmpty()) {
+                    if (!condition.stockCode.contains(it.commonStatement.stockCode)) {
+                        return@filter false
+                    }
+                }
+                if (!condition.reportCode.isNullOrEmpty()) {
+                    if (!condition.reportCode.contains(it.commonStatement.reportCode)) {
+                        return@filter false
+                    }
+                }
+                if (!condition.accountNm.isNullOrEmpty()) {
+                    if (!condition.accountNm.contains(it.accountNm)) {
+                        return@filter false
+                    }
+                }
+                if (!condition.fsDiv.isNullOrEmpty()) {
+                    if (!condition.fsDiv.contains(it.fsDiv)) {
+                        return@filter false
+                    }
+                }
+                return@filter true
+            }
+            .toImmutableList()
     }
 
-    fun searchFinancialDetail(stockCode: String, financialMetric: FinancialMetric): List<FinancialDetailStatement> {
+    fun searchFinancialDetail(stockCode: String, financialDetailMetric: FinancialDetailMetric): List<FinancialDetailStatement> {
         return financialDetailStatementList.filter {    //
             // TODO OFS도 되도록 변경
             if (it.fsDiv != FinancialFs.CFS) {
@@ -115,13 +139,13 @@ class DartStructuringService {
             if (it.commonStatement.stockCode != stockCode) {
                 return@filter false
             }
-            if (!financialMetric.financialSj.contains(it.sjDiv)) {
+            if (!financialDetailMetric.financialSj.contains(it.sjDiv)) {
                 return@filter false
             }
-            if (it.accountId == financialMetric.accountId) {
+            if (it.accountId == financialDetailMetric.accountId) {
                 return@filter true
             }
-            return@filter financialMetric.accountName.contains(it.accountNm)
+            return@filter financialDetailMetric.accountName.contains(it.accountNm)
         }.toImmutableList()
     }
 
@@ -167,11 +191,11 @@ class DartStructuringService {
             throw IllegalStateException("loadFinancial() 호출 후 사용")
         }
 
-        val condition: Map<String, Any> = mapOf(
-            "commonStatement.reportCode" to ReportCode.ANNUAL,
-            "commonStatement.stockCode" to stockCode,
-            "accountNm" to "영업이익", // 고정값
-            "fsDiv" to FinancialFs.CFS, // TODO 연결재무가 없는 회사가 있음, OFS 사용
+        val condition = FinancialSearchCondition(
+            stockCode = stockCode,
+            reportCode = setOf(ReportCode.ANNUAL),
+            accountNm = setOf("영업이익"),
+            fsDiv = setOf(FinancialFs.CFS)
         )
 
         val financialList = searchFinancial(condition)
@@ -196,9 +220,10 @@ class DartStructuringService {
         if (financialStatementList.isEmpty()) {
             throw IllegalStateException("loadFinancial() 호출 후 사용")
         }
-        val condition: Map<String, Any> = mapOf(
-            "commonStatement.stockCode" to stockCode,
-            "accountNm" to "매출액",
+        val condition = FinancialSearchCondition(
+            stockCode = stockCode,
+            accountNm = setOf("매출액"),
+            fsDiv = setOf(FinancialFs.CFS)
         )
 
         val financialList = searchFinancial(condition)
@@ -217,21 +242,21 @@ class DartStructuringService {
      * 데이터를 로드한 상태에서 본 메소드 사용
      * @param stockCode 종목코드
      * @param year 연도
-     * @param financialMetric 재무제표 항목명
+     * @param financialDetailMetric 재무제표 항목명
      */
-    fun getFinancialItemValue(stockCode: String, year: Int, financialMetric: FinancialMetric): FinancialItemValue {
-        val financialDetailList = searchFinancialDetail(stockCode, financialMetric)
+    fun getFinancialItemValue(stockCode: String, year: Int, financialDetailMetric: FinancialDetailMetric): FinancialItemValue {
+        val financialDetailList = searchFinancialDetail(stockCode, financialDetailMetric)
 
-        if (financialMetric.isIs()) {
-            return getIncomeStatement(financialDetailList, stockCode, year, financialMetric)
-        } else if (financialMetric.isBs()) {
-            return getBalanceSheet(financialDetailList, stockCode, year, financialMetric)
+        if (financialDetailMetric.isIs()) {
+            return getIncomeStatement(financialDetailList, stockCode, year, financialDetailMetric)
+        } else if (financialDetailMetric.isBs()) {
+            return getBalanceSheet(financialDetailList, stockCode, year, financialDetailMetric)
         }
 
         return FinancialItemValue(
             stockCode = stockCode,
             year = year,
-            itemName = financialMetric.accountName[0],
+            itemName = financialDetailMetric.accountName[0],
             q1Value = 0,
             q2Value = 0,
             q3Value = 0,
@@ -246,14 +271,14 @@ class DartStructuringService {
         financialDetailList: List<FinancialDetailStatement>,
         stockCode: String,
         year: Int,
-        financialMetric: FinancialMetric
+        financialDetailMetric: FinancialDetailMetric
     ): FinancialItemValue {
         val accountClose = getAccountClose(stockCode)
 
         var financialItemValue = FinancialItemValue(
             stockCode = stockCode,
             year = year,
-            itemName = financialMetric.accountName[0],
+            itemName = financialDetailMetric.accountName[0],
             q1Value = 0,
             q2Value = 0,
             q3Value = 0,
@@ -349,14 +374,14 @@ class DartStructuringService {
         financialDetailList: List<FinancialDetailStatement>,
         stockCode: String,
         year: Int,
-        financialMetric: FinancialMetric
+        financialDetailMetric: FinancialDetailMetric
     ): FinancialItemValue {
         val accountClose = getAccountClose(stockCode)
 
         var financialItemValue = FinancialItemValue(
             stockCode = stockCode,
             year = year,
-            itemName = financialMetric.accountName[0],
+            itemName = financialDetailMetric.accountName[0],
             q1Value = 0,
             q2Value = 0,
             q3Value = 0,

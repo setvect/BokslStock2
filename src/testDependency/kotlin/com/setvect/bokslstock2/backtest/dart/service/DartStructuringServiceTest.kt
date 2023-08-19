@@ -65,9 +65,9 @@ class DartStructuringServiceTest {
         )
         dartStructuringService.loadFinancial(filter)
 
-        val condition: Map<String, Any> = mapOf(
-            "accountNm" to name,
-            "fsDiv" to FinancialFs.CFS,
+        val condition = FinancialSearchCondition(
+            accountNm = setOf(name),
+            fsDiv = setOf(FinancialFs.CFS),
         )
         val result = dartStructuringService.searchFinancial(condition)
 
@@ -131,7 +131,7 @@ class DartStructuringServiceTest {
         dartStructuringService.loadFinancial(filter)
         dartStructuringService.loadFinancialDetail(filter)
 
-        FinancialMetric.values().forEach {
+        FinancialDetailMetric.values().forEach {
             filter.stockCodes.forEach { stockCode ->
                 val incomeStatement = dartStructuringService.getFinancialItemValue(stockCode, 2022, it)
                 println("2022년 ${it.accountName[0]}: ${incomeStatement}")
