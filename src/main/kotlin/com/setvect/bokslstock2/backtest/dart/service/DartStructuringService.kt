@@ -195,7 +195,7 @@ class DartStructuringService {
         val condition = FinancialSearchCondition(
             stockCode = stockCode,
             reportCode = setOf(ReportCode.ANNUAL),
-            accountNm = setOf("영업이익"),
+            accountNm = setOf("영업이익"), // 모든 재무제표에 '영업이익'이 있다고 가정
             fsDiv = setOf(FinancialFs.CFS)
         )
 
@@ -495,37 +495,41 @@ class DartStructuringService {
         val faceValuePerShare = targetData
             .filter { it.se == DividenMetric.FACE_VALUE_PER_SHARE.se }
             .map { ApplicationUtil.convertToLong(it.thstrm) }
-            .first() ?: 0
+            .firstOrNull() ?: 0
 
         val netProfitPerShare = targetData
             .filter { it.se == DividenMetric.NET_PROFIT_PER_SHARE.se }
             .map { ApplicationUtil.convertToLong(it.thstrm) }
-            .first() ?: 0
+            .firstOrNull() ?: 0
 
         val cashDividendPropensity = targetData
             .filter { it.se == DividenMetric.CASH_DIVIDEND_PROPENSITY.se }
+            .filter { it.thstrm.toDoubleOrNull() != null }
             .map { it.thstrm.toDouble() }
-            .first() ?: 0.0
+            .firstOrNull() ?: 0.0
 
         val cashDividendYield = targetData
             .filter { it.se == DividenMetric.CASH_DIVIDEND_YIELD.se }
-            .map { it.thstrm.toDouble()}
-            .first() ?: 0.0
+            .filter { it.thstrm.toDoubleOrNull() != null }
+            .map { it.thstrm.toDouble() }
+            .firstOrNull() ?: 0.0
 
         val cashDividendAmount = targetData
             .filter { it.se == DividenMetric.CASH_DIVIDEND_AMOUNT.se }
             .map { ApplicationUtil.convertToLong(it.thstrm) }
-            .first() ?: 0
+            .firstOrNull() ?: 0
 
 
+        val accountClose = getAccountClose(stockCode)
         return DividenValue(
             stockCode = stockCode,
             year = year,
+            accountClose = accountClose,
             faceValuePerShare = faceValuePerShare,
-            netProfitPerShare = netProfitPerShare,
-            cashDividendPropensity = cashDividendPropensity,
-            cashDividendYield = cashDividendYield,
-            cashDividendAmount = cashDividendAmount
+            eps = netProfitPerShare,
+            dividendPropensity = cashDividendPropensity,
+            dividendYield = cashDividendYield,
+            dps = cashDividendAmount
         )
     }
 }

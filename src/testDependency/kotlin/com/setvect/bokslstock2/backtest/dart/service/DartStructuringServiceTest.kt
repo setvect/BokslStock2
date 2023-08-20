@@ -142,9 +142,13 @@ class DartStructuringServiceTest {
 
     /**
      * 배당 정보
+     * <pre>
+     * - 결과 검증: https://finance.naver.com/item/coinfo.naver?code=005930
+     * - 투자지표 -> 수익성 클릭
+     * </pre>
      */
     @Test
-    fun getDividend(){
+    fun getDividend() {
         val filter = DartFilter(
             year = linkedSetOf(2021, 2022),
             quarter = ReportCode.values().toSet(),
@@ -154,13 +158,9 @@ class DartStructuringServiceTest {
         dartStructuringService.loadFinancial(filter)
         dartStructuringService.loadDividend(filter)
 
-
         filter.stockCodes.forEach { stockCode ->
             val dividen = dartStructuringService.getDividend(stockCode, 2022)
             println("${dividen.year}년, ${dividen.stockCode}, 배당: ${dividen}")
         }
-
-
-
     }
 }

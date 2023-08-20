@@ -3,7 +3,7 @@ package com.setvect.bokslstock2.crawl.dart.model
 import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
- * 상세 제무 제표
+ * 상세 재무제표
  * 참고로 ResFinancialStatement 는 주요 재무제표
  * ResFinancialStatement 항목이 더 많지만 본 응담 모델의 계정명이 더 많다(설명이 어렵네)
  */
