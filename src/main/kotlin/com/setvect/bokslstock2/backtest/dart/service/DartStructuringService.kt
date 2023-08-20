@@ -131,23 +131,21 @@ class DartStructuringService {
             .toImmutableList()
     }
 
+    /**
+     * CFS(연결재무)우선, 없으면 OFS도 찾음
+     */
     fun searchFinancialDetail(stockCode: String, financialDetailMetric: FinancialDetailMetric): List<FinancialDetailStatement> {
-        return financialDetailStatementList.filter {    //
-            // TODO OFS도 되도록 변경
-            if (it.fsDiv != FinancialFs.CFS) {
-                return@filter false
-            }
-            if (it.commonStatement.stockCode != stockCode) {
-                return@filter false
-            }
-            if (!financialDetailMetric.financialSj.contains(it.sjDiv)) {
-                return@filter false
-            }
-            if (it.accountId == financialDetailMetric.accountId) {
-                return@filter true
-            }
-            return@filter financialDetailMetric.accountName.contains(it.accountNm)
-        }.toImmutableList()
+        fun filterStatements(fsDiv: FinancialFs): List<FinancialDetailStatement> {
+            return financialDetailStatementList
+                .filter { it.fsDiv == fsDiv }
+                .filter { it.commonStatement.stockCode == stockCode }
+                .filter { financialDetailMetric.financialSj.contains(it.sjDiv) }
+                .filter { it.accountId == financialDetailMetric.accountId || financialDetailMetric.accountName.contains(it.accountNm) }
+                .toImmutableList()
+        }
+
+        val result = filterStatements(FinancialFs.CFS)
+        return result.ifEmpty { filterStatements(FinancialFs.OFS) }
     }
 
     @Deprecated("리플랙션을 웬만해서 사용하지 말자. 지저분해 진다.")
@@ -196,7 +194,7 @@ class DartStructuringService {
             stockCode = stockCode,
             reportCode = setOf(ReportCode.ANNUAL),
             accountNm = setOf("영업이익"), // 모든 재무제표에 '영업이익'이 있다고 가정
-            fsDiv = setOf(FinancialFs.CFS)
+            fsDiv = setOf(FinancialFs.CFS, FinancialFs.OFS)
         )
 
         val financialList = searchFinancial(condition)
@@ -254,9 +252,11 @@ class DartStructuringService {
             return getBalanceSheet(financialDetailList, stockCode, year, financialDetailMetric)
         }
 
+        // 빈값
         return FinancialItemValue(
             stockCode = stockCode,
             year = year,
+            accountClose = AccountClose.Q4,
             itemName = financialDetailMetric.accountName[0],
             q1Value = 0,
             q2Value = 0,
@@ -279,6 +279,7 @@ class DartStructuringService {
         var financialItemValue = FinancialItemValue(
             stockCode = stockCode,
             year = year,
+            accountClose = accountClose,
             itemName = financialDetailMetric.accountName[0],
             q1Value = 0,
             q2Value = 0,
@@ -382,6 +383,7 @@ class DartStructuringService {
         var financialItemValue = FinancialItemValue(
             stockCode = stockCode,
             year = year,
+            accountClose = accountClose,
             itemName = financialDetailMetric.accountName[0],
             q1Value = 0,
             q2Value = 0,

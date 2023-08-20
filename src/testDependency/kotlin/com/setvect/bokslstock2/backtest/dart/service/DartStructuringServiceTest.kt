@@ -115,14 +115,15 @@ class DartStructuringServiceTest {
     }
 
     /**
-     * 분기별 손익 계산서
+     * 분기별 재무제표
      */
     @Test
     fun getIncomeStatement() {
         val filter = DartFilter(
             year = linkedSetOf(2021, 2022),
             quarter = ReportCode.values().toSet(),
-            stockCodes = linkedSetOf("008110", "005390", "003610", "005930", "304100")
+            // 065450: 단일 재무제표
+            stockCodes = linkedSetOf("008110", "005390", "003610", "005930", "304100", "065450")
         )
 
         // 검증은 아래 링크에서
