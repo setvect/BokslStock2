@@ -43,6 +43,8 @@ class StockClientService(
     /**
      * @return 주문에 사용되는 post API 사용시 쓰이는 hashkey
      */
+    // API 문서(https://apiportal.koreainvestment.com/apiservice/oauth2)를 보면 hashkey값이 필수가 아니라고 되어 있음
+    @Deprecated("사용안함")
     fun requestHashKey(body: Any): String {
         val koreainvestment = bokslStockProperties.koreainvestment
         val url = koreainvestment.trade.url + "/uapi/hashkey"
@@ -245,8 +247,7 @@ class StockClientService(
     ): CommonResponse<OrderResponse> {
         val url = bokslStockProperties.koreainvestment.trade.url + "/uapi/domestic-stock/v1/trading/order-cash"
 
-        val hashKey = this.requestHashKey(request)
-        val headers = headerAuthHash(authorization, order, hashKey)
+        val headers = headerAuthHash(authorization, order)
 
         val httpEntity = HttpEntity<OrderRequest>(request, headers)
 
@@ -271,14 +272,12 @@ class StockClientService(
     private fun headerAuthHash(
         authorization: String,
         stockTransaction: StockTransaction,
-        hashKey: String
     ): HttpHeaders {
         return BaseHeader(
             appkey = bokslStockProperties.koreainvestment.appkey,
             appsecret = bokslStockProperties.koreainvestment.appsecret,
             authorization = authorization,
             trId = stockTransaction.trId,
-            hashKey = hashKey
         ).headers()
     }
 
