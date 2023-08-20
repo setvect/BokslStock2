@@ -3,6 +3,7 @@ package com.setvect.bokslstock2.backtest.dart.service
 import com.setvect.bokslstock2.backtest.dart.model.*
 import com.setvect.bokslstock2.crawl.dart.DartConstants
 import com.setvect.bokslstock2.crawl.dart.model.ReportCode
+import com.setvect.bokslstock2.util.ApplicationUtil
 import com.setvect.bokslstock2.util.NumberUtil.comma
 import okhttp3.internal.toImmutableList
 import org.slf4j.LoggerFactory
@@ -480,5 +481,51 @@ class DartStructuringService {
         year: Int
     ): FinancialDetailStatement? {
         return financialDetailStatementList.find { it.commonStatement.reportCode == reportCode && it.commonStatement.year == year }
+    }
+
+    /**
+     * 배당금 정보
+     */
+    fun getDividend(stockCode: String, year: Int): DividenValue {
+        val targetData = this.dividendStatementList
+            .filter { it.commonStatement.stockCode == stockCode }
+            .filter { it.commonStatement.year == year }
+            .filter { it.commonStatement.reportCode == ReportCode.ANNUAL }
+
+        val faceValuePerShare = targetData
+            .filter { it.se == DividenMetric.FACE_VALUE_PER_SHARE.se }
+            .map { ApplicationUtil.convertToLong(it.thstrm) }
+            .first() ?: 0
+
+        val netProfitPerShare = targetData
+            .filter { it.se == DividenMetric.NET_PROFIT_PER_SHARE.se }
+            .map { ApplicationUtil.convertToLong(it.thstrm) }
+            .first() ?: 0
+
+        val cashDividendPropensity = targetData
+            .filter { it.se == DividenMetric.CASH_DIVIDEND_PROPENSITY.se }
+            .map { it.thstrm.toDouble() }
+            .first() ?: 0.0
+
+        val cashDividendYield = targetData
+            .filter { it.se == DividenMetric.CASH_DIVIDEND_YIELD.se }
+            .map { it.thstrm.toDouble()}
+            .first() ?: 0.0
+
+        val cashDividendAmount = targetData
+            .filter { it.se == DividenMetric.CASH_DIVIDEND_AMOUNT.se }
+            .map { ApplicationUtil.convertToLong(it.thstrm) }
+            .first() ?: 0
+
+
+        return DividenValue(
+            stockCode = stockCode,
+            year = year,
+            faceValuePerShare = faceValuePerShare,
+            netProfitPerShare = netProfitPerShare,
+            cashDividendPropensity = cashDividendPropensity,
+            cashDividendYield = cashDividendYield,
+            cashDividendAmount = cashDividendAmount
+        )
     }
 }

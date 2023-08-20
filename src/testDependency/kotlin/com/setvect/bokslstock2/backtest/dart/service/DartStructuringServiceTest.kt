@@ -139,4 +139,28 @@ class DartStructuringServiceTest {
             log.info("-------------")
         }
     }
+
+    /**
+     * 배당 정보
+     */
+    @Test
+    fun getDividend(){
+        val filter = DartFilter(
+            year = linkedSetOf(2021, 2022),
+            quarter = ReportCode.values().toSet(),
+            stockCodes = linkedSetOf("008110", "005390", "003610", "005930", "304100")
+        )
+
+        dartStructuringService.loadFinancial(filter)
+        dartStructuringService.loadDividend(filter)
+
+
+        filter.stockCodes.forEach { stockCode ->
+            val dividen = dartStructuringService.getDividend(stockCode, 2022)
+            println("${dividen.year}년, ${dividen.stockCode}, 배당: ${dividen}")
+        }
+
+
+
+    }
 }
