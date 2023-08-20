@@ -3,6 +3,7 @@ package com.setvect.bokslstock2.crawl.dart.service
 import com.fasterxml.jackson.core.type.TypeReference
 import com.setvect.bokslstock2.backtest.dart.model.CommonStatement
 import com.setvect.bokslstock2.backtest.dart.model.DetailStatement
+import com.setvect.bokslstock2.backtest.dart.model.FinancialDetailKey
 import com.setvect.bokslstock2.backtest.dart.model.FinancialFs
 import com.setvect.bokslstock2.backtest.dart.service.DartStructuringService
 import com.setvect.bokslstock2.config.BokslStockProperties
@@ -10,6 +11,7 @@ import com.setvect.bokslstock2.crawl.dart.DartConstants
 import com.setvect.bokslstock2.crawl.dart.model.*
 import com.setvect.bokslstock2.util.JsonUtil
 import org.apache.commons.compress.archivers.zip.ZipFile
+import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -22,6 +24,7 @@ import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
 import java.io.File
 import java.io.FileOutputStream
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.LocalDate
@@ -225,7 +228,7 @@ class CrawlerDartService(
      * 단일회사 전체 기업 재무재표 수집
      * 전체 기업 재무제표는 하나씩 조회 해야됨
      * 존재하는 데이터를 조회 하기 위해서 주요 재무제표에 수집된 내용이 존재하는지 확인한 후 수집 실행
-     * @param companyCodeList 기업코드 목록
+     * @param companyAll 기업코드 목록
      */
     fun crawlCompanyFinancialInfoDetail(companyAll: List<CompanyCode>) {
         val existFinancialInfo = makeExistFinancialInfo(DartConstants.FINANCIAL_PATH)
@@ -236,13 +239,16 @@ class CrawlerDartService(
         log.info("상장 회사수: {}", companyCodeList.size)
         val companyCodeMap = companyCodeList.associateBy { it.corpCode }
         val apiCallCount = AtomicInteger(0)
-        for (year in 2021..LocalDate.now().year) {
+
+        val financialDetailKey: Set<FinancialDetailKey> = loadNoDataFinancialDetailKey()
+        for (year in 2015..LocalDate.now().year) {
             ReportCode.values().forEach { reportCode ->
                 for (fs in FinancialFs.values()) {
                     companyCodeList
                         .filter { existFinancialInfo.contains(CommonStatement(year, reportCode, it.stockCode)) }
                         // 이미 수집한 재무제표는 수집하지 않음
                         .filter { !existFinancialDetailInfo.contains(DetailStatement(year, reportCode, it.stockCode, fs)) }
+                        .filter { !financialDetailKey.contains(FinancialDetailKey(it.stockCode, year, reportCode, fs)) }
                         .forEach inner@{ company ->
                             val uri = UriComponentsBuilder
                                 .fromHttpUrl("https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json")
@@ -289,6 +295,11 @@ class CrawlerDartService(
                             if (status == "020") {
                                 log.info("API 사용한도 초과했음, Response without list: $resBodyJson")
                                 return
+                            } else if (status == "013") {
+                                log.info("조회 데이터가 없음 ${year}년, reportCode: ${reportCode}, corpCodes: ${company.stockCode}, fs: ${fs}, Response without list: $resBodyJson")
+                                val content = "${company.stockCode}\t${year}\t${reportCode}\t${fs}\n"
+                                FileUtils.writeStringToFile(NO_DATA_FINANCIAL_DETAIL_FILE, content, StandardCharsets.UTF_8, true)
+                                return@inner
                             } else if (status != "000") {
                                 log.info("수집 대상 없음 ${year}년, reportCode: ${reportCode}, corpCodes: ${company.stockCode}, fs: ${fs}, Response without list: $resBodyJson")
                                 return@inner
@@ -371,6 +382,8 @@ class CrawlerDartService(
     }
 
     companion object {
+        private val NO_DATA_FINANCIAL_DETAIL_FILE = File("crawl/dart/financialDetail/no_data.txt")
+
         fun unzip(zipFile: File, destDirectory: File) {
             ZipFile(zipFile).use { archive ->
                 archive.entries.asSequence().forEach { entry ->
@@ -387,6 +400,28 @@ class CrawlerDartService(
                     }
                 }
             }
+        }
+
+        /**
+         * 조회되지 않은 정보 로드
+         */
+        private fun loadNoDataFinancialDetailKey(): Set<FinancialDetailKey> {
+            return FileUtils.readLines(NO_DATA_FINANCIAL_DETAIL_FILE, StandardCharsets.UTF_8)
+                .map { line ->
+                    line.split("\t")
+                }
+                .filter { it.size == 4 }
+                .map {
+                    val stockCode = it[0]
+                    val year = it[1].toInt()
+                    val reportCode = ReportCode.valueOf(it[2])
+                    val fs = FinancialFs.valueOf(it[3])
+                    FinancialDetailKey(stockCode, year, reportCode, fs)
+                }
+                .toSet()
+                .also {
+                    println("조회된 데이타 정보 로드: ${it.size}개")
+                }
         }
     }
 }
