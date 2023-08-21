@@ -21,9 +21,9 @@ data class CancelableResponse(
     /**정정취소구분명*/
     @JsonProperty("rvse_cncl_dvsn_name") val rvseCnclDvsnName: String,
     /**주문수량*/
-    @JsonProperty("ord_qty") val ordQty: String,
+    @JsonProperty("ord_qty") val ordQty: Long,
     /**주문단가*/
-    @JsonProperty("ord_unpr") val ordUnpr: String,
+    @JsonProperty("ord_unpr") val ordUnpr: Long,
     /**주문시각*/
     @JsonProperty("ord_tmd") val ordTmd: String,
     /**총체결수량*/
@@ -38,4 +38,8 @@ data class CancelableResponse(
     @JsonProperty("ord_dvsn_cd") val ordDvsnCd: String,
     /**운용사지정주문번호*/
     @JsonProperty("mgco_aptm_odno") val mgcoAptmOdno: String,
-)
+) {
+    fun getAmount(): Long {
+        return ordQty * ordUnpr
+    }
+}

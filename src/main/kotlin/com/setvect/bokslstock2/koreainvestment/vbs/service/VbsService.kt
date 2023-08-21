@@ -7,6 +7,7 @@ import com.setvect.bokslstock2.koreainvestment.trade.entity.AssetHistoryEntity
 import com.setvect.bokslstock2.koreainvestment.trade.entity.TradeEntity
 import com.setvect.bokslstock2.koreainvestment.trade.model.request.*
 import com.setvect.bokslstock2.koreainvestment.trade.model.response.BalanceResponse
+import com.setvect.bokslstock2.koreainvestment.trade.model.response.CancelableResponse
 import com.setvect.bokslstock2.koreainvestment.trade.repository.AssetHistoryRepository
 import com.setvect.bokslstock2.koreainvestment.trade.repository.TradeRepository
 import com.setvect.bokslstock2.koreainvestment.trade.service.PriceGroupService
@@ -64,6 +65,9 @@ class VbsService(
 
     /** 매수 또는 매수 대기중인 종목 */
     private val buyCode = mutableSetOf<String>()
+
+    /** 매수 대기중인 종목 */
+    private val buyStockWait = mutableSetOf<CancelableResponse>()
 
     private var run = false
 
@@ -362,6 +366,7 @@ class VbsService(
 //        loadBalance()
 
         val deposit = balanceResponse!!.deposit[0].prvsRcdlExccAmt
+        val buyWaitAmount = buyStockWait.sumOf { it.getAmount() }
         val vbsConfig = bokslStockProperties.koreainvestment.vbs
         val purchasedAllRatio = vbsConfig.stock
             .filter { buyCode.contains(it.code) }
@@ -369,13 +374,14 @@ class VbsService(
 
         val investmentRatio = vbsConfig.stock
             .stream()
-            .filter{ it.code == buyStock.code }
+            .filter { it.code == buyStock.code }
             .findFirst().map { it.investmentRatio }
             .orElseThrow { RuntimeException("주문할 종목 '${buyStock.code}'의 매매 비율 설정이 없습니다.") }
 
-        log.info("purchasedAllRatio: $purchasedAllRatio, deposit: ${deposit.toDouble()}, investmentRatio: $investmentRatio, investRatio: ${vbsConfig.investRatio}")
+        val cash = deposit.toDouble() - buyWaitAmount
+        log.info("purchasedAllRatio: $purchasedAllRatio, deposit: ${deposit.toDouble()}, buyWaitAmount: $buyWaitAmount, cash: $cash, investmentRatio: $investmentRatio, investRatio: ${vbsConfig.investRatio}")
 
-        val buyCash = ApplicationUtil.getBuyCash(purchasedAllRatio, deposit.toDouble(), investmentRatio, vbsConfig.investRatio).toLong()
+        val buyCash = ApplicationUtil.getBuyCash(purchasedAllRatio, cash, investmentRatio, vbsConfig.investRatio).toLong()
 
         val ordqty = (buyCash / targetPrice).toInt()
 
@@ -569,9 +575,9 @@ class VbsService(
      */
     private fun initBuyCode() {
         buyCode.clear()
+        buyStockWait.clear()
         val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
-        val cancelableStock =
-            stockClientService.requestCancelableList(CancelableRequest(accountNo), tokenService.getAccessToken())
+        val cancelableStock = stockClientService.requestCancelableList(CancelableRequest(accountNo), tokenService.getAccessToken())
         val holdingStock = getHoldingStock(false)
         // 잔고가 1이상인 경우만 보유 주식으로 인정
         val hasStock = holdingStock.entries.filter { it.value.ordPsblQty >= 1 }.map { it.key }
@@ -581,6 +587,7 @@ class VbsService(
                 "02" -> {
                     log.info("[${it.prdtName}-${it.code}] 매수 대기 - $it")
                     buyCode.add(it.code)
+                    buyStockWait.add(it)
                 }
 
                 "01" -> log.info("[${it.prdtName}-${it.code}] 매도 대기 - $it")
