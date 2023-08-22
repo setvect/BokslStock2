@@ -1,10 +1,12 @@
 package com.setvect.bokslstock2.koreainvestment.ws.service
 
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@Profile("!test") // 테스트 때는 실행 안함
 class WebsocketStockSchedule(
     var tradingWebsocket: TradingWebsocket
 ) {
