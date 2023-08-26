@@ -80,7 +80,8 @@ data class BalanceResponse(
         @JsonProperty("nxdy_excc_amt") val nxdyExccAmt: String,
         /**
          * 가수도정산금액
-         * ※ 주문에 사용할 금액
+         * 주문에 사용할 금액
+         * ※ 주의사항: 매수 대기 금액은 제외 됐다. 실제 주문 금액은 매수 대기 금액은 빼고 사용해야됨.
          */
         @JsonProperty("prvs_rcdl_excc_amt") val prvsRcdlExccAmt: Long,
         /**CMA평가금액*/

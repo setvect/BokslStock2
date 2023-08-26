@@ -362,9 +362,6 @@ class VbsService(
      * 매수 주문
      */
     private fun buyOrder(buyStock: BokslStockProperties.Vbs.VbsStock, targetPrice: Int) {
-        // TODO 잔고 조회 안하는 걸로 생각해 보기
-//        loadBalance()
-
         val deposit = balanceResponse!!.deposit[0].prvsRcdlExccAmt
         val buyWaitAmount = buyStockWait.sumOf { it.getAmount() }
         val vbsConfig = bokslStockProperties.koreainvestment.vbs
@@ -423,6 +420,7 @@ class VbsService(
             TimeUnit.SECONDS.sleep(2)
             // 주문 완료 이후 잔고 조회
             loadBalance()
+            initBuyCode()
         }
         slackMessageService.sendMessage(message)
     }
@@ -432,7 +430,7 @@ class VbsService(
      * [openSellStockList] 매도 종목
      */
     private fun sellOrder(openSellStockList: List<BokslStockProperties.Vbs.VbsStock>) {
-        val holdingsMap = getHoldingStock(false)
+        val holdingsMap = getBalanceForCash()
 
         openSellStockList.forEach {
             val stock = holdingsMap[it.code] ?: return@forEach
@@ -513,15 +511,17 @@ class VbsService(
 
     /**
      * 주식 잔고
-     * [reloadBalance] true면 계좌 잔고를 조회, false면 기존 조회한 값을 그대로 반환
      * @return <종목코드, 잔고정보>
      */
-    private fun getHoldingStock(reloadBalance: Boolean): Map<String, BalanceResponse.Holdings> {
-        if (reloadBalance) {
-            loadBalance()
-        }
-        return balanceResponse!!.holdings.associateBy { it.code }
+    private fun getHoldingStock(): Map<String, BalanceResponse.Holdings> {
+        loadBalance()
+        return getBalanceForCash()
     }
+
+    /**
+     * @return 이미 조회된 잔고 정보
+     */
+    private fun getBalanceForCash() = balanceResponse!!.holdings.associateBy { it.code }
 
     /**
      * 날짜가 변경될 경우 최초 로드
@@ -571,14 +571,14 @@ class VbsService(
     }
 
     /**
-     * 현재 매수 또는 매수 대기중인 종목
+     * 현재 매수 또는 매수 대기중인 종목 불러오기
      */
     private fun initBuyCode() {
         buyCode.clear()
         buyStockWait.clear()
         val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
         val cancelableStock = stockClientService.requestCancelableList(CancelableRequest(accountNo), tokenService.getAccessToken())
-        val holdingStock = getHoldingStock(false)
+        val holdingStock = getBalanceForCash()
         // 잔고가 1이상인 경우만 보유 주식으로 인정
         val hasStock = holdingStock.entries.filter { it.value.ordPsblQty >= 1 }.map { it.key }
         buyCode.addAll(hasStock)
@@ -608,7 +608,8 @@ class VbsService(
             log.info("매도 가능시간 아님")
             return
         }
-        val holdingStock = getHoldingStock(true)
+        val holdingStock = getHoldingStock()
+        initBuyCode()
         // 잔고 수익률 보내지 않음 - 의미 없음
         // senderPurchaseStock(holdingStock)
 
