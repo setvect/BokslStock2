@@ -17,31 +17,9 @@ data class BokslStockProperties(
     val slack: Slack,
 ) {
     data class Crawl(
-        val korea: Korea,
-        val global: Global,
-        val exchangeRate: ExchangeRate,
         val fred: Fred,
         val dart: Dart,
     ) {
-        data class Korea(
-            val url: UrlCollection,
-            val userAgent: String,
-            val savePath: String,
-        ) {
-            data class UrlCollection(
-                val list: String,
-                val info: String,
-                val stockPrice: String
-            )
-
-        }
-
-        data class Global(
-            val url: String
-        )
-        data class ExchangeRate(
-            val url: String
-        )
         data class Fred(
             val key: String
         )

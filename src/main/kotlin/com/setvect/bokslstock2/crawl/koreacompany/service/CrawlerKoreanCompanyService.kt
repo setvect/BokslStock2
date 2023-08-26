@@ -17,9 +17,7 @@ import java.util.stream.IntStream
  * 한국 기업 정보 크롤링
  */
 @Service
-class CrawlerKoreanCompanyService(
-    val crawlerKoreanCompanyProperties: CrawlerKoreanCompanyProperties
-) {
+class CrawlerKoreanCompanyService {
     private val regexCompanyLink = Regex("code=(\\w*).*>(.*)<")
     private val log = LoggerFactory.getLogger(javaClass)
     private val gson = GsonBuilder().setPrettyPrinting().create()
@@ -28,14 +26,14 @@ class CrawlerKoreanCompanyService(
      * 상세 정보 크롤링
      */
     fun crawlDetailList() {
-        val listFile = crawlerKoreanCompanyProperties.getSummaryListFile()
+        val listFile = CrawlerKoreanCompanyProperties.getSummaryListFile()
         val listJson = FileUtils.readFileToString(listFile, "utf-8")
         val companyList = gson.fromJson(listJson, Array<KoreanCompanySummary>::class.java).asList()
 
         val koreanCompanyDetailList = mutableListOf<KoreanCompanyDetail>()
         var count = 0
         companyList.forEach { company ->
-            val url = crawlerKoreanCompanyProperties.getDetailUrl(company.code)
+            val url = CrawlerKoreanCompanyProperties.getDetailUrl(company.code)
             log.info("${company.name} 조회, $url, [${count++}/${companyList.size}]")
 
             val document = Jsoup.connect(url).get()
@@ -155,7 +153,7 @@ class CrawlerKoreanCompanyService(
         KoreaMarket.values().forEach { stockType ->
             var page = 1
             while (true) {
-                val url = crawlerKoreanCompanyProperties.getUrlList()
+                val url = CrawlerKoreanCompanyProperties.getUrlList()
                     .replace("{marketSeq}", stockType.code.toString())
                     .replace("{page}", page.toString())
                 log.info("페이지: $url")
@@ -190,7 +188,7 @@ class CrawlerKoreanCompanyService(
     private fun saveDetailList(detailList: List<KoreanCompanyDetail>) {
         val companyListJson = gson.toJson(detailList)
 
-        val listFile = crawlerKoreanCompanyProperties.getDetailListFile()
+        val listFile = CrawlerKoreanCompanyProperties.getDetailListFile()
         FileUtils.writeStringToFile(listFile, companyListJson, "utf-8")
         log.info("상세 정보 저장. 건수: ${detailList.size}, 경로: ${listFile.absoluteFile}")
     }
@@ -201,7 +199,7 @@ class CrawlerKoreanCompanyService(
     private fun saveSummaryList(crawCompanyList: List<KoreanCompanySummary>) {
         val companyListJson = gson.toJson(crawCompanyList)
 
-        val listFile = crawlerKoreanCompanyProperties.getSummaryListFile()
+        val listFile = CrawlerKoreanCompanyProperties.getSummaryListFile()
         FileUtils.writeStringToFile(listFile, companyListJson, "utf-8")
         log.info("요약 정보 저장. 건수: ${crawCompanyList.size}, 경로: ${listFile.absoluteFile}")
     }

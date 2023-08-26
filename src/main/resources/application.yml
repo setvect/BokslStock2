@@ -36,17 +36,6 @@ com:
   setvect:
     bokslstock:
       crawl:
-        korea:
-          url:
-            list: https://finance.naver.com/sise/sise_market_sum.nhn?sosok={marketSeq}&page={page}
-            info: https://finance.naver.com/item/main.nhn?code={code}
-            stockPrice: https://api.finance.naver.com/siseJson.naver?symbol={code}&requestType=1&startTime={start}&endTime={end}&timeframe=day
-          userAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36
-          savePath: ./crawl
-        global:
-          url: https://query1.finance.yahoo.com/v7/finance/download/{code}?period1={from}&period2={to}
-        exchangeRate:
-          url: https://spot.wooribank.com/pot/jcc?withyou=FXXRT0014&__ID=c008217
         fred:
           key: <key_입력>
         dart:

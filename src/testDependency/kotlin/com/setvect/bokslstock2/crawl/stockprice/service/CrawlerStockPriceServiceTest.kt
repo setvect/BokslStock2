@@ -64,7 +64,7 @@ class CrawlerStockPriceServiceTest {
         crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.TIGER_USA_TREASURY_BOND_305080)
         crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.ACE_GLD_411060)
         crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_200_USD_BOND_284430)
-//        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_KOSDAQ_2X_233740, PeriodType.PERIOD_DAY)
+//        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_KOSDAQ_2X_233740, PeriodType.PERIOD_DAY) // 5분봉 데이터 있기 때문에 수집 안함
         crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_200_069500, PeriodType.PERIOD_DAY)
         crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_BANK_091170, PeriodType.PERIOD_DAY)
         crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.KODEX_KOSDAQ_229200, PeriodType.PERIOD_DAY)
@@ -75,6 +75,13 @@ class CrawlerStockPriceServiceTest {
 //        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.OS_CODE_GLD, PeriodType.PERIOD_DAY)
 //        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.OS_CODE_IEF, PeriodType.PERIOD_DAY)
 //        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.OS_CODE_IWD, PeriodType.PERIOD_DAY)
+        println("끝.")
+    }
+
+    // 원-달러 환율 수집
+    @Test
+    fun crawBatchExchange() {
+        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.EXCHANGE_DOLLAR)
         println("끝.")
     }
 

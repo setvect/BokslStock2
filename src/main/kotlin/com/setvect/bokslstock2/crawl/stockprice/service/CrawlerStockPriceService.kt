@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.setvect.bokslstock2.backtest.common.model.StockCode
 import com.setvect.bokslstock2.config.BokslStockProperties
+import com.setvect.bokslstock2.crawl.koreacompany.service.CrawlerKoreanCompanyProperties
 import com.setvect.bokslstock2.index.entity.CandleEntity
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
@@ -31,6 +32,9 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
+
+
+
 /**
  * 각종 시세 데이터 수집
  */
@@ -45,6 +49,8 @@ class CrawlerStockPriceService(
     companion object {
         private val START_DATE = LocalDateTime.of(1991, 1, 1, 0, 0)
         private val START_DATE_DOLLAR = LocalDateTime.of(2002, 1, 1, 0, 0)
+        private const val URL = "https://query1.finance.yahoo.com/v7/finance/download/{code}?period1={from}&period2={to}"
+        private const val URL_EXCHANGE = "https://spot.wooribank.com/pot/jcc?withyou=FXXRT0014&__ID=c008217"
     }
 
     @Autowired
@@ -125,7 +131,7 @@ class CrawlerStockPriceService(
     private fun crawlStockPriceGlobal(stockEntity: StockEntity) {
         val from = DateUtil.getUnixTime(LocalDate.of(1994, 1, 1))
         val to = DateUtil.getUnixTimeCurrent()
-        val urlStr = bokslStockProperties.crawl.global.url
+        val urlStr = URL
             .replace("{code}", stockEntity.code)
             .replace("{from}", from.toString())
             .replace("{to}", to.toString())
@@ -200,7 +206,7 @@ class CrawlerStockPriceService(
             "BAS_SDT" to DateUtil.format(start, "yyyyMMdd"),
             "BAS_EDT" to DateUtil.format(end, "yyyyMMdd")
         )
-        val url = bokslStockProperties.crawl.exchangeRate.url
+        val url = URL_EXCHANGE
         val response = Jsoup.connect(url).method(Connection.Method.POST).data(data).execute().body()
         val document = Jsoup.parse(response)
 
@@ -225,7 +231,7 @@ class CrawlerStockPriceService(
     }
 
     private fun saveCandleEntityList(stockEntity: StockEntity, range: DateRange) {
-        val stockList = bokslStockProperties.crawl.korea.url.stockPrice
+        val stockList = CrawlerKoreanCompanyProperties.STOCK_PRICE
         val url = stockList.replace("{code}", stockEntity.code)
             .replace("{start}", range.getFromDateTimeFormat("yyyyMMdd"))
             .replace("{end}", range.getToDateTimeFormat("yyyyMMdd"))
@@ -233,7 +239,7 @@ class CrawlerStockPriceService(
         log.info("crawl: $url")
 
         val parameter: MutableMap<String, Any> = HashMap()
-        parameter["User-Agent"] = bokslStockProperties.crawl.korea.userAgent
+        parameter["User-Agent"] = CrawlerKoreanCompanyProperties.USER_AGENT
         val httpEntity = HttpEntity<Map<String, Any>>(parameter)
 
         val result = crawlRestTemplate.exchange(url, HttpMethod.GET, httpEntity, String::class.java)

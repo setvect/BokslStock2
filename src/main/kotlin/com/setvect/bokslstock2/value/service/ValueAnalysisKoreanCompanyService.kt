@@ -19,9 +19,7 @@ import java.io.FileOutputStream
 /**
  * 한국 기업 가치 평가 전략
  */
-class ValueAnalysisKoreanCompanyService(
-    val crawlerKoreanCompanyProperties: CrawlerKoreanCompanyProperties
-) {
+class ValueAnalysisKoreanCompanyService {
     private val gson = GsonBuilder().setPrettyPrinting().create()
     private val log = LoggerFactory.getLogger(javaClass)
     private val excludeIndustry = listOf("기타금융", "생명보험", "손해보험", "은행", "증권", "창업투자")
@@ -33,7 +31,7 @@ class ValueAnalysisKoreanCompanyService(
         val targetList = filter(companyAllList)
         val listByRanking = ranking(targetList)
 
-        val resultFile = crawlerKoreanCompanyProperties.getResultFile()
+        val resultFile = CrawlerKoreanCompanyProperties.getResultFile()
         XSSFWorkbook().use { workbook ->
             val sheet = workbook.createSheet()
 
@@ -64,9 +62,9 @@ class ValueAnalysisKoreanCompanyService(
 
                 createCell = row.createCell(cellIdx++)
                 val link = createHelper.createHyperlink(HyperlinkType.URL)
-                link.address = crawlerKoreanCompanyProperties.getDetailUrl(it.first.summary.code)
+                link.address = CrawlerKoreanCompanyProperties.getDetailUrl(it.first.summary.code)
                 createCell.setHyperlink(link)
-                createCell.setCellValue(crawlerKoreanCompanyProperties.getDetailUrl(it.first.summary.code))
+                createCell.setCellValue(CrawlerKoreanCompanyProperties.getDetailUrl(it.first.summary.code))
                 createCell.cellStyle = hyperlinkStyle
 
                 createCell = row.createCell(cellIdx++)
@@ -147,7 +145,7 @@ class ValueAnalysisKoreanCompanyService(
     }
 
     private fun loadCompanyDetails(): List<KoreanCompanyDetail> {
-        val detailFile = crawlerKoreanCompanyProperties.getDetailListFile()
+        val detailFile = CrawlerKoreanCompanyProperties.getDetailListFile()
         val listJson = FileUtils.readFileToString(detailFile, "utf-8")
         return gson.fromJson(listJson, Array<KoreanCompanyDetail>::class.java).asList()
     }

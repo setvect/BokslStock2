@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.crawl.dart.youtube.service
+package com.setvect.bokslstock2.crawl.youtube.service
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
