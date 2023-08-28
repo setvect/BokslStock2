@@ -1,8 +1,8 @@
 package com.setvect.bokslstock2.crawl.koreacompany.service
 
 import com.google.gson.GsonBuilder
-import com.setvect.bokslstock2.value.dto.KoreanCompanyDetail
-import com.setvect.bokslstock2.value.dto.KoreanCompanySummary
+import com.setvect.bokslstock2.strategy.companyvalue.model.KoreanCompanyDetail
+import com.setvect.bokslstock2.strategy.companyvalue.model.KoreanCompanySummary
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
 import org.jsoup.Jsoup
@@ -26,9 +26,7 @@ class CrawlerKoreanCompanyService {
      * 상세 정보 크롤링
      */
     fun crawlDetailList() {
-        val listFile = CrawlerKoreanCompanyProperties.getSummaryListFile()
-        val listJson = FileUtils.readFileToString(listFile, "utf-8")
-        val companyList = gson.fromJson(listJson, Array<KoreanCompanySummary>::class.java).asList()
+        val companyList = getKoreanCompanyList()
 
         val koreanCompanyDetailList = mutableListOf<KoreanCompanyDetail>()
         var count = 0
@@ -56,6 +54,14 @@ class CrawlerKoreanCompanyService {
         log.info("수집 종료")
     }
 
+    /**
+     * @return 수집 기준 코스피, 코스닥 상장 종목
+     */
+    fun getKoreanCompanyList(): List<KoreanCompanySummary> {
+        val listFile = CrawlerKoreanCompanyProperties.getSummaryListFile()
+        val listJson = FileUtils.readFileToString(listFile, "utf-8")
+        return gson.fromJson(listJson, Array<KoreanCompanySummary>::class.java).asList()
+    }
 
     private fun sleep(baseSleep: Int, randomSleep: Int) {
         val wait = baseSleep + (Math.random() * randomSleep).toLong()

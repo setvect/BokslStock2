@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.value.service
+package com.setvect.bokslstock2.strategy.companyvalue.service
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

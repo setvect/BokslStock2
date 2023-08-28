@@ -1,10 +1,10 @@
-package com.setvect.bokslstock2.value.service
+package com.setvect.bokslstock2.strategy.companyvalue.service
 
 import com.google.gson.GsonBuilder
 import com.setvect.bokslstock2.backtest.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.util.NumberUtil
-import com.setvect.bokslstock2.value.dto.Rank
-import com.setvect.bokslstock2.value.dto.UsaCompanyDetail
+import com.setvect.bokslstock2.strategy.companyvalue.model.Rank
+import com.setvect.bokslstock2.strategy.companyvalue.model.UsaCompanyDetail
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.apache.poi.common.usermodel.HyperlinkType
@@ -24,8 +24,7 @@ import java.util.stream.Collectors
 /**
  * 미국 기업 주식 가치 평가 전략
  */
-class ValueAnalysisUsaCompanyService(
-) {
+class ValueAnalysisUsaCompanyService {
     private val log = LoggerFactory.getLogger(javaClass)
     private val gson = GsonBuilder().setPrettyPrinting().create()
 

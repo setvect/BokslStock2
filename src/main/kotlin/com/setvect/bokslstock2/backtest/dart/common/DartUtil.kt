@@ -1,8 +1,6 @@
 package com.setvect.bokslstock2.backtest.dart.common
 
-import com.setvect.bokslstock2.backtest.dart.model.TotalCapitalCondition
 import com.setvect.bokslstock2.util.DateUtil
-import org.springframework.stereotype.Service
 import java.time.LocalDate
 
 /**
@@ -28,7 +26,7 @@ class DartUtil {
             return Pair(start, end)
         }
 
-        fun determineType(dateStr: String): Int {
+        private fun determineType(dateStr: String): Int {
             return if (dateStr.contains("~")) 2 else 1
         }
 

@@ -272,8 +272,8 @@ gradlew makeInstallFile
 
 ### 7.1. 가치평가 전략(한국 주식)
 
-- 메인 소스: [ValueAnalysisKoreanCompanyService.kt](src/main/kotlin/com/setvect/bokslstock2/value/service/ValueAnalysisKoreanCompanyService.kt)
-- 실행 소스: [ValueAnalysisKoreanCompanyServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/value/service/ValueAnalysisKoreanCompanyServiceTest.kt)
+- 메인 소스: [ValueAnalysisKoreanCompanyService.kt](src/main/kotlin/com/setvect/bokslstock2/strategy/companyvalue/service/ValueAnalysisKoreanCompanyService.kt)
+- 실행 소스: [ValueAnalysisKoreanCompanyServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/strategy/companyvalue/service/ValueAnalysisKoreanCompanyServiceTest.kt)
 - 매수조건
     - 필터
        1. 기타금융, 생명보험, 손해보험, 은행, 증권, 창업투자

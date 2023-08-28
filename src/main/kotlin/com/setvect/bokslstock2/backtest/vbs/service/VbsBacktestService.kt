@@ -54,7 +54,7 @@ class VbsBacktestService(
                 val lastBuyInfo = lastBuyInfoByCondition[conditionItem]
                 // 매수 상태이면 매도 조건 체크
                 if (lastBuyInfo != null) {
-                    log.info("현제 날짜: ${currentCandle.candleDateTimeStart}")
+                    log.info("현재 날짜: ${currentCandle.candleDateTimeStart}")
 
                     // 매도
                     var sellPrice = currentCandle.openPrice

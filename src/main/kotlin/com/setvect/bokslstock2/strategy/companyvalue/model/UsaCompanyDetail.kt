@@ -1,4 +1,4 @@
-package com.setvect.bokslstock2.value.dto
+package com.setvect.bokslstock2.strategy.companyvalue.model
 
 class UsaCompanyDetail(
     val ticker: String,

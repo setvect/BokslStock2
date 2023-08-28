@@ -310,7 +310,7 @@ class VbsService(
         log.debug("${wsResponse.trId} = $realtimeExecution")
         val executionPriceOver = targetPrice <= realtimeExecution.stckPrpr
         val askPriceOver = askp1.any { targetPrice <= it }
-        log.debug("목표가: $targetPrice, 매도호가 돌파: $askPriceOver, 체결가 돌파: $executionPriceOver, 현제가 : ${realtimeExecution.stckPrpr}, 매도호가1 : $askp1")
+        log.debug("목표가: $targetPrice, 매도호가 돌파: $askPriceOver, 체결가 돌파: $executionPriceOver, 현재가 : ${realtimeExecution.stckPrpr}, 매도호가1 : $askp1")
 
         val targetPriceExceeded = executionPriceOver || askPriceOver
 

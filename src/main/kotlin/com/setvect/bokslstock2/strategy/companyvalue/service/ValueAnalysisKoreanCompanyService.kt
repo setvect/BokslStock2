@@ -1,10 +1,10 @@
-package com.setvect.bokslstock2.value.service
+package com.setvect.bokslstock2.strategy.companyvalue.service
 
 import com.google.gson.GsonBuilder
 import com.setvect.bokslstock2.backtest.common.service.ReportMakerHelperService
 import com.setvect.bokslstock2.crawl.koreacompany.service.CrawlerKoreanCompanyProperties
-import com.setvect.bokslstock2.value.dto.KoreanCompanyDetail
-import com.setvect.bokslstock2.value.dto.Rank
+import com.setvect.bokslstock2.strategy.companyvalue.model.KoreanCompanyDetail
+import com.setvect.bokslstock2.strategy.companyvalue.model.Rank
 import org.apache.commons.io.FileUtils
 import org.apache.poi.common.usermodel.HyperlinkType
 import org.apache.poi.ss.usermodel.CreationHelper

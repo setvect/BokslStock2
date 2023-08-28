@@ -6,7 +6,7 @@ enum class StockTransaction(
     @get:JsonValue
     val trId: String
 ) {
-    /** 주식 현제가 */
+    /** 주식 현재가 */
     CURRENT_PRICE("FHKST01010100"),
 
     /** 일자별 가격 */

@@ -377,7 +377,7 @@ object ApplicationUtil {
     }
 
     /**
-     * @return 현제 날짜를 주기에 맞게 증가시킨 날짜 반환
+     * @return 현재 날짜를 주기에 맞게 증가시킨 날짜 반환
      */
     fun incrementDate(
         periodType: PeriodType,
