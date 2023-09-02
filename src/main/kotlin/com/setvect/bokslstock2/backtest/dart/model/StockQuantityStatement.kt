@@ -39,7 +39,7 @@ data class StockQuantityStatement(
         private fun create(year: Int, reportCode: ReportCode, stockCode: String, resStockQuantity: ResStockQuantity): StockQuantityStatement {
             try {
                 return StockQuantityStatement(
-                    commonStatement = CommonStatement(year, reportCode, stockCode),
+                    commonStatement = CommonStatement(stockCode, year, reportCode),
                     rceptNo = resStockQuantity.rceptNo,
                     corpCls = CorpCls.valueOf(resStockQuantity.corpCls),
                     corpCode = resStockQuantity.corpCode,

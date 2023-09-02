@@ -140,6 +140,9 @@ gradlew makeInstallFile
 - [OPEN DART](https://opendart.fss.or.kr) 참고
 - 메인 소스: [CrawlerDartService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/dart/service/CrawlerDartService.kt)
 - 실행 소스: [CrawlerDartServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/dart/service/CrawlerDartServiceTest.kt)
+- 재무제표 수집순서 
+  1. 주요 재무 정보 수집
+  2. 전체 재무제표 정보 수집
 - 상식: 사업보고서 제출 기한
 
     | 구분        | 제출기한                   |

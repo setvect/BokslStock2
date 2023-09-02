@@ -40,7 +40,7 @@ class CrawlerDartServiceTest {
     }
 
     /**
-     * 전체 재무재표 정보 수집
+     * 전체 재무제표 정보 수집
      */
     @Test
     fun crawlCompanyFinanceInfoDetail() {

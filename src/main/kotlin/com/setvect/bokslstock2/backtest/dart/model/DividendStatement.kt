@@ -35,7 +35,7 @@ data class DividendStatement(
         private fun create(year: Int, reportCode: ReportCode, stockCode: String, resDividend: ResDividend): DividendStatement {
             try {
                 return DividendStatement(
-                    commonStatement = CommonStatement(year, reportCode, stockCode),
+                    commonStatement = CommonStatement(stockCode, year, reportCode),
                     rceptNo = resDividend.rceptNo,
                     corpCls = CorpCls.valueOf(resDividend.corpCls),
                     corpCode = resDividend.corpCode,

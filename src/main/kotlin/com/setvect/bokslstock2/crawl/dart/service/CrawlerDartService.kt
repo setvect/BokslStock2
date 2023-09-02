@@ -79,7 +79,7 @@ class CrawlerDartService(
     fun crawlCompanyFinancialInfo(companyAll: List<CompanyCode>) {
         val financialInfoToSave = object : DartMakerJson {
             override fun save(body: String, companyCodeMap: Map<String, CompanyCode>, year: Int, reportCode: ReportCode) {
-                val saveBaseDir = DartConstants.FINANCIAL_PATH
+                val saveBaseDir = getSavePath()
                 val saveDir = File(saveBaseDir, "$year/${reportCode}")
                 saveDir.mkdirs()
                 val typeRef = object : TypeReference<ResDart<ResFinancialStatement>>() {}
@@ -95,6 +95,10 @@ class CrawlerDartService(
                     log.info("저장: {}", file)
                 }
             }
+
+            override fun getSavePath(): File {
+                return DartConstants.FINANCIAL_PATH
+            }
         }
 
         crawl(companyAll, financialInfoToSave, "https://opendart.fss.or.kr/api/fnlttMultiAcnt.json")
@@ -105,9 +109,9 @@ class CrawlerDartService(
      * 주식 보유 현황 수집
      */
     fun crawlStockQuantity(companyAll: List<CompanyCode>) {
-        val stockQuantity = object : DartMakerJson {
+        val stockQuantityToSave = object : DartMakerJson {
             override fun save(body: String, companyCodeMap: Map<String, CompanyCode>, year: Int, reportCode: ReportCode) {
-                val saveBaseDir = DartConstants.QUANTITY_PATH
+                val saveBaseDir = getSavePath()
                 val saveDir = File(saveBaseDir, "$year/${reportCode}")
                 saveDir.mkdirs()
                 val typeRef = object : TypeReference<ResDart<ResStockQuantity>>() {}
@@ -123,9 +127,13 @@ class CrawlerDartService(
                     log.info("저장: {}", file)
                 }
             }
+
+            override fun getSavePath(): File {
+                return DartConstants.QUANTITY_PATH
+            }
         }
 
-        crawl(companyAll, stockQuantity, "https://opendart.fss.or.kr/api/stockTotqySttus.json")
+        crawl(companyAll, stockQuantityToSave, "https://opendart.fss.or.kr/api/stockTotqySttus.json")
         println("끝.")
     }
 
@@ -133,9 +141,9 @@ class CrawlerDartService(
      * 배당 내역 수집
      */
     fun crawlDividend(companyAll: List<CompanyCode>) {
-        val stockQuantity = object : DartMakerJson {
+        val dividendToSave = object : DartMakerJson {
             override fun save(body: String, companyCodeMap: Map<String, CompanyCode>, year: Int, reportCode: ReportCode) {
-                val saveBaseDir = DartConstants.DIVIDEND_PATH
+                val saveBaseDir = getSavePath()
                 val saveDir = File(saveBaseDir, "$year/${reportCode}")
                 saveDir.mkdirs()
                 val typeRef = object : TypeReference<ResDart<ResDividend>>() {}
@@ -151,9 +159,13 @@ class CrawlerDartService(
                     log.info("저장: {}", file)
                 }
             }
+
+            override fun getSavePath(): File {
+                return DartConstants.DIVIDEND_PATH
+            }
         }
 
-        crawl(companyAll, stockQuantity, "https://opendart.fss.or.kr/api/alotMatter.json")
+        crawl(companyAll, dividendToSave, "https://opendart.fss.or.kr/api/alotMatter.json")
         println("끝.")
     }
 
@@ -162,78 +174,86 @@ class CrawlerDartService(
         log.info("상장 회사수: {}", companyCodeList.size)
         val companyCodeMap = companyCodeList.associateBy { it.corpCode }
 
-        val chunkedCompany = companyCodeList
-            .chunked(100)
+        val existFinancialInfo = getExistCrawlData(toSave.getSavePath())
         val apiCallCount = AtomicInteger(0)
+        log.info("존재하는 재무제표 수: {}", existFinancialInfo.size)
+
+        val notCrawlData: Set<CommonStatement> = loadNoDataCommonStatement(File(toSave.getSavePath(), "no_data.txt"))
+
         for (year in 2015..LocalDate.now().year) {
             ReportCode.values().forEach { reportCode ->
-                chunkedCompany.forEach inner@{ companyList ->
-                    val corpCodes = companyList.joinToString(",") { it.corpCode }
+                companyCodeList
+                    .filter { !existFinancialInfo.contains(CommonStatement(it.stockCode, year, reportCode)) }
+                    .filter { !notCrawlData.contains(CommonStatement(it.stockCode, year, reportCode)) }
+                    .chunked(100)
+                    .forEach inner@{ companyList ->
+                        val corpCodes = companyList.joinToString(",") { it.corpCode }
 
-                    val uri = UriComponentsBuilder
-                        .fromHttpUrl(endpointUrl)
-                        .queryParam("crtfc_key", bokslStockProperties.crawl.dart.key)
-                        .queryParam("corp_code", corpCodes)
-                        .queryParam("bsns_year", year.toString())
-                        .queryParam("reprt_code", reportCode.code)
-                        .build()
-                        .encode()
-                        .toUri()
+                        val uri = UriComponentsBuilder
+                            .fromHttpUrl(endpointUrl)
+                            .queryParam("crtfc_key", bokslStockProperties.crawl.dart.key)
+                            .queryParam("corp_code", corpCodes)
+                            .queryParam("bsns_year", year.toString())
+                            .queryParam("reprt_code", reportCode.code)
+                            .build()
+                            .encode()
+                            .toUri()
 
-                    var response: ResponseEntity<Any>? = null
-                    // 3번까지 재시도
-                    for (retry in 1..3) {
-                        try {
-                            response = crawlRestTemplate.exchange(uri, HttpMethod.GET, null, Any::class.java)
-                            break
-                        } catch (e: Exception) {
-                            log.info("Exception: {}, retry: $retry", e.message)
-                            Thread.sleep(1000)
-                            if (retry == 3) {
-                                throw e
+                        var response: ResponseEntity<Any>? = null
+                        // 3번까지 재시도
+                        for (retry in 1..3) {
+                            try {
+                                response = crawlRestTemplate.exchange(uri, HttpMethod.GET, null, Any::class.java)
+                                break
+                            } catch (e: Exception) {
+                                log.info("Exception: {}, retry: $retry", e.message)
+                                Thread.sleep(1000)
+                                if (retry == 3) {
+                                    throw e
+                                }
                             }
                         }
-                    }
 
-                    log.info("API 호출수: ${apiCallCount.incrementAndGet()}")
+                        log.info("API 호출수: ${apiCallCount.incrementAndGet()}")
 
-                    // 100건 마다 1초 정지
-                    if (apiCallCount.get() % 100 == 0) {
-                        // 분당 호출 건수가 1,000건으로 제한됨
-                        log.info("100건 호출 후 6.1초 정지")
-                        Thread.sleep(6100)
-                    }
+                        // 100건 마다 1초 정지
+                        if (apiCallCount.get() % 100 == 0) {
+                            // 분당 호출 건수가 1,000건으로 제한됨
+                            log.info("100건 호출 후 6.1초 정지")
+                            Thread.sleep(6100)
+                        }
 
-                    if (!response!!.statusCode.is2xxSuccessful) {
-                        log.info("Response without list: {}", response.statusCode)
-                        return@inner
-                    }
+                        if (!response!!.statusCode.is2xxSuccessful) {
+                            log.info("Response without list: {}", response.statusCode)
+                            return@inner
+                        }
 
-                    val body = JsonUtil.mapper.writeValueAsString(response.body)!!
-                    val status = JsonUtil.mapper.readTree(body).get("status").asText()
-                    if (status == "020") {
-                        log.info("API 사용한도 초과했음, Response without list: $body")
-                        return
-                    } else if (status != "000") {
-                        log.info("수집 대상 없음 ${year}년, reportCode: ${reportCode}, corpCodes: ${companyList.map { it.stockCode }}, Response without list: $body")
-                        return@inner
+                        val body = JsonUtil.mapper.writeValueAsString(response.body)!!
+                        val status = JsonUtil.mapper.readTree(body).get("status").asText()
+                        if (status == "020") {
+                            log.info("API 사용한도 초과했음, Response without list: $body")
+                            return
+                        } else if (status != "000") {
+                            log.info("수집 대상 없음 ${year}년, reportCode: ${reportCode}, corpCodes: ${companyList.map { it.stockCode }}, Response without list: $body")
+                            toSave.saveNoData(companyList.map { it.stockCode }, year, reportCode)
+                            return@inner
+                        }
+                        toSave.save(body, companyCodeMap, year, reportCode)
                     }
-                    toSave.save(body, companyCodeMap, year, reportCode)
-                }
             }
         }
     }
 
     /**
-     * 단일회사 전체 기업 재무재표 수집
+     * 단일회사 전체 기업 재무제표 수집
      * 전체 기업 재무제표는 하나씩 조회 해야됨
      * 존재하는 데이터를 조회 하기 위해서 주요 재무제표에 수집된 내용이 존재하는지 확인한 후 수집 실행
      * @param companyAll 기업코드 목록
      */
     fun crawlCompanyFinancialInfoDetail(companyAll: List<CompanyCode>) {
-        val existFinancialInfo = makeExistFinancialInfo(DartConstants.FINANCIAL_PATH)
-        val existFinancialDetailInfo = makeExistFinancialDetailInfo(DartConstants.FINANCIAL_DETAIL_PATH)
-        log.info("존재하는 재무제표 수: {}, 이미수집된 재무재표 수: {}", existFinancialInfo.size, existFinancialDetailInfo.size)
+        val existCrawlData = getExistCrawlData(DartConstants.FINANCIAL_PATH)
+        val existFinancialDetailInfo = getExistFinancialDetailInfo(DartConstants.FINANCIAL_DETAIL_PATH)
+        log.info("존재하는 재무제표 수: {}, 이미수집된 재무제표 수: {}", existCrawlData.size, existFinancialDetailInfo.size)
 
         val companyCodeList = companyAll.filter { StringUtils.isNotBlank(it.stockCode) }
         log.info("상장 회사수: {}", companyCodeList.size)
@@ -245,7 +265,7 @@ class CrawlerDartService(
             ReportCode.values().forEach { reportCode ->
                 for (fs in FinancialFs.values()) {
                     companyCodeList
-                        .filter { existFinancialInfo.contains(CommonStatement(year, reportCode, it.stockCode)) }
+                        .filter { existCrawlData.contains(CommonStatement(it.stockCode, year, reportCode)) }
                         // 이미 수집한 재무제표는 수집하지 않음
                         .filter { !existFinancialDetailInfo.contains(DetailStatement(year, reportCode, it.stockCode, fs)) }
                         .filter { !financialDetailKey.contains(FinancialDetailKey(it.stockCode, year, reportCode, fs)) }
@@ -313,7 +333,11 @@ class CrawlerDartService(
         println("끝.")
     }
 
-    private fun makeExistFinancialInfo(file: File): Set<CommonStatement> {
+    /**
+     * [file]에 저장된 수집 데이터(JSON)을 읽어 특정 정보가 수집되었는지 확인
+     * @return 주요재무제표, 주식 총수, 배당 정보 수집 여부
+     */
+    private fun getExistCrawlData(file: File): Set<CommonStatement> {
         val existFinancialInfo = file.walk()
             .filter { it.isFile && it.extension == "json" }
             .mapNotNull { financialFile ->
@@ -325,13 +349,13 @@ class CrawlerDartService(
                 val reportCode = ReportCode.valueOf(matcher.group(2))
                 val stockCode = matcher.group(3)
 
-                CommonStatement(year, reportCode, stockCode)
+                CommonStatement(stockCode, year, reportCode)
             }
             .toSet()
         return existFinancialInfo
     }
 
-    private fun makeExistFinancialDetailInfo(file: File): Set<DetailStatement> {
+    private fun getExistFinancialDetailInfo(file: File): Set<DetailStatement> {
         val existFinancialInfo = file.walk()
             .filter { it.isFile && it.extension == "json" }
             .mapNotNull { financialDetailFile ->
@@ -403,9 +427,13 @@ class CrawlerDartService(
         }
 
         /**
-         * 조회되지 않은 정보 로드
+         * 조회되지 않은 재무제표 데이터 로드
+         * 조회해 봤자 결과가 없는 데이터를 수집에서 제외하기 위함
          */
         private fun loadNoDataFinancialDetailKey(): Set<FinancialDetailKey> {
+            if (!NO_DATA_FINANCIAL_DETAIL_FILE.exists()) {
+                return emptySet()
+            }
             return FileUtils.readLines(NO_DATA_FINANCIAL_DETAIL_FILE, StandardCharsets.UTF_8)
                 .map { line ->
                     line.split("\t")
@@ -417,6 +445,30 @@ class CrawlerDartService(
                     val reportCode = ReportCode.valueOf(it[2])
                     val fs = FinancialFs.valueOf(it[3])
                     FinancialDetailKey(stockCode, year, reportCode, fs)
+                }
+                .toSet()
+                .also {
+                    println("조회된 데이타 정보 로드: ${it.size}개")
+                }
+        }
+
+        /**
+         * 조회해 봤자 결과가 없는 데이터를 수집에서 제외하기 위함
+         */
+        private fun loadNoDataCommonStatement(notDataFile: File): Set<CommonStatement> {
+            if (!notDataFile.exists()) {
+                return emptySet()
+            }
+            return FileUtils.readLines(notDataFile, StandardCharsets.UTF_8)
+                .map { line ->
+                    line.split("\t")
+                }
+                .filter { it.size == 3 }
+                .map {
+                    val stockCode = it[0]
+                    val year = it[1].toInt()
+                    val reportCode = ReportCode.valueOf(it[2])
+                    CommonStatement(stockCode, year, reportCode)
                 }
                 .toSet()
                 .also {

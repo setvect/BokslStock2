@@ -54,7 +54,7 @@ data class FinancialStatement(
 
             try {
                 return FinancialStatement(
-                    commonStatement = CommonStatement(year, reportCode, stockCode),
+                    commonStatement = CommonStatement(stockCode, year, reportCode),
                     rceptNo = resFinancialStatement.rceptNo,
                     bsnsYear = resFinancialStatement.bsnsYear,
                     corpCode = resFinancialStatement.corpCode,
