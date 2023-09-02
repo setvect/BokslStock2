@@ -1,6 +1,5 @@
 package com.setvect.bokslstock2.strategy.inheritancetax.service
 
-import com.setvect.bokslstock2.backtest.dart.service.DartStructuringService
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
