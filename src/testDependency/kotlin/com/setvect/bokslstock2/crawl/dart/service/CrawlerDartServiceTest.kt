@@ -1,5 +1,6 @@
 package com.setvect.bokslstock2.crawl.dart.service
 
+import com.setvect.bokslstock2.crawl.dart.DartConstants
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
@@ -7,7 +8,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
-import java.io.File
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -32,7 +32,7 @@ class CrawlerDartServiceTest {
      */
     @Test
     fun crawlCompanyFinanceInfo() {
-        val companyAll = crawlerDartService.parsingCompanyList(File("crawl/dart/CORPCODE.xml"))
+        val companyAll = crawlerDartService.parsingCompanyList(DartConstants.CORP_CODE_PATH)
         log.info("기업수: {}", companyAll.size)
         crawlerDartService.crawlCompanyFinancialInfo(companyAll)
 
@@ -44,7 +44,7 @@ class CrawlerDartServiceTest {
      */
     @Test
     fun crawlCompanyFinanceInfoDetail() {
-        val companyAll = crawlerDartService.parsingCompanyList(File("crawl/dart/CORPCODE.xml"))
+        val companyAll = crawlerDartService.parsingCompanyList(DartConstants.CORP_CODE_PATH)
         log.info("기업수: {}", companyAll.size)
         crawlerDartService.crawlCompanyFinancialInfoDetail(companyAll)
         log.info("끝.")
@@ -55,7 +55,7 @@ class CrawlerDartServiceTest {
      */
     @Test
     fun crawlStockQuantity() {
-        val companyAll = crawlerDartService.parsingCompanyList(File("crawl/dart/CORPCODE.xml"))
+        val companyAll = crawlerDartService.parsingCompanyList(DartConstants.CORP_CODE_PATH)
         log.info("기업수: {}", companyAll.size)
         crawlerDartService.crawlStockQuantity(companyAll)
 
@@ -67,7 +67,7 @@ class CrawlerDartServiceTest {
      */
     @Test
     fun crawlDividend() {
-        val companyAll = crawlerDartService.parsingCompanyList(File("crawl/dart/CORPCODE.xml"))
+        val companyAll = crawlerDartService.parsingCompanyList(DartConstants.CORP_CODE_PATH)
         log.info("기업수: {}", companyAll.size)
         crawlerDartService.crawlDividend(companyAll)
 

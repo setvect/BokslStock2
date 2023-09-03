@@ -3,6 +3,8 @@ package com.setvect.bokslstock2.crawl.dart
 import java.io.File
 
 object DartConstants {
+    // 기업 코드
+    val CORP_CODE_PATH = File("crawl/dart/CORPCODE.xml")
     // 주요 기업 재무
     val FINANCIAL_PATH = File("crawl/dart/financial")
     // 전체 기업 재무

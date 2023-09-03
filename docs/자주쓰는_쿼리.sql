@@ -144,5 +144,18 @@ where CA.CODE IN ('233740')
 order by CB.CANDLE_DATE_TIME desc;
 
 
+select count(*)
+from CC_CORPORATE_DISCLOSURE_INFO;
+
+select CC.*
+from CC_CORPORATE_DISCLOSURE_INFO CC
+WHERE CC.CODE = '304100'
+order by CC.YEAR;
+
+select CC.*
+from CC_CORPORATE_DISCLOSURE_INFO CC
+WHERE CC.CODE = '005930'
+order by CC.YEAR;
 
 
+-- truncate table CC_CORPORATE_DISCLOSURE_INFO;

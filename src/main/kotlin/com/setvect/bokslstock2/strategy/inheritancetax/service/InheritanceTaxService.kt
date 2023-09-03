@@ -29,7 +29,7 @@ class InheritanceTaxService(
         // 시가총액 기준 정렬, 하위 70 ~ 90% 만 조회
         val koreanCompanySubList = koreanCompanyList
             .sortedByDescending { it.capitalization }
-            .subList((koreanCompanyList.size * 0.7).toInt(), (koreanCompanyList.size * 0.9).toInt())
+            .subList((koreanCompanyList.size * 0.0).toInt(), (koreanCompanyList.size * 0.1).toInt())
 
         log.info("조회 종목 수: ${koreanCompanySubList.size}개")
 

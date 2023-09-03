@@ -53,6 +53,25 @@
 | LOW_PRICE        | 저가           |     | DOUBLE   |     | Y        |                                                         |
 | CLOSE_PRICE      | 종가           |     | DOUBLE   |     | Y        |                                                         |
 
+
+### 1.2.3. CC_CORPORATE_DISCLOSURE_INFO: 기업공시정보
+
+| Column Name                   | Attribute Name     | Key | Type     | Len | Not Null | Description                      |
+| ----------------------------- | ------------------ | --- | -------- | --- | -------- | -------------------------------- |
+| CORPORATE_DISCLOSURE_INFO_SEQ | 일련번호           | PK  | BIGINT   |     | Y        |                                  |
+| CODE                          | 종목코드           |     | VARCHAR  | 20  | Y        | 005930, 233740, ...              |
+| FINANCIAL_METRIC_TYPE         | 재무제표 항목 유형 |     | VARCHAR  |     | Y        | SALES_REVENUE, TOTAL_ASSETS, ... |
+| YEAR                          | 년도               |     | INTEGER  |     | Y        |                                  |
+| ACCOUNT_CLOSE                 | 회계마감 기준      |     | VARCHAR  | 20  | Y        | Q1, Q2, Q3, Q4                   |
+| ITEM_NAME                     | 재무제표 항목명    |     | VARCHAR  | 50  | Y        | 매출액, 영업이익                 |
+| Q1_VALUE                      | 1분기값            |     | BIGINT   |     | Y        |                                  |
+| Q2_VALUE                      | 2분기값            |     | BIGINT   |     | Y        |                                  |
+| Q3_VALUE                      | 3분기값            |     | BIGINT   |     | Y        |                                  |
+| Q4_VALUE                      | 4분기값            |     | BIGINT   |     | Y        |                                  |
+| REG_DATE                      | 등록일             |     | DATETIME |     | Y        |                                  |
+| EDIT_DATE                     | 마지막 수정일      |     | DATETIME |     | Y        |                                  |
+
+
 ## 1.3. 백테스트
 
 ### 1.3.1. HA_MABS_CONDITION: 이평선 돌파 백테스트 조건
