@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 
+/**
+ * 상속세법 매매 전략 분석
+ */
 @SpringBootTest
 @ActiveProfiles("test")
 class InheritanceTaxServiceTest {

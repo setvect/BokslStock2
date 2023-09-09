@@ -1,6 +1,5 @@
 package com.setvect.bokslstock2.crawl.koreacompany.service
 
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -16,7 +15,6 @@ class CrawlerKoreanCompanyServiceTest {
      * 종목 크롤링
      */
     @Test
-    @Disabled
     fun crawlCompanyListTest() {
         crawlCompanyValueService.crawlSummaryList()
     }

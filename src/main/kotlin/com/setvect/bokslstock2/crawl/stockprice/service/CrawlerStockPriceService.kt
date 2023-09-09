@@ -32,9 +32,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
-
-
-
 /**
  * 각종 시세 데이터 수집
  */
@@ -83,14 +80,31 @@ class CrawlerStockPriceService(
         crawlStockPriceWithDelete(stockEntity, periodType)
     }
 
+    @Transactional
+    fun crawlStockPriceWithDelete(stockCode: String, stockName: String, periodType: PeriodType? = null) {
+        val stockEntityOptional = stockRepository.findByCode(stockCode)
+        if (stockEntityOptional.isEmpty) {
+            log.info("종목 등록: $stockCode")
+            stockRepository.save(StockEntity(code = stockCode, name = stockName))
+        }
+        val stockEntity = stockRepository.findByCode(stockCode).get()
+        crawlStockPriceWithDelete(stockEntity, periodType)
+    }
+
     private fun crawlStockPriceWithDelete(stockEntity: StockEntity, periodType: PeriodType?) {
-        val stockCode = StockCode.findByCode(stockEntity.code)
         val deleteCount = if (periodType == null) {
             candleRepository.deleteByStock(stockEntity)
         } else {
             candleRepository.deleteByStockPeriodType(stockEntity, periodType)
         }
         log.info("시세 데이터 삭제: ${stockEntity.name}(${stockEntity.code}) - ${String.format("%,d", deleteCount)}건")
+
+        // TODO 정리할 필요가 있음. null이면 국내 주식이다 라는게 이상함
+        val stockCode = StockCode.findByCodeOrNull(stockEntity.code)
+        if (stockCode == null) {
+            crawlStockPrice(stockEntity)
+            return
+        }
 
         when (stockCode.national) {
             StockCode.StockType.KOR -> crawlStockPrice(stockEntity)

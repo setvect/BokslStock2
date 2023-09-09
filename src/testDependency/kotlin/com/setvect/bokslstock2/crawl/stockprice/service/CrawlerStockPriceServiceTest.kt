@@ -1,6 +1,7 @@
 package com.setvect.bokslstock2.crawl.stockprice.service
 
 import com.setvect.bokslstock2.backtest.common.model.StockCode
+import com.setvect.bokslstock2.crawl.koreacompany.service.CrawlerKoreanCompanyService
 import com.setvect.bokslstock2.index.entity.StockEntity
 import com.setvect.bokslstock2.index.model.PeriodType
 import com.setvect.bokslstock2.index.repository.StockRepository
@@ -27,6 +28,9 @@ class CrawlerStockPriceServiceTest {
 
     @Autowired
     private lateinit var csvStoreService: CsvStoreService
+
+    @Autowired
+    private lateinit var crawlerKoreanCompanyService: CrawlerKoreanCompanyService
 
     @Test
     @Disabled
@@ -76,6 +80,27 @@ class CrawlerStockPriceServiceTest {
 //        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.OS_CODE_IEF, PeriodType.PERIOD_DAY)
 //        crawlerStockPriceService.crawlStockPriceWithDelete(StockCode.OS_CODE_IWD, PeriodType.PERIOD_DAY)
         println("끝.")
+    }
+
+    /**
+     * 전체 종목 수집 시세 모두 지우고 다시 수집
+     */
+    @Test
+    fun crawBatchStockAll() {
+        val companyList = crawlerKoreanCompanyService.getCompanyList()
+        // 5분봉 데이터가 있어 수집 안함
+        val exclude = setOf<String>(StockCode.KODEX_KOSDAQ_2X_233740.code)
+        var count = 0
+        val targetList = companyList.filter { !exclude.contains(it.code) }
+        targetList.forEach { company ->
+            log.info("${company.name}(${company.code}) 조회, [${count++}/${targetList.size}]")
+            crawlerStockPriceService.crawlStockPriceWithDelete(company.code, company.name)
+            //  랜덤으로 대기
+            if (count % 50 == 0) {
+                val wait = 3000 + (Math.random() * 5000).toLong()
+                Thread.sleep(wait)
+            }
+        }
     }
 
     // 원-달러 환율 수집

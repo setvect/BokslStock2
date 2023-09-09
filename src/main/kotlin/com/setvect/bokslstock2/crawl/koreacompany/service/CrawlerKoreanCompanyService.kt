@@ -26,7 +26,7 @@ class CrawlerKoreanCompanyService {
      * 상세 정보 크롤링
      */
     fun crawlDetailList() {
-        val companyList = getKoreanCompanyList()
+        val companyList = getCompanyList()
 
         val koreanCompanyDetailList = mutableListOf<KoreanCompanyDetail>()
         var count = 0
@@ -57,7 +57,7 @@ class CrawlerKoreanCompanyService {
     /**
      * @return 수집 기준 코스피, 코스닥 상장 종목
      */
-    fun getKoreanCompanyList(): List<KoreanCompanySummary> {
+    fun getCompanyList(): List<KoreanCompanySummary> {
         val listFile = CrawlerKoreanCompanyProperties.getSummaryListFile()
         val listJson = FileUtils.readFileToString(listFile, "utf-8")
         return gson.fromJson(listJson, Array<KoreanCompanySummary>::class.java).asList()

@@ -43,7 +43,7 @@ interface CandleRepository : JpaRepository<CandleEntity, Long> {
         @Param("stockCode") stockCode: String,
         @Param("base") base: LocalDateTime,
         @Param("periodType") periodType: PeriodType,
-        page: Pageable,
+        page: Pageable = Pageable.ofSize(1),
     ): List<CandleEntity>
 
     /**
