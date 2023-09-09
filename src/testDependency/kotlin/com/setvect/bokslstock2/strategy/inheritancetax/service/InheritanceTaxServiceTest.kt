@@ -19,6 +19,10 @@ class InheritanceTaxServiceTest {
 
     @Test
     fun analysis() {
-        inheritanceTaxService.analysis(2023, Quarter.Q2)
+        val year = 2023
+        val quarter = Quarter.Q2
+        val inheritanceTaxScoreList = inheritanceTaxService.analysis(year, quarter)
+        inheritanceTaxService.makeReport(inheritanceTaxScoreList, "${year}_${quarter.name}")
+        log.info("끝.")
     }
 }

@@ -35,7 +35,7 @@ class ValueAnalysisKoreanCompanyService {
         XSSFWorkbook().use { workbook ->
             val sheet = workbook.createSheet()
 
-            val header = "이름,종목코드,링크,마켓,시총,현재가,업종," +
+            val header = "이름,종목코드,링크,마켓,시총(억원),현재가,업종," +
                     "현재-PER,현재-PBR,현재-배당수익률," +
                     "순위-PER,순위-PBR,순위-배당수익률,순위합계"
             ReportMakerHelperService.applyHeader(sheet, header)
@@ -62,9 +62,9 @@ class ValueAnalysisKoreanCompanyService {
 
                 createCell = row.createCell(cellIdx++)
                 val link = createHelper.createHyperlink(HyperlinkType.URL)
-                link.address = CrawlerKoreanCompanyProperties.getDetailUrl(it.first.summary.code)
+                link.address = CrawlerKoreanCompanyProperties.getNaverDetailUrl(it.first.summary.code)
                 createCell.setHyperlink(link)
-                createCell.setCellValue(CrawlerKoreanCompanyProperties.getDetailUrl(it.first.summary.code))
+                createCell.setCellValue(CrawlerKoreanCompanyProperties.getNaverDetailUrl(it.first.summary.code))
                 createCell.cellStyle = hyperlinkStyle
 
                 createCell = row.createCell(cellIdx++)

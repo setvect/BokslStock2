@@ -31,7 +31,7 @@ class CrawlerKoreanCompanyService {
         val koreanCompanyDetailList = mutableListOf<KoreanCompanyDetail>()
         var count = 0
         companyList.forEach { company ->
-            val url = CrawlerKoreanCompanyProperties.getDetailUrl(company.code)
+            val url = CrawlerKoreanCompanyProperties.getNaverDetailUrl(company.code)
             log.info("${company.name} 조회, $url, [${count++}/${companyList.size}]")
 
             val document = Jsoup.connect(url).get()

@@ -26,7 +26,9 @@ class DartDataStoreService(
     private val log = LoggerFactory.getLogger(javaClass)
     fun loadFinancial() {
         val companyAll = crawlerDartService.parsingCompanyList(DartConstants.CORP_CODE_PATH)
-        val companyCodeList = companyAll.filter { StringUtils.isNotBlank(it.stockCode) }
+        val companyCodeList = companyAll
+            .filter { StringUtils.isNotBlank(it.stockCode) }
+            .filter { it.stockCode == "069330"}
         val stockCodes = companyCodeList.map { it.stockCode }.toSet()
 
         var count = 0

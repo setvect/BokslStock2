@@ -11,7 +11,9 @@ object CrawlerKoreanCompanyProperties {
     private const val LIST_DETAIL_JSON = "detail-list.json"
     private const val RESULT = "value-result.xlsx"
     private val SAVE_PATH = File("./crawl/stock.naver.com")
-    const val INFO = "https://finance.naver.com/item/main.nhn?code={code}"
+    const val NAVER_STOCK_URL = "https://finance.naver.com/item/main.nhn?code={code}"
+    const val NAVER_STOCK_DETAIL_URL = "https://finance.naver.com/item/coinfo.naver?code={code}"
+    const val ALPHASQUARE_URL = "https://alphasquare.co.kr/home/stock/financial-information?code={code}"
     const val USER_LIST = "https://finance.naver.com/sise/sise_market_sum.nhn?sosok={marketSeq}&page={page}"
     const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     const val STOCK_PRICE =
@@ -29,8 +31,16 @@ object CrawlerKoreanCompanyProperties {
         return File(SAVE_PATH, RESULT)
     }
 
-    fun getDetailUrl(code: String): String {
-        return INFO.replace("{code}", code)
+    fun getNaverDetailUrl(code: String): String {
+        return NAVER_STOCK_URL.replace("{code}", code)
+    }
+
+    fun getAlphaSquareDetailUrl(code: String): String {
+        return ALPHASQUARE_URL.replace("{code}", code)
+    }
+
+    fun getDetailNaverDetailUrl(code: String): String {
+        return NAVER_STOCK_DETAIL_URL.replace("{code}", code)
     }
 
     fun getUrlList(): String {

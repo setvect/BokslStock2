@@ -2,6 +2,7 @@ package com.setvect.bokslstock2.strategy.companyvalue.service
 
 import com.google.gson.GsonBuilder
 import com.setvect.bokslstock2.backtest.common.service.ReportMakerHelperService
+import com.setvect.bokslstock2.crawl.koreacompany.service.CrawlerKoreanCompanyProperties
 import com.setvect.bokslstock2.util.NumberUtil
 import com.setvect.bokslstock2.strategy.companyvalue.model.Rank
 import com.setvect.bokslstock2.strategy.companyvalue.model.UsaCompanyDetail
@@ -88,9 +89,9 @@ class ValueAnalysisUsaCompanyService {
 
                 createCell = row.createCell(cellIdx++)
                 val link2 = createHelper.createHyperlink(HyperlinkType.URL)
-                link2.address = getDetailUrl2(it.first.ticker)
+                link2.address = CrawlerKoreanCompanyProperties.getAlphaSquareDetailUrl(it.first.ticker)
                 createCell.setHyperlink(link2)
-                createCell.setCellValue(getDetailUrl2(it.first.ticker))
+                createCell.setCellValue(CrawlerKoreanCompanyProperties.getAlphaSquareDetailUrl(it.first.ticker))
                 createCell.cellStyle = hyperlinkStyle
 
                 createCell = row.createCell(cellIdx++)
@@ -165,10 +166,6 @@ class ValueAnalysisUsaCompanyService {
 
     private fun getDetailUrl(ticker: String): String {
         return "https://finviz.com/quote.ashx?t=$ticker"
-    }
-
-    private fun getDetailUrl2(ticker: String): String {
-        return "https://alphasquare.co.kr/home/stock/financial-information?code=$ticker"
     }
 
     private fun filter(companyAllList: List<UsaCompanyDetail>): List<UsaCompanyDetail> {

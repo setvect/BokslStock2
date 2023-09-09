@@ -413,6 +413,10 @@ object ReportMakerHelperService {
 
             for (rowIdx in 0 until rowCount) {
                 val row = sheet.getRow(rowIdx)
+                if (row == null) {
+                    log.warn("row is null: $rowIdx")
+                    continue
+                }
                 val cellCount = row.physicalNumberOfCells
                 for (cellIdx in 0 until cellCount) {
                     val cell = row.getCell(cellIdx)
@@ -442,6 +446,10 @@ object ReportMakerHelperService {
             val rowCount = sheet.physicalNumberOfRows
             for (rowIdx in 0 until rowCount) {
                 val row = sheet.getRow(rowIdx)
+                if (row == null) {
+                    log.warn("row is null: $rowIdx")
+                    continue
+                }
                 val cellCount = row.physicalNumberOfCells
                 for (cellIdx in 0 until cellCount) {
                     val cellStyle = row.getCell(cellIdx).cellStyle
