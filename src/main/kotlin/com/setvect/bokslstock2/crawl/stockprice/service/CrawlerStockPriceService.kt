@@ -37,8 +37,6 @@ import java.util.concurrent.TimeUnit
  */
 @Service
 class CrawlerStockPriceService(
-
-    private val bokslStockProperties: BokslStockProperties,
     private val stockRepository: StockRepository,
     private val candleRepository: CandleRepository,
     private val crawlRestTemplate: RestTemplate,
