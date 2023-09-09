@@ -150,6 +150,9 @@ gradlew makeInstallFile
     | 사업 보고서 | 사업연도 경과 후 90일 이내 |
     | 반기 보고서 | 반기 경과 후 45일 이내     |
 
+- DB 적제
+  - 메인소스: [DartDataStoreService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/dart/service/DartDataStoreService.kt)
+  - 실행소스: [DartDataStoreServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/backtest/dart/service/DartDataStoreServiceTest.kt)
 - 수집에 이용하는 API
   - [다중회사 주요계정](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS003&apiId=2019017)
   - [주식의 총수 현황 개발가이드](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS002&apiId=2020002)
@@ -319,7 +322,7 @@ gradlew makeInstallFile
 - 기업가치 구합
   - 현재 기업가치를 순자산가치 40%, 순이익가치 60%
   - 순자산가치 = 총 자산 - 총 부채 = 총 자본
-  - 순이익가치 = 최근 3년 순이익 가중평균 - 최근 연도 3/6, 전 연도 2/6, 전전 1/6
+  - 순이익가치 = 최근 3년 순이익 가중평균 = 최근 연도 3/6 + 전 연도 2/6 + 전전 1/6
     여기에 PER 10 적용(순이익 가치에 10을 곱합)
   - 기업가치 = 순자산가치 + 순이익가치
 - 매수조건

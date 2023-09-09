@@ -28,6 +28,7 @@ data class FinancialItemValue(
 
     /**
      * 특정 분기에 값이 있다는 보장으로 합계를 얻어야됨. 수집이 안된 값이 있어 0이 되어 계산오류가 발생하는걸 예방
+     * 그런데 만약 진짜 값이 0이면 어떻하지? ㅡㅡ;
      */
     fun getSum(existQ1: Boolean, existQ2: Boolean, existQ3: Boolean, existQ4: Boolean): Long {
         if (existQ1 && q1Value == 0L) {

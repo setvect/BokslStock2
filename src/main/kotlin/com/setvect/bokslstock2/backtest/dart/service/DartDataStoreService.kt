@@ -62,7 +62,7 @@ class DartDataStoreService(
                         return@label1
                     }
 
-                    val existingEntity = corporateDisclosureInfoRepository.findByUniqueKey(
+                    val existingEntity = corporateDisclosureInfoRepository.findByMetric(
                         stockCode,
                         financialDetailMetric,
                         year

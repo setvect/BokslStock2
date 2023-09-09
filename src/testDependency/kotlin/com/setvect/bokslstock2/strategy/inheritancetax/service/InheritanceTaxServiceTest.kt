@@ -1,5 +1,6 @@
 package com.setvect.bokslstock2.strategy.inheritancetax.service
 
+import com.setvect.bokslstock2.strategy.inheritancetax.model.Quarter
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -15,6 +16,6 @@ class InheritanceTaxServiceTest {
 
     @Test
     fun analysis() {
-        inheritanceTaxService.analysis()
+        inheritanceTaxService.analysis(2023, Quarter.Q2)
     }
 }

@@ -12,7 +12,7 @@ interface CorporateDisclosureInfoRepository : JpaRepository<CorporateDisclosureI
     fun findByCode(code: String): List<CorporateDisclosureInfoEntity>
 
     @Query("SELECT c FROM CorporateDisclosureInfoEntity c WHERE c.code = :code AND c.financialDetailMetric = :financialDetailMetric AND c.year = :year")
-    fun findByUniqueKey(
+    fun findByMetric(
         code: String,
         financialDetailMetric: FinancialDetailMetric,
         year: Int

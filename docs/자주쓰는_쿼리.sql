@@ -159,3 +159,20 @@ order by CC.YEAR;
 
 
 -- truncate table CC_CORPORATE_DISCLOSURE_INFO;
+
+select CORPORATE_DISCLOSURE_INFO_SEQ,
+       CODE,
+       YEAR,
+       FINANCIAL_METRIC_TYPE,
+       ITEM_NAME,
+       ACCOUNT_CLOSE,
+       Q1_VALUE,
+       Q2_VALUE,
+       Q3_VALUE,
+       Q4_VALUE,
+       EDIT_DATE,
+       REG_DATE
+from CC_CORPORATE_DISCLOSURE_INFO
+where CODE = '005930'
+order by year desc, FINANCIAL_METRIC_TYPE;
+

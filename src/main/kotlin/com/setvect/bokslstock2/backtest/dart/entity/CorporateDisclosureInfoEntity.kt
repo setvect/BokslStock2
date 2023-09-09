@@ -66,4 +66,8 @@ class CorporateDisclosureInfoEntity(
     @GeneratedValue(strategy = SEQUENCE)
     @Column(name = "CORPORATE_DISCLOSURE_INFO_SEQ", nullable = false)
     var corporateDisclosureInfoSeq: Long? = null
+
+    fun getTotalValue(): Long {
+        return q1Value + q2Value + q3Value + q4Value
+    }
 }
