@@ -20,7 +20,7 @@ object TradeTimeHelper {
     private val OPEN_TIME = LocalTime.of(9, 0, 0).get(ChronoField.MILLI_OF_DAY)
 
     /** 매수 시작 시간*/
-    private val BUY_TIME = LocalTime.of(9, 0, 20).get(ChronoField.MILLI_OF_DAY)
+    private val BUY_TIME = LocalTime.of(9, 0, 30).get(ChronoField.MILLI_OF_DAY)
 
     /** 장 종료(동시호가 제외)*/
     private val CLOSE_TIME = LocalTime.of(15, 20, 0).get(ChronoField.MILLI_OF_DAY)
