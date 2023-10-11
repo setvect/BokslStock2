@@ -259,10 +259,12 @@ class VbsService(
                 val tempPrice = openPrice + (beforeDayHigh - beforeDayLow) * stock.k
                 val targetPrice = (tempPrice - tempPrice % QUOTE_UNIT).toInt()
 
-                // TODO 적용 예정
-//                if (dayPriceCandle.output[0].prdyVrssVolRate == "-100.00") {
-//                    throw RuntimeException("전일 대비 거래량 비율이 -100.00인 종목이 존재함. 종목코드: ${stock.code}")
-//                }
+                // 제대로 시초가를 얻어 오지 않은 경우 판단
+                if (dayPriceCandle.output[0].prdyVrssVolRate == "-100.00") {
+                    val message = "전일 대비 거래량 비율이 -100.00인 종목이 존재함. 종목코드: ${stock.code}"
+                    slackMessageService.sendMessage("@channel $message")
+                    throw RuntimeException(message)
+                }
 
                 log.info("[목표가] ${stock.code}: $openPrice + ($beforeDayHigh - $beforeDayLow) * ${stock.k} = $targetPrice")
 
