@@ -35,7 +35,7 @@ class ValueAnalysisKoreanCompanyService {
         XSSFWorkbook().use { workbook ->
             val sheet = workbook.createSheet()
 
-            val header = "이름,종목코드,링크,마켓,시총(억원),현재가,업종," +
+            val header = "이름,종목코드,링크(네이버),링크(알파스퀘어),마켓,시총(억원),현재가,업종," +
                     "현재-PER,현재-PBR,현재-배당수익률," +
                     "순위-PER,순위-PBR,순위-배당수익률,순위합계"
             ReportMakerHelperService.applyHeader(sheet, header)
@@ -61,10 +61,17 @@ class ValueAnalysisKoreanCompanyService {
                 createCell.cellStyle = defaultStyle
 
                 createCell = row.createCell(cellIdx++)
-                val link = createHelper.createHyperlink(HyperlinkType.URL)
-                link.address = CrawlerKoreanCompanyProperties.getNaverDetailUrl(it.first.summary.code)
-                createCell.setHyperlink(link)
+                val linkNaver = createHelper.createHyperlink(HyperlinkType.URL)
+                linkNaver.address = CrawlerKoreanCompanyProperties.getNaverDetailUrl(it.first.summary.code)
+                createCell.setHyperlink(linkNaver)
                 createCell.setCellValue(CrawlerKoreanCompanyProperties.getNaverDetailUrl(it.first.summary.code))
+                createCell.cellStyle = hyperlinkStyle
+
+                createCell = row.createCell(cellIdx++)
+                val linkAlpha = createHelper.createHyperlink(HyperlinkType.URL)
+                linkAlpha.address = CrawlerKoreanCompanyProperties.getAlphaSquareDetailUrl(it.first.summary.code)
+                createCell.setHyperlink(linkAlpha)
+                createCell.setCellValue(CrawlerKoreanCompanyProperties.getAlphaSquareDetailUrl(it.first.summary.code))
                 createCell.cellStyle = hyperlinkStyle
 
                 createCell = row.createCell(cellIdx++)
@@ -114,7 +121,6 @@ class ValueAnalysisKoreanCompanyService {
             sheet.createFreezePane(0, 1)
             sheet.defaultColumnWidth = 14
             sheet.setColumnWidth(0, 6000)
-            sheet.setColumnWidth(2, 12000)
             sheet.setAutoFilter(CellRangeAddress(0, 0, 0, header.split(",").size - 1))
 
             ReportMakerHelperService.ExcelStyle.applyAllBorder(sheet)
