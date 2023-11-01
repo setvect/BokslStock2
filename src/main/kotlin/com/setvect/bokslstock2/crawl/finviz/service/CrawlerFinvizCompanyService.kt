@@ -28,7 +28,7 @@ class CrawlerFinvizCompanyService {
             val r = (page - 1) * pagePerCount + 1
             val url = "$baseUrl&r=$r"
             val document = Jsoup.connect(url).get()
-            val tableRows = document.select("table[class=table-light is-new] > tbody > tr")
+            val tableRows = document.select("#screener-table > td > table > tbody > tr > td > table > thead > tr")
 
             var first = true
             for (row in tableRows) {
