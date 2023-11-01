@@ -301,6 +301,7 @@ gradlew makeInstallFile
        - 지주회사 제외
        - 기업명에 `홀딩스` 포함 기업제외
        - 우선주 제외
+       - 전년도 영업이익 적자 제외 OR 직전 2분기 연속 영업이익 적자 제외
     - 상위 20개 기업 매수
 - 매도 조건
     - 1년에 한 번 또는 두 번 리벨런싱
@@ -313,7 +314,7 @@ gradlew makeInstallFile
     1. 시총 순위 70% ~ 90% 사이 기업
     1. 국가: USA
     1. 제외 색터: Real Estate, Financial, Energy
-    1. PTP 종목 제외 [PTP.txt](src/main/resources/assets) 참고
+    1. PTP 종목 제외 [PTP1.txt, PTP2.txt](src/main/resources/assets) 참고
   - 순위 매김
       - 1/PER
       - 1/PBR
