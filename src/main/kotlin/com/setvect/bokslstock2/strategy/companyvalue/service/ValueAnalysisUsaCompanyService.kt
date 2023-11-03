@@ -45,6 +45,7 @@ class ValueAnalysisUsaCompanyService {
     fun analysis() {
         log.info("미국 기업 주식 가치 평가 전략")
         val companyList = loadCompanyInfo()
+        log.info("companyList size: ${companyList.size}")
         val usaCompanyDetailList = loadCompanyDetail(companyList)
         val targetList = filter(usaCompanyDetailList)
         val listByRanking = ranking(targetList)

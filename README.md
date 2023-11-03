@@ -322,6 +322,7 @@ gradlew makeInstallFile
   - 각각의 등수를 더해 오름차순 정렬
   - 후처리(수동)
       - 업종당 3종목 이하
+    - 전년도 영업이익 적자 제외 OR 직전 2분기 연속 영업이익 적자 제외
   - 상위 20개 기업 매수
   - [기업 재무정보 조회](https://opendart.fss.or.kr/index.do)
 
