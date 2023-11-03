@@ -309,6 +309,7 @@ class VbsService(
 
         logChangePrice(realtimeExecution, vbsStock)
         if (buyCode.contains(realtimeExecution.code)) {
+            log.debug("[추가 매수안함] 매수한 종목 ${buyCode}, 대상 종목: ${realtimeExecution.code}")
             return
         }
 
