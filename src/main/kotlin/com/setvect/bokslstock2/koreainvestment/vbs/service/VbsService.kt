@@ -496,6 +496,9 @@ class VbsService(
             )
             tradeRepository.save(tradeEntity)
             slackMessageService.sendMessage(message)
+            // 주문 완료 이후 잔고 조회
+            TimeUnit.SECONDS.sleep(2)
+            loadBalance()
         }
     }
 
@@ -582,14 +585,20 @@ class VbsService(
      * 현재 매수 또는 매수 대기중인 종목 불러오기
      */
     private fun initBuyCode() {
-        buyCode.clear()
-        buyStockWait.clear()
         val accountNo = bokslStockProperties.koreainvestment.vbs.accountNo
         val cancelableStock = stockClientService.requestCancelableList(CancelableRequest(accountNo), tokenService.getAccessToken())
         val holdingStock = getBalanceForCash()
         // 잔고가 1이상인 경우만 보유 주식으로 인정
         val hasStock = holdingStock.entries.filter { it.value.ordPsblQty >= 1 }.map { it.key }
+
+        // buyCode Clear와 Add 사이에 주문이 들어가면 문제가 발생할 가능성 있음.
+        // 매우 짧은 시간이기 때문에 무시함
+        log.info("buyCode, buyStockWaitClear Start")
+        buyCode.clear()
+        buyStockWait.clear()
+        log.info("buyCode, buyStockWait Clear End")
         buyCode.addAll(hasStock)
+        log.info("buyCode addAll End")
         cancelableStock.output!!.forEach {
             when (it.sllBuyDvsnCd) {
                 "02" -> {
@@ -602,6 +611,7 @@ class VbsService(
                 else -> log.warn("[${it.prdtName}-${it.code}] 없는 코드 - $it")
             }
         }
+        log.info("buyStockWait add End")
     }
 
     /** 5분마다 실행되는 매도 체크 */
