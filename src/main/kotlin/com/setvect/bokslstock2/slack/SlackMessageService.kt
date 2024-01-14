@@ -3,6 +3,10 @@ package com.setvect.bokslstock2.slack
 import com.setvect.bokslstock2.config.BokslStockProperties
 import com.setvect.bokslstock2.util.ApplicationUtil.getQueryString
 import com.setvect.bokslstock2.util.ApplicationUtil.request
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.apache.http.NameValuePair
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.HttpPost
@@ -11,17 +15,19 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
+
 @Service
 class SlackMessageService(
     private val bokslStockProperties: BokslStockProperties
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    fun sendMessage(message: String) {
+    fun sendMessage(message: String) = serviceScope.launch {
         val config = bokslStockProperties.slack
         if (!config.enable) {
             log.debug("skip")
-            return
+            return@launch
         }
         val param: MutableMap<String, String> = HashMap()
         param["channel"] = config.channelId

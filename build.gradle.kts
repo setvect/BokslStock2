@@ -63,6 +63,7 @@ dependencies {
 
     implementation ("com.google.api-client:google-api-client:1.31.5")
     implementation ("com.google.apis:google-api-services-youtube:v3-rev222-1.25.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
 
     implementation("com.fasterxml.jackson.core:jackson-core")
     implementation("com.fasterxml.jackson.core:jackson-databind")

@@ -594,7 +594,7 @@ class VbsService(
         // buyCode Clear와 Add 사이에 주문이 들어가면 문제가 발생할 가능성 있음.
         // 매우 짧은 시간이기 때문에 무시함
         log.info("buyCode, buyStockWaitClear Start")
-        buyCode.clear()
+        buyCode.clear() // TODO 동시성 이슈 해결
         buyStockWait.clear()
         log.info("buyCode, buyStockWait Clear End")
         buyCode.addAll(hasStock)
