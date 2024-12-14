@@ -136,6 +136,7 @@ class CrawlerStockPriceService(
                 StockCode.StockType.KOR -> crawlStockPriceIncremental(it)
                 StockCode.StockType.USA -> crawlStockPriceGlobal(it)
                 StockCode.StockType.EXCHANGE -> crawlExchangeDollarIncremental(it)
+                StockCode.StockType.CASH -> TODO()
             }
         }
     }
@@ -219,7 +220,7 @@ class CrawlerStockPriceService(
             "BAS_EDT" to DateUtil.format(end, "yyyyMMdd")
         )
         val url = URL_EXCHANGE
-        val response = Jsoup.connect(url).method(Connection.Method.POST).data(data).execute().body()
+        val response = Jsoup.connect(url).timeout(60_000).method(Connection.Method.POST).data(data).execute().body()
         val document = Jsoup.parse(response)
 
         val elements = document.select("table.tbl-type-1 tbody tr")
