@@ -5,6 +5,7 @@ import com.setvect.bokslstock2.koreainvestment.trade.model.BaseHeader
 import com.setvect.bokslstock2.koreainvestment.trade.model.request.*
 import com.setvect.bokslstock2.koreainvestment.trade.model.response.*
 import com.setvect.bokslstock2.koreainvestment.ws.model.StockTransaction
+import com.setvect.bokslstock2.slack.SlackMessageService
 import com.setvect.bokslstock2.util.DateUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -14,11 +15,13 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
+import kotlin.math.pow
 
 @Service
 class StockClientService(
     private val bokslStockProperties: BokslStockProperties,
     private val stockRestTemplate: RestTemplate,
+    private val slackMessageService: SlackMessageService,
 ) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -158,7 +161,7 @@ class StockClientService(
     /**
      * @return 휴장일 조회
      */
-    fun requestHoliday(request: HolidayRequest, authorization: String): CommonResponse<List<HolidayResponse>>  {
+    fun requestHoliday(request: HolidayRequest, authorization: String): CommonResponse<List<HolidayResponse>> {
         val url = bokslStockProperties.koreainvestment.trade.url +
                 "/uapi/domestic-stock/v1/quotations/chk-holiday?BASS_DT={date}&CTX_AREA_NK=&CTX_AREA_FK="
 
@@ -246,18 +249,52 @@ class StockClientService(
         order: StockTransaction
     ): CommonResponse<OrderResponse> {
         val url = bokslStockProperties.koreainvestment.trade.url + "/uapi/domestic-stock/v1/trading/order-cash"
-
         val headers = headerAuthHash(authorization, order)
-
         val httpEntity = HttpEntity<OrderRequest>(request, headers)
 
-        val result = stockRestTemplate.exchange(
-            url,
-            HttpMethod.POST,
-            httpEntity,
-            object : ParameterizedTypeReference<CommonResponse<OrderResponse>>() {},
-        )
-        return result.body ?: throw RuntimeException("API 결과 없음")
+        val maxRetries = 5           // 최대 재시도 횟수
+        var attempt = 0              // 현재 시도 횟수
+        var lastException: Exception? = null
+
+        while (attempt < maxRetries) {
+            try {
+                log.info("주문 요청 시도 중 (${attempt + 1}/${maxRetries}): ${request.code}")
+                val result = stockRestTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    httpEntity,
+                    object : ParameterizedTypeReference<CommonResponse<OrderResponse>>() {}
+                )
+                log.info("주문 요청 성공: ${request.code}")
+                return result.body ?: throw RuntimeException("API 결과 없음")
+            } catch (e: Exception) {
+                lastException = e
+                attempt++
+                val message = "주문 요청 실패 (${attempt}/${maxRetries}): ${e.javaClass.simpleName} - ${e.message}"
+                log.warn(message)
+                slackMessageService.sendMessage(message)
+
+                if (attempt < maxRetries) {
+                    val waitTime = calculateWaitTime(attempt)
+                    log.info("${waitTime}ms 후 재시도합니다.")
+                    Thread.sleep(waitTime)
+                }
+            }
+        }
+
+        // 모든 재시도가 실패한 경우 마지막 예외를 던집니다
+        log.error("최대 재시도 횟수(${maxRetries})를 초과했습니다. 주문 요청 실패: ${request.code}")
+        throw lastException ?: RuntimeException("API 호출 실패", lastException)
+    }
+
+    // 지수적 백오프를 사용한 대기 시간 계산
+    private fun calculateWaitTime(attempt: Int): Long {
+        val baseWaitTimeMs = 1000L   // 기본 대기 시간 (1초)
+        val maxWaitTimeMs = 5000L   // 최대 대기 시간 (5초)
+
+        // 지수적 백오프: 2^attempt * baseWaitTimeMs (최대값 제한)
+        val waitTime = (2.0.pow(attempt.toDouble()) * baseWaitTimeMs).toLong()
+        return waitTime.coerceAtMost(maxWaitTimeMs)
     }
 
     private fun headerAuth(authorization: String, stockTransaction: StockTransaction): HttpHeaders {
