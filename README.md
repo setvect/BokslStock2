@@ -171,7 +171,7 @@ gradlew makeInstallFile
 
 해당 알고리즘을 요약 설명하면 단기 이동평균이 장기 이동평균을 돌파(정배열) 했을 때 매수, 단기 이동 평균이 장기 이동평균 아래로 내려(역배열)가면 매도함.
 
-- 메인 소스: [MabsBacktestService.kt](src/main/kotlin/com/setvect/bokslstock2/analysis/mabs/service/MabsBacktestService.kt)
+- 메인 소스: [MabsBacktestService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/mabs/service/MabsBacktestService.kt)
 - 알고리즘
     1. 오늘 종가 기준 단기 이동평균 값과 장기 이동평균 값을 구함
     2. `(단기 이동평균 / 장기 이동평균 - 1) > 상승매수률` 조건이 만족하면 다음날 시초가 매수
@@ -182,7 +182,7 @@ gradlew makeInstallFile
 
 ### 6.2. 변동성 돌파 전략
 
-- 메인 소스:[VbsBacktestService.kt](src/main/kotlin/com/setvect/bokslstock2/analysis/vbs/service/VbsBacktestService.kt)
+- 메인 소스:[VbsBacktestService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/vbs/service/VbsBacktestService.kt)
 - 매수 조건
     - 목표가 < 오늘 주가
     - 목표가 산출 방법: 목표가 = 오늘 시가 + (어제 고가 - 어제 저가) * k
@@ -202,8 +202,8 @@ gradlew makeInstallFile
 
 ### 6.3. 듀얼모멘텀
 
-- 메인 소스:[DmAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/analysis/dm/service/DmAnalysisService.kt)
-- 실행 소스:[DmBacktest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/analysis/DmBacktest.kt)
+- 메인 소스:[DmAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/dm/service/DmBacktestService.kt)
+- 실행 소스:[DmBacktest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/backtest/DmBacktest.kt)
 - 절대 모멘텀과 상대 모멘텀 결합
 - 매매 전략 전략
     - 직전월 종가 기준 n월 평균 종가보다 높은순으로 정렬
@@ -226,8 +226,8 @@ gradlew makeInstallFile
 
 ### 6.4. 리벨런싱
 
-- 메인 소스: [RebalanceAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/analysis/rebalance/service/RebalanceAnalysisService.kt)
-- 실행 소스:[RebalanceBacktest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/analysis/RebalanceBacktest.kt)
+- 메인 소스: [RebalanceAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/rebalance/service/RebalanceBacktestService.kt)
+- 실행 소스:[RebalanceBacktest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/backtest/RebalanceBacktest.kt)
 - 리밸런싱 매매 분석
 - 일정주기마다 리벨런싱 적용
 - 사용가능한 매매전략
@@ -307,8 +307,8 @@ gradlew makeInstallFile
     - 1년에 한 번 또는 두 번 리벨런싱
 
 ### 7.2. 가치평가 전략(미국 주식)
-- 메인 소스: [ValueAnalysisUsaCompanyService.kt](src/main/kotlin/com/setvect/bokslstock2/value/service/ValueAnalysisUsaCompanyService.kt)
-- 실행 소스: [ValueAnalysisUsaCompanyServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/value/service/ValueAnalysisUsaCompanyServiceTest.kt)
+- 메인 소스: [ValueAnalysisUsaCompanyService.kt](src/main/kotlin/com/setvect/bokslstock2/strategy/companyvalue/service/ValueAnalysisUsaCompanyService.kt)
+- 실행 소스: [ValueAnalysisUsaCompanyServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/strategy/companyvalue/service/ValueAnalysisUsaCompanyServiceTest.kt)
 - 매수조건
   - 필터
     1. 시총 순위 70% ~ 90% 사이 기업
@@ -340,7 +340,7 @@ gradlew makeInstallFile
 - 매도 조건: 리벨런싱 4월말, 10월말
 
 **주의사항**
-수집 이슈 있음. 몇몇 데이터는 말도 안되는 값이 수집됨. 자세한 내용은 [DART_수집_이슈.md](docs%2FDART_%BC%F6%C1%FD%2FDART_%BC%F6%C1%FD_%C0%CC%BD%B4.md) 참고
+수집 이슈 있음. 몇몇 데이터는 말도 안되는 값이 수집됨. 자세한 내용은 [DART_수집_이슈.md](docs/DART_수집/DART_수집_이슈.md) 참고
 
 #### 7.3.1. 상속세 전략 결과를 구하기 위한 절차
 약간 복잡함
