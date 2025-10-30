@@ -1,0 +1,149 @@
+# 122630 - KODEX 레버리지
+# 233740 - KODEX 코스닥150 레버리지
+# 069500 - KODEX 200
+# 229200 - KODEX 코스닥 150
+# 091170  - KODEX 은행,
+
+### 토큰발급
+POST https://openapi.koreainvestment.com:9443/oauth2/tokenP HTTP/1.1
+content-type: application/json
+
+{
+  "grant_type": "client_credentials",
+  "appkey": "{{appkey}}",
+  "appsecret": "{{appsecret}}"
+}
+
+### 해쉬키 생성
+POST https://openapi.koreainvestment.com:9443/uapi/hashkey HTTP/1.1
+content-type: application/json
+appkey: {{appkey}}
+appsecret: {{appsecret}}
+
+{
+  "CANO": "{{CANO}}",
+  "ACNT_PRDT_CD": "01",
+  "PDNO": "069500",
+  "ORD_DVSN": "00",
+  "ORD_QTY": "5",
+  "ORD_UNPR": "31600"
+}
+
+### 주식현재가
+GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-price?fid_cond_mrkt_div_code=J&fid_input_iscd=069500 HTTP/1.1
+content-type: application/json
+authorization: Bearer {{access_token}}
+appkey: {{appkey}}
+appsecret: {{appsecret}}
+tr_id: FHKST01010100
+
+### 일자별주식
+GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-daily-price?fid_cond_mrkt_div_code=J&fid_input_iscd=069500&fid_period_div_code=D&fid_org_adj_prc=0 HTTP/1.1
+content-type: application/json
+authorization: Bearer {{access_token}}
+appkey: {{appkey}}
+appsecret: {{appsecret}}
+tr_id: FHKST01010400
+
+### 분봉조회
+GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-time-itemchartprice?fid_cond_mrkt_div_code=J&fid_etc_cls_code=&fid_input_hour_1=153500&fid_input_iscd=233740&fid_pw_data_incu_yn=Y HTTP/1.1
+content-type: application/json
+authorization: Bearer {{access_token}}
+appkey: {{appkey}}
+appsecret: {{appsecret}}
+tr_id: FHKST03010200
+
+
+### 주식현재가 호가 예상체결[v1_국내주식-011]
+GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-asking-price-exp-ccn?fid_cond_mrkt_div_code=J&fid_input_iscd=233740 HTTP/1.1
+content-type: application/json
+authorization: Bearer {{access_token}}
+appkey: {{appkey}}
+appsecret: {{appsecret}}
+tr_id: FHKST01010200
+
+
+### 잔고조회
+GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/trading/inquire-balance?CANO={{CANO}}&ACNT_PRDT_CD=01&AFHR_FLPR_YN=N&OFL_YN=&INQR_DVSN=01&UNPR_DVSN=01&FUND_STTL_ICLD_YN=N&FNCG_AMT_AUTO_RDPT_YN=N&PRCS_DVSN=00&CTX_AREA_FK100=null&CTX_AREA_NK100= HTTP/1.1
+content-type: application/json
+authorization: Bearer {{access_token}}
+appkey: {{appkey}}
+appsecret: {{appsecret}}
+tr_id: TTTC8434R
+
+### 주식주문 - 현금
+# tr_id
+# TTTC0802U : 주식 현금 매수 주문
+# TTTC0801U : 주식 현금 매도 주문
+
+POST https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/trading/order-cash HTTP/1.1
+content-type: application/json
+authorization: Bearer {{access_token}}
+appkey: {{appkey}}
+appsecret: {{appsecret}}
+tr_id: TTTC0802U
+
+{
+  "CANO": "{{CANO}}",
+  "ACNT_PRDT_CD": "01",
+  "PDNO": "069500",
+  "ORD_DVSN": "00",
+  "ORD_QTY": "5",
+  "ORD_UNPR": "31600"
+}
+
+### 주식정정취소가능주문조회[v1_국내주식-004]
+GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/trading/inquire-psbl-rvsecncl?CANO={{CANO}}&ACNT_PRDT_CD=01&CTX_AREA_FK100=&CTX_AREA_NK100=&INQR_DVSN_1=1&INQR_DVSN_2=0 HTTP/1.1
+content-type: application/json
+authorization: Bearer {{access_token}}
+appkey: {{appkey}}
+appsecret: {{appsecret}}
+tr_id: TTTC8036R
+
+### 휴장일 조회
+GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/chk-holiday?BASS_DT=20230124&CTX_AREA_NK=&CTX_AREA_FK= HTTP/1.1
+content-type: application/json
+authorization: Bearer {{access_token}}
+appkey: {{appkey}}
+appsecret: {{appsecret}}
+tr_id: CTCA0903R
+
+
+# --- 기업정보
+
+
+### 주식기본조회[v1_국내주식-067]
+GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/search-stock-info?PRDT_TYPE_CD=300&PDNO=005930
+content-type: application/json
+authorization: Bearer {{access_token}}
+appkey: {{appkey}}
+appsecret: {{appsecret}}
+tr_id: CTPF1002R
+custtype: P
+
+### 예탁원정보(배당일정)[국내주식-145]
+GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/ksdinfo/dividend?CTS=&GB1=0&F_DT=20250101&T_DT=20251030&SHT_CD=005930
+content-type: application/json
+authorization: Bearer {{access_token}}
+appkey: {{appkey}}
+appsecret: {{appsecret}}
+tr_id: HHKDB669102C0
+custtype: P
+
+### 예탁원정보(배당일정)[국내주식-145]
+GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/finance/financial-ratio?FID_DIV_CLS_CODE=0&fid_cond_mrkt_div_code=J&fid_input_iscd=005930
+content-type: application/json
+authorization: Bearer {{access_token}}
+appkey: {{appkey}}
+appsecret: {{appsecret}}
+tr_id: FHKST66430300
+custtype: P
+
+### 국내주식 기타주요비율[v1_국내주식-082]
+GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/finance/other-major-ratios?fid_input_iscd=005930&fid_div_cls_code=0&fid_cond_mrkt_div_code=J
+content-type: application/json
+authorization: Bearer {{access_token}}
+appkey: {{appkey}}
+appsecret: {{appsecret}}
+tr_id: FHKST66430500
+custtype: P
