@@ -157,9 +157,6 @@ gradlew makeInstallFile
     | 사업 보고서 | 사업연도 경과 후 90일 이내 |
     | 반기 보고서 | 반기 경과 후 45일 이내     |
 
-- DB 적제
-  - 메인소스: [DartDataStoreService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/dart/service/DartDataStoreService.kt)
-  - 실행소스: [DartDataStoreServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/backtest/dart/service/DartDataStoreServiceTest.kt)
 - 수집에 이용하는 API
   - [다중회사 주요계정](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS003&apiId=2019017)
   - [주식의 총수 현황 개발가이드](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS002&apiId=2020002)
@@ -347,11 +344,9 @@ gradlew makeInstallFile
    - 기업 코드 수집
    - 주요 재무 정보 수집
    - 전체 재무제표 정보 수집
-2. 재무제표 정보 DB 적제 `DartDataStoreServiceTest.kt`
-3. 한국 주식시장 종목 정보 수집 `CrawlerKoreanCompanyServiceTest.kt`
+2. 한국 주식시장 종목 정보 수집 `CrawlerKoreanCompanyServiceTest.kt`
    - 시가총액 구하기 위함 
    - crawlCompanyListTest() 메소드 실행  
-4. 상속세법 매매전략 실행 `InheritanceTaxServiceTest.kt`
 
 ## 8. 기타
 ### 8.1. 인증서 연결

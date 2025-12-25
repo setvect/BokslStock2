@@ -5,7 +5,6 @@ import com.setvect.bokslstock2.backtest.dart.model.CommonStatement
 import com.setvect.bokslstock2.backtest.dart.model.DetailStatement
 import com.setvect.bokslstock2.backtest.dart.model.FinancialDetailKey
 import com.setvect.bokslstock2.backtest.dart.model.FinancialFs
-import com.setvect.bokslstock2.backtest.dart.service.DartStructuringService
 import com.setvect.bokslstock2.config.BokslStockProperties
 import com.setvect.bokslstock2.crawl.dart.DartConstants
 import com.setvect.bokslstock2.crawl.dart.model.*
@@ -29,6 +28,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.regex.Pattern
 
 /**
  * OPEN DART API 이용해 기업 정보 크롤링
@@ -341,7 +341,7 @@ class CrawlerDartService(
         val existFinancialInfo = file.walk()
             .filter { it.isFile && it.extension == "json" }
             .mapNotNull { financialFile ->
-                val matcher = DartStructuringService.PATTERN.matcher(financialFile.name)
+                val matcher = FINANCIAL_PATTERN.matcher(financialFile.name)
                 if (!matcher.find()) {
                     return@mapNotNull null
                 }
@@ -359,7 +359,7 @@ class CrawlerDartService(
         val existFinancialInfo = file.walk()
             .filter { it.isFile && it.extension == "json" }
             .mapNotNull { financialDetailFile ->
-                val matcher = DartStructuringService.PATTERN_DETAIL.matcher(financialDetailFile.name)
+                val matcher = FINANCIAL_DETAIL_PATTERN.matcher(financialDetailFile.name)
                 if (!matcher.find()) {
                     return@mapNotNull null
                 }
@@ -407,6 +407,10 @@ class CrawlerDartService(
 
     companion object {
         private val NO_DATA_FINANCIAL_DETAIL_FILE = File("crawl/dart/financialDetail/no_data.txt")
+        private val FINANCIAL_PATTERN: Pattern =
+            Pattern.compile("(\\d{4})_(QUARTER\\d|HALF_ANNUAL|ANNUAL)_(\\d{6})_.+\\.json")
+        private val FINANCIAL_DETAIL_PATTERN: Pattern =
+            Pattern.compile("(\\d{4})_(QUARTER\\d|HALF_ANNUAL|ANNUAL)_(\\d{6})_(OFS|CFS)_.+\\.json")
 
         fun unzip(zipFile: File, destDirectory: File) {
             ZipFile(zipFile).use { archive ->
