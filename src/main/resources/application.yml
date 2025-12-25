@@ -35,11 +35,6 @@ logging.level:
 com:
   setvect:
     bokslstock:
-      crawl:
-        fred:
-          key: <key_입력>
-        dart:
-          key: <key_입력>
       koreainvestment:
         # 엑세스 키: 환경 변수 또는 직접 입력
         appkey: ${APPKEY}

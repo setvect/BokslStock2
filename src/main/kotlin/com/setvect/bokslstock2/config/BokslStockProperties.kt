@@ -11,23 +11,10 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConstructorBinding
 @ConfigurationProperties(prefix = "com.setvect.bokslstock")
 data class BokslStockProperties(
-    val crawl: Crawl,
     val koreainvestment: Koreainvestment,
     val restTemplate: RestTemplate,
     val slack: Slack,
 ) {
-    data class Crawl(
-        val fred: Fred,
-        val dart: Dart,
-    ) {
-        data class Fred(
-            val key: String
-        )
-        data class Dart(
-            val key: String
-        )
-    }
-
     data class Koreainvestment(
         val appkey: String,
         val appsecret: String,

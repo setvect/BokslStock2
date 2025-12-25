@@ -95,7 +95,6 @@ gradlew makeInstallFile
     - 미국주식: https://query1.finance.yahoo.com
     - 원달러환율: https://spot.wooribank.com/pot/Dream?withyou=FXXRT0014
 - 메인 소스: [CrawlerStockPriceService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/stockprice/service/CrawlerStockPriceService.kt)
-- 실행 소스: [CrawlerStockPriceServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/stockprice/service/CrawlerStockPriceServiceTest.kt)
 
 #### 5.1.1 수정 주가 (adjusted stock price)
 
@@ -120,8 +119,6 @@ gradlew makeInstallFile
 
 ### 5.2. 한국주식 기업 가치 평가 정보
 
-- 메인 소스: [CrawlerKoreanCompanyService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/koreacompany/service/CrawlerKoreanCompanyService.kt)
-- 실행 소스: [CrawlerKoreanCompanyServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/koreacompany/service/CrawlerKoreanCompanyServiceTest.kt)
 
 ## 5.3. finviz.com 수집
 ### 5.3.1. 수집 방법
@@ -135,49 +132,9 @@ gradlew makeInstallFile
 ### 5.3.2. 수집 용어
 [수집항목_용어](docs/주식_용어.md) 참고
 
-### 5.4. 미국 실업률 통계
-- LAA 전략 구현을 위한 데이터 
-- 메인 소스: [CrawlerUnemploymentRateService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/unemployment/service/CrawlerUnemploymentRateService.kt)
-- 실행 소스: [CrawlerUnemploymentRateServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/unemployment/CrawlerUnemploymentRateServiceTest.kt)
-- [여기](https://fred.stlouisfed.org/)서 API Key 신청을 해야됨
-- 간단하게 보려면 [여기](https://kr.investing.com/economic-calendar/unemployment-rate-300)서 보면 됨
-
-### 5.5. DART 공시 정보
-- 기업 재무재표 정보 수집
-- [OPEN DART](https://opendart.fss.or.kr) 참고
-- 메인 소스: [CrawlerDartService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/dart/service/CrawlerDartService.kt)
-- 실행 소스: [CrawlerDartServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/dart/service/CrawlerDartServiceTest.kt)
-- 재무제표 수집순서 
-  1. 주요 재무 정보 수집
-  2. 전체 재무제표 정보 수집
-- 상식: 사업보고서 제출 기한
-
-    | 구분        | 제출기한                   |
-    | ----------- | -------------------------- |
-    | 사업 보고서 | 사업연도 경과 후 90일 이내 |
-    | 반기 보고서 | 반기 경과 후 45일 이내     |
-
-- 수집에 이용하는 API
-  - [다중회사 주요계정](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS003&apiId=2019017)
-  - [주식의 총수 현황 개발가이드](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS002&apiId=2020002)
-  - [배당에 관한 사항](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS002&apiId=2019005)
-
 ## 6. 백테스트 전략
 
-### 6.1. 이동평균돌파 전략
-
-해당 알고리즘을 요약 설명하면 단기 이동평균이 장기 이동평균을 돌파(정배열) 했을 때 매수, 단기 이동 평균이 장기 이동평균 아래로 내려(역배열)가면 매도함.
-
-- 메인 소스: [MabsBacktestService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/mabs/service/MabsBacktestService.kt)
-- 알고리즘
-    1. 오늘 종가 기준 단기 이동평균 값과 장기 이동평균 값을 구함
-    2. `(단기 이동평균 / 장기 이동평균 - 1) > 상승매수률` 조건이 만족하면 다음날 시초가 매수
-    3. `(단기 이동평균 / 장기 이동평균 - 1) * -1 > 하락매도률 )` 조건이 만족하면 다음날 시초가 매도
-    4. 매도가 발생한 주기는 매수하지 않음, 다음 주기로 넘어갔을 때 매수 활성화
-
-`상승매수률`과 `하락매도률`를 둔 이유는 매수가와 매도가의 차이를 두어 매수가 이러난 직후 매도하지 않게 하기 위함
-
-### 6.2. 변동성 돌파 전략
+### 6.1. 변동성 돌파 전략
 
 - 메인 소스:[VbsBacktestService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/vbs/service/VbsBacktestService.kt)
 - 매수 조건
@@ -197,31 +154,7 @@ gradlew makeInstallFile
   - 그래서 `KODEX 은행` 같은 배당이 있는 종목은 매매 조건중 `stayGapRise` false로 하기 바람
 - 참고로 레버리지 종목은 애초에 배당이 없기 때문에 수정주가 이슈는 없음
 
-### 6.3. 듀얼모멘텀
-
-- 메인 소스:[DmAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/dm/service/DmBacktestService.kt)
-- 실행 소스:[DmBacktest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/backtest/DmBacktest.kt)
-- 절대 모멘텀과 상대 모멘텀 결합
-- 매매 전략 전략
-    - 직전월 종가 기준 n월 평균 종가보다 높은순으로 정렬
-    - 1보다 큰 종목이 있으면 매수
-    - 0보다 작으면 Hold 종목 매수
-- 포트폴리오 비주얼라이저와 차이점
-    - 복슬스톡2: 현재 월 시가 기준 매매
-    - 포트폴리오 비주얼라이저: 직전 월 종가 기준 매매
-- 모멘텀 계산 예시
-    - 조건
-        - 모멘텀 가중치: 1개월 전: 33%, 3개월 전: 33%, 6개월 전: 34%
-        - 현재 날짜: 2022년 5월 1일
-        - 2022년 04월 종가: 105
-        - 2022년 03월 종가: 110
-        - 2022년 01월 종가: 100
-        - 2021년 10월 종가: 95
-    - 모멘텀 스코어 = 105 / (110 * 0.33 + 100 * 0.33 + 95 * 0.34) = 1.033464567
-- [포트폴리오 비주얼라이저](https://www.portfoliovisualizer.com/)
-- [예시](https://www.portfoliovisualizer.com/test-market-timing-model?s=y&coreSatellite=false&timingModel=6&timePeriod=4&startYear=2018&firstMonth=1&endYear=2019&lastMonth=12&calendarAligned=true&includeYTD=false&initialAmount=10000&periodicAdjustment=0&adjustmentAmount=0&inflationAdjusted=true&adjustmentPercentage=0.0&adjustmentFrequency=4&symbols=SPY&singleAbsoluteMomentum=false&volatilityTarget=9.0&downsideVolatility=false&outOfMarketStartMonth=5&outOfMarketEndMonth=10&outOfMarketAssetType=2&outOfMarketAsset=TLT&movingAverageSignal=1&movingAverageType=1&multipleTimingPeriods=true&periodWeighting=2&windowSize=1&windowSizeInDays=105&movingAverageType2=1&windowSize2=10&windowSizeInDays2=105&excludePreviousMonth=false&normalizeReturns=false&volatilityWindowSize=0&volatilityWindowSizeInDays=0&assetsToHold=1&allocationWeights=1&riskControlType=0&riskWindowSize=10&riskWindowSizeInDays=0&stopLossMode=0&stopLossThreshold=2.0&stopLossAssetType=1&rebalancePeriod=1&separateSignalAsset=false&tradeExecution=0&leverageType=0&leverageRatio=0.0&debtAmount=0&debtInterest=0.0&maintenanceMargin=25.0&leveragedBenchmark=false&comparedAllocation=0&benchmark=VFINX&timingPeriods%5B0%5D=1&timingUnits%5B0%5D=2&timingWeights%5B0%5D=100&timingUnits%5B1%5D=2&timingUnits%5B2%5D=2&timingUnits%5B3%5D=2&timingWeights%5B3%5D=0&timingUnits%5B4%5D=2&timingWeights%5B4%5D=0&volatilityPeriodUnit=2&volatilityPeriodWeight=0)
-
-### 6.4. 리벨런싱
+### 6.2. 리벨런싱
 
 - 메인 소스: [RebalanceAnalysisService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/rebalance/service/RebalanceBacktestService.kt)
 - 실행 소스:[RebalanceBacktest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/backtest/RebalanceBacktest.kt)
@@ -232,50 +165,10 @@ gradlew makeInstallFile
     - 올웨더포트폴리오
     - 등...
 
-### 6.5. 하방변동설 돌파 전략 
-- 메인소스: [IvbsBacktestService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/ivbs/service/IvbsBacktestService.kt)
-- 실행 소스: [IvbsBacktest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/backtest/IvbsBacktest.kt)
-- 매수 조건
-    - 목표가 >= 오늘 종가
-    - 목표가 산출 방법: 목표가 = 오늘 시가 - (어제 고가 - 어제 저가) * k
-- 매도 조건
-    - 매수 다음날 시가 매도
-- 결과: **쓰지마**
-
-### 6.6. LAA
-- 메인소스: [LaaBacktestService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/laa/service/LaaBacktestService.kt)
-- 실행소스: [LaaBacktest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/backtest/LaaBacktest.kt)
-- 매수 조건
-  - IWD(미국 중소형) / GLD(IAU) / IEF 각 25%는 고정
-  - 나머지 25%는아래 두 조건 모두 만족시 SHY(단기채권) 매수
-    - 현재 미국 SPY 지수가 200일 평균보다 낮은가?
-    - 현재 미국 실업률이 12개월 평균 보다 높은가?
-  - 그렇지 않은 경우 QQQ 매수
-- 매도 조건
-  - 3개월 마다 혹은 차이가 너무 벌어지면 리밸러싱
-  - 여기서 너무 벌어진다는 조건은 무엇일까?
-
-### 6.7. 손절매 전략
-- 메인소스: [LaaBacktestService.kt](src/main/kotlin/com/setvect/bokslstock2/backtest/laa/service/LaaBacktestService.kt)
-- 실행소스: [LaaBacktest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/backtest/LaaBacktest.kt)
-- 매월 첫 거래일 시가에 코스피 ETF(종목은 선택할 수 있음) 매수
-- 매일 주가 구간 * 배수를 손절선으로 계산하고 아래 사항 확인
-  - 월초 매수한 ETF가 손절선에 걸리지 않는 경우: 지수 보유
-  - 월초 매수한 ETF가 손절선에 걸리는 경우: 손절매, 현금보유
-  - 손절매했을 경우 다음 달 첫날 코스피 ETF 매수
-- 손절선 계산법
-  - 최근 6개월 주가 구간 계산
-    - 주가 구간 계산법: (전월 고가 - 전월 저가)/(전월 시가)
-    - 최근 6개월간 주가 구간의 평균을 계산
-  - 이 평균 구간에 선택한 배수를 곱함(배수 = 0 ~ 1)
-
 ### 6.8. 간단한 전략들
 내가 궁금해서, 인터넷에 떠돌아 다니는 전략들을 검증하기 위해 간단하게 만들어 보았음
 
-- [CandleAnalysisTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/analysis/price/CandleAnalysisTest.kt)
-- [LongShortAnalysisTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/analysis/price/LongShortAnalysisTest.kt)
   - 11월~4월 매수, 5월~10월 매도
-- [TrendFollowingBacktest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/analysis/price/TrendFollowingBacktest.kt)
   - 다양한 추세 추종 방법 테스트
 
 ## 7. 전략
@@ -322,31 +215,6 @@ gradlew makeInstallFile
     - 전년도 영업이익 적자 제외 OR 직전 2분기 연속 영업이익 적자 제외
   - 상위 20개 기업 매수
 
-### 7.3. 상속세법 매매 전략
-- [관련 자료](https://www.youtube.com/watch?v=0_11aHlQelY)
-- 기업가치 구합
-  - 현재 기업가치를 순자산가치 40%, 순이익가치 60%
-  - 순자산가치 = 총 자산 - 총 부채 = 총 자본
-  - 순이익가치 = 최근 3년 순이익 가중평균 = 최근 연도 3/6 + 전 연도 2/6 + 전전 1/6
-    여기에 PER 10 적용(순이익 가치에 10을 곱합)
-  - 기업가치 = (순자산가치 * 60% + 순이익가치 * 40%) / 시총
-- 매수조건
-  - 평가 점수 = 가치 / 시총
-  - 평가 점수가 높은 순으로 20개 종목 매수
-- 매도 조건: 리벨런싱 4월말, 10월말
-
-**주의사항**
-수집 이슈 있음. 몇몇 데이터는 말도 안되는 값이 수집됨. 자세한 내용은 [DART_수집_이슈.md](docs/DART_수집/DART_수집_이슈.md) 참고
-
-#### 7.3.1. 상속세 전략 결과를 구하기 위한 절차
-약간 복잡함
-1. 기업재무제표 정보 수집 `CrawlerDartServiceTest.kt`
-   - 기업 코드 수집
-   - 주요 재무 정보 수집
-   - 전체 재무제표 정보 수집
-2. 한국 주식시장 종목 정보 수집 `CrawlerKoreanCompanyServiceTest.kt`
-   - 시가총액 구하기 위함 
-   - crawlCompanyListTest() 메소드 실행  
 
 ## 8. 기타
 ### 8.1. 인증서 연결

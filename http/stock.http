@@ -112,7 +112,7 @@ tr_id: CTCA0903R
 # --- 기업정보
 
 
-### 주식기본조회[v1_국내주식-067]
+### 주식기본조회[v1_국내주식-067] - https://apiportal.koreainvestment.com/apiservice-apiservice?/uapi/domestic-stock/v1/quotations/search-stock-info
 GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/search-stock-info?PRDT_TYPE_CD=300&PDNO=005930
 content-type: application/json
 authorization: Bearer {{access_token}}
@@ -121,7 +121,7 @@ appsecret: {{appsecret}}
 tr_id: CTPF1002R
 custtype: P
 
-### 예탁원정보(배당일정)[국내주식-145]
+### 예탁원정보(배당일정)[국내주식-145] - https://apiportal.koreainvestment.com/apiservice-apiservice?/uapi/domestic-stock/v1/ksdinfo/dividend
 GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/ksdinfo/dividend?CTS=&GB1=0&F_DT=20250101&T_DT=20251030&SHT_CD=005930
 content-type: application/json
 authorization: Bearer {{access_token}}
@@ -130,7 +130,7 @@ appsecret: {{appsecret}}
 tr_id: HHKDB669102C0
 custtype: P
 
-### 예탁원정보(배당일정)[국내주식-145]
+### 국내주식 재무비율[v1_국내주식-080] - https://apiportal.koreainvestment.com/apiservice-apiservice?/uapi/domestic-stock/v1/finance/financial-ratio
 GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/finance/financial-ratio?FID_DIV_CLS_CODE=0&fid_cond_mrkt_div_code=J&fid_input_iscd=005930
 content-type: application/json
 authorization: Bearer {{access_token}}
@@ -139,7 +139,7 @@ appsecret: {{appsecret}}
 tr_id: FHKST66430300
 custtype: P
 
-### 국내주식 기타주요비율[v1_국내주식-082]
+### 국내주식 기타주요비율[v1_국내주식-082] - https://apiportal.koreainvestment.com/apiservice-apiservice?/uapi/domestic-stock/v1/finance/other-major-ratios
 GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/finance/other-major-ratios?fid_input_iscd=005930&fid_div_cls_code=0&fid_cond_mrkt_div_code=J
 content-type: application/json
 authorization: Bearer {{access_token}}
