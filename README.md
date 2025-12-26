@@ -119,6 +119,18 @@ gradlew makeInstallFile
 
 ### 5.2. 한국주식 기업 가치 평가 정보
 
+- 메인 소스: [NaverCompanyValueCrawlerService.kt](src/main/kotlin/com/setvect/bokslstock2/crawl/naver/service/NaverCompanyValueCrawlerService.kt)
+- 실행 소스: [NaverCompanyValueCrawlerServiceTest.kt](src/testDependency/kotlin/com/setvect/bokslstock2/crawl/naver/service/NaverCompanyValueCrawlerServiceTest.kt)
+- 수집 소스
+  - Naver API: `https://stock.naver.com/api/domestic/market/stock/default`
+  - 수집 조건: tradeType=KRX, marketType=ALL, orderType=marketSum, pageSize=5000
+- 결과 파일
+  - `crawl/stock.naver.com/detail-list.json`
+- 수집 데이터(요약)
+  - summary: 종목코드, 종목명, 마켓, 시총, 현재가
+  - currentIndicator: 상장주식수, PER, EPS, PBR, 배당수익률
+  - historyData는 수집하지 않음
+
 
 ## 5.3. finviz.com 수집
 ### 5.3.1. 수집 방법

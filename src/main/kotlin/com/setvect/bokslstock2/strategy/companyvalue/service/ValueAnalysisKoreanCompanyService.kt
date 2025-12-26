@@ -22,7 +22,6 @@ import java.io.FileOutputStream
 class ValueAnalysisKoreanCompanyService {
     private val gson = GsonBuilder().setPrettyPrinting().create()
     private val log = LoggerFactory.getLogger(javaClass)
-    private val excludeIndustry = listOf("기타금융", "생명보험", "손해보험", "은행", "증권", "창업투자")
     private val upperRatio = .7
     private val lowerRatio = .9
 
@@ -35,7 +34,7 @@ class ValueAnalysisKoreanCompanyService {
         XSSFWorkbook().use { workbook ->
             val sheet = workbook.createSheet()
 
-            val header = "이름,종목코드,링크(네이버),링크(알파스퀘어),마켓,시총(억원),현재가,업종," +
+            val header = "이름,종목코드,링크(네이버),링크(알파스퀘어),마켓,시총(억원),현재가," +
                     "현재-PER,현재-PBR,현재-배당수익률," +
                     "순위-PER,순위-PBR,순위-배당수익률,순위합계"
             ReportMakerHelperService.applyHeader(sheet, header)
@@ -87,10 +86,6 @@ class ValueAnalysisKoreanCompanyService {
                 createCell.cellStyle = commaStyle
 
                 createCell = row.createCell(cellIdx++)
-                createCell.setCellValue(it.first.industry)
-                createCell.cellStyle = commaStyle
-
-                createCell = row.createCell(cellIdx++)
                 createCell.setCellValue(it.first.currentIndicator.per!!)
                 createCell.cellStyle = decimalStyle
 
@@ -138,12 +133,10 @@ class ValueAnalysisKoreanCompanyService {
     private fun filter(companyAllList: List<KoreanCompanyDetail>): List<KoreanCompanyDetail> {
         println("전체 Size: " + companyAllList.size)
         val companyFilterList = companyAllList
-            .filter { !excludeIndustry.contains(it.industry) }
             .filter { it.currentIndicator.per != null && it.currentIndicator.pbr != null && it.currentIndicator.dvr != null }
             .sortedByDescending { it.summary.capitalization }
             .toList()
         println("필터 Size: " + companyFilterList.size)
-
         // 시총 기준 추출범위 설정
         val fromIndex = (companyFilterList.size * upperRatio).toInt()
         val toIndex = (companyFilterList.size * lowerRatio).toInt()

@@ -11,7 +11,7 @@ object CrawlerKoreanCompanyProperties {
     private const val LIST_DETAIL_JSON = "detail-list.json"
     private const val RESULT = "value-result.xlsx"
     private val SAVE_PATH = File("./crawl/stock.naver.com")
-    const val NAVER_STOCK_URL = "https://finance.naver.com/item/main.nhn?code={code}"
+    const val NAVER_STOCK_URL = "https://stock.naver.com/domestic/stock/{code}/info/company"
     const val NAVER_STOCK_DETAIL_URL = "https://finance.naver.com/item/coinfo.naver?code={code}"
     const val ALPHASQUARE_URL = "https://alphasquare.co.kr/home/stock/financial-information?code={code}"
     const val USER_LIST = "https://finance.naver.com/sise/sise_market_sum.nhn?sosok={marketSeq}&page={page}"

@@ -25,24 +25,27 @@ class NaverCompanyValueCrawlerService(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun crawlAndSave(pageSize: Int = 200, maxPages: Int = Int.MAX_VALUE): List<KoreanCompanyDetail> {
+    fun crawlAndSave(pageSize: Int = 5000, maxPages: Int = Int.MAX_VALUE): List<KoreanCompanyDetail> {
         val details = crawlAll(pageSize, maxPages)
         writeDetailList(details)
         return details
     }
 
-    fun crawlAll(pageSize: Int = 200, maxPages: Int = Int.MAX_VALUE): List<KoreanCompanyDetail> {
+    fun crawlAll(pageSize: Int = 5000, maxPages: Int = Int.MAX_VALUE): List<KoreanCompanyDetail> {
         val result = mutableListOf<KoreanCompanyDetail>()
         var startIdx = 0
         var page = 0
         var lastFirstCode: String? = null
 
         while (page < maxPages) {
-            val items = fetchPage(startIdx, pageSize)
+            val pageResult = fetchPage(startIdx, pageSize)
+            val items = pageResult.items
 
             if (items.isEmpty()) {
                 break
             }
+
+            writeRawBody(pageResult.rawBody, startIdx, page)
 
             val firstCode = items.first().itemcode?.trim()
             if (!firstCode.isNullOrBlank() && firstCode == lastFirstCode && startIdx > 0) {
@@ -80,7 +83,7 @@ class NaverCompanyValueCrawlerService(
             "?tradeType=KRX&marketType=ALL&orderType=marketSum&startIdx=$startIdx&pageSize=$pageSize"
     }
 
-    private fun fetchPage(startIdx: Int, pageSize: Int): List<NaverStockItem> {
+    private fun fetchPage(startIdx: Int, pageSize: Int): PageResult {
         val url = buildUrl(startIdx, pageSize)
         val headers = HttpHeaders()
         headers["User-Agent"] = CrawlerKoreanCompanyProperties.USER_AGENT
@@ -88,8 +91,21 @@ class NaverCompanyValueCrawlerService(
         headers["Referer"] = "https://stock.naver.com/"
         val httpEntity = HttpEntity<Void>(headers)
         val response = crawlRestTemplate.exchange(url, HttpMethod.GET, httpEntity, String::class.java)
-        val body = response.body ?: return emptyList()
-        return JsonUtil.mapper.readValue(body, object : TypeReference<List<NaverStockItem>>() {})
+        val body = response.body ?: return PageResult("", emptyList())
+        val items = JsonUtil.mapper.readValue(body, object : TypeReference<List<NaverStockItem>>() {})
+        return PageResult(body, items)
+    }
+
+    private fun writeRawBody(rawBody: String, startIdx: Int, page: Int) {
+        if (rawBody.isBlank()) {
+            return
+        }
+        val dir = CrawlerKoreanCompanyProperties.getDetailListFile().parentFile
+        FileUtils.forceMkdir(dir)
+        val suffix = if (page == 0) "" else "-$startIdx"
+        val file = FileUtils.getFile(dir, "naver-raw-list$suffix.json")
+        FileUtils.writeStringToFile(file, rawBody, StandardCharsets.UTF_8)
+        log.info("save raw: {}", file.absoluteFile)
     }
 
     private fun toCompanyDetailOrNull(item: NaverStockItem): KoreanCompanyDetail? {
@@ -127,9 +143,7 @@ class NaverCompanyValueCrawlerService(
         return KoreanCompanyDetail(
             summary = summary,
             normalStock = item.type?.trim() == "ST",
-            industry = "",
             currentIndicator = currentIndicator,
-            historyData = emptyList(),
         )
     }
 
@@ -179,5 +193,10 @@ class NaverCompanyValueCrawlerService(
         val pbr: String?,
         @JsonProperty("dividendRate")
         val dividendRate: String?,
+    )
+
+    private data class PageResult(
+        val rawBody: String,
+        val items: List<NaverStockItem>,
     )
 }
