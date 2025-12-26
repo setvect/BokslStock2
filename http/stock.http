@@ -111,6 +111,17 @@ tr_id: CTCA0903R
 
 # --- 기업정보
 
+###
+GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/ranking/market-cap
+    ?fid_input_price_2=&fid_cond_mrkt_div_code=J&fid_cond_scr_div_code=20174&fid_div_cls_code=1&fid_input_iscd=0000&fid_trgt_cls_code=0&fid_trgt_exls_cls_code=0&fid_input_price_1=&fid_vol_cnt=
+content-type: application/json
+authorization: Bearer {{access_token}}
+appkey: {{appkey}}
+appsecret: {{appsecret}}
+tr_id: FHPST01740000
+custtype: P
+
+
 
 ### 주식기본조회[v1_국내주식-067] - https://apiportal.koreainvestment.com/apiservice-apiservice?/uapi/domestic-stock/v1/quotations/search-stock-info
 GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/search-stock-info?PRDT_TYPE_CD=300&PDNO=005930
@@ -122,7 +133,7 @@ tr_id: CTPF1002R
 custtype: P
 
 ### 예탁원정보(배당일정)[국내주식-145] - https://apiportal.koreainvestment.com/apiservice-apiservice?/uapi/domestic-stock/v1/ksdinfo/dividend
-GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/ksdinfo/dividend?CTS=&GB1=0&F_DT=20250101&T_DT=20251030&SHT_CD=005930
+GET https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/ksdinfo/dividend?CTS=&GB1=0&F_DT=20241001&T_DT=20251230&SHT_CD=005930
 content-type: application/json
 authorization: Bearer {{access_token}}
 appkey: {{appkey}}
