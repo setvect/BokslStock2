@@ -44,6 +44,38 @@ private const val QUOTE_UNIT = 5
  */
 private const val DIFF_MINUTES = 2L
 
+/** 목표가 계산 최대 시도 횟수 */
+private const val TARGET_PRICE_MAX_ATTEMPTS = 10
+
+/** 목표가 계산 재시도 간격(초) */
+private const val TARGET_PRICE_RETRY_INTERVAL_SECONDS = 10L
+
+internal class TargetPriceNotReadyException(message: String) : RuntimeException(message)
+
+internal fun <T> retryTargetPriceCalculation(
+    maxAttempts: Int,
+    retryIntervalSeconds: Long,
+    calculation: () -> T,
+    onFailure: (Int, TargetPriceNotReadyException) -> Unit = { _, _ -> },
+    sleeper: (Long) -> Unit = { TimeUnit.SECONDS.sleep(it) },
+): T {
+    require(maxAttempts > 0) { "최대 시도 횟수는 1 이상이어야 합니다." }
+
+    for (attempt in 1..maxAttempts) {
+        try {
+            return calculation()
+        } catch (e: TargetPriceNotReadyException) {
+            onFailure(attempt, e)
+            if (attempt == maxAttempts) {
+                throw e
+            }
+            sleeper(retryIntervalSeconds)
+        }
+    }
+
+    throw IllegalStateException("목표가 계산 재시도 상태가 올바르지 않습니다.")
+}
+
 @Service
 class VbsService(
     private val stockClientService: StockClientService,
@@ -247,39 +279,81 @@ class VbsService(
 
             loadBalance()
 
-            val targetPriceMessage = StringBuilder()
-            val targetPrice = vbsStocks.associate { stock ->
-                val dayPriceCandle = stockClientService.requestDatePrice(
-                    DatePriceRequest(stock.code, DatePriceRequest.DateType.DAY),
-                    tokenService.getAccessToken()
-                )
-                val openPrice = dayPriceCandle.output!![0].stckOprc
-                val beforeDayHigh = dayPriceCandle.output[1].stckHgpr
-                val beforeDayLow = dayPriceCandle.output[1].stckLwpr
-                val tempPrice = openPrice + (beforeDayHigh - beforeDayLow) * stock.k
-                val targetPrice = (tempPrice - tempPrice % QUOTE_UNIT).toInt()
+            return retryTargetPriceCalculation(
+                maxAttempts = TARGET_PRICE_MAX_ATTEMPTS,
+                retryIntervalSeconds = TARGET_PRICE_RETRY_INTERVAL_SECONDS,
+                calculation = { calculateTargetPrice(vbsStocks) },
+                onFailure = { attempt, e ->
+                    if (attempt < TARGET_PRICE_MAX_ATTEMPTS) {
+                        log.warn(
+                            "목표가 계산 실패({}/{}). {}초 후 재시도. 사유: {}",
+                            attempt,
+                            TARGET_PRICE_MAX_ATTEMPTS,
+                            TARGET_PRICE_RETRY_INTERVAL_SECONDS,
+                            e.message
+                        )
+                    } else {
+                        log.error("목표가 계산 최종 실패({}/{}). 사유: {}", attempt, TARGET_PRICE_MAX_ATTEMPTS, e.message)
+                    }
 
-                // 제대로 시초가를 얻어 오지 않은 경우 판단
-                if (dayPriceCandle.output[0].prdyVrssVolRate == "-100.00") {
-                    val message = "전일 대비 거래량 비율이 -100.00인 종목이 존재함. 종목코드: ${stock.code}"
-                    slackMessageService.sendMessage("@channel $message")
-                    throw RuntimeException(message)
+                    if (attempt == 1 || attempt == TARGET_PRICE_MAX_ATTEMPTS) {
+                        slackMessageService.sendMessage(
+                            "@channel 목표가 계산 실패($attempt/$TARGET_PRICE_MAX_ATTEMPTS): ${e.message}"
+                        )
+                    }
                 }
-
-                log.info("[목표가] ${stock.code}: $openPrice + ($beforeDayHigh - $beforeDayLow) * ${stock.k} = $targetPrice")
-
-                targetPriceMessage.append(
-                    "${stock.getName()}(${stock.code})\n" +
-                            "  - 시초가: ${comma(dayPriceCandle.output[0].stckOprc)}\n" +
-                            "  - 목표가: ${comma(targetPrice)}\n"
-                )
-
-                stock.code to targetPrice
-            }
-            log.info(targetPriceMessage.toString())
-            slackMessageService.sendMessage(targetPriceMessage.toString())
-            return targetPrice
+            )
         }
+    }
+
+    private fun calculateTargetPrice(vbsStocks: List<BokslStockProperties.Vbs.VbsStock>): Map<String, Int> {
+        val targetPriceMessage = StringBuilder()
+        val targetPriceLog = StringBuilder()
+        val targetPrice = vbsStocks.associate { stock ->
+            val dayPriceResponse = stockClientService.requestDatePrice(
+                DatePriceRequest(stock.code, DatePriceRequest.DateType.DAY),
+                tokenService.getAccessToken()
+            )
+            val dayPrices = dayPriceResponse.output
+            if (dayPrices == null || dayPrices.size < 2) {
+                throw TargetPriceNotReadyException(
+                    "당일 또는 전일 가격정보가 부족함. 종목코드: ${stock.code}, 응답코드: ${dayPriceResponse.msgCd}"
+                )
+            }
+
+            val todayPrice = dayPrices[0]
+            val beforeDayPrice = dayPrices[1]
+            if (todayPrice.date() != LocalDate.now() || todayPrice.stckOprc <= 0 || todayPrice.prdyVrssVolRate == "-100.00") {
+                throw TargetPriceNotReadyException(
+                    "당일 가격정보가 아직 준비되지 않음. 종목코드: ${stock.code}, " +
+                            "가격일자: ${todayPrice.stckBsopDate}, 거래량비율: ${todayPrice.prdyVrssVolRate}"
+                )
+            }
+            if (beforeDayPrice.stckHgpr <= 0 || beforeDayPrice.stckLwpr <= 0) {
+                throw TargetPriceNotReadyException("전일 고가 또는 저가 정보가 올바르지 않음. 종목코드: ${stock.code}")
+            }
+
+            val openPrice = todayPrice.stckOprc
+            val beforeDayHigh = beforeDayPrice.stckHgpr
+            val beforeDayLow = beforeDayPrice.stckLwpr
+            val tempPrice = openPrice + (beforeDayHigh - beforeDayLow) * stock.k
+            val calculatedTargetPrice = (tempPrice - tempPrice % QUOTE_UNIT).toInt()
+
+            targetPriceLog.append(
+                "[목표가] ${stock.code}: $openPrice + ($beforeDayHigh - $beforeDayLow) * ${stock.k} = $calculatedTargetPrice\n"
+            )
+            targetPriceMessage.append(
+                "${stock.getName()}(${stock.code})\n" +
+                        "  - 시초가: ${comma(openPrice)}\n" +
+                        "  - 목표가: ${comma(calculatedTargetPrice)}\n"
+            )
+
+            stock.code to calculatedTargetPrice
+        }
+        log.info(targetPriceLog.toString())
+        log.info(targetPriceMessage.toString())
+        slackMessageService.sendMessage(targetPriceMessage.toString())
+        return targetPrice
     }
 
     /**
