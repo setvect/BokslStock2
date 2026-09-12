@@ -30,6 +30,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.TimeUnit
 
 
@@ -76,6 +77,23 @@ internal fun <T> retryTargetPriceCalculation(
     throw IllegalStateException("목표가 계산 재시도 상태가 올바르지 않습니다.")
 }
 
+internal class SingleExecutionGuard {
+    private val running = AtomicBoolean(false)
+
+    fun executeIfIdle(block: () -> Unit): Boolean {
+        if (!running.compareAndSet(false, true)) {
+            return false
+        }
+
+        try {
+            block()
+        } finally {
+            running.set(false)
+        }
+        return true
+    }
+}
+
 @Service
 class VbsService(
     private val stockClientService: StockClientService,
@@ -101,7 +119,7 @@ class VbsService(
     /** 매수 대기중인 종목 */
     private val buyStockWait = mutableSetOf<CancelableResponse>()
 
-    private var run = false
+    private val startExecutionGuard = SingleExecutionGuard()
 
     /**목표가 <종목코드, 매수가격>*/
     private var targetPriceMap = mapOf<String, Int>()
@@ -121,34 +139,32 @@ class VbsService(
 
     @Async(value = "applicationTaskExecutor")
     fun start() {
-        // TODO 동기화 문제가 있을 수 있음
-        if (run) {
-            log.info("이미 시작중")
-            return
-        } else {
-            log.info("매매 시작")
-            run = true
+        val executed = startExecutionGuard.executeIfIdle {
+            startTrade()
         }
+        if (!executed) {
+            log.info("이미 시작중")
+        }
+    }
+
+    private fun startTrade() {
+        log.info("매매 시작")
         todayClosed = false
 
         checkDay()
 
-        try {
-            if (!TradeTimeHelper.isTimeToTrade()) {
-                log.info("매매 가능시간 아님")
-                return
-            }
-            if (!isTradingDay()) {
-                log.info("휴장일입니다.")
-                slackMessageService.sendMessage("휴장일입니다.")
-                todayClosed = true
-                return
-            }
-            sellSimultaneousPrice()
-            targetPriceMap = getTargetPrice()
-        } finally {
-            run = false
+        if (!TradeTimeHelper.isTimeToTrade()) {
+            log.info("매매 가능시간 아님")
+            return
         }
+        if (!isTradingDay()) {
+            log.info("휴장일입니다.")
+            slackMessageService.sendMessage("휴장일입니다.")
+            todayClosed = true
+            return
+        }
+        sellSimultaneousPrice()
+        targetPriceMap = getTargetPrice()
     }
 
     /**
