@@ -192,14 +192,24 @@ class StockClientService(
 
         val httpEntity = HttpEntity<Void>(headers)
 
-        val result = stockRestTemplate.exchange(
-            url,
-            HttpMethod.GET,
-            httpEntity,
-            BalanceResponse::class.java,
-            mapOf<String, String>("cano" to request.accountNo)
+        return retryBalanceRequest(
+            request = {
+                val result = stockRestTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    httpEntity,
+                    BalanceResponse::class.java,
+                    mapOf<String, String>("cano" to request.accountNo)
+                )
+                result.body ?: throw RuntimeException("API 결과 없음")
+            },
+            onRetry = { retry, seconds, e ->
+                log.warn("잔고 조회 실패. {}초 후 재시도({}/5). 오류 유형: {}", seconds, retry, e.javaClass.simpleName)
+            },
+            onFailure = { attempts, e ->
+                log.error("잔고 조회 최종 실패. 총 시도 횟수: {}. 오류 유형: {}", attempts, e.javaClass.simpleName)
+            }
         )
-        return result.body ?: throw RuntimeException("API 결과 없음")
     }
 
 
